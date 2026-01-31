@@ -1,0 +1,57 @@
+import { Routes, Route } from "react-router-dom";
+import Home from "./pages/Home2.jsx";
+import Login from "./pages/Login.jsx";
+import Register from "./pages/Register.jsx";
+import ProtectedRoute from "./components/ProtectedRoute";
+import MySales from "./pages/MySales";
+import Cars from "./pages/Cars";
+import Navbar from "./components/Navbar";
+import CarDetails from "./pages/CarDetails";
+import NewSale from "./pages/NewSale";
+import EditSale from "./pages/EditSale";
+
+export default function App() {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+
+      <Routes>
+        <Route path="/" element={<Home />} />
+
+        {/* Public */}
+        <Route path="/cars" element={<Cars />} />
+        <Route path="/cars/:id" element={<CarDetails />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        {/* Seller Routes */}
+        <Route
+          path="/my-sales"
+          element={
+            <ProtectedRoute roles={["seller", "admin"]}>
+              <MySales />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/my-sales/new"
+          element={
+            <ProtectedRoute roles={["seller", "admin"]}>
+              <NewSale />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/my-sales/edit/:id"
+          element={
+            <ProtectedRoute roles={["seller", "admin"]}>
+              <EditSale />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </div>
+  );
+}
