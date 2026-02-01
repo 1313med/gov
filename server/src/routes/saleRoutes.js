@@ -9,19 +9,40 @@ const {
   deleteSaleListing,
   getApprovedSaleListings,
   getSaleById,
-  updateSaleListing
+  updateSaleListing,
+  getAllSaleListingsAdmin,
+  updateSaleStatusAdmin  
 } = require("../controllers/saleController");
 
-// PUBLIC ROUTES
+// PUBLIC
 router.get("/", getApprovedSaleListings);
 
-// SELLER ROUTES
+// SELLER
 router.get("/mine", protect, role("seller", "admin"), getMySaleListings);
 router.post("/", protect, role("seller", "admin"), createSaleListing);
+
+// 🔴 ADMIN ROUTES MUST COME BEFORE :id
+router.get(
+  "/admin",
+  protect,
+  role("admin"),
+  getAllSaleListingsAdmin
+);
+
+router.put(
+  "/admin/:id/status",
+  protect,
+  role("admin"),
+  updateSaleStatusAdmin
+);
+
+
+// SELLER EDIT / DELETE
 router.put("/:id", protect, role("seller", "admin"), updateSaleListing);
 router.delete("/:id", protect, role("seller", "admin"), deleteSaleListing);
 
-// DYNAMIC ROUTE (MUST ALWAYS BE LAST)
+// 🔴 MUST ALWAYS BE LAST
 router.get("/:id", getSaleById);
+
 
 module.exports = router;

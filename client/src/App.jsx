@@ -11,6 +11,9 @@ import NewSale from "./pages/NewSale";
 import EditSale from "./pages/EditSale";
 import Dashboard from "./pages/Dashboard";
 import Notifications from "./pages/Notifications";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminSales from "./pages/admin/AdminSales";
+
 
 export default function App() {
   return (
@@ -58,6 +61,24 @@ export default function App() {
   element={
     <ProtectedRoute roles={["seller", "admin"]}>
       <Notifications />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin"
+  element={
+    <ProtectedRoute roles={["admin"]}>
+      <AdminDashboard />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin/sales"
+  element={
+    <ProtectedRoute roles={["admin"]}>
+      <AdminSales />
     </ProtectedRoute>
   }
 />
