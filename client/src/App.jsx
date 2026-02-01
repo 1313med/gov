@@ -9,6 +9,8 @@ import Navbar from "./components/Navbar";
 import CarDetails from "./pages/CarDetails";
 import NewSale from "./pages/NewSale";
 import EditSale from "./pages/EditSale";
+import Dashboard from "./pages/Dashboard";
+import Notifications from "./pages/Notifications";
 
 export default function App() {
   return (
@@ -16,15 +18,24 @@ export default function App() {
       <Navbar />
 
       <Routes>
-        <Route path="/" element={<Home />} />
-
         {/* Public */}
+        <Route path="/" element={<Home />} />
         <Route path="/cars" element={<Cars />} />
         <Route path="/cars/:id" element={<CarDetails />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Seller Routes */}
+        {/* Seller Dashboard */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute roles={["seller", "admin"]}>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Seller Listings */}
         <Route
           path="/my-sales"
           element={
@@ -42,6 +53,15 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+  path="/notifications"
+  element={
+    <ProtectedRoute roles={["seller", "admin"]}>
+      <Notifications />
+    </ProtectedRoute>
+  }
+/>
+
 
         <Route
           path="/my-sales/edit/:id"

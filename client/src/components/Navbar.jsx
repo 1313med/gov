@@ -4,8 +4,11 @@ import { loadAuth, clearAuth } from "../utils/authStorage";
 export default function Navbar() {
   const navigate = useNavigate();
   const auth = loadAuth();
-  const role = (auth?.role || "").toLowerCase();
-  const isSeller = role === "seller" || role === "admin";
+
+  const isSeller =
+    auth &&
+    typeof auth.role === "string" &&
+    ["seller", "admin"].includes(auth.role.toLowerCase());
 
   return (
     <header className="bg-white border-b shadow-sm">
@@ -21,9 +24,21 @@ export default function Navbar() {
           </Link>
 
           {isSeller && (
-            <Link to="/my-sales" className="px-3 py-2 hover:text-black/80">
-              My Sales
-            </Link>
+            <>
+              <Link
+                to="/my-sales"
+                className="px-3 py-2 hover:text-black/80"
+              >
+                My Sales
+              </Link>
+
+              <Link
+                to="/my-sales/new"
+                className="px-4 py-2 bg-black text-white rounded-lg hover:opacity-90"
+              >
+                + Add Car
+              </Link>
+            </>
           )}
 
           {auth?.token ? (

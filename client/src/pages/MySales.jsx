@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
-import { getMySales, deleteSale } from "../api/sale";
+import { getMySales, deleteSale, updateSaleStatus } from "../api/sale";
 import { Link } from "react-router-dom";
+import SellerLayout from "../components/seller/SellerLayout";
 
-
-const badgeClass = (status) => {
+const statusBadge = (status) => {
   const s = (status || "").toLowerCase();
   if (s === "approved") return "bg-green-100 text-green-700";
   if (s === "rejected") return "bg-red-100 text-red-700";
   if (s === "sold") return "bg-gray-200 text-gray-800";
-  return "bg-orange-100 text-orange-700"; // pending default
+  return "bg-orange-100 text-orange-700"; // pending
 };
 
 export default function MySales() {
@@ -22,18 +22,9 @@ export default function MySales() {
 
     try {
       const res = await getMySales();
-      const data = Array.isArray(res.data) ? res.data : [];
-      setSales(data);
+      setSales(Array.isArray(res.data) ? res.data : []);
     } catch (e) {
-      console.error("GET /sale/mine failed:", e);
-
-      if (e?.response?.status === 403) {
-        setError(
-          "You are not a seller. Switch to a seller account to see your listings."
-        );
-      } else {
-        setError(e?.response?.data?.message || "Failed to load your sales");
-      }
+      setError(e?.response?.data?.message || "Failed to load your listings");
     } finally {
       setLoading(false);
     }
@@ -43,104 +34,142 @@ export default function MySales() {
     fetchSales();
   }, []);
 
-  const handleDelete = async (saleId) => {
+  // ===================== DELETE =====================
+  const handleDelete = async (id) => {
     const ok = window.confirm("Are you sure you want to delete this listing?");
     if (!ok) return;
 
     try {
-      await deleteSale(saleId);
-      setSales((prev) => prev.filter((s) => s._id !== saleId));
+      await deleteSale(id);
+      setSales((prev) => prev.filter((s) => s._id !== id));
     } catch (e) {
-      console.error("DELETE failed:", e);
-      alert(e?.response?.data?.message || "Failed to delete. Please try again.");
+      alert(e?.response?.data?.message || "Delete failed");
     }
   };
 
-  if (loading)
-    return (
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="bg-white border rounded-2xl p-6">
-          <p className="text-gray-600">Loading your listings...</p>
+  // ===================== STATUS TOGGLE =====================
+  const toggleStatus = async (sale) => {
+    const newStatus = sale.status === "sold" ? "approved" : "sold";
+
+    try {
+      await updateSaleStatus(sale._id, newStatus);
+
+      setSales((prev) =>
+        prev.map((s) =>
+          s._id === sale._id ? { ...s, status: newStatus } : s
+        )
+      );
+    } catch (e) {
+      alert(e?.response?.data?.message || "Failed to update status");
+    }
+  };
+
+  return (
+    <SellerLayout>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">My Listings</h1>
+
+        <Link
+          to="/my-sales/new"
+          className="px-4 py-2 bg-black text-white rounded-lg hover:opacity-90"
+        >
+          + Add Car
+        </Link>
+      </div>
+
+      {loading && (
+        <div className="bg-white p-6 rounded-xl border shadow">
+          Loading your listings...
         </div>
-      </div>
-    );
+      )}
 
-  if (error)
-    return (
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="bg-white border rounded-2xl p-6">
-          <p className="text-red-600 font-semibold">{error}</p>
+      {error && (
+        <div className="bg-white p-6 rounded-xl border shadow text-red-600">
+          {error}
         </div>
-      </div>
-    );
+      )}
 
- return (
-  <div className="max-w-6xl mx-auto px-4 py-8">
-    <div className="flex items-center justify-between">
-      <h2 className="text-2xl font-bold">My Sales</h2>
-    </div>
+      {!loading && sales.length === 0 && (
+        <div className="bg-white p-6 rounded-xl border shadow">
+          <p className="font-semibold">No listings yet.</p>
+          <p className="text-sm text-gray-600 mt-1">
+            Start by adding your first car.
+          </p>
+        </div>
+      )}
 
-    {sales.length === 0 ? (
-      <div className="mt-6 bg-white border rounded-2xl p-6">
-        <p className="font-semibold text-gray-800">No listings yet.</p>
-        <p className="text-sm text-gray-600 mt-1">
-          Create a listing and it will appear here.
-        </p>
-      </div>
-    ) : (
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        {sales.map((s) => (
-          <div key={s._id} className="border rounded-lg p-4 shadow-sm bg-white">
-            <p className="font-semibold text-lg">{s.title}</p>
+      {!loading && sales.length > 0 && (
+        <div className="bg-white rounded-xl border shadow overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-100 text-gray-700">
+              <tr>
+                <th className="px-4 py-3 text-left">Title</th>
+                <th className="px-4 py-3 text-left">Car</th>
+                <th className="px-4 py-3 text-left">City</th>
+                <th className="px-4 py-3 text-left">Price</th>
+                <th className="px-4 py-3 text-left">Status</th>
+                <th className="px-4 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
 
-            <p className="text-gray-700 mt-1">
-              <b>Car:</b> {s.brand} {s.model} ({s.year})
-            </p>
+            <tbody>
+              {sales.map((s) => (
+                <tr key={s._id} className="border-t hover:bg-gray-50">
+                  <td className="px-4 py-3 font-medium">{s.title}</td>
 
-            <p className="text-gray-700 mt-1">
-              <b>City:</b> {s.city}
-            </p>
+                  <td className="px-4 py-3">
+                    {s.brand} {s.model} ({s.year})
+                  </td>
 
-            <p className="text-gray-900 font-bold mt-1">
-              {s.price} MAD
-            </p>
+                  <td className="px-4 py-3">{s.city}</td>
 
-            {/* STATUS */}
-            <span
-              className={`inline-block px-3 py-1 text-sm rounded mt-2 ${
-                s.status === "approved"
-                  ? "bg-green-100 text-green-700"
-                  : s.status === "rejected"
-                  ? "bg-red-100 text-red-700"
-                  : "bg-orange-100 text-orange-700"
-              }`}
-            >
-              {s.status}
-            </span>
+                  <td className="px-4 py-3 font-semibold">
+                    {s.price} MAD
+                  </td>
 
-            {/* ACTION BUTTONS */}
-            <div className="flex gap-3 mt-4">
+                  <td className="px-4 py-3">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${statusBadge(
+                        s.status
+                      )}`}
+                    >
+                      {s.status}
+                    </span>
+                  </td>
 
-              <Link
-                to={`/my-sales/edit/${s._id}`}
-                className="px-4 py-2 bg-blue-600 text-white rounded"
-              >
-                Edit
-              </Link>
+                  <td className="px-4 py-3 text-right space-x-2">
+                    {/* STATUS TOGGLE */}
+                    <button
+                      onClick={() => toggleStatus(s)}
+                      className={`px-3 py-1 rounded text-white ${
+                        s.status === "sold"
+                          ? "bg-green-600"
+                          : "bg-gray-700"
+                      }`}
+                    >
+                      {s.status === "sold" ? "Mark Active" : "Mark Sold"}
+                    </button>
 
-              <button
-                onClick={() => handleDelete(s._id)}
-                className="px-4 py-2 bg-black text-white rounded"
-              >
-                Delete
-              </button>
+                    <Link
+                      to={`/my-sales/edit/${s._id}`}
+                      className="px-3 py-1 bg-blue-600 text-white rounded"
+                    >
+                      Edit
+                    </Link>
 
-            </div>
-
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
-);
+                    <button
+                      onClick={() => handleDelete(s._id)}
+                      className="px-3 py-1 bg-black text-white rounded"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </SellerLayout>
+  );
 }
