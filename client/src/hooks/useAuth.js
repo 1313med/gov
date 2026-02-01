@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { clearAuth, loadAuth, saveAuth } from "../utils/authStorage";
 
-export function useAuthState() {
+export function useAuth() {
   const [auth, setAuth] = useState(() => loadAuth());
 
   function login(data) {
