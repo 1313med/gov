@@ -61,12 +61,38 @@ exports.getMySaleListings = asyncHandler(async (req, res) => {
 
 // ===================== GET APPROVED (PUBLIC) =====================
 exports.getApprovedSaleListings = asyncHandler(async (req, res) => {
-  const listings = await SaleListing.find({ status: "approved" }).sort({
-    createdAt: -1,
-  });
+  const { brand, city, minPrice, maxPrice, page = 1, limit = 9 } = req.query;
 
-  res.json(listings);
+  const filter = { status: "approved" };
+
+  if (brand) filter.brand = { $regex: brand, $options: "i" };
+  if (city) filter.city = { $regex: city, $options: "i" };
+
+  if (minPrice || maxPrice) {
+    filter.price = {};
+    if (minPrice) filter.price.$gte = Number(minPrice);
+    if (maxPrice) filter.price.$lte = Number(maxPrice);
+  }
+
+  const skip = (Number(page) - 1) * Number(limit);
+
+  const [items, total] = await Promise.all([
+    SaleListing.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit)),
+
+    SaleListing.countDocuments(filter),
+  ]);
+
+  res.json({
+    items,
+    total,
+    page: Number(page),
+    pages: Math.ceil(total / Number(limit)),
+  });
 });
+
 
 // ===================== DELETE SALE =====================
 exports.deleteSaleListing = asyncHandler(async (req, res) => {
@@ -90,7 +116,10 @@ exports.deleteSaleListing = asyncHandler(async (req, res) => {
 
 // ===================== GET SALE BY ID (PUBLIC) =====================
 exports.getSaleById = asyncHandler(async (req, res) => {
-  const sale = await SaleListing.findById(req.params.id);
+  const sale = await SaleListing.findById(req.params.id).populate(
+    "sellerId",
+    "name phone"
+  );
 
   if (!sale) {
     return res.status(404).json({ message: "Listing not found" });
@@ -102,6 +131,7 @@ exports.getSaleById = asyncHandler(async (req, res) => {
 
   res.json(sale);
 });
+
 
 // ===================== SELLER UPDATE (NO STATUS) =====================
 exports.updateSaleListing = asyncHandler(async (req, res) => {
