@@ -61,10 +61,29 @@ exports.getMySaleListings = asyncHandler(async (req, res) => {
 
 // ===================== GET APPROVED (PUBLIC) =====================
 exports.getApprovedSaleListings = asyncHandler(async (req, res) => {
-  const { brand, city, minPrice, maxPrice, page = 1, limit = 9 } = req.query;
+  const {
+    brand,
+    city,
+    minPrice,
+    maxPrice,
+    search,
+    page = 1,
+    limit = 9,
+  } = req.query;
 
   const filter = { status: "approved" };
 
+  // 🔍 GLOBAL SEARCH
+  if (search) {
+    filter.$or = [
+      { title: { $regex: search, $options: "i" } },
+      { brand: { $regex: search, $options: "i" } },
+      { model: { $regex: search, $options: "i" } },
+      { city: { $regex: search, $options: "i" } },
+    ];
+  }
+
+  // Individual filters (still work)
   if (brand) filter.brand = { $regex: brand, $options: "i" };
   if (city) filter.city = { $regex: city, $options: "i" };
 
@@ -92,6 +111,7 @@ exports.getApprovedSaleListings = asyncHandler(async (req, res) => {
     pages: Math.ceil(total / Number(limit)),
   });
 });
+
 
 
 // ===================== DELETE SALE =====================

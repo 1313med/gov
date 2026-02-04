@@ -13,6 +13,8 @@ import Dashboard from "./pages/Dashboard";
 import Notifications from "./pages/Notifications";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminSales from "./pages/admin/AdminSales";
+import SellerProfile from "./pages/SellerProfile";
+
 
 
 export default function App() {
@@ -27,6 +29,8 @@ export default function App() {
         <Route path="/cars/:id" element={<CarDetails />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/seller/:id" element={<SellerProfile />} />
+
 
         {/* Seller Dashboard */}
         <Route

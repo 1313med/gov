@@ -135,7 +135,13 @@ export default function CarDetails() {
 
           <div className="bg-white p-6 rounded-2xl shadow sticky top-6">
             <h2 className="text-lg font-semibold mb-2">Seller</h2>
-            <p className="font-medium">{seller?.name}</p>
+            <Link
+  to={`/seller/${seller?._id}`}
+  className="font-medium text-blue-600 hover:underline"
+>
+  {seller?.name}
+</Link>
+
 
             {auth?.token ? (
               <div className="space-y-3 mt-4">
