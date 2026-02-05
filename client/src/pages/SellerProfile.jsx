@@ -1,121 +1,142 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { api } from "../api/axios";
-import { loadAuth } from "../utils/authStorage";
+import { api } from "../../api/axios";
 
-export default function SellerProfile() {
-  const { id } = useParams();
-  const [seller, setSeller] = useState(null);
-  const [cars, setCars] = useState([]);
+export default function AdminSales() {
+  const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(null);
 
-  const auth = loadAuth();
+  const fetchSales = async () => {
+    setLoading(true);
+    const res = await api.get("/sale/admin");
+    setSales(res.data || []);
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await api.get(`/user/seller/${id}`);
+    fetchSales();
+  }, []);
 
-        setSeller(res.data.seller);
-        setCars(res.data.listings || []);
-      } catch {
-        setSeller(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [id]);
+  const updateStatus = async (id, status) => {
+    const msg =
+      status === "approved"
+        ? "Approve this listing?"
+        : "Reject this listing?";
 
-  if (loading) return <p className="p-6">Loading seller...</p>;
-  if (!seller) return <p className="p-6 text-red-600">Seller not found</p>;
+    if (!window.confirm(msg)) return;
+
+    try {
+      setActionLoading(id);
+      await api.put(`/sale/admin/${id}/status`, { status });
+      fetchSales();
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const badge = (status) => {
+    const base = "px-3 py-1 rounded-full text-xs font-semibold";
+
+    if (status === "approved")
+      return <span className={`${base} bg-green-600/20 text-green-400`}>Approved</span>;
+    if (status === "rejected")
+      return <span className={`${base} bg-red-600/20 text-red-400`}>Rejected</span>;
+    if (status === "pending")
+      return <span className={`${base} bg-yellow-500/20 text-yellow-400`}>Pending</span>;
+    if (status === "sold")
+      return <span className={`${base} bg-blue-500/20 text-blue-400`}>Sold</span>;
+
+    return <span className={base}>{status}</span>;
+  };
 
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-
-        {/* Seller Card */}
-        <div className="bg-white rounded-2xl shadow p-6 mb-10">
-          <h1 className="text-3xl font-extrabold">{seller.name}</h1>
-
-          {seller.city && (
-            <p className="text-gray-500 mt-1">{seller.city}</p>
-          )}
-
-          {auth?.token && (
-            <div className="flex gap-4 mt-4">
-              <a
-                href={`tel:${seller.phone}`}
-                className="px-6 py-3 bg-black text-white rounded-xl"
-              >
-                Call
-              </a>
-
-              <a
-                href={`https://wa.me/${seller.phone}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-6 py-3 bg-green-600 text-white rounded-xl"
-              >
-                WhatsApp
-              </a>
-            </div>
-          )}
+    <AdminLayout>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold">Listings Review</h1>
+          <p className="text-sm text-gray-400 mt-1">
+            Approve or reject seller listings
+          </p>
         </div>
 
-        {/* Listings */}
-        <h2 className="text-2xl font-bold mb-6">
-          Listings by {seller.name}
-        </h2>
-
-        {cars.length === 0 ? (
-          <p className="text-gray-500">
-            This seller has no active listings.
-          </p>
-        ) : (
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {cars.map((c) => (
-              <Link
-                key={c._id}
-                to={`/cars/${c._id}`}
-                className="bg-white rounded-2xl shadow hover:shadow-xl transition overflow-hidden"
-              >
-                <div className="h-52 bg-gray-100">
-                  {c.images?.[0] ? (
-                    <img
-                      src={c.images[0]}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="h-full flex items-center justify-center text-gray-400">
-                      No Image
-                    </div>
-                  )}
-                </div>
-
-                <div className="p-5">
-                  <p className="font-semibold text-lg truncate">
-                    {c.title}
-                  </p>
-                  <p className="text-gray-600 text-sm">
-                    {c.brand} {c.model} • {c.year}
-                  </p>
-                  <p className="font-bold mt-2">
-                    {c.price} MAD
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-
-        <Link
-          to="/cars"
-          className="inline-block mt-10 text-blue-600 hover:underline"
-        >
-          ← Back to marketplace
-        </Link>
+        <p className="text-sm text-gray-400">
+          Total: {sales.length}
+        </p>
       </div>
-    </div>
+
+      {loading ? (
+        <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
+          Loading listings...
+        </div>
+      ) : (
+        <div className="bg-gray-800 border border-gray-700 rounded-2xl overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-900 text-gray-400">
+              <tr>
+                <th className="px-6 py-4 text-left">Title</th>
+                <th className="px-6 py-4 text-left">Seller</th>
+                <th className="px-6 py-4 text-left">Status</th>
+                <th className="px-6 py-4 text-right">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {sales.map((s) => (
+                <tr
+                  key={s._id}
+                  className="border-t border-gray-700 hover:bg-gray-700/30 transition"
+                >
+                  <td className="px-6 py-4 font-medium">
+                    {s.title}
+                  </td>
+
+                  <td className="px-6 py-4 text-gray-300">
+                    {s.sellerId?.name || "—"}
+                  </td>
+
+                  <td className="px-6 py-4">
+                    {badge(s.status)}
+                  </td>
+
+                  <td className="px-6 py-4 text-right space-x-2">
+                    {s.status === "pending" && (
+                      <>
+                        <button
+                          disabled={actionLoading === s._id}
+                          onClick={() => updateStatus(s._id, "approved")}
+                          className="px-3 py-1.5 bg-green-600 hover:bg-green-700 rounded-lg text-white text-xs"
+                        >
+                          Approve
+                        </button>
+
+                        <button
+                          disabled={actionLoading === s._id}
+                          onClick={() => updateStatus(s._id, "rejected")}
+                          className="px-3 py-1.5 bg-red-600 hover:bg-red-700 rounded-lg text-white text-xs"
+                        >
+                          Reject
+                        </button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
+
+              {sales.length === 0 && (
+                <tr>
+                  <td
+                    colSpan="4"
+                    className="px-6 py-10 text-center text-gray-400"
+                  >
+                    No listings found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </AdminLayout>
   );
 }

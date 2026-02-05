@@ -22,7 +22,7 @@ const NewSale = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // ===================== INPUT CHANGE =====================
+  // ================= INPUT CHANGE =================
   const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
@@ -30,7 +30,7 @@ const NewSale = () => {
     }));
   };
 
-  // ===================== CLOUDINARY UPLOAD =====================
+  // ================= CLOUDINARY =================
   const openCloudinaryWidget = () => {
     window.cloudinary.openUploadWidget(
       {
@@ -39,7 +39,7 @@ const NewSale = () => {
         multiple: true,
       },
       (error, result) => {
-        if (!error && result && result.event === "success") {
+        if (!error && result?.event === "success") {
           setFormData((prev) => ({
             ...prev,
             images: [...prev.images, result.info.secure_url],
@@ -49,7 +49,7 @@ const NewSale = () => {
     );
   };
 
-  // ===================== VALIDATION =====================
+  // ================= VALIDATION =================
   const validateForm = () => {
     if (!formData.title) return "Title is required";
     if (!formData.brand) return "Brand is required";
@@ -62,7 +62,7 @@ const NewSale = () => {
     return null;
   };
 
-  // ===================== SUBMIT =====================
+  // ================= SUBMIT =================
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -77,114 +77,127 @@ const NewSale = () => {
       setLoading(true);
 
       await api.post("/sale", {
-        title: formData.title,
-        brand: formData.brand,
-        model: formData.model,
-        year: formData.year,
-        mileage: formData.mileage,
+        ...formData,
         price: Number(formData.price),
-        city: formData.city,
-        fuel: formData.fuel,
-        gearbox: formData.gearbox,
-        description: formData.description,
-        images: formData.images,
       });
 
       navigate("/my-sales");
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Failed to create sale listing"
-      );
+      setError(err.response?.data?.message || "Failed to create listing");
     } finally {
       setLoading(false);
     }
   };
 
-  // ===================== UI =====================
+  // ================= UI =================
   return (
-    <div className="max-w-5xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Add New Car</h1>
+    <div className="min-h-screen bg-gray-50 py-12 px-6">
+      <div className="max-w-5xl mx-auto">
 
-      {error && <p className="text-red-600 mb-4">{error}</p>}
+        {/* Header */}
+        <div className="mb-10">
+          <h1 className="text-4xl font-extrabold">Add a new car</h1>
+          <p className="mt-2 text-gray-600">
+            Fill in the details below to publish your car listing
+          </p>
+        </div>
 
-      <form onSubmit={handleSubmit} className="space-y-10">
+        {error && (
+          <div className="mb-6 rounded-xl bg-red-50 text-red-600 px-4 py-3">
+            {error}
+          </div>
+        )}
 
-        {/* ================= BASIC INFO ================= */}
-        <div className="bg-white p-6 rounded-xl shadow border space-y-4">
-          <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
+        <form onSubmit={handleSubmit} className="space-y-12">
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <input name="title" className="input" placeholder="Title" value={formData.title} onChange={handleChange} />
-            <input name="brand" className="input" placeholder="Brand" value={formData.brand} onChange={handleChange} />
-            <input name="model" className="input" placeholder="Model" value={formData.model} onChange={handleChange} />
-            <input name="year" className="input" placeholder="Year" value={formData.year} onChange={handleChange} />
-            <input name="mileage" className="input" placeholder="Mileage" value={formData.mileage} onChange={handleChange} />
-            <input name="price" className="input" placeholder="Price" value={formData.price} onChange={handleChange} />
-            <input name="city" className="input" placeholder="City" value={formData.city} onChange={handleChange} />
-            <input name="fuel" className="input" placeholder="Fuel" value={formData.fuel} onChange={handleChange} />
-            <input name="gearbox" className="input" placeholder="Gearbox" value={formData.gearbox} onChange={handleChange} />
+          {/* ================= BASIC INFO ================= */}
+          <section className="bg-white rounded-3xl border shadow-sm p-8">
+            <h2 className="text-2xl font-semibold mb-6">Car information</h2>
+
+            <div className="grid sm:grid-cols-2 gap-5">
+              <Input name="title" placeholder="Listing title" value={formData.title} onChange={handleChange} />
+              <Input name="brand" placeholder="Brand" value={formData.brand} onChange={handleChange} />
+              <Input name="model" placeholder="Model" value={formData.model} onChange={handleChange} />
+              <Input name="year" placeholder="Year" value={formData.year} onChange={handleChange} />
+              <Input name="mileage" placeholder="Mileage (km)" value={formData.mileage} onChange={handleChange} />
+              <Input name="price" placeholder="Price (MAD)" value={formData.price} onChange={handleChange} />
+              <Input name="city" placeholder="City" value={formData.city} onChange={handleChange} />
+              <Input name="fuel" placeholder="Fuel (Diesel, Petrol...)" value={formData.fuel} onChange={handleChange} />
+              <Input name="gearbox" placeholder="Gearbox (Manual / Auto)" value={formData.gearbox} onChange={handleChange} />
+            </div>
+
+            <textarea
+              name="description"
+              className="mt-5 w-full rounded-xl border px-4 py-3 h-32 resize-none focus:outline-none focus:ring-2 focus:ring-black"
+              placeholder="Describe the car condition, history, extras..."
+              value={formData.description}
+              onChange={handleChange}
+            />
+          </section>
+
+          {/* ================= IMAGES ================= */}
+          <section className="bg-white rounded-3xl border shadow-sm p-8">
+            <h2 className="text-2xl font-semibold mb-6">Photos</h2>
+
+            <button
+              type="button"
+              onClick={openCloudinaryWidget}
+              className="px-5 py-3 bg-black text-white rounded-xl font-medium hover:opacity-90"
+            >
+              Upload images
+            </button>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-6">
+              {formData.images.map((img, index) => (
+                <div key={index} className="relative group">
+                  <img
+                    src={img}
+                    className="w-full h-32 object-cover rounded-xl border"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        images: prev.images.filter((_, i) => i !== index),
+                      }))
+                    }
+                    className="absolute top-2 right-2 bg-black text-white text-xs px-3 py-1 rounded-full opacity-0 group-hover:opacity-100 transition"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* ================= SUBMIT ================= */}
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-8 py-4 bg-black text-white rounded-2xl text-lg font-semibold hover:opacity-90 disabled:opacity-60"
+            >
+              {loading ? "Publishing..." : "Publish car"}
+            </button>
           </div>
 
-          <textarea
-            name="description"
-            className="input h-28 resize-none"
-            placeholder="Description"
-            value={formData.description}
-            onChange={handleChange}
-          />
-        </div>
-
-        {/* ================= IMAGES ================= */}
-        <div className="bg-white p-6 rounded-xl shadow border">
-          <h2 className="text-xl font-semibold mb-4">Images</h2>
-
-          <button
-            type="button"
-            onClick={openCloudinaryWidget}
-            className="px-4 py-2 bg-black text-white rounded-lg hover:opacity-90"
-          >
-            Upload Images
-          </button>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
-            {formData.images.map((img, index) => (
-              <div key={index} className="relative group">
-                <img
-                  src={img}
-                  className="w-full h-32 object-cover rounded-lg shadow-sm border"
-                />
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      images: prev.images.filter((_, i) => i !== index),
-                    }))
-                  }
-                  className="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition"
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ================= SUBMIT ================= */}
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-6 py-3 bg-black text-white rounded-xl hover:opacity-90"
-          >
-            {loading ? "Saving..." : "Add Car"}
-          </button>
-        </div>
-
-      </form>
+        </form>
+      </div>
     </div>
   );
 };
+
+// ================= INPUT COMPONENT =================
+const Input = ({ name, placeholder, value, onChange }) => (
+  <input
+    name={name}
+    placeholder={placeholder}
+    value={value}
+    onChange={onChange}
+    className="w-full rounded-xl border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
+  />
+);
 
 export default NewSale;

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { api } from "../api/axios";
 import { saveAuth } from "../utils/authStorage";
 
@@ -29,76 +29,120 @@ export default function Register() {
         role,
       });
 
-      saveAuth(res.data); // save token + user info
+      saveAuth(res.data);
       navigate("/");
     } catch (err) {
-      setError(err?.response?.data?.message || "Register failed");
+      setError(err?.response?.data?.message || "Registration failed");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
-      <div className="w-full max-w-md bg-white rounded-xl shadow p-6">
-        <h2 className="text-xl font-semibold">Register</h2>
-
-        {error && (
-          <p className="mt-3 text-sm text-red-600 bg-red-50 p-2 rounded">
-            {error}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-white px-6">
+      
+      <div className="w-full max-w-md bg-white rounded-3xl border shadow-sm p-8">
+        
+        {/* Header */}
+        <div className="text-center">
+          <h1 className="text-3xl font-extrabold">Create your account</h1>
+          <p className="mt-2 text-gray-500">
+            Join Goovoiture and start buying or selling cars today
           </p>
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div className="mt-4 rounded-xl bg-red-50 text-red-600 text-sm px-4 py-3">
+            {error}
+          </div>
         )}
 
-        <form onSubmit={handleSubmit} className="mt-4 space-y-3">
-          <input
-            className="w-full border rounded px-3 py-2"
-            placeholder="Full name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
 
-          <input
-            className="w-full border rounded px-3 py-2"
-            placeholder="Phone (e.g. 06...)"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            required
-          />
+          <div>
+            <label className="text-sm font-medium text-gray-700">
+              Full name
+            </label>
+            <input
+              className="mt-1 w-full rounded-xl border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
+              placeholder="John Doe"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
 
-          <input
-            className="w-full border rounded px-3 py-2"
-            placeholder="City"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-          />
+          <div>
+            <label className="text-sm font-medium text-gray-700">
+              Phone number
+            </label>
+            <input
+              className="mt-1 w-full rounded-xl border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
+              placeholder="06XXXXXXXX"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required
+            />
+          </div>
 
-          <select
-            className="w-full border rounded px-3 py-2"
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-          >
-            <option value="customer">Customer</option>
-            <option value="seller">Seller</option>
-            <option value="rental_owner">Rental Owner</option>
-          </select>
+          <div>
+            <label className="text-sm font-medium text-gray-700">
+              City
+            </label>
+            <input
+              className="mt-1 w-full rounded-xl border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
+              placeholder="Casablanca"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+            />
+          </div>
 
-          <input
-            className="w-full border rounded px-3 py-2"
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          <div>
+            <label className="text-sm font-medium text-gray-700">
+              Account type
+            </label>
+            <select
+              className="mt-1 w-full rounded-xl border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+            >
+              <option value="customer">Buyer (Customer)</option>
+              <option value="seller">Seller</option>
+              <option value="rental_owner">Rental Owner</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-gray-700">
+              Password
+            </label>
+            <input
+              className="mt-1 w-full rounded-xl border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
 
           <button
-            className="w-full bg-black text-white rounded px-4 py-2 disabled:opacity-60"
             disabled={loading}
+            className="w-full mt-4 bg-black text-white py-3 rounded-xl font-semibold hover:opacity-90 transition disabled:opacity-60"
           >
-            {loading ? "Creating..." : "Create account"}
+            {loading ? "Creating account..." : "Create account"}
           </button>
         </form>
+
+        {/* Footer */}
+        <div className="mt-6 text-center text-sm text-gray-500">
+          Already have an account?{" "}
+          <Link to="/login" className="text-black font-medium hover:underline">
+            Login
+          </Link>
+        </div>
       </div>
     </div>
   );
