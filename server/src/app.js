@@ -5,7 +5,6 @@ const morgan = require("morgan");
 
 const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
 
-
 const app = express();
 
 app.use(cors({ origin: true, credentials: true }));
@@ -17,14 +16,16 @@ app.use(morgan("dev"));
 app.get("/api/health", (req, res) => {
   res.json({ ok: true, message: "API is running" });
 });
+
+// ROUTES
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/sale", require("./routes/saleRoutes"));
+app.use("/api/rental", require("./routes/rentalRoutes"));
 app.use("/api/user", require("./routes/userRoutes"));
 app.use("/api/notifications", require("./routes/notificationRoutes"));
+app.use("/api/bookings", require("./routes/bookingRoutes"));
 
-
-// routes later...
-
+// ERROR HANDLING
 app.use(notFound);
 app.use(errorHandler);
 

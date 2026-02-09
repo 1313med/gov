@@ -5,6 +5,7 @@ import Register from "./pages/Register.jsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import MySales from "./pages/MySales";
 import Cars from "./pages/Cars";
+import Rentals from "./pages/Rentals";
 import Navbar from "./components/Navbar";
 import CarDetails from "./pages/CarDetails";
 import NewSale from "./pages/NewSale";
@@ -14,6 +15,10 @@ import Notifications from "./pages/Notifications";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminSales from "./pages/admin/AdminSales";
 import SellerProfile from "./pages/SellerProfile";
+import RentalDetails from "./pages/RentalDetails";
+import MyRentals from "./pages/MyRentals";
+import MyBookings from "./pages/MyBookings";
+import OwnerBookings from "./pages/OwnerBookings";
 
 
 
@@ -27,9 +32,36 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/cars" element={<Cars />} />
         <Route path="/cars/:id" element={<CarDetails />} />
+        <Route path="/rentals" element={<Rentals />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/seller/:id" element={<SellerProfile />} />
+        <Route path="/rentals/:id" element={<RentalDetails />} />
+        <Route
+  path="/my-rentals"
+  element={
+    <ProtectedRoute roles={["rental_owner"]}>
+      <MyRentals />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/my-bookings"
+  element={
+    <ProtectedRoute roles={["customer"]}>
+      <MyBookings />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/owner-bookings"
+  element={
+    <ProtectedRoute roles={["rental_owner"]}>
+      <OwnerBookings />
+    </ProtectedRoute>
+  }
+/>
 
 
         {/* Seller Dashboard */}
@@ -42,7 +74,6 @@ export default function App() {
           }
         />
 
-        {/* Seller Listings */}
         <Route
           path="/my-sales"
           element={
@@ -60,39 +91,40 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-  path="/notifications"
-  element={
-    <ProtectedRoute roles={["seller", "admin"]}>
-      <Notifications />
-    </ProtectedRoute>
-  }
-/>
-
-<Route
-  path="/admin"
-  element={
-    <ProtectedRoute roles={["admin"]}>
-      <AdminDashboard />
-    </ProtectedRoute>
-  }
-/>
-
-<Route
-  path="/admin/sales"
-  element={
-    <ProtectedRoute roles={["admin"]}>
-      <AdminSales />
-    </ProtectedRoute>
-  }
-/>
-
 
         <Route
           path="/my-sales/edit/:id"
           element={
             <ProtectedRoute roles={["seller", "admin"]}>
               <EditSale />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute roles={["seller", "admin"]}>
+              <Notifications />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Admin */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute roles={["admin"]}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/sales"
+          element={
+            <ProtectedRoute roles={["admin"]}>
+              <AdminSales />
             </ProtectedRoute>
           }
         />
