@@ -19,6 +19,8 @@ import RentalDetails from "./pages/RentalDetails";
 import MyRentals from "./pages/MyRentals";
 import MyBookings from "./pages/MyBookings";
 import OwnerBookings from "./pages/OwnerBookings";
+import AddRental from "./pages/AddRental";
+
 
 
 
@@ -62,6 +64,15 @@ export default function App() {
     </ProtectedRoute>
   }
 />
+<Route
+  path="/add-rental"
+  element={
+    <ProtectedRoute roles={["rental_owner"]}>
+      <AddRental />
+    </ProtectedRoute>
+  }
+/>
+
 
 
         {/* Seller Dashboard */}

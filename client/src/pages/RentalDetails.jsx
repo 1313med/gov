@@ -13,6 +13,23 @@ export default function RentalDetails() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [bookingLoading, setBookingLoading] = useState(false);
+  const calculateDays = () => {
+  if (!startDate || !endDate) return 0;
+
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  const diff =
+    (end.getTime() - start.getTime()) /
+    (1000 * 60 * 60 * 24);
+
+  return diff > 0 ? diff : 0;
+};
+
+const days = calculateDays();
+const totalPrice =
+  rental && days > 0 ? days * rental.pricePerDay : 0;
+
 
   useEffect(() => {
     const loadRental = async () => {
@@ -127,10 +144,30 @@ export default function RentalDetails() {
               onChange={(e) => setEndDate(e.target.value)}
               className="w-full border rounded-xl p-3"
             />
+            {days > 0 && (
+  <div className="border rounded-xl p-4 bg-gray-50 space-y-2">
+    <div className="flex justify-between text-sm">
+      <span>Price per day</span>
+      <span>{rental.pricePerDay} MAD</span>
+    </div>
+
+    <div className="flex justify-between text-sm">
+      <span>Days</span>
+      <span>{days}</span>
+    </div>
+
+    <div className="flex justify-between font-semibold text-lg pt-2 border-t">
+      <span>Total</span>
+      <span>{totalPrice} MAD</span>
+    </div>
+  </div>
+)}
+
 
             <button
               onClick={handleBooking}
-              disabled={bookingLoading}
+              disabled={bookingLoading || days === 0}
+
               className="w-full py-3 bg-black text-white rounded-xl disabled:opacity-50"
             >
               {bookingLoading ? "Booking..." : "Book now"}

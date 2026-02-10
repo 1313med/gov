@@ -28,7 +28,7 @@ if (role === "admin") {
 } else if (role === "seller") {
   navigate("/dashboard");
 } else {
-  navigate("/cars");
+  navigate("/");
 }
 
     } catch (err) {
