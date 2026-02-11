@@ -1,5 +1,6 @@
 const RentalListing = require("../models/RentalListing");
 const Booking = require("../models/Booking");
+const Notification = require("../models/Notification");
 
 // =======================
 // Create rental listing
@@ -53,19 +54,11 @@ exports.createRental = async (req, res, next) => {
 // =======================
 exports.getRentals = async (req, res, next) => {
   try {
-    const {
-      city,
-      minPrice,
-      maxPrice,
-      startDate,
-      endDate,
-    } = req.query;
+    const { city, minPrice, maxPrice, startDate, endDate } = req.query;
 
     const query = { status: "approved" };
 
-    if (city) {
-      query.city = city;
-    }
+    if (city) query.city = city;
 
     if (minPrice || maxPrice) {
       query.pricePerDay = {};
@@ -73,20 +66,15 @@ exports.getRentals = async (req, res, next) => {
       if (maxPrice) query.pricePerDay.$lte = Number(maxPrice);
     }
 
-    // 1️⃣ Get all approved rentals
     let rentals = await RentalListing.find(query);
 
-    // 2️⃣ Filter by bookings ONLY
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
 
-      // Find conflicting bookings
       const conflicts = await Booking.find({
         status: "confirmed",
-        $or: [
-          { startDate: { $lt: end }, endDate: { $gt: start } },
-        ],
+        $or: [{ startDate: { $lt: end }, endDate: { $gt: start } }],
       }).select("rentalId");
 
       const blockedIds = conflicts.map((b) =>
@@ -103,8 +91,6 @@ exports.getRentals = async (req, res, next) => {
     next(error);
   }
 };
-
-
 
 // =======================
 // Rental details
@@ -141,6 +127,11 @@ exports.createBooking = async (req, res, next) => {
       return res.status(400).json({ message: "Invalid dates" });
     }
 
+    const rental = await RentalListing.findById(rentalId);
+    if (!rental) {
+      return res.status(404).json({ message: "Rental not found" });
+    }
+
     const conflict = await Booking.findOne({
       rentalId,
       status: "confirmed",
@@ -153,16 +144,52 @@ exports.createBooking = async (req, res, next) => {
         .json({ message: "Already booked for these dates" });
     }
 
-   const booking = await Booking.create({
-  rentalId,
-  customerId: req.user._id,
-  startDate,
-  endDate,
-  status: "pending", // 🔥 FORCE PENDING
-});
+    const booking = await Booking.create({
+      rentalId,
+      customerId: req.user._id,
+      startDate,
+      endDate,
+      status: "pending",
+    });
 
+    // 🔔 Notify owner (pending request)
+    await Notification.create({
+      user: rental.rentalOwnerId,
+      message: `New booking request for "${rental.title}"`,
+      type: "pending",
+    });
 
     res.status(201).json(booking);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// =======================
+// Update booking status (owner)
+// =======================
+exports.updateBookingStatus = async (req, res, next) => {
+  try {
+    const { status } = req.body;
+
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    booking.status = status;
+    await booking.save();
+
+    const rental = await RentalListing.findById(booking.rentalId);
+
+    // 🔔 Notify customer
+    await Notification.create({
+      user: booking.customerId,
+      message: `Your booking for "${rental.title}" was ${status}`,
+      type: status === "confirmed" ? "approved" : "pending",
+    });
+
+    res.json(booking);
   } catch (error) {
     next(error);
   }

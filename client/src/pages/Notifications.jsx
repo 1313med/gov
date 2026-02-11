@@ -14,6 +14,7 @@ export default function Notifications() {
 
   const handleRead = async (id) => {
     await markAsRead(id);
+
     setItems((prev) =>
       prev.map((n) =>
         n._id === id ? { ...n, read: true } : n
@@ -23,7 +24,9 @@ export default function Notifications() {
 
   return (
     <SellerLayout>
-      <h1 className="text-2xl font-bold mb-6">Notifications</h1>
+      <h1 className="text-2xl font-bold mb-6">
+        Notifications
+      </h1>
 
       {loading && (
         <div className="bg-white p-6 rounded-xl border shadow">
@@ -37,23 +40,24 @@ export default function Notifications() {
         </div>
       )}
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {items.map((n) => (
           <div
             key={n._id}
-            className={`p-4 rounded-xl border shadow bg-white ${
-              n.read ? "opacity-60" : ""
+            className={`p-5 rounded-xl border shadow bg-white transition ${
+              n.read ? "opacity-60" : "border-blue-400"
             }`}
           >
             <p className="font-medium">{n.message}</p>
-            <p className="text-xs text-gray-500 mt-1">
+
+            <p className="text-xs text-gray-500 mt-2">
               {new Date(n.createdAt).toLocaleString()}
             </p>
 
             {!n.read && (
               <button
                 onClick={() => handleRead(n._id)}
-                className="mt-2 text-sm text-blue-600"
+                className="mt-3 text-sm text-blue-600 hover:underline"
               >
                 Mark as read
               </button>
