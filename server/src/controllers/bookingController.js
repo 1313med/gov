@@ -27,14 +27,12 @@ exports.getMyBookings = async (req, res, next) => {
 */
 exports.getBookingsForOwner = async (req, res, next) => {
   try {
-    // 1️⃣ Find rentals owned by this owner
     const rentals = await RentalListing.find({
       rentalOwnerId: req.user._id,
     }).select("_id");
 
     const rentalIds = rentals.map((r) => r._id);
 
-    // 2️⃣ Find bookings for those rentals
     const bookings = await Booking.find({
       rentalId: { $in: rentalIds },
     })
@@ -72,7 +70,12 @@ exports.updateBookingStatus = async (req, res, next) => {
       });
     }
 
-    // Make sure this booking belongs to this rental owner
+    /*
+    ---------------------------------------------------------
+    Ensure this booking belongs to the rental owner
+    ---------------------------------------------------------
+    */
+
     if (
       booking.rentalId.rentalOwnerId.toString() !==
       req.user._id.toString()
@@ -82,7 +85,31 @@ exports.updateBookingStatus = async (req, res, next) => {
       });
     }
 
+    /*
+    ---------------------------------------------------------
+    Prevent overlapping confirmed bookings
+    ---------------------------------------------------------
+    */
+
+    if (status === "confirmed") {
+      const conflictingBooking = await Booking.findOne({
+        rentalId: booking.rentalId._id,
+        status: "confirmed",
+        _id: { $ne: booking._id },
+        startDate: { $lt: booking.endDate },
+        endDate: { $gt: booking.startDate },
+      });
+
+      if (conflictingBooking) {
+        return res.status(400).json({
+          message:
+            "This car is already booked for these dates",
+        });
+      }
+    }
+
     booking.status = status;
+
     await booking.save();
 
     res.json(booking);

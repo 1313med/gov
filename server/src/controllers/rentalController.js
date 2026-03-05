@@ -152,7 +152,6 @@ exports.createBooking = async (req, res, next) => {
       status: "pending",
     });
 
-    // 🔔 Notify owner (pending request)
     await Notification.create({
       user: rental.rentalOwnerId,
       message: `New booking request for "${rental.title}"`,
@@ -182,7 +181,6 @@ exports.updateBookingStatus = async (req, res, next) => {
 
     const rental = await RentalListing.findById(booking.rentalId);
 
-    // 🔔 Notify customer
     await Notification.create({
       user: booking.customerId,
       message: `Your booking for "${rental.title}" was ${status}`,
@@ -240,6 +238,22 @@ exports.updateRentalStatus = async (req, res, next) => {
     await rental.save();
 
     res.json(rental);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// =======================
+// Get bookings for a rental (availability)
+// =======================
+exports.getBookingsForRental = async (req, res, next) => {
+  try {
+    const bookings = await Booking.find({
+      rentalId: req.params.id,
+      status: "confirmed",
+    });
+
+    res.json(bookings);
   } catch (error) {
     next(error);
   }

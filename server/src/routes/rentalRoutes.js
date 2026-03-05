@@ -9,6 +9,7 @@ const {
   getOwnerBookings,
   getAdminRentals,
   updateRentalStatus,
+  getBookingsForRental,
 } = require("../controllers/rentalController");
 
 const { protect, role } = require("../middlewares/authMiddleware");
@@ -16,6 +17,7 @@ const { protect, role } = require("../middlewares/authMiddleware");
 // Public
 router.get("/", getRentals);
 router.get("/:id", getRentalById);
+router.get("/:id/bookings", getBookingsForRental);
 
 // Booking (customer)
 router.post("/:id/book", protect, role("customer"), createBooking);
