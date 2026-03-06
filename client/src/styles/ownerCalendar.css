@@ -1,0 +1,98 @@
+/* Calendar container */
+.rbc-calendar {
+  font-family: inherit;
+}
+
+/* Toolbar (top navigation) */
+.rbc-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+/* Toolbar buttons */
+.rbc-toolbar button {
+  background: white;
+  border: 1px solid #e5e7eb;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.rbc-toolbar button:hover {
+  background: #f9fafb;
+}
+
+.rbc-toolbar button.rbc-active {
+  background: black;
+  color: white;
+  border: none;
+}
+
+/* Month title */
+.rbc-toolbar-label {
+  font-weight: 700;
+  font-size: 18px;
+}
+
+/* Day headers */
+.rbc-header {
+  padding: 12px 0;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+/* Day cells */
+.rbc-month-view {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.rbc-day-bg {
+  transition: background 0.2s;
+}
+
+.rbc-day-bg:hover {
+  background: #f9fafb;
+}
+
+/* Today highlight */
+.rbc-today {
+  background: #f3f4f6;
+}
+
+/* Event cards */
+.rbc-event {
+  border-radius: 10px;
+  border: none;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Confirmed */
+.event-confirmed {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+}
+
+/* Pending */
+.event-pending {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+}
+
+/* Rejected */
+.event-rejected {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+}
+
+/* "+ more" link */
+.rbc-show-more {
+  color: #2563eb;
+  font-weight: 500;
+}
