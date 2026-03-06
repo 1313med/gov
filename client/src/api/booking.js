@@ -8,3 +8,6 @@ export const getOwnerBookings = () =>
 
 export const updateBookingStatus = (id, status) =>
   api.put(`/bookings/${id}/status`, { status });
+
+export const updateBookingDates = (id, data) =>
+  api.put(`/bookings/${id}/dates`, data);

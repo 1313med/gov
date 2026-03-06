@@ -5,6 +5,7 @@ const {
   getMyBookings,
   getBookingsForOwner,
   updateBookingStatus,
+  updateBookingDates,
 } = require("../controllers/bookingController");
 
 const { protect, role } = require("../middlewares/authMiddleware");
@@ -38,6 +39,18 @@ router.put(
   protect,
   role("rental_owner"),
   updateBookingStatus
+);
+
+/*
+|--------------------------------------------------------------------------
+| Update booking dates (Drag & Drop calendar)
+|--------------------------------------------------------------------------
+*/
+router.put(
+  "/:id/dates",
+  protect,
+  role("rental_owner"),
+  updateBookingDates
 );
 
 module.exports = router;

@@ -70,12 +70,6 @@ exports.updateBookingStatus = async (req, res, next) => {
       });
     }
 
-    /*
-    ---------------------------------------------------------
-    Ensure this booking belongs to the rental owner
-    ---------------------------------------------------------
-    */
-
     if (
       booking.rentalId.rentalOwnerId.toString() !==
       req.user._id.toString()
@@ -84,12 +78,6 @@ exports.updateBookingStatus = async (req, res, next) => {
         message: "Forbidden",
       });
     }
-
-    /*
-    ---------------------------------------------------------
-    Prevent overlapping confirmed bookings
-    ---------------------------------------------------------
-    */
 
     if (status === "confirmed") {
       const conflictingBooking = await Booking.findOne({
@@ -109,6 +97,67 @@ exports.updateBookingStatus = async (req, res, next) => {
     }
 
     booking.status = status;
+
+    await booking.save();
+
+    res.json(booking);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/*
+|--------------------------------------------------------------------------
+| RENTAL OWNER – Update booking dates (Drag & Resize)
+|--------------------------------------------------------------------------
+*/
+exports.updateBookingDates = async (req, res, next) => {
+  try {
+    const { startDate, endDate } = req.body;
+
+    const booking = await Booking.findById(req.params.id)
+      .populate("rentalId");
+
+    if (!booking) {
+      return res.status(404).json({
+        message: "Booking not found",
+      });
+    }
+
+    if (
+      booking.rentalId.rentalOwnerId.toString() !==
+      req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        message: "Forbidden",
+      });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (end <= start) {
+      return res.status(400).json({
+        message: "Invalid dates",
+      });
+    }
+
+    const conflict = await Booking.findOne({
+      rentalId: booking.rentalId._id,
+      status: "confirmed",
+      _id: { $ne: booking._id },
+      startDate: { $lt: end },
+      endDate: { $gt: start },
+    });
+
+    if (conflict) {
+      return res.status(400).json({
+        message: "Dates conflict with another booking",
+      });
+    }
+
+    booking.startDate = start;
+    booking.endDate = end;
 
     await booking.save();
 

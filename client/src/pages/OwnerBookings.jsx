@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   getOwnerBookings,
   updateBookingStatus,
+  updateBookingDates,
 } from "../api/booking";
 import SellerLayout from "../components/seller/SellerLayout";
 import "../styles/ownerCalendar.css";
@@ -128,36 +129,58 @@ export default function OwnerBookings() {
     };
   };
 
-  /* Drag booking */
-  const moveEvent = ({ event, start, end }) => {
+  /* Drag booking → update DB */
+  const moveEvent = async ({ event, start, end }) => {
 
-    const updated = events.map((e) =>
-      e.id === event.id
-        ? { ...e, start, end }
-        : e
-    );
+    try {
 
-    setEvents(updated);
+      await updateBookingDates(event.id, {
+        startDate: start,
+        endDate: end
+      });
 
-    alert(
-      "Booking moved locally. Backend update can be added later."
-    );
+      setEvents((prev) =>
+        prev.map((e) =>
+          e.id === event.id ? { ...e, start, end } : e
+        )
+      );
+
+    } catch (err) {
+
+      alert(
+        err?.response?.data?.message ||
+        "Failed to update booking dates"
+      );
+
+      loadBookings();
+    }
   };
 
-  /* Resize booking */
-  const resizeEvent = ({ event, start, end }) => {
+  /* Resize booking → update DB */
+  const resizeEvent = async ({ event, start, end }) => {
 
-    const updated = events.map((e) =>
-      e.id === event.id
-        ? { ...e, start, end }
-        : e
-    );
+    try {
 
-    setEvents(updated);
+      await updateBookingDates(event.id, {
+        startDate: start,
+        endDate: end
+      });
 
-    alert(
-      "Booking duration changed locally."
-    );
+      setEvents((prev) =>
+        prev.map((e) =>
+          e.id === event.id ? { ...e, start, end } : e
+        )
+      );
+
+    } catch (err) {
+
+      alert(
+        err?.response?.data?.message ||
+        "Failed to update booking duration"
+      );
+
+      loadBookings();
+    }
   };
 
   if (loading)
