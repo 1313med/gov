@@ -20,8 +20,7 @@ import MyRentals from "./pages/MyRentals";
 import MyBookings from "./pages/MyBookings";
 import OwnerBookings from "./pages/OwnerBookings";
 import AddRental from "./pages/AddRental";
-
-
+import OwnerAnalytics from "./pages/OwnerAnalytics"; // ✅ NEW
 
 
 export default function App() {
@@ -39,41 +38,52 @@ export default function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/seller/:id" element={<SellerProfile />} />
         <Route path="/rentals/:id" element={<RentalDetails />} />
+
         <Route
-  path="/my-rentals"
-  element={
-    <ProtectedRoute roles={["rental_owner"]}>
-      <MyRentals />
-    </ProtectedRoute>
-  }
-/>
-<Route
-  path="/my-bookings"
-  element={
-    <ProtectedRoute roles={["customer"]}>
-      <MyBookings />
-    </ProtectedRoute>
-  }
-/>
+          path="/my-rentals"
+          element={
+            <ProtectedRoute roles={["rental_owner"]}>
+              <MyRentals />
+            </ProtectedRoute>
+          }
+        />
 
-<Route
-  path="/owner-bookings"
-  element={
-    <ProtectedRoute roles={["rental_owner"]}>
-      <OwnerBookings />
-    </ProtectedRoute>
-  }
-/>
-<Route
-  path="/add-rental"
-  element={
-    <ProtectedRoute roles={["rental_owner"]}>
-      <AddRental />
-    </ProtectedRoute>
-  }
-/>
+        <Route
+          path="/my-bookings"
+          element={
+            <ProtectedRoute roles={["customer"]}>
+              <MyBookings />
+            </ProtectedRoute>
+          }
+        />
 
+        <Route
+          path="/owner-bookings"
+          element={
+            <ProtectedRoute roles={["rental_owner"]}>
+              <OwnerBookings />
+            </ProtectedRoute>
+          }
+        />
 
+        <Route
+          path="/add-rental"
+          element={
+            <ProtectedRoute roles={["rental_owner"]}>
+              <AddRental />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ✅ NEW ANALYTICS PAGE */}
+        <Route
+          path="/owner/analytics"
+          element={
+            <ProtectedRoute roles={["rental_owner"]}>
+              <OwnerAnalytics />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Seller Dashboard */}
         <Route

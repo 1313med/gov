@@ -25,6 +25,13 @@ app.use("/api/user", require("./routes/userRoutes"));
 app.use("/api/notifications", require("./routes/notificationRoutes"));
 app.use("/api/bookings", require("./routes/bookingRoutes"));
 
+/*
+|--------------------------------------------------------------------------
+| ANALYTICS ROUTES
+|--------------------------------------------------------------------------
+*/
+app.use("/api/analytics", require("./routes/analyticsRoutes"));
+
 // ERROR HANDLING
 app.use(notFound);
 app.use(errorHandler);
