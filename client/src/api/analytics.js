@@ -6,7 +6,12 @@ import { api } from "./axios";
 |--------------------------------------------------------------------------
 */
 
-export const getOwnerAnalytics = async () => {
-  const { data } = await api.get("/analytics/owner");
+export const getOwnerAnalytics = async (period = "30d") => {
+
+  const { data } = await api.get("/analytics/owner", {
+    params: { period }
+  });
+
   return data;
+
 };

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import SellerLayout from "../components/seller/SellerLayout";
 import { api } from "../api/axios";
+import OwnerLayout from "../components/owner/OwnerLayout"; // ✅ ADDED
 
 export default function MyRentals() {
   const [bookings, setBookings] = useState([]);
@@ -22,7 +22,7 @@ export default function MyRentals() {
   }, []);
 
   return (
-    <SellerLayout>
+    <OwnerLayout>
       <div className="mb-8">
         <h1 className="text-3xl font-extrabold">My Rental Bookings</h1>
         <p className="text-gray-600 mt-1">
@@ -88,6 +88,6 @@ export default function MyRentals() {
           ))}
         </div>
       )}
-    </SellerLayout>
+    </OwnerLayout> 
   );
 }

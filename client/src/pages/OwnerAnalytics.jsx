@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { getOwnerAnalytics } from "../api/analytics";
 import OwnerBookingCalendar from "../components/analytics/OwnerBookingCalendar";
+import TimeFilter from "../components/analytics/TimeFilter";
+import BookingStatusChart from "../components/analytics/BookingStatusChart";
+import RevenuePerCarChart from "../components/analytics/RevenuePerCarChart";
+import DemandHeatmap from "../components/analytics/DemandHeatmap";
+import OwnerLayout from "../components/owner/OwnerLayout"; // ✅ ADDED
 
 import {
   LineChart,
@@ -10,8 +15,6 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar,
   AreaChart,
   Area,
   RadialBarChart,
@@ -30,12 +33,15 @@ export default function OwnerAnalytics() {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // NEW: time filter
+  const [period, setPeriod] = useState("30d");
+
   useEffect(() => {
 
     const fetchAnalytics = async () => {
       try {
 
-        const data = await getOwnerAnalytics();
+        const data = await getOwnerAnalytics(period);
         setAnalytics(data);
 
       } catch (error) {
@@ -47,21 +53,25 @@ export default function OwnerAnalytics() {
 
     fetchAnalytics();
 
-  }, []);
+  }, [period]);
 
   if (loading) {
     return (
-      <div className="p-10 text-center text-gray-500">
-        Loading analytics...
-      </div>
+      <OwnerLayout>
+        <div className="p-10 text-center text-gray-500">
+          Loading analytics...
+        </div>
+      </OwnerLayout>
     );
   }
 
   if (!analytics) {
     return (
-      <div className="p-10 text-center text-gray-500">
-        No analytics data
-      </div>
+      <OwnerLayout>
+        <div className="p-10 text-center text-gray-500">
+          No analytics data
+        </div>
+      </OwnerLayout>
     );
   }
 
@@ -71,7 +81,21 @@ export default function OwnerAnalytics() {
 
   return (
 
+<OwnerLayout> {/* ✅ SIDEBAR WRAPPER ADDED */}
+
     <div className="p-8 min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 space-y-10">
+
+      {/* HEADER + TIME FILTER */}
+      <div className="flex items-center justify-between">
+
+        <h1 className="text-2xl font-bold text-gray-800">
+          Owner Analytics
+        </h1>
+
+        <TimeFilter period={period} setPeriod={setPeriod} />
+
+      </div>
+
 
       {/* KPI CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -152,6 +176,8 @@ export default function OwnerAnalytics() {
         </div>
 
       </div>
+
+
       {/* CALENDAR */}
       <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100">
 
@@ -170,9 +196,36 @@ export default function OwnerAnalytics() {
         {/* REVENUE */}
         <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 col-span-2">
 
-          <h2 className="text-lg font-semibold mb-4">
-            Monthly Revenue
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+
+            <div>
+
+              <h2 className="text-lg font-semibold">
+                Revenue
+              </h2>
+
+              <p className="text-2xl font-bold text-indigo-600">
+                ${analytics.totalRevenue?.toLocaleString()}
+              </p>
+
+            </div>
+
+            <div
+              className={`text-sm font-semibold px-3 py-1 rounded-full
+              ${
+                analytics.revenueGrowth >= 0
+                  ? "bg-emerald-100 text-emerald-600"
+                  : "bg-red-100 text-red-600"
+              }`}
+            >
+
+              {analytics.revenueGrowth >= 0 ? "+" : ""}
+              {analytics.revenueGrowth}% vs previous
+
+            </div>
+
+          </div>
+
 
           <ResponsiveContainer width="100%" height={300}>
 
@@ -282,7 +335,31 @@ export default function OwnerAnalytics() {
       </div>
 
 
-      
+      {/* REVENUE PER CAR */}
+      <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100">
+
+        <h2 className="text-lg font-semibold mb-4">
+          Revenue per Car
+        </h2>
+
+        <RevenuePerCarChart
+          data={analytics.fleetPerformance || []}
+        />
+
+      </div>
+
+
+      {/* BOOKING STATUS */}
+      <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100">
+
+        <h2 className="text-lg font-semibold mb-4">
+          Booking Status
+        </h2>
+
+        <BookingStatusChart data={analytics.bookingStatusData || []} />
+
+      </div>
+
 
 
       {/* DATA SECTION */}
@@ -298,6 +375,7 @@ export default function OwnerAnalytics() {
           <div className="space-y-3">
 
             {analytics.upcomingRentals?.map((booking)=>(
+
               <div
                 key={booking._id}
                 className="p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition"
@@ -316,6 +394,7 @@ export default function OwnerAnalytics() {
                 </p>
 
               </div>
+
             ))}
 
           </div>
@@ -344,6 +423,7 @@ export default function OwnerAnalytics() {
             <tbody className="divide-y">
 
               {analytics.fleetPerformance?.map((car,i)=>(
+
                 <tr key={i} className="hover:bg-gray-50">
 
                   <td className="py-3 font-semibold">
@@ -363,6 +443,7 @@ export default function OwnerAnalytics() {
                   </td>
 
                 </tr>
+
               ))}
 
             </tbody>
@@ -374,35 +455,22 @@ export default function OwnerAnalytics() {
       </div>
 
 
-  {/* HEATMAP */}
-<div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100">
+      {/* DEMAND HEATMAP */}
+      <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100">
 
-  <h2 className="text-lg font-semibold mb-6">
-    Demand Heatmap
-  </h2>
+        <h2 className="text-lg font-semibold mb-6">
+          Demand Heatmap
+        </h2>
 
-  <div className="grid grid-cols-7 gap-3">
+        <DemandHeatmap
+          data={analytics.demandHeatmap || []}
+        />
 
-    {analytics.demandHeatmap?.map((d, i) => {
-      let color = "bg-gray-200";
+      </div>
 
-      if (d.demand >= 5) color = "bg-emerald-500";
-      else if (d.demand >= 3) color = "bg-emerald-400";
-      else if (d.demand >= 1) color = "bg-emerald-300";
+    </div>
 
-      return (
-        <div
-          key={i}
-          className={`${color} text-white rounded-xl h-14 flex items-center justify-center font-semibold`}
-        >
-          {d.day} {d.demand}
-        </div>
-      );
-    })}
+</OwnerLayout>  /* ✅ SIDEBAR END */
 
-  </div>
-
-</div>
-</div>
   );
 }

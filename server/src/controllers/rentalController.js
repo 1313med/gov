@@ -198,24 +198,31 @@ exports.updateBookingStatus = async (req, res, next) => {
 // =======================
 exports.getOwnerBookings = async (req, res, next) => {
   try {
+
     const rentals = await RentalListing.find({
-      rentalOwnerId: req.user._id,
+      rentalOwnerId: req.user._id
     }).select("_id");
 
-    const rentalIds = rentals.map((r) => r._id);
+    const rentalIds = rentals.map(r => r._id);
 
     const bookings = await Booking.find({
-      rentalId: { $in: rentalIds },
+      rentalId: { $in: rentalIds }
     })
       .populate("rentalId", "title pricePerDay city")
-      .populate("customerId", "name phone")
-      .sort({ createdAt: -1 });
+      .populate("customerId", "name email")
+      .sort({ startDate: -1 });
 
     res.json(bookings);
+
   } catch (error) {
-    next(error);
-  }
+  console.error("GET OWNER BOOKINGS ERROR:");
+  console.error(error);
+  res.status(500).json({ error: error.message });
+}
+
+  
 };
+
 
 // =======================
 // Admin

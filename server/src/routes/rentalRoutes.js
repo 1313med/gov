@@ -14,20 +14,24 @@ const {
 
 const { protect, role } = require("../middlewares/authMiddleware");
 
-// Public
+// PUBLIC
 router.get("/", getRentals);
-router.get("/:id", getRentalById);
-router.get("/:id/bookings", getBookingsForRental);
 
-// Booking (customer)
-router.post("/:id/book", protect, role("customer"), createBooking);
-
-// Rental owner
-router.post("/", protect, role("rental_owner"), createRental);
+// OWNER ROUTES (must come before :id)
 router.get("/owner/bookings", protect, role("rental_owner"), getOwnerBookings);
 
-// Admin
+// ADMIN
 router.get("/admin", protect, role("admin"), getAdminRentals);
 router.put("/admin/:id/status", protect, role("admin"), updateRentalStatus);
+
+// BOOKING
+router.post("/:id/book", protect, role("customer"), createBooking);
+
+// RENTAL DETAILS
+router.get("/:id/bookings", getBookingsForRental);
+router.get("/:id", getRentalById);
+
+// CREATE RENTAL
+router.post("/", protect, role("rental_owner"), createRental);
 
 module.exports = router;

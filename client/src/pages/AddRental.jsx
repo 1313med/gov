@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/axios";
-import SellerLayout from "../components/seller/SellerLayout";
+import OwnerLayout from "../components/owner/OwnerLayout"; // ✅ ADDED
 
 export default function AddRental() {
   const navigate = useNavigate();
@@ -75,7 +75,7 @@ export default function AddRental() {
   };
 
   return (
-    <SellerLayout>
+    <OwnerLayout> 
       <h1 className="text-3xl font-bold mb-6">
         Add Rental Car
       </h1>
@@ -137,7 +137,7 @@ export default function AddRental() {
           {loading ? "Submitting..." : "Submit Rental"}
         </button>
       </form>
-    </SellerLayout>
+   </OwnerLayout> 
   );
 }
 
