@@ -152,6 +152,16 @@ export default function OwnerAnalytics() {
         </div>
 
       </div>
+      {/* CALENDAR */}
+      <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100">
+
+        <h2 className="text-lg font-semibold mb-4">
+          Booking Calendar
+        </h2>
+
+        <OwnerBookingCalendar/>
+
+      </div>
 
 
       {/* CHARTS */}
@@ -272,16 +282,7 @@ export default function OwnerAnalytics() {
       </div>
 
 
-      {/* CALENDAR */}
-      <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100">
-
-        <h2 className="text-lg font-semibold mb-4">
-          Booking Calendar
-        </h2>
-
-        <OwnerBookingCalendar/>
-
-      </div>
+      
 
 
       {/* DATA SECTION */}

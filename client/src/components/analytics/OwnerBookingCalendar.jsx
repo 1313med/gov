@@ -23,9 +23,7 @@ import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 
 const DragCalendar = withDragAndDrop(Calendar);
 
-const locales = {
-  "en-US": enUS,
-};
+const locales = { "en-US": enUS };
 
 const localizer = dateFnsLocalizer({
   format,
@@ -37,22 +35,30 @@ const localizer = dateFnsLocalizer({
 
 export default function OwnerBookingCalendar() {
 
-  const [bookings, setBookings] = useState([]);
   const [events, setEvents] = useState([]);
   const [selectedBooking, setSelectedBooking] = useState(null);
-
   const [date, setDate] = useState(new Date());
   const [view, setView] = useState("month");
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
+
     loadBookings();
+
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
+
   }, []);
 
   const loadBookings = async () => {
 
     const res = await getOwnerBookings();
-
-    setBookings(res.data);
 
     const calendarEvents = res.data.map((b) => ({
       id: b._id,
@@ -74,44 +80,6 @@ export default function OwnerBookingCalendar() {
     setSelectedBooking(null);
 
     loadBookings();
-  };
-
-  const getCarColor = (car) => {
-
-    const colors = [
-      "#60a5fa",
-      "#34d399",
-      "#c084fc",
-      "#fb923c",
-      "#f87171",
-      "#22d3ee",
-    ];
-
-    let hash = 0;
-
-    for (let i = 0; i < car.length; i++) {
-      hash = car.charCodeAt(i) + ((hash << 5) - hash);
-    }
-
-    const index = Math.abs(hash % colors.length);
-
-    return colors[index];
-  };
-
-  const eventStyleGetter = (event) => {
-
-    const backgroundColor = getCarColor(event.car);
-
-    return {
-      style: {
-        backgroundColor,
-        borderRadius: "10px",
-        border: "none",
-        color: "white",
-        padding: "5px 8px",
-        fontWeight: "500",
-      },
-    };
   };
 
   const moveEvent = async ({ event, start, end }) => {
@@ -142,41 +110,283 @@ export default function OwnerBookingCalendar() {
     );
   };
 
-  return (
-    <div className="bg-white rounded-3xl shadow-lg p-8 mb-10 h-[680px] border border-gray-100">
+  const getCarColor = (car) => {
 
-      <DragCalendar
-        localizer={localizer}
-        events={events}
-        startAccessor="start"
-        endAccessor="end"
-        date={date}
-        view={view}
-        onNavigate={(newDate) => setDate(newDate)}
-        onView={(newView) => setView(newView)}
-        views={["month", "week", "day", "agenda"]}
-        style={{ height: "100%" }}
-        eventPropGetter={eventStyleGetter}
-        onSelectEvent={(event) => setSelectedBooking(event.booking)}
-        onEventDrop={moveEvent}
-        onEventResize={resizeEvent}
-        resizable
-      />
+    const colors = [
+      "#6366f1",
+      "#10b981",
+      "#f59e0b",
+      "#ef4444",
+      "#06b6d4",
+      "#8b5cf6",
+    ];
+
+    let hash = 0;
+
+    for (let i = 0; i < car.length; i++) {
+      hash = car.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    const index = Math.abs(hash % colors.length);
+
+    return colors[index];
+  };
+
+  const eventStyleGetter = (event) => {
+
+    const color = getCarColor(event.car);
+
+    return {
+      style: {
+        background: color,
+        borderRadius: "10px",
+        border: "none",
+        color: "white",
+        padding: "6px 10px",
+        fontWeight: "500",
+        fontSize: "13px",
+      }
+    };
+  };
+
+  const CustomToolbar = ({ label, onNavigate, onView }) => (
+
+    <div className="flex items-center justify-between mb-4">
+
+      <div className="flex items-center gap-2">
+
+        <button
+          onClick={() => onNavigate("PREV")}
+          className="px-3 py-1 border rounded-lg hover:bg-gray-100"
+        >
+          ←
+        </button>
+
+        <button
+          onClick={() => onNavigate("TODAY")}
+          className="px-3 py-1 border rounded-lg hover:bg-gray-100"
+        >
+          Today
+        </button>
+
+        <button
+          onClick={() => onNavigate("NEXT")}
+          className="px-3 py-1 border rounded-lg hover:bg-gray-100"
+        >
+          →
+        </button>
+
+      </div>
+
+      <h2 className="text-lg font-semibold">{label}</h2>
+
+      <div className="flex gap-2">
+
+        {["month","week","day","agenda"].map((v)=>(
+          <button
+            key={v}
+            onClick={()=>onView(v)}
+            className="px-3 py-1 border rounded-lg hover:bg-gray-100"
+          >
+            {v}
+          </button>
+        ))}
+
+      </div>
+
+    </div>
+
+  );
+
+  return (
+
+    <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6">
+
+      <div className="flex items-center justify-between mb-4">
+
+        <h2 className="text-lg font-semibold">
+          Booking Calendar
+        </h2>
+
+        <span className="text-sm text-gray-400">
+          Drag bookings to reschedule
+        </span>
+
+      </div>
+
+      {/* Desktop Calendar */}
+
+      {!isMobile && (
+
+        <div className="h-[620px]">
+
+          <DragCalendar
+            localizer={localizer}
+            events={events}
+            startAccessor="start"
+            endAccessor="end"
+            date={date}
+            view={view}
+            onNavigate={(newDate) => setDate(newDate)}
+            onView={(newView) => setView(newView)}
+            views={["month", "week", "day", "agenda"]}
+            style={{ height: "100%" }}
+            eventPropGetter={eventStyleGetter}
+            onSelectEvent={(event) => setSelectedBooking(event.booking)}
+            onEventDrop={moveEvent}
+            onEventResize={resizeEvent}
+            resizable
+            components={{ toolbar: CustomToolbar }}
+          />
+
+        </div>
+
+      )}
+
+      {/* MOBILE AIRBNB STYLE CALENDAR */}
+
+      {isMobile && (
+
+        <div>
+
+          {/* WEEK SELECTOR */}
+
+          <div className="flex overflow-x-auto gap-2 pb-4 mb-4">
+
+            {Array.from({ length: 7 }).map((_,i)=>{
+
+              const d = new Date(date);
+              d.setDate(date.getDate() - date.getDay() + i);
+
+              const isSelected =
+                d.toDateString() === date.toDateString();
+
+              return(
+
+                <button
+                  key={i}
+                  onClick={()=>setDate(d)}
+                  className={`flex flex-col items-center min-w-[60px] py-2 rounded-xl border transition
+                  ${isSelected
+                    ? "bg-indigo-600 text-white border-indigo-600"
+                    : "bg-white border-gray-200"
+                  }`}
+                >
+
+                  <span className="text-xs">
+                    {d.toLocaleDateString("en",{weekday:"short"})}
+                  </span>
+
+                  <span className="text-sm font-semibold">
+                    {d.getDate()}
+                  </span>
+
+                </button>
+
+              );
+
+            })}
+
+          </div>
+
+
+          {/* BOOKINGS OF SELECTED DAY */}
+
+          <div className="space-y-3">
+
+            {events
+            .filter(event => {
+
+              const dayStart = new Date(date);
+              dayStart.setHours(0,0,0,0);
+
+              const dayEnd = new Date(date);
+              dayEnd.setHours(23,59,59,999);
+
+              return (
+                event.start <= dayEnd &&
+                event.end >= dayStart
+              );
+
+            })
+            .map(event => (
+
+              <div
+                key={event.id}
+                onClick={()=>setSelectedBooking(event.booking)}
+                className="bg-white border rounded-xl p-4 shadow-sm"
+              >
+
+                <div className="flex justify-between items-center">
+
+                  <h3 className="font-semibold">
+                    {event.title}
+                  </h3>
+
+                  <span
+                    className="text-xs px-2 py-1 rounded-full"
+                    style={{
+                      background:getCarColor(event.car),
+                      color:"white"
+                    }}
+                  >
+                    booked
+                  </span>
+
+                </div>
+
+                <p className="text-sm text-gray-500 mt-1">
+
+                  {new Date(event.start).toLocaleDateString()}
+                  {" → "}
+                  {new Date(event.end).toLocaleDateString()}
+
+                </p>
+
+              </div>
+
+            ))}
+
+            {events.filter(event => {
+
+              const dayStart = new Date(date);
+              dayStart.setHours(0,0,0,0);
+
+              const dayEnd = new Date(date);
+              dayEnd.setHours(23,59,59,999);
+
+              return (
+                event.start <= dayEnd &&
+                event.end >= dayStart
+              );
+
+            }).length === 0 && (
+
+              <div className="text-center text-gray-400 py-10">
+                No bookings this day
+              </div>
+
+            )}
+
+          </div>
+
+        </div>
+
+      )}
+
+      {/* MODAL */}
 
       {selectedBooking && (
 
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
 
-          <div className="bg-white rounded-2xl shadow-xl p-8 w-[400px]">
+          <div className="bg-white rounded-2xl shadow-xl p-8 w-[420px]">
 
-            <h2 className="text-xl font-bold mb-4">
+            <h2 className="text-lg font-semibold mb-4">
               Booking Details
             </h2>
 
-            <p>
-              <strong>Car:</strong>{" "}
-              {selectedBooking.rentalId?.title}
-            </p>
+            <p><strong>Car:</strong> {selectedBooking.rentalId?.title}</p>
 
             <p>
               <strong>Dates:</strong>{" "}
@@ -203,7 +413,7 @@ export default function OwnerBookingCalendar() {
                   onClick={() =>
                     updateStatus(selectedBooking._id, "confirmed")
                   }
-                  className="flex-1 bg-green-600 text-white py-2 rounded-xl"
+                  className="flex-1 bg-emerald-600 text-white py-2 rounded-lg"
                 >
                   Accept
                 </button>
@@ -212,12 +422,13 @@ export default function OwnerBookingCalendar() {
                   onClick={() =>
                     updateStatus(selectedBooking._id, "rejected")
                   }
-                  className="flex-1 bg-red-600 text-white py-2 rounded-xl"
+                  className="flex-1 bg-red-500 text-white py-2 rounded-lg"
                 >
                   Reject
                 </button>
 
               </div>
+
             )}
 
             <button
@@ -234,5 +445,7 @@ export default function OwnerBookingCalendar() {
       )}
 
     </div>
+
   );
+
 }

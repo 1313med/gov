@@ -96,3 +96,55 @@
   color: #2563eb;
   font-weight: 500;
 }
+
+/* Calendar container */
+.rbc-calendar {
+  font-family: Inter, sans-serif;
+}
+
+/* Toolbar */
+.rbc-toolbar {
+  margin-bottom: 20px;
+}
+
+.rbc-toolbar button {
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  padding: 6px 14px;
+  background: white;
+  font-size: 14px;
+}
+
+.rbc-toolbar button:hover {
+  background: #f3f4f6;
+}
+
+/* Today highlight */
+.rbc-today {
+  background: #eef2ff;
+}
+
+/* Day cells */
+.rbc-day-bg:hover {
+  background: #f9fafb;
+}
+
+/* Event style */
+.rbc-event {
+  border-radius: 10px !important;
+  padding: 6px 8px !important;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+/* Event hover */
+.rbc-event:hover {
+  transform: scale(1.02);
+}
+
+/* Calendar grid lines */
+.rbc-month-view,
+.rbc-time-view {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
