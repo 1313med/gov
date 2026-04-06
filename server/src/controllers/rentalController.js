@@ -229,7 +229,9 @@ exports.getOwnerBookings = async (req, res, next) => {
 // =======================
 exports.getAdminRentals = async (req, res, next) => {
   try {
-    const rentals = await RentalListing.find();
+    const rentals = await RentalListing.find()
+      .populate("rentalOwnerId", "name email")
+      .sort({ createdAt: -1 });
     res.json(rentals);
   } catch (error) {
     next(error);
@@ -238,11 +240,28 @@ exports.getAdminRentals = async (req, res, next) => {
 
 exports.updateRentalStatus = async (req, res, next) => {
   try {
+    const { status } = req.body;
+    if (!["approved", "rejected"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
     const rental = await RentalListing.findById(req.params.id);
     if (!rental) return res.status(404).json({ message: "Not found" });
 
-    rental.status = req.body.status;
+    const previousStatus = rental.status;
+    rental.status = status;
     await rental.save();
+
+    if (previousStatus !== status) {
+      await Notification.create({
+        user: rental.rentalOwnerId,
+        message:
+          status === "approved"
+            ? `Your rental listing "${rental.title}" has been approved and is now live.`
+            : `Your rental listing "${rental.title}" was rejected by the admin.`,
+        type: status,
+      });
+    }
 
     res.json(rental);
   } catch (error) {

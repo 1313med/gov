@@ -14,6 +14,7 @@ import Dashboard from "./pages/Dashboard";
 import Notifications from "./pages/Notifications";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminSales from "./pages/admin/AdminSales";
+import AdminRentals from "./pages/admin/AdminRentals";
 import SellerProfile from "./pages/SellerProfile";
 import RentalDetails from "./pages/RentalDetails";
 import MyRentals from "./pages/MyRentals";
@@ -146,6 +147,15 @@ export default function App() {
           element={
             <ProtectedRoute roles={["admin"]}>
               <AdminSales />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/rentals"
+          element={
+            <ProtectedRoute roles={["admin"]}>
+              <AdminRentals />
             </ProtectedRoute>
           }
         />

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { loadAuth, clearAuth } from "../utils/authStorage";
 import { useState, useEffect, useRef } from "react";
+import { useAppLang } from "../context/AppLangContext";
 
 /* ──────────────────────────────────────────────
    Scroll reveal — IntersectionObserver, no lib
@@ -19,6 +20,41 @@ function useReveal(threshold = 0.1) {
     return () => obs.disconnect();
   }, []);
   return ref;
+}
+
+function useCountUp(target = 100, duration = 1200, threshold = 0.2) {
+  const ref = useRef(null);
+  const [value, setValue] = useState(0);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    let raf = 0;
+    let started = false;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting || started) return;
+        started = true;
+        const start = performance.now();
+        const step = (now) => {
+          const progress = Math.min((now - start) / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          setValue(Math.floor(target * eased));
+          if (progress < 1) raf = requestAnimationFrame(step);
+        };
+        raf = requestAnimationFrame(step);
+        obs.disconnect();
+      },
+      { threshold }
+    );
+    obs.observe(el);
+    return () => {
+      cancelAnimationFrame(raf);
+      obs.disconnect();
+    };
+  }, [target, duration, threshold]);
+
+  return [ref, value];
 }
 
 /* Sub-components that need their own reveal hook */
@@ -45,61 +81,149 @@ function StatItem({ n, sup, label, delay = "0s" }) {
   );
 }
 
-const ACTS = {
-  "/rentals":        { icon: "🚗", label: "Rent a Car" },
-  "/my-bookings":    { icon: "📅", label: "My Bookings" },
-  "/cars":           { icon: "🔍", label: "Buy a Car" },
-  "/owner-bookings": { icon: "📋", label: "Rental Bookings" },
-  "/add-rental":     { icon: "➕", label: "Add Rental Car" },
-  "/my-sales":       { icon: "💰", label: "My Sales" },
-  "/my-sales/new":   { icon: "🚀", label: "Add Car for Sale" },
-  "/admin":          { icon: "⚙️", label: "Admin Dashboard" },
+function CounterItem({ to, suffix = "", label, delay = "0s" }) {
+  const [ref, value] = useCountUp(to, 1300, 0.22);
+  return (
+    <div ref={ref} className="hx-stat rv rv-u vis" style={{ transitionDelay: delay }}>
+      <div className="hx-stat-n">{value}<em>{suffix}</em></div>
+      <div className="hx-stat-l">{label}</div>
+      <div className="hx-stat-line" />
+    </div>
+  );
+}
+
+function FeaturedCard({ item, delay = "0s" }) {
+  const ref = useReveal(0.08);
+  const { copy } = useAppLang();
+  return (
+    <article ref={ref} className="hx-fc rv rv-u" style={{ transitionDelay: delay }}>
+      <img src={item.img} alt={item.name} className="hx-fc-img" loading="lazy" decoding="async" />
+      <div className="hx-fc-top">
+        <span className="hx-fc-badge">{item.badge}</span>
+        <span className="hx-fc-loc">{item.city}</span>
+      </div>
+      <div className="hx-fc-body">
+        <h3>{item.name}</h3>
+        <p>{item.price}</p>
+        <Link to="/cars" className="hx-fc-btn">{copy.home.featured.viewDetails}</Link>
+      </div>
+    </article>
+  );
+}
+
+function BenefitItem({ icon, title, desc, delay = "0s" }) {
+  const ref = useReveal(0.08);
+  return (
+    <div ref={ref} className="hx-ben rv rv-u" style={{ transitionDelay: delay }}>
+      <div className="hx-ben-ico">{icon}</div>
+      <h4>{title}</h4>
+      <p>{desc}</p>
+    </div>
+  );
+}
+
+function TestimonialCard({ item, delay = "0s" }) {
+  const ref = useReveal(0.08);
+  return (
+    <article ref={ref} className="hx-tm rv rv-u" style={{ transitionDelay: delay }}>
+      <div className="hx-tm-stars">★★★★★</div>
+      <p className="hx-tm-txt">"{item.text}"</p>
+      <div className="hx-tm-ft">
+        <strong>{item.name}</strong>
+        <span>{item.role}</span>
+      </div>
+    </article>
+  );
+}
+
+const ICON = {
+  car: (
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 13.5h15l-1.2-4.1a2 2 0 0 0-1.9-1.4H7.6a2 2 0 0 0-1.9 1.4L4.5 13.5Zm0 0v3a1 1 0 0 0 1 1H7m-2.5-4h15M17 17.5h1.5a1 1 0 0 0 1-1v-3M8 17.5h8M7.5 13.5a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6Zm9 0a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6Z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  ),
+  calendar: (
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5V6M17 3.5V6M4.5 9h15M6 5h12a1.5 1.5 0 0 1 1.5 1.5v11A1.5 1.5 0 0 1 18 19H6a1.5 1.5 0 0 1-1.5-1.5v-11A1.5 1.5 0 0 1 6 5Z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+  ),
+  search: (
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.6"/><path d="m16 16 4 4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+  ),
+  clipboard: (
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4.5h6m-5-2h4a1 1 0 0 1 1 1v1h2.5A1.5 1.5 0 0 1 19 6v13.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19.5V6a1.5 1.5 0 0 1 1.5-1.5H9v-1a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  ),
+  plus: (
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+  ),
+  chart: (
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 19.5h15M7 16V9m5 7V6m5 10v-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+  ),
+  rocket: (
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4.5c2.2 1 4.1 2.9 5 5L14 15l-5-5 5.5-5.5ZM9 10l-3 1-1 3 3-1m6 6-1 3 3-1 1-3" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  ),
+  shield: (
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 5.5 6v5.6c0 4.2 2.7 7.7 6.5 9 3.8-1.3 6.5-4.8 6.5-9V6L12 3.5Z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><path d="m9.2 12.2 2 2 3.7-4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  ),
+  card: (
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="2.2" fill="none" stroke="currentColor" strokeWidth="1.6"/><path d="M3.5 10h17" fill="none" stroke="currentColor" strokeWidth="1.6"/></svg>
+  ),
+  support: (
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 13.5v-2a5.5 5.5 0 1 1 11 0v2" fill="none" stroke="currentColor" strokeWidth="1.6"/><rect x="4.5" y="12.5" width="3" height="5" rx="1" fill="none" stroke="currentColor" strokeWidth="1.6"/><rect x="16.5" y="12.5" width="3" height="5" rx="1" fill="none" stroke="currentColor" strokeWidth="1.6"/><path d="M9 19h6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+  ),
+  pin: (
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s6-5.3 6-10a6 6 0 1 0-12 0c0 4.7 6 10 6 10Z" fill="none" stroke="currentColor" strokeWidth="1.6"/><circle cx="12" cy="11" r="2" fill="none" stroke="currentColor" strokeWidth="1.6"/></svg>
+  ),
 };
+
+const ACTION_ICONS = {
+  "/rentals": ICON.car,
+  "/my-bookings": ICON.calendar,
+  "/cars": ICON.search,
+  "/owner-bookings": ICON.clipboard,
+  "/add-rental": ICON.plus,
+  "/my-sales": ICON.chart,
+  "/my-sales/new": ICON.rocket,
+  "/admin": ICON.shield,
+};
+
 function ActionCard({ to, isAdmin }) {
-  const { icon, label } = ACTS[to] || { icon: "→", label: to };
+  const { copy } = useAppLang();
+  const icon = ACTION_ICONS[to] || "→";
+  const label = copy.home.actions[to] || to;
   return (
     <Link to={to} className={`hx-act${isAdmin ? " hx-act-admin" : ""}`}>
       <div className="hx-act-ico">{icon}</div>
       <span className="hx-act-lbl">{label}</span>
-      <span className="hx-act-arr">Open →</span>
+      <span className="hx-act-arr">{copy.home.actions.open}</span>
     </Link>
   );
 }
-
-const STRIP = [
-  "Verified Listings","Secure Payments","Premium Fleet",
-  "Instant Booking","Trusted Sellers","Zero Hidden Fees",
-  "Elite Service","Admin Moderated",
-];
 
 /* ──────────────────────────────────────────────
    CSS
 ────────────────────────────────────────────── */
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;0,700;1,300;1,600;1,700&family=Space+Grotesk:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 img{display:block;max-width:100%;}a{text-decoration:none;}
 
 /* ════ TOKENS — Light ════ */
 .hx {
-  --bg:       #f8f6f1;
-  --bg2:      #efede6;
+  --bg:       #f6f8ff;
+  --bg2:      #eef2ff;
   --sur:      #ffffff;
-  --sur2:     #f3f0e9;
-  --bdr:      rgba(0,0,0,0.08);
-  --bdr2:     rgba(0,0,0,0.13);
-  --ink:      #0e0d0a;
-  --ink2:     #2a2925;
-  --mut:      #7a7870;
-  --fnt:      #b8b5ac;
-  --gold:     #b8912a;
-  --gold2:    #d4af50;
-  --gbg:      rgba(184,145,42,0.08);
-  --gbd:      rgba(184,145,42,0.22);
-  --nav:      rgba(248,246,241,0.9);
-  --disp:     'Cormorant Garamond',Georgia,serif;
-  --body:     'Space Grotesk',system-ui,sans-serif;
+  --sur2:     #f1f4ff;
+  --bdr:      rgba(12, 26, 86, 0.09);
+  --bdr2:     rgba(12, 26, 86, 0.18);
+  --ink:      #0b163d;
+  --ink2:     #1b2f66;
+  --mut:      #53608f;
+  --fnt:      #b8c2df;
+  --gold:     #7c6bff;
+  --gold2:    #38bdf8;
+  --gbg:      rgba(124,107,255,0.10);
+  --gbd:      rgba(124,107,255,0.30);
+  --nav:      rgba(246,248,255,0.9);
+  --disp:     'Poppins',system-ui,sans-serif;
+  --body:     'Outfit',system-ui,sans-serif;
   --mono:     'DM Mono',monospace;
   min-height:100vh;
   background:var(--bg);
@@ -111,21 +235,21 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
 
 /* ════ TOKENS — Dark ════ */
 .hx.dark {
-  --bg:       #09090e;
-  --bg2:      #0d0d16;
-  --sur:      #111119;
-  --sur2:     #16161f;
+  --bg:       #05060f;
+  --bg2:      #080c1a;
+  --sur:      #101426;
+  --sur2:     #141b34;
   --bdr:      rgba(255,255,255,0.07);
   --bdr2:     rgba(255,255,255,0.12);
-  --ink:      #f0eff8;
-  --ink2:     #c8c7d4;
-  --mut:      #5a5968;
-  --fnt:      #383748;
-  --gold:     #d4a840;
-  --gold2:    #f0c868;
-  --gbg:      rgba(212,168,64,0.10);
-  --gbd:      rgba(212,168,64,0.25);
-  --nav:      rgba(9,9,14,0.92);
+  --ink:      #f5f7ff;
+  --ink2:     #c6d3ff;
+  --mut:      #8a95bf;
+  --fnt:      #404a70;
+  --gold:     #7c6bff;
+  --gold2:    #38bdf8;
+  --gbg:      rgba(124,107,255,0.16);
+  --gbd:      rgba(124,107,255,0.34);
+  --nav:      rgba(5,6,15,0.92);
 }
 
 /* ════ SCROLL REVEAL ════ */
@@ -166,6 +290,35 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
 .hx-nav-link:hover{color:var(--ink);}
 
 .hx-nav-end{display:flex;align-items:center;gap:10px;}
+
+.hx-lang {
+  display:inline-flex;
+  align-items:center;
+  border-radius:10px;
+  border:1px solid var(--bdr2);
+  overflow:hidden;
+  background:var(--sur);
+  flex-shrink:0;
+}
+.hx-lang button{
+  padding:7px 11px;
+  font-family:var(--mono);
+  font-size:10px;
+  font-weight:600;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  border:none;
+  background:transparent;
+  color:var(--mut);
+  cursor:pointer;
+  transition:background .2s,color .2s;
+}
+.hx-lang button:hover{color:var(--ink);}
+.hx-lang button.on{
+  background:var(--gbg);
+  color:var(--gold);
+  box-shadow:inset 0 0 0 1px var(--gbd);
+}
 
 .hx-theme {
   width:36px;height:36px;border-radius:10px;
@@ -228,50 +381,55 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
 
 /* ════ HERO ════ */
 .hx-hero {
-  position:relative;min-height:100vh;
-  display:flex;align-items:center;
-  padding-top:64px;overflow:hidden;
+  position:relative;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  padding:108px 64px 48px;
+  overflow:hidden;
+  background:
+    radial-gradient(65% 55% at 10% 5%, rgba(124,107,255,.18) 0%, transparent 70%),
+    radial-gradient(50% 45% at 90% 85%, rgba(56,189,248,.12) 0%, transparent 72%),
+    var(--bg);
+}
+.hx-hero-inner {
+  position:relative;z-index:2;
+  width:min(1280px,100%);
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:1.05fr .95fr;
+  gap:28px;
+  align-items:center;
+}
+.hx-hero-left{max-width:620px;}
+.hx-hero-right{
+  position:relative;
+  border-radius:24px;
+  overflow:hidden;
+  border:1px solid var(--bdr2);
+  min-height:520px;
+  box-shadow:0 32px 80px rgba(6,12,36,.28);
 }
 .hx-hero-img {
   position:absolute;inset:0;z-index:0;
-  width:100%;height:100%;object-fit:cover;object-position:center 35%;
-  opacity:0;transition:opacity 1.4s ease;
-  will-change:opacity;
+  width:100%;height:100%;object-fit:cover;object-position:center 42%;
+  opacity:0;transition:opacity 1.2s ease, transform 1.4s ease;
+  will-change:opacity,transform;
+  transform:scale(1.03);
 }
-.hx-hero-img.ldd{opacity:1;}
+.hx-hero-img.ldd{opacity:1;transform:scale(1);}
 
 .hx-hero-veil {
   position:absolute;inset:0;z-index:1;
   background:
-    linear-gradient(to right,
-      rgba(248,246,241,.97) 0%,
-      rgba(248,246,241,.88) 38%,
-      rgba(248,246,241,.35) 65%,
-      transparent 100%
-    ),
-    linear-gradient(to top,
-      rgba(248,246,241,.6) 0%,
-      transparent 40%
-    );
-  transition:background .4s;
+    linear-gradient(160deg, rgba(8,16,52,.3) 0%, rgba(7,12,36,.78) 100%),
+    linear-gradient(to top, rgba(8,16,52,.62) 0%, transparent 44%);
 }
-.hx.dark .hx-hero-veil {
+.hx.dark .hx-hero{
   background:
-    linear-gradient(to right,
-      rgba(9,9,14,.97) 0%,
-      rgba(9,9,14,.88) 38%,
-      rgba(9,9,14,.35) 65%,
-      transparent 100%
-    ),
-    linear-gradient(to top,
-      rgba(9,9,14,.6) 0%,
-      transparent 40%
-    );
-}
-
-.hx-hero-inner {
-  position:relative;z-index:2;
-  padding:0 64px;max-width:680px;
+    radial-gradient(65% 55% at 10% 5%, rgba(124,107,255,.14) 0%, transparent 70%),
+    radial-gradient(50% 45% at 90% 85%, rgba(56,189,248,.10) 0%, transparent 72%),
+    var(--bg);
 }
 .hx-hero-kicker {
   display:inline-flex;align-items:center;gap:10px;
@@ -284,8 +442,8 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
 
 .hx-hero-h1 {
   font-family:var(--disp);font-weight:700;
-  font-size:clamp(64px,9vw,120px);
-  line-height:.88;letter-spacing:-.045em;
+  font-size:clamp(48px,6vw,86px);
+  line-height:.95;letter-spacing:-.04em;
   color:var(--ink);
   margin-bottom:28px;
   opacity:0;animation:hUp .75s cubic-bezier(.22,1,.36,1) .2s forwards;
@@ -298,8 +456,8 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   opacity:0;animation:hUp .5s ease .35s forwards;
 }
 .hx-hero-p {
-  font-size:16px;font-weight:300;line-height:1.8;
-  color:var(--mut);max-width:360px;margin-bottom:36px;
+  font-size:17px;font-weight:300;line-height:1.85;
+  color:var(--mut);max-width:520px;margin-bottom:36px;
   opacity:0;animation:hUp .6s ease .42s forwards;
   transition:color .4s;
 }
@@ -317,8 +475,8 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   background:var(--ink);color:var(--bg);border:1px solid var(--ink);
 }
 .hx-hbtn.prim:hover {
-  background:var(--gold);border-color:var(--gold);color:#000;
-  transform:translateY(-2px);box-shadow:0 10px 28px rgba(184,145,42,.3);
+  background:var(--gold);border-color:var(--gold);color:#fff;
+  transform:translateY(-2px);box-shadow:0 10px 28px rgba(124,107,255,.35);
 }
 .hx-hbtn.outl {
   background:transparent;color:var(--ink);border:1px solid var(--bdr2);
@@ -327,7 +485,7 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
 
 .hx-hero-stats {
   display:flex;gap:32px;
-  margin-top:48px;padding-top:32px;border-top:1px solid var(--bdr);
+  margin-top:34px;padding-top:26px;border-top:1px solid var(--bdr);
   opacity:0;animation:hUp .6s ease .62s forwards;
   transition:border-color .4s;
 }
@@ -345,7 +503,7 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
 
 /* Scroll indicator */
 .hx-scroll-ind {
-  position:absolute;bottom:36px;left:50%;transform:translateX(-50%);
+  position:absolute;bottom:24px;left:50%;transform:translateX(-50%);
   z-index:2;display:flex;flex-direction:column;align-items:center;gap:6px;
   font-family:var(--mono);font-size:9px;letter-spacing:.14em;
   text-transform:uppercase;color:var(--mut);
@@ -439,10 +597,10 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
 }
 .hx-svc-veil{position:absolute;inset:0;z-index:1;}
 .hx-svc.rent .hx-svc-veil{
-  background:linear-gradient(155deg,rgba(5,22,14,.35) 0%,rgba(5,22,14,.92) 100%);
+  background:linear-gradient(155deg,rgba(12,27,88,.32) 0%,rgba(9,17,56,.93) 100%);
 }
 .hx-svc.sell .hx-svc-veil{
-  background:linear-gradient(155deg,rgba(18,12,35,.35) 0%,rgba(18,12,35,.92) 100%);
+  background:linear-gradient(155deg,rgba(20,11,58,.32) 0%,rgba(13,8,36,.93) 100%);
 }
 
 /* Hover glow */
@@ -450,8 +608,8 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   content:'';position:absolute;inset:0;z-index:1;border-radius:22px;
   opacity:0;transition:opacity .4s;pointer-events:none;
 }
-.hx-svc.rent::after{box-shadow:inset 0 0 0 1.5px rgba(78,203,139,.4);}
-.hx-svc.sell::after{box-shadow:inset 0 0 0 1.5px rgba(184,145,42,.4);}
+.hx-svc.rent::after{box-shadow:inset 0 0 0 1.5px rgba(56,189,248,.45);}
+.hx-svc.sell::after{box-shadow:inset 0 0 0 1.5px rgba(124,107,255,.45);}
 .hx-svc:hover::after{opacity:1;}
 
 /* Big ghost number */
@@ -482,7 +640,7 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
 .hx-svc-tag::before{
   content:'';display:block;width:6px;height:6px;border-radius:50%;
 }
-.hx-svc.rent .hx-svc-tag::before{background:#4ecb8b;box-shadow:0 0 8px #4ecb8b;}
+.hx-svc.rent .hx-svc-tag::before{background:#38bdf8;box-shadow:0 0 8px #38bdf8;}
 .hx-svc.sell .hx-svc-tag::before{background:var(--gold);box-shadow:0 0 8px var(--gold);}
 
 .hx-svc-title {
@@ -506,7 +664,7 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   content:'';display:block;
   width:18px;height:1px;flex-shrink:0;
 }
-.hx-svc.rent .hx-svc-feat::before{background:#4ecb8b;}
+.hx-svc.rent .hx-svc-feat::before{background:#38bdf8;}
 .hx-svc.sell .hx-svc-feat::before{background:var(--gold);}
 
 /* CTA button */
@@ -518,15 +676,15 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   width:fit-content;
 }
 .hx-svc.rent .hx-svc-btn{
-  background:rgba(78,203,139,.14);
-  border:1px solid rgba(78,203,139,.3);
-  color:#4ecb8b;
+  background:rgba(56,189,248,.14);
+  border:1px solid rgba(56,189,248,.3);
+  color:#38bdf8;
 }
-.hx-svc.rent .hx-svc-btn:hover{background:#4ecb8b;color:#000;transform:translateX(4px);}
+.hx-svc.rent .hx-svc-btn:hover{background:#38bdf8;color:#041028;transform:translateX(4px);}
 .hx-svc.sell .hx-svc-btn{
   background:var(--gbg);border:1px solid var(--gbd);color:var(--gold2);
 }
-.hx-svc.sell .hx-svc-btn:hover{background:var(--gold);color:#000;transform:translateX(4px);}
+.hx-svc.sell .hx-svc-btn:hover{background:var(--gold);color:#fff;transform:translateX(4px);}
 .hx-svc-arr{transition:transform .25s;}
 .hx-svc-btn:hover .hx-svc-arr{transform:translateX(4px);}
 
@@ -548,6 +706,12 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   color:var(--gold);margin-bottom:22px;
 }
 .hx-how-icon{font-size:32px;display:block;margin-bottom:18px;}
+.hx-how-icon{
+  width:38px;height:38px;display:flex;align-items:center;justify-content:center;
+  color:var(--gold);
+  margin-bottom:16px;
+}
+.hx-how-icon svg{width:100%;height:100%;}
 .hx-how-title {
   font-family:var(--disp);font-size:26px;font-weight:700;
   letter-spacing:-.03em;color:var(--ink);margin-bottom:12px;
@@ -645,8 +809,9 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
 .hx-act-ico{
   width:40px;height:40px;border-radius:12px;
   background:var(--gbg);border:1px solid var(--gbd);
-  display:flex;align-items:center;justify-content:center;font-size:18px;
+  display:flex;align-items:center;justify-content:center;
 }
+.hx-act-ico svg{width:20px;height:20px;}
 .hx-act-lbl{
   font-family:var(--disp);font-size:18px;font-weight:700;
   letter-spacing:-.02em;color:var(--ink);flex:1;
@@ -679,6 +844,144 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   width:6px;height:6px;border-radius:50%;flex-shrink:0;
   background:var(--gold);box-shadow:0 0 8px var(--gold);
 }
+
+/* ════ FEATURED CARS ════ */
+.hx-fsec{padding:92px 64px;background:var(--bg);transition:background .4s;}
+.hx-fhead{max-width:1280px;margin:0 auto 28px;}
+.hx-frail{
+  max-width:1280px;margin:0 auto;display:grid;
+  grid-template-columns:repeat(4,minmax(220px,1fr));gap:18px;
+}
+.hx-fc{
+  position:relative;overflow:hidden;border-radius:18px;
+  border:1px solid var(--bdr2);background:var(--sur);
+  min-height:330px;display:flex;flex-direction:column;justify-content:flex-end;
+  transition:transform .35s,box-shadow .35s,border-color .35s;
+}
+.hx-fc:hover{transform:translateY(-6px);box-shadow:0 24px 45px rgba(7,14,45,.18);border-color:var(--gbd);}
+.hx-fc-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;transition:transform .7s;}
+.hx-fc:hover .hx-fc-img{transform:scale(1.06);}
+.hx-fc::after{
+  content:'';position:absolute;inset:0;z-index:1;
+  background:linear-gradient(to top,rgba(6,14,43,.92),rgba(6,14,43,.18) 58%,transparent);
+}
+.hx-fc-top,.hx-fc-body{position:relative;z-index:2;padding:16px 16px 0;}
+.hx-fc-top{display:flex;justify-content:space-between;align-items:center;}
+.hx-fc-badge{
+  padding:5px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.26);
+  background:rgba(124,107,255,.2);color:#d8d7ff;font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+}
+.hx-fc-loc{display:flex;align-items:center;gap:6px;color:rgba(255,255,255,.76);font-size:11px;}
+.hx-fc-loc::before{content:'';width:6px;height:6px;border-radius:50%;background:#38bdf8;}
+.hx-fc-body{padding-bottom:16px;}
+.hx-fc-body h3{font-family:var(--disp);font-size:24px;line-height:1.1;color:#fff;margin:0 0 6px;}
+.hx-fc-body p{color:rgba(255,255,255,.78);font-size:13px;margin-bottom:14px;}
+.hx-fc-btn{
+  display:inline-flex;padding:9px 14px;border-radius:9px;
+  background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.26);
+  color:#fff;font-size:12px;font-weight:600;transition:all .25s;
+}
+.hx-fc-btn:hover{background:var(--gold);border-color:var(--gold);transform:translateX(3px);}
+
+/* ════ ELITE BENEFITS ════ */
+.hx-ben-sec{padding:80px 64px;background:var(--bg2);}
+.hx-ben-grid{
+  max-width:1280px;margin:26px auto 0;display:grid;
+  grid-template-columns:repeat(5,1fr);gap:14px;
+}
+.hx-ben{
+  background:var(--sur);border:1px solid var(--bdr);border-radius:14px;
+  padding:22px;transition:all .3s;
+}
+.hx-ben:hover{transform:translateY(-4px);border-color:var(--gbd);box-shadow:0 14px 28px rgba(0,0,0,.08);}
+.hx-ben-ico{
+  width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  background:var(--gbg);border:1px solid var(--gbd);color:var(--gold);margin-bottom:12px;
+}
+.hx-ben-ico svg{width:20px;height:20px;}
+.hx-ben h4{font-size:16px;color:var(--ink);margin-bottom:8px;}
+.hx-ben p{font-size:13px;line-height:1.65;color:var(--mut);}
+
+/* ════ EXPERIENCE ════ */
+.hx-exp{
+  position:relative;min-height:500px;display:flex;align-items:flex-end;
+  margin:84px 64px;border-radius:24px;overflow:hidden;border:1px solid var(--bdr2);
+}
+.hx-exp-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
+.hx-exp::after{
+  content:'';position:absolute;inset:0;z-index:1;
+  background:linear-gradient(160deg,rgba(7,11,32,.28) 0%,rgba(7,11,32,.88) 75%);
+}
+.hx-exp-body{position:relative;z-index:2;max-width:780px;padding:52px;}
+.hx-exp-body h3{
+  font-family:var(--disp);font-size:clamp(34px,4.4vw,58px);line-height:.98;color:#fff;
+  margin-bottom:14px;letter-spacing:-.04em;
+}
+.hx-exp-body p{color:rgba(255,255,255,.74);font-size:16px;line-height:1.8;max-width:620px;}
+
+/* ════ TESTIMONIALS ════ */
+.hx-tsec{padding:92px 64px;background:var(--bg);}
+.hx-tgrid{
+  max-width:1280px;margin:22px auto 0;display:grid;
+  grid-template-columns:repeat(3,1fr);gap:16px;
+}
+.hx-tm{
+  background:var(--sur);border:1px solid var(--bdr);border-radius:14px;padding:24px;
+  transition:transform .3s,border-color .3s,box-shadow .3s;
+}
+.hx-tm:hover{transform:translateY(-4px);border-color:var(--gbd);box-shadow:0 18px 32px rgba(0,0,0,.08);}
+.hx-tm-stars{letter-spacing:.08em;color:#f5c56b;margin-bottom:10px;}
+.hx-tm-txt{font-size:14px;line-height:1.8;color:var(--ink2);margin-bottom:16px;}
+.hx-tm-ft{display:flex;flex-direction:column;gap:4px;}
+.hx-tm-ft strong{font-size:14px;color:var(--ink);}
+.hx-tm-ft span{font-size:12px;color:var(--mut);}
+
+/* ════ TRUST / SECURITY ════ */
+.hx-trust{padding:82px 64px;background:var(--bg2);}
+.hx-tr-grid{
+  max-width:1280px;margin:20px auto 0;display:grid;
+  grid-template-columns:repeat(3,1fr);gap:16px;
+}
+.hx-tr{
+  background:var(--sur);border:1px solid var(--bdr);border-radius:14px;
+  padding:24px;transition:all .3s;
+}
+.hx-tr:hover{border-color:var(--gbd);transform:translateY(-3px);}
+.hx-tr h4{font-size:18px;color:var(--ink);margin:10px 0 8px;}
+.hx-tr p{font-size:13px;line-height:1.75;color:var(--mut);}
+
+/* ════ APP & FINAL CTA ════ */
+.hx-app{padding:92px 64px;background:var(--bg);}
+.hx-app-grid{
+  max-width:1280px;margin:0 auto;display:grid;grid-template-columns:1.1fr .9fr;
+  gap:26px;align-items:center;
+}
+.hx-phone{
+  justify-self:end;width:min(320px,100%);height:560px;border-radius:34px;
+  border:1px solid var(--bdr2);background:linear-gradient(180deg,var(--sur2),var(--sur));
+  padding:12px;box-shadow:0 22px 54px rgba(7,14,45,.14);
+}
+.hx-phone-in{
+  width:100%;height:100%;border-radius:24px;padding:18px;
+  background:linear-gradient(155deg,#121a3f,#1b2a63 55%,#2e3f86);color:#dce4ff;
+  display:flex;flex-direction:column;gap:14px;
+}
+.hx-phone-top{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.8;}
+.hx-phone-card{padding:14px;border-radius:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);}
+.hx-phone-card strong{display:block;font-size:14px;margin-bottom:6px;}
+.hx-phone-card span{font-size:12px;opacity:.85;}
+
+.hx-final{
+  margin:0 64px 92px;border:1px solid var(--bdr2);border-radius:24px;padding:48px;
+  background:linear-gradient(130deg,rgba(124,107,255,.18),rgba(56,189,248,.11) 58%,transparent);
+  display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;
+}
+.hx-final h3{
+  font-family:var(--disp);font-size:clamp(32px,4.2vw,56px);
+  line-height:.95;letter-spacing:-.04em;color:var(--ink);
+}
+.hx-final p{font-size:14px;color:var(--mut);margin-top:10px;}
+.hx-final-btns{display:flex;gap:10px;flex-wrap:wrap;}
 
 /* ════ FOOTER ════ */
 .hx-ft{background:var(--ink);padding:72px 64px 32px;transition:background .4s;}
@@ -720,11 +1023,22 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   to{opacity:1;transform:translateY(0);}
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .hx *, .hx *::before, .hx *::after {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
 /* ════ RESPONSIVE ════ */
 @media(max-width:1024px){
   .hx-sec{padding:80px 40px;}
   .hx-sec-sm{padding:64px 40px;}
-  .hx-hero-inner{padding:0 40px;}
+  .hx-hero{padding:100px 40px 42px;}
+  .hx-hero-inner{grid-template-columns:1fr;gap:20px;}
+  .hx-hero-left{max-width:100%;}
+  .hx-hero-right{min-height:420px;}
   .hx-svc-header{padding:64px 40px 0;}
   .hx-svc-grid{padding:40px 40px 64px;gap:16px;}
   .hx-svc{height:500px;}
@@ -732,6 +1046,14 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-stats-inner{grid-template-columns:repeat(2,1fr);}
   .hx-stat-n{font-size:44px;}
   .hx-dash-sec{padding:80px 40px;}
+  .hx-fsec,.hx-ben-sec,.hx-tsec,.hx-trust,.hx-app{padding-left:40px;padding-right:40px;}
+  .hx-frail{grid-template-columns:repeat(2,1fr);}
+  .hx-ben-grid{grid-template-columns:repeat(3,1fr);}
+  .hx-tgrid,.hx-tr-grid{grid-template-columns:repeat(2,1fr);}
+  .hx-exp{margin:70px 40px;min-height:440px;}
+  .hx-app-grid{grid-template-columns:1fr;}
+  .hx-phone{justify-self:start;}
+  .hx-final{margin:0 40px 80px;}
   .hx-ft{padding:56px 40px 24px;}
   .hx-ft-top{grid-template-columns:1fr 1fr;}
   .hx-ft-top>div:first-child{grid-column:1/-1;}
@@ -741,7 +1063,9 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-nav-links{display:none;}
   .hx-npill.gh{display:none;}
   .hx-burger{display:flex;}
-  .hx-hero-inner{padding:0 24px;max-width:100%;}
+  .hx-hero{padding:92px 24px 36px;min-height:auto;}
+  .hx-hero-inner{max-width:100%;}
+  .hx-hero-right{min-height:340px;border-radius:18px;}
   .hx-hero-stats{gap:20px;flex-wrap:wrap;}
   .hx-hero-btns{flex-direction:column;}
   .hx-hbtn{justify-content:center;}
@@ -759,6 +1083,11 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-stats-inner{grid-template-columns:1fr 1fr;gap:28px;}
   .hx-stat-n{font-size:40px;}
   .hx-dash-sec{padding:64px 24px;}
+  .hx-fsec,.hx-ben-sec,.hx-tsec,.hx-trust,.hx-app{padding-left:24px;padding-right:24px;}
+  .hx-frail,.hx-ben-grid,.hx-tgrid,.hx-tr-grid{grid-template-columns:1fr;}
+  .hx-exp{margin:56px 24px;min-height:380px;border-radius:18px;}
+  .hx-exp-body{padding:26px;}
+  .hx-final{margin:0 24px 64px;padding:28px;border-radius:18px;}
   .hx-dash-card{padding:28px 20px;}
   .hx-dash-top{flex-direction:column;}
   .hx-acts{grid-template-columns:1fr;}
@@ -769,11 +1098,15 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-ft-top>div:first-child{grid-column:1;}
 }
 @media(max-width:480px){
+  .hx-lang button{padding:6px 8px;font-size:9px;}
   .hx-npill.sl{display:none;}
-  .hx-hero-h1{font-size:56px;}
+  .hx-hero-h1{font-size:42px;}
+  .hx-hero-p{font-size:15px;line-height:1.75;}
+  .hx-hero-right{min-height:300px;}
   .hx-svc{height:390px;}
   .hx-svc-title{font-size:52px;}
   .hx-svc-body{padding:28px;}
+  .hx-phone{height:500px;}
   .hx-stats-inner{grid-template-columns:1fr;}
   .hx-auth-btns{flex-direction:column;}
   .hx-auth-btns a,.hx-auth-btns button{justify-content:center;}
@@ -783,9 +1116,15 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
 /* ═══════════════════════════════════════════════
    COMPONENT
 ═══════════════════════════════════════════════ */
-export default function Home() {
+function HomeInner() {
+  const { lang, setLang, copy } = useAppLang();
   const [auth, setAuth] = useState(() => loadAuth());
-  const [dark, setDark] = useState(false);
+  const [dark, setDark] = useState(() => {
+    const saved = localStorage.getItem("home2-theme");
+    if (saved === "dark") return true;
+    if (saved === "light") return false;
+    return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false;
+  });
   const [menu, setMenu] = useState(false);
 
   const heroImgRef   = useRef(null);
@@ -802,6 +1141,9 @@ export default function Home() {
     img.src = "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1800&q=80&auto=format&fit=crop";
     img.onload = () => { if (heroImgRef.current) heroImgRef.current.classList.add("ldd"); };
   }, []);
+  useEffect(() => {
+    localStorage.setItem("home2-theme", dark ? "dark" : "light");
+  }, [dark]);
 
   function logout() { clearAuth(); setAuth(null); }
 
@@ -820,23 +1162,45 @@ export default function Home() {
         <Link to="/" className="hx-logo">Goo<em>voiture</em></Link>
 
         <div className="hx-nav-links">
-          <Link to="/cars"    className="hx-nav-link">Buy</Link>
-          <Link to="/rentals" className="hx-nav-link">Rent</Link>
+          <Link to="/cars"    className="hx-nav-link">{copy.home.nav.buy}</Link>
+          <Link to="/rentals" className="hx-nav-link">{copy.home.nav.rent}</Link>
         </div>
 
         <div className="hx-nav-end">
+          <div className="hx-lang" role="group" aria-label="Language">
+            <button
+              type="button"
+              className={lang === "fr" ? "on" : ""}
+              onClick={() => setLang("fr")}
+              aria-pressed={lang === "fr"}
+            >
+              FR
+            </button>
+            <button
+              type="button"
+              className={lang === "en" ? "on" : ""}
+              onClick={() => setLang("en")}
+              aria-pressed={lang === "en"}
+            >
+              EN
+            </button>
+          </div>
           {auth ? (
-            <button onClick={logout} className="hx-npill gh">Logout</button>
+            <button onClick={logout} className="hx-npill gh">{copy.home.nav.logout}</button>
           ) : (
             <>
-              <Link to="/login"    className="hx-npill gh">Login</Link>
-              <Link to="/register" className="hx-npill sl">Get Started</Link>
+              <Link to="/login"    className="hx-npill gh">{copy.home.nav.login}</Link>
+              <Link to="/register" className="hx-npill sl">{copy.home.nav.getStarted}</Link>
             </>
           )}
-          <button className="hx-theme" onClick={() => setDark(d => !d)} aria-label="Toggle theme">
+          <button
+            className="hx-theme"
+            onClick={() => setDark(d => !d)}
+            aria-label={dark ? copy.home.nav.themeLight : copy.home.nav.themeDark}
+          >
             {dark ? "☀" : "☾"}
           </button>
-          <button className="hx-burger" onClick={() => setMenu(m => !m)} aria-label="Menu">
+          <button className="hx-burger" onClick={() => setMenu(m => !m)} aria-label={copy.home.nav.menu}>
             <span/><span/><span/>
           </button>
         </div>
@@ -844,54 +1208,45 @@ export default function Home() {
 
       {/* Mobile drawer */}
       <div className={`hx-drawer${menu ? " open" : ""}`}>
-        <Link to="/cars"    className="hx-dlink" onClick={() => setMenu(false)}>Buy Cars</Link>
-        <Link to="/rentals" className="hx-dlink" onClick={() => setMenu(false)}>Rent a Car</Link>
+        <Link to="/cars"    className="hx-dlink" onClick={() => setMenu(false)}>{copy.home.drawer.buyCars}</Link>
+        <Link to="/rentals" className="hx-dlink" onClick={() => setMenu(false)}>{copy.home.drawer.rentCar}</Link>
         {auth
-          ? <button onClick={() => { logout(); setMenu(false); }} className="hx-dlink">Logout</button>
+          ? <button onClick={() => { logout(); setMenu(false); }} className="hx-dlink">{copy.home.drawer.logout}</button>
           : <>
-              <Link to="/login"    className="hx-dlink" onClick={() => setMenu(false)}>Login</Link>
-              <Link to="/register" className="hx-dlink" onClick={() => setMenu(false)}>Get Started</Link>
+              <Link to="/login"    className="hx-dlink" onClick={() => setMenu(false)}>{copy.home.drawer.login}</Link>
+              <Link to="/register" className="hx-dlink" onClick={() => setMenu(false)}>{copy.home.drawer.getStarted}</Link>
             </>
         }
       </div>
 
       {/* ═══ HERO ═══ */}
       <section className="hx-hero">
-        <img
-          ref={heroImgRef}
-          src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1800&q=80&auto=format&fit=crop"
-          alt=""
-          className="hx-hero-img"
-          fetchpriority="high"
-        />
-        <div className="hx-hero-veil" />
-
         <div className="hx-hero-inner">
-          <div className="hx-hero-kicker">Algeria's Elite Car Marketplace</div>
+          <div className="hx-hero-left">
+          <div className="hx-hero-kicker">{copy.home.hero.kicker}</div>
 
           <h1 className="hx-hero-h1">
-            Drive<br/>
-            Your<br/>
-            <em>Dream.</em>
+            {copy.home.hero.line1}<br/>
+            {copy.home.hero.line2}<br/>
+            <em>{copy.home.hero.line3}</em>
           </h1>
 
           <div className="hx-hero-rule" />
 
           <p className="hx-hero-p">
-            Verified vehicles. Trusted sellers. Instant booking.
-            Buy or rent your perfect car — all in one place.
+            {copy.home.hero.body}
           </p>
 
           <div className="hx-hero-btns">
-            <Link to="/rentals" className="hx-hbtn prim">Rent a Car</Link>
-            <Link to="/cars"    className="hx-hbtn outl">Browse for Sale</Link>
+            <Link to="/rentals" className="hx-hbtn prim">{copy.home.hero.rent}</Link>
+            <Link to="/cars"    className="hx-hbtn outl">{copy.home.hero.browseSale}</Link>
           </div>
 
           <div className="hx-hero-stats">
             {[
-              { n: "12K", s: "+", l: "Vehicles Listed"  },
-              { n: "5K",  s: "+", l: "Happy Users"      },
-              { n: "99",  s: "%", l: "Secure Deals"     },
+              { n: "12K", s: "+", l: copy.home.hero.statVehicles },
+              { n: "5K",  s: "+", l: copy.home.hero.statUsers },
+              { n: "99",  s: "%", l: copy.home.hero.statDeals },
             ].map((st, i) => (
               <div key={i}>
                 <div className="hx-hstat-n">{st.n}<em>{st.s}</em></div>
@@ -899,18 +1254,32 @@ export default function Home() {
               </div>
             ))}
           </div>
+          </div>
+
+          <div className="hx-hero-right rv rv-r vis">
+            <img
+              ref={heroImgRef}
+              src="https://images.unsplash.com/photo-1549924231-f129b911e442?w=1400&q=82&auto=format&fit=crop"
+              alt={copy.home.hero.heroAlt}
+              className="hx-hero-img"
+              fetchPriority="high"
+              loading="eager"
+              decoding="async"
+            />
+            <div className="hx-hero-veil" />
+          </div>
         </div>
 
         <div className="hx-scroll-ind" aria-hidden="true">
           <div className="hx-scroll-bar" />
-          <span>Scroll</span>
+          <span>{copy.home.hero.scroll}</span>
         </div>
       </section>
 
       {/* ═══ MARQUEE ═══ */}
       <div className="hx-marquee" aria-hidden="true">
         <div className="hx-mtrack">
-          {[...STRIP, ...STRIP].map((t, i) => (
+          {[...copy.home.marquee, ...copy.home.marquee].map((t, i) => (
             <span key={i} className="hx-mitem">
               <span className="hx-mdot" />
               {t}
@@ -925,12 +1294,11 @@ export default function Home() {
       <div className="hx-svc-wrap">
         <div className="hx-svc-header">
           <div ref={svcHdrRef} className="rv rv-u">
-            <div className="hx-ey">Our Services</div>
-            <h2 className="hx-h2">Two ways to<br/><em>own the road.</em></h2>
+            <div className="hx-ey">{copy.home.services.eyebrow}</div>
+            <h2 className="hx-h2">{copy.home.services.title1}<br/><em>{copy.home.services.title2}</em></h2>
           </div>
           <p className="hx-h2-sub" style={{ maxWidth: 280, textAlign: "right" }}>
-            Book for a weekend or find your forever car —
-            we've built the platform for both.
+            {copy.home.services.sub}
           </p>
         </div>
 
@@ -940,7 +1308,7 @@ export default function Home() {
           <div ref={rentRef} className="hx-svc rent rv rv-l">
             <img
               src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=900&q=75&auto=format&fit=crop"
-              alt="Rent a Car"
+              alt={copy.home.services.rentAlt}
               className="hx-svc-img"
               loading="lazy"
             />
@@ -948,21 +1316,20 @@ export default function Home() {
             <div className="hx-svc-num" aria-hidden="true">01</div>
             <div className="hx-svc-body">
               <div>
-                <div className="hx-svc-tag">Available Now</div>
-                <div className="hx-svc-title">RENT</div>
+                <div className="hx-svc-tag">{copy.home.services.rentTag}</div>
+                <div className="hx-svc-title">{copy.home.services.rentTitle}</div>
                 <p className="hx-svc-desc">
-                  Premium fleet at your fingertips. Book by day, week, or month
-                  with instant confirmation and fully transparent pricing.
+                  {copy.home.services.rentDesc}
                 </p>
               </div>
               <div>
                 <div className="hx-svc-feats">
-                  {["Instant online booking", "Verified rental owners", "Flexible date ranges"].map((f, i) => (
+                  {copy.home.services.rentFeats.map((f, i) => (
                     <div key={i} className="hx-svc-feat">{f}</div>
                   ))}
                 </div>
                 <Link to="/rentals" className="hx-svc-btn">
-                  Browse Rentals <span className="hx-svc-arr">→</span>
+                  {copy.home.services.rentCta} <span className="hx-svc-arr">→</span>
                 </Link>
               </div>
             </div>
@@ -972,7 +1339,7 @@ export default function Home() {
           <div ref={sellRef} className="hx-svc sell rv rv-r">
             <img
               src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=900&q=75&auto=format&fit=crop"
-              alt="Buy or Sell a Car"
+              alt={copy.home.services.sellAlt}
               className="hx-svc-img"
               loading="lazy"
             />
@@ -980,21 +1347,20 @@ export default function Home() {
             <div className="hx-svc-num" aria-hidden="true">02</div>
             <div className="hx-svc-body">
               <div>
-                <div className="hx-svc-tag">Verified Listings</div>
-                <div className="hx-svc-title">SELL</div>
+                <div className="hx-svc-tag">{copy.home.services.sellTag}</div>
+                <div className="hx-svc-title">{copy.home.services.sellTitle}</div>
                 <p className="hx-svc-desc">
-                  List your vehicle to thousands of verified buyers.
-                  Get the best price through our secure, admin-moderated marketplace.
+                  {copy.home.services.sellDesc}
                 </p>
               </div>
               <div>
                 <div className="hx-svc-feats">
-                  {["Admin-approved listings", "Direct buyer contact", "Secure transactions"].map((f, i) => (
+                  {copy.home.services.sellFeats.map((f, i) => (
                     <div key={i} className="hx-svc-feat">{f}</div>
                   ))}
                 </div>
                 <Link to="/cars" className="hx-svc-btn">
-                  Browse Cars <span className="hx-svc-arr">→</span>
+                  {copy.home.services.sellCta} <span className="hx-svc-arr">→</span>
                 </Link>
               </div>
             </div>
@@ -1003,22 +1369,75 @@ export default function Home() {
         </div>
       </div>
 
+      {/* ═══ FEATURED LUXURY CARS ═══ */}
+      <section className="hx-fsec">
+        <div className="hx-fhead rv rv-u vis">
+          <div className="hx-ey">{copy.home.featured.eyebrow}</div>
+          <h2 className="hx-h2">{copy.home.featured.title1} <em>{copy.home.featured.title2}</em></h2>
+          <p className="hx-h2-sub">{copy.home.featured.sub}</p>
+        </div>
+        <div className="hx-frail">
+          {copy.home.featuredCars.map((item, i) => (
+            <FeaturedCard key={item.name} item={item} delay={`${i * 0.08}s`} />
+          ))}
+        </div>
+      </section>
+
+      {/* ═══ ELITE BENEFITS ═══ */}
+      <section className="hx-ben-sec">
+        <div className="hx-wrap">
+          <div className="rv rv-u vis">
+            <div className="hx-ey">{copy.home.benefits.eyebrow}</div>
+            <h2 className="hx-h2">{copy.home.benefits.title1} <em>{copy.home.benefits.title2}</em></h2>
+          </div>
+        </div>
+        <div className="hx-ben-grid">
+          {copy.home.benefits.items.map((b, i) => (
+            <BenefitItem
+              key={b.title}
+              icon={[ICON.shield, ICON.card, ICON.calendar, ICON.search, ICON.support][i]}
+              title={b.title}
+              desc={b.desc}
+              delay={`${i * 0.06}s`}
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* ═══ EXPERIENCE STORY ═══ */}
+      <section className="hx-exp rv rv-s vis">
+        <img
+          src="https://images.unsplash.com/photo-1494905998402-395d579af36f?w=1800&q=75&auto=format&fit=crop"
+          alt={copy.home.experience.alt}
+          className="hx-exp-img"
+          loading="lazy"
+          decoding="async"
+        />
+        <div className="hx-exp-body">
+          <div className="hx-ey" style={{ color: "#b7c5ff" }}>{copy.home.experience.eyebrow}</div>
+          <h3>{copy.home.experience.title}</h3>
+          <p>
+            {copy.home.experience.body}
+          </p>
+        </div>
+      </section>
+
       {/* ═══ HOW IT WORKS ═══ */}
       <div className="hx-how-wrap">
         <div className="hx-wrap hx-sec hx-sec-sm">
           <div ref={howHdrRef} className="rv rv-u">
-            <div className="hx-ey">Process</div>
-            <h2 className="hx-h2">How it <em>works.</em></h2>
+            <div className="hx-ey">{copy.home.how.eyebrow}</div>
+            <h2 className="hx-h2">{copy.home.how.title1} <em>{copy.home.how.title2}</em></h2>
           </div>
           <div className="hx-how-grid">
-            <HowItem n="01" icon="🔍" title="Search"
-              desc="Browse thousands of verified listings. Filter by brand, city, and price range to find your perfect match."
+            <HowItem n={copy.home.how.steps[0].n} icon={ICON.search} title={copy.home.how.steps[0].title}
+              desc={copy.home.how.steps[0].desc}
               delay="0s" />
-            <HowItem n="02" icon="📋" title="Book or Buy"
-              desc="Reserve a rental instantly or contact a verified seller directly through our secure, moderated platform."
+            <HowItem n={copy.home.how.steps[1].n} icon={ICON.clipboard} title={copy.home.how.steps[1].title}
+              desc={copy.home.how.steps[1].desc}
               delay="0.1s" />
-            <HowItem n="03" icon="🚗" title="Drive Away"
-              desc="Pick up your car, complete the secure transaction, and hit the road with complete confidence."
+            <HowItem n={copy.home.how.steps[2].n} icon={ICON.car} title={copy.home.how.steps[2].title}
+              desc={copy.home.how.steps[2].desc}
               delay="0.2s" />
           </div>
         </div>
@@ -1027,12 +1446,55 @@ export default function Home() {
       {/* ═══ STATS ═══ */}
       <div className="hx-stats">
         <div className="hx-stats-inner" ref={statsRef}>
-          <StatItem n="12" sup="K+" label="Active Listings"    delay="0s"    />
-          <StatItem n="5"  sup="K+" label="Registered Users"   delay="0.08s" />
-          <StatItem n="48" sup="h"  label="Avg. Listing Review" delay="0.16s" />
-          <StatItem n="99" sup="%"  label="Satisfaction Rate"  delay="0.24s" />
+          <CounterItem to={12} suffix="K+" label={copy.home.stats.cars} delay="0s" />
+          <CounterItem to={8} suffix="K+" label={copy.home.stats.clients} delay="0.08s" />
+          <CounterItem to={24} suffix="+" label={copy.home.stats.cities} delay="0.16s" />
+          <CounterItem to={99} suffix="%" label={copy.home.stats.satisfaction} delay="0.24s" />
         </div>
       </div>
+
+      {/* ═══ TESTIMONIALS ═══ */}
+      <section className="hx-tsec">
+        <div className="hx-wrap">
+          <div className="rv rv-u vis">
+            <div className="hx-ey">{copy.home.testimonials.eyebrow}</div>
+            <h2 className="hx-h2">{copy.home.testimonials.title1} <em>{copy.home.testimonials.title2}</em></h2>
+          </div>
+        </div>
+        <div className="hx-tgrid">
+          {copy.home.testimonials.items.map((item, i) => (
+            <TestimonialCard key={item.name} item={item} delay={`${i * 0.08}s`} />
+          ))}
+        </div>
+      </section>
+
+      {/* ═══ SECURITY & TRUST ═══ */}
+      <section className="hx-trust">
+        <div className="hx-wrap">
+          <div className="rv rv-u vis">
+            <div className="hx-ey">{copy.home.trust.eyebrow}</div>
+            <h2 className="hx-h2">{copy.home.trust.title1} <em>{copy.home.trust.title2}</em></h2>
+            <p className="hx-h2-sub">{copy.home.trust.sub}</p>
+          </div>
+        </div>
+        <div className="hx-tr-grid">
+          <article className="hx-tr rv rv-u vis">
+            <div className="hx-ben-ico">{ICON.shield}</div>
+            <h4>{copy.home.trust.cards[0].title}</h4>
+            <p>{copy.home.trust.cards[0].desc}</p>
+          </article>
+          <article className="hx-tr rv rv-u vis">
+            <div className="hx-ben-ico">{ICON.search}</div>
+            <h4>{copy.home.trust.cards[1].title}</h4>
+            <p>{copy.home.trust.cards[1].desc}</p>
+          </article>
+          <article className="hx-tr rv rv-u vis">
+            <div className="hx-ben-ico">{ICON.card}</div>
+            <h4>{copy.home.trust.cards[2].title}</h4>
+            <p>{copy.home.trust.cards[2].desc}</p>
+          </article>
+        </div>
+      </section>
 
       {/* ═══ DASHBOARD / AUTH CTA ═══ */}
       <div className="hx-dash-sec">
@@ -1041,11 +1503,11 @@ export default function Home() {
             <>
               <div className="hx-dash-top">
                 <div>
-                  <p className="hx-dash-gr">Welcome back</p>
+                  <p className="hx-dash-gr">{copy.home.dash.welcome}</p>
                   <p className="hx-dash-name">{auth.name}</p>
                   <span className="hx-dash-badge">{role}</span>
                 </div>
-                <button onClick={logout} className="hx-logout">Logout</button>
+                <button onClick={logout} className="hx-logout">{copy.home.dash.logout}</button>
               </div>
               <div className="hx-acts">
                 {isCust  && <><ActionCard to="/rentals"/><ActionCard to="/my-bookings"/><ActionCard to="/cars"/></>}
@@ -1057,24 +1519,17 @@ export default function Home() {
           ) : (
             <div className="hx-auth">
               <div>
-                <h3 className="hx-auth-h3">Your journey<br/><em>starts here.</em></h3>
+                <h3 className="hx-auth-h3">{copy.home.auth.title1}<br/><em>{copy.home.auth.title2}</em></h3>
                 <p className="hx-auth-p">
-                  Create a free account to buy, rent, or list your vehicle.
-                  Join thousands of users already on Goovoiture.
+                  {copy.home.auth.body}
                 </p>
                 <div className="hx-auth-btns">
-                  <Link to="/register" className="hx-npill sl">Create Account</Link>
-                  <Link to="/login"    className="hx-npill gh">Sign In</Link>
+                  <Link to="/register" className="hx-npill sl">{copy.home.auth.create}</Link>
+                  <Link to="/login"    className="hx-npill gh">{copy.home.auth.signIn}</Link>
                 </div>
               </div>
               <div className="hx-auth-feats">
-                {[
-                  "Verified listings only",
-                  "Secure payment processing",
-                  "Instant booking confirmation",
-                  "24/7 customer support",
-                  "Transparent pricing — no hidden fees",
-                ].map((f, i) => (
+                {copy.home.auth.feats.map((f, i) => (
                   <div key={i} className="hx-auth-feat">
                     <span className="hx-auth-fdot" />
                     {f}
@@ -1086,6 +1541,50 @@ export default function Home() {
         </div>
       </div>
 
+      {/* ═══ APP / COMING SOON ═══ */}
+      <section className="hx-app">
+        <div className="hx-app-grid">
+          <div className="rv rv-l vis">
+            <div className="hx-ey">{copy.home.app.eyebrow}</div>
+            <h2 className="hx-h2">{copy.home.app.title1} <em>{copy.home.app.title2}</em></h2>
+            <p className="hx-h2-sub" style={{ maxWidth: 560 }}>
+              {copy.home.app.sub}
+            </p>
+            <div className="hx-hero-btns" style={{ marginTop: 24 }}>
+              <button className="hx-hbtn prim" type="button">{copy.home.app.download}</button>
+              <Link to="/register" className="hx-hbtn outl">{copy.home.app.waitlist}</Link>
+            </div>
+          </div>
+          <div className="hx-phone rv rv-r vis">
+            <div className="hx-phone-in">
+              <div className="hx-phone-top">{copy.home.app.phoneTitle}</div>
+              {copy.home.app.phoneCards.map((c, i) => (
+                <div key={i} className="hx-phone-card"><strong>{c.strong}</strong><span>{c.span}</span></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ FINAL CONVERSION CTA ═══ */}
+      <section className="hx-final rv rv-s vis">
+        <div>
+          <h3>
+            {copy.home.final.title.split("\n").map((line, i) => (
+              <span key={i}>
+                {i > 0 ? <br /> : null}
+                {line}
+              </span>
+            ))}
+          </h3>
+          <p>{copy.home.final.sub}</p>
+        </div>
+        <div className="hx-final-btns">
+          <Link to="/rentals" className="hx-hbtn prim">{copy.home.final.rent}</Link>
+          <Link to="/my-sales/new" className="hx-hbtn outl">{copy.home.final.sell}</Link>
+        </div>
+      </section>
+
       {/* ═══ FOOTER ═══ */}
       <footer className="hx-ft">
         <div className="hx-ft-inner">
@@ -1093,33 +1592,34 @@ export default function Home() {
             <div>
               <div className="hx-ft-logo">Goo<em>voiture</em></div>
               <p className="hx-ft-tag">
-                Algeria's premium marketplace for buying, selling, and renting cars
-                with confidence and full transparency.
+                {copy.home.footer.tag}
               </p>
             </div>
             <div>
-              <p className="hx-ft-ch">Platform</p>
-              <Link to="/cars"    className="hx-ft-link">Buy Cars</Link>
-              <Link to="/rentals" className="hx-ft-link">Rent Cars</Link>
-              <Link to="/login"   className="hx-ft-link">Sign In</Link>
+              <p className="hx-ft-ch">{copy.home.footer.platform}</p>
+              <Link to="/cars"    className="hx-ft-link">{copy.home.footer.buyCars}</Link>
+              <Link to="/rentals" className="hx-ft-link">{copy.home.footer.rentCars}</Link>
+              <Link to="/login"   className="hx-ft-link">{copy.home.footer.signIn}</Link>
             </div>
             <div>
-              <p className="hx-ft-ch">Account</p>
-              <Link to="/register" className="hx-ft-link">Register</Link>
-              <Link to="/login"    className="hx-ft-link">Login</Link>
+              <p className="hx-ft-ch">{copy.home.footer.account}</p>
+              <Link to="/register" className="hx-ft-link">{copy.home.footer.register}</Link>
+              <Link to="/login"    className="hx-ft-link">{copy.home.footer.login}</Link>
             </div>
             <div>
-              <p className="hx-ft-ch">Legal</p>
-              <span className="hx-ft-link" style={{cursor:"default"}}>Terms of Service</span>
-              <span className="hx-ft-link" style={{cursor:"default"}}>Privacy Policy</span>
+              <p className="hx-ft-ch">{copy.home.footer.legal}</p>
+              <span className="hx-ft-link" style={{cursor:"default"}}>{copy.home.footer.terms}</span>
+              <span className="hx-ft-link" style={{cursor:"default"}}>{copy.home.footer.privacy}</span>
             </div>
           </div>
           <div className="hx-ft-bot">
-            <span>© {new Date().getFullYear()} <em>Goovoiture</em> — Algeria's Elite Car Marketplace</span>
-            <span>Built with care ♥</span>
+            <span>© {new Date().getFullYear()} <em>Goovoiture</em> — {copy.home.footer.copy}</span>
+            <span>{copy.home.footer.built}</span>
           </div>
         </div>
       </footer>
     </div>
   );
 }
+
+export default HomeInner;

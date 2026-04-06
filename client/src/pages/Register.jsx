@@ -2,8 +2,10 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { api } from "../api/axios";
 import { saveAuth } from "../utils/authStorage";
+import { useAppLang } from "../context/AppLangContext";
 
 export default function Register() {
+  const { copy } = useAppLang();
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
@@ -32,7 +34,7 @@ export default function Register() {
       saveAuth(res.data);
       navigate("/");
     } catch (err) {
-      setError(err?.response?.data?.message || "Registration failed");
+      setError(err?.response?.data?.message || copy.register.regFail);
     } finally {
       setLoading(false);
     }
@@ -52,10 +54,10 @@ export default function Register() {
 
         <div className="relative z-10 max-w-md px-10">
           <h1 className="text-5xl font-extrabold leading-tight">
-            Join Goovoiture
+            {copy.register.joinTitle}
           </h1>
           <p className="mt-6 text-gray-300 text-lg">
-            Create your account and access the future of car mobility.
+            {copy.register.joinSub}
           </p>
         </div>
       </div>
@@ -68,10 +70,10 @@ export default function Register() {
           {/* Header */}
           <div className="text-center">
             <h2 className="text-3xl font-extrabold">
-              Create Account
+              {copy.register.createTitle}
             </h2>
             <p className="mt-2 text-gray-500">
-              Start buying, selling or renting cars
+              {copy.register.createSub}
             </p>
           </div>
 
@@ -86,19 +88,19 @@ export default function Register() {
           <form onSubmit={handleSubmit} className="mt-8 space-y-6">
 
             <FloatingInput
-              label="Full Name"
+              label={copy.register.fullName}
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
 
             <FloatingInput
-              label="Phone Number"
+              label={copy.register.phone}
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
             />
 
             <FloatingInput
-              label="City"
+              label={copy.register.city}
               value={city}
               onChange={(e) => setCity(e.target.value)}
             />
@@ -106,21 +108,21 @@ export default function Register() {
             {/* Account Type */}
             <div>
               <label className="text-sm font-medium text-gray-600">
-                Account Type
+                {copy.register.accountType}
               </label>
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
                 className="mt-2 w-full rounded-2xl border border-gray-200 bg-white/80 px-4 py-4 focus:outline-none focus:ring-2 focus:ring-black/20 transition"
               >
-                <option value="customer">Buyer (Customer)</option>
-                <option value="seller">Seller</option>
-                <option value="rental_owner">Rental Owner</option>
+                <option value="customer">{copy.register.roleCustomer}</option>
+                <option value="seller">{copy.register.roleSeller}</option>
+                <option value="rental_owner">{copy.register.roleRental}</option>
               </select>
             </div>
 
             <FloatingInput
-              label="Password"
+              label={copy.register.password}
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -130,18 +132,18 @@ export default function Register() {
               disabled={loading}
               className="w-full mt-4 bg-black text-white py-4 rounded-2xl font-semibold text-lg hover:scale-105 transition-all duration-300 shadow-lg disabled:opacity-60"
             >
-              {loading ? "Creating account..." : "Create Account"}
+              {loading ? copy.register.creating : copy.register.createBtn}
             </button>
           </form>
 
           {/* Footer */}
           <div className="mt-8 text-center text-sm text-gray-500">
-            Already have an account?{" "}
+            {copy.register.footerQ}{" "}
             <Link
               to="/login"
               className="text-black font-semibold hover:underline"
             >
-              Login
+              {copy.register.footerLogin}
             </Link>
           </div>
         </div>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { api } from "../api/axios";
 import { loadAuth } from "../utils/authStorage";
+import { useAppLang } from "../context/AppLangContext";
 
 const S = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap');
@@ -319,6 +320,7 @@ function Spec({ label, value }) {
 }
 
 export default function CarDetails() {
+  const { copy } = useAppLang();
   const { id } = useParams();
   const [car,         setCar        ] = useState(null);
   const [loading,     setLoading    ] = useState(true);
@@ -338,12 +340,12 @@ export default function CarDetails() {
 
   if (loading) return (
     <div className="cd"><style>{S}</style>
-      <div className="cd-state">Loading vehicle…</div>
+      <div className="cd-state">{copy.carDetails.loading}</div>
     </div>
   );
   if (!car) return (
     <div className="cd"><style>{S}</style>
-      <div className="cd-state" style={{color:"#c93030"}}>Vehicle not found.</div>
+      <div className="cd-state" style={{color:"#c93030"}}>{copy.carDetails.notFound}</div>
     </div>
   );
 
@@ -359,7 +361,7 @@ export default function CarDetails() {
       {/* ══ NAV ══ */}
       <nav className="cd-nav">
         <Link to="/" className="cd-nav-logo">Goo<em>voiture</em></Link>
-        <Link to="/cars" className="cd-back">← Back to listings</Link>
+        <Link to="/cars" className="cd-back">{copy.carDetails.back}</Link>
       </nav>
 
       <div className="cd-body">
@@ -385,7 +387,7 @@ export default function CarDetails() {
                 )}
               </>
             ) : (
-              <div className="cd-carousel-none">No image available</div>
+              <div className="cd-carousel-none">{copy.carDetails.noImage}</div>
             )}
           </div>
 
@@ -406,23 +408,23 @@ export default function CarDetails() {
 
           {/* Specs */}
           <div className="cd-card cd-fade" style={{animationDelay:"100ms"}}>
-            <div className="cd-label">Specifications</div>
+            <div className="cd-label">{copy.carDetails.specifications}</div>
             <div className="cd-specs">
-              <Spec label="Brand"    value={car.brand}   />
-              <Spec label="Model"    value={car.model}   />
-              <Spec label="Year"     value={car.year}    />
-              <Spec label="Mileage"  value={car.mileage ? `${Number(car.mileage).toLocaleString()} km` : null} />
-              <Spec label="Fuel"     value={car.fuel}    />
-              <Spec label="Gearbox"  value={car.gearbox} />
-              <Spec label="City"     value={car.city}    />
+              <Spec label={copy.carDetails.brand}    value={car.brand}   />
+              <Spec label={copy.carDetails.model}    value={car.model}   />
+              <Spec label={copy.carDetails.year}     value={car.year}    />
+              <Spec label={copy.carDetails.mileage}  value={car.mileage ? `${Number(car.mileage).toLocaleString()} ${copy.carDetails.km}` : null} />
+              <Spec label={copy.carDetails.fuel}     value={car.fuel}    />
+              <Spec label={copy.carDetails.gearbox}  value={car.gearbox} />
+              <Spec label={copy.carDetails.city}     value={car.city}    />
             </div>
           </div>
 
           {/* Description */}
           <div className="cd-card cd-fade" style={{animationDelay:"140ms"}}>
-            <div className="cd-label">Description</div>
+            <div className="cd-label">{copy.carDetails.description}</div>
             <p className="cd-desc">
-              {car.description || "No description provided."}
+              {car.description || copy.carDetails.noDesc}
             </p>
           </div>
         </div>
@@ -432,7 +434,7 @@ export default function CarDetails() {
 
           {/* Price + title */}
           <div className="cd-price-card cd-fade" style={{animationDelay:"60ms"}}>
-            <span className="cd-badge">Approved Listing</span>
+            <span className="cd-badge">{copy.carDetails.approved}</span>
             <h1 className="cd-title" style={{marginTop:14}}>{car.title}</h1>
             <div className="cd-price-row">
               <span className="cd-price">{Number(car.price).toLocaleString()}</span>
@@ -442,17 +444,17 @@ export default function CarDetails() {
 
           {/* Seller + CTA */}
           <div className="cd-seller-card cd-fade" style={{animationDelay:"120ms"}}>
-            <div className="cd-label">Seller</div>
+            <div className="cd-label">{copy.carDetails.seller}</div>
 
             <Link to={`/seller/${seller?._id}`} className="cd-seller-name">
-              {seller?.name || "Unknown Seller"}
+              {seller?.name || copy.carDetails.unknownSeller}
             </Link>
-            <p className="cd-seller-sub">Verified Seller</p>
+            <p className="cd-seller-sub">{copy.carDetails.verifiedSeller}</p>
 
             {auth?.token ? (
               <>
                 <a href={`tel:${seller?.phone}`} className="cd-btn cd-btn-dark">
-                  📞 Call Seller
+                  {copy.carDetails.callSeller}
                 </a>
                 <a
                   href={`https://wa.me/${seller?.phone}`}
@@ -460,14 +462,14 @@ export default function CarDetails() {
                   rel="noopener noreferrer"
                   className="cd-btn cd-btn-green"
                 >
-                  💬 WhatsApp
+                  {copy.carDetails.whatsapp}
                 </a>
               </>
             ) : (
               <div className="cd-login-nudge">
                 <p>
-                  <Link to="/login">Sign in</Link> to contact the seller
-                  and view contact details.
+                  <Link to="/login">{copy.carDetails.signInContact}</Link>{" "}
+                  {copy.carDetails.signInContactRest}
                 </p>
               </div>
             )}

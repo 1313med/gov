@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { api } from "../api/axios";
 import { saveAuth } from "../utils/authStorage";
+import { useAppLang } from "../context/AppLangContext";
 
 /* ─────────────────────────────────────────────
    GLOBAL STYLES
@@ -588,6 +589,7 @@ function Particles() {
    FLOAT LABEL FIELD
 ───────────────────────────────────────────── */
 function Field({ icon, label, value, onChange, type = "text", hasError }) {
+  const { copy } = useAppLang();
   const [showPw, setShowPw] = useState(false);
   const isPassword = type === "password";
   const inputType = isPassword ? (showPw ? "text" : "password") : type;
@@ -611,7 +613,7 @@ function Field({ icon, label, value, onChange, type = "text", hasError }) {
           onClick={() => setShowPw(v => !v)}
           tabIndex={-1}
         >
-          {showPw ? "HIDE" : "SHOW"}
+          {showPw ? copy.login.hide : copy.login.show}
         </button>
       )}
     </div>
@@ -622,6 +624,7 @@ function Field({ icon, label, value, onChange, type = "text", hasError }) {
    MAIN LOGIN COMPONENT
 ───────────────────────────────────────────── */
 export default function Login() {
+  const { copy } = useAppLang();
   const navigate  = useNavigate();
   const imgRef    = useRef(null);
   const btnRef    = useRef(null);
@@ -674,8 +677,6 @@ export default function Login() {
     }
   }
 
-  const pills = ["Verified Listings", "Instant Booking", "Trusted Sellers", "Secure Platform"];
-
   return (
     <div className="lx-root">
       <style>{CSS}</style>
@@ -708,18 +709,17 @@ export default function Login() {
 
           {/* Hero */}
           <div className="lx-hero">
-            <div className="lx-hero-tag">Member Portal</div>
+            <div className="lx-hero-tag">{copy.login.memberPortal}</div>
             <h1>
-              Drive<br/>
-              Your <em>Story</em><br/>
-              Forward.
+              {copy.login.heroL1}<br/>
+              {copy.login.heroL2} <em>{copy.login.heroEm}</em><br/>
+              {copy.login.heroL3}
             </h1>
             <p className="lx-hero-sub">
-              Morocco's premium automotive marketplace. Buy, sell, and rent
-              with confidence — all in one place.
+              {copy.login.heroSub}
             </p>
             <div className="lx-pills">
-              {pills.map((p, i) => (
+              {copy.login.pills.map((p, i) => (
                 <span key={i} className="lx-pill">{p}</span>
               ))}
             </div>
@@ -727,15 +727,15 @@ export default function Login() {
             <div className="lx-stats">
               <div className="lx-stat">
                 <div className="lx-stat-num"><span>12k</span>+</div>
-                <div className="lx-stat-label">Listings</div>
+                <div className="lx-stat-label">{copy.login.statListings}</div>
               </div>
               <div className="lx-stat">
                 <div className="lx-stat-num"><span>4.8</span>★</div>
-                <div className="lx-stat-label">Rating</div>
+                <div className="lx-stat-label">{copy.login.statRating}</div>
               </div>
               <div className="lx-stat">
                 <div className="lx-stat-num"><span>98</span>%</div>
-                <div className="lx-stat-label">Satisfaction</div>
+                <div className="lx-stat-label">{copy.login.statSat}</div>
               </div>
             </div>
           </div>
@@ -745,7 +745,7 @@ export default function Login() {
       {/* ═══ RIGHT PANEL ═══ */}
       <div className="lx-right">
 
-        <Link to="/" className="lx-back">← Back</Link>
+        <Link to="/" className="lx-back">{copy.login.back}</Link>
 
         <div style={{ width: "100%", maxWidth: 420 }}>
 
@@ -765,10 +765,10 @@ export default function Login() {
             <div className="lx-ch">
               <div className="lx-ch-badge">
                 <div className="lx-ch-badge-dot" />
-                <span>Secure Sign In</span>
+                <span>{copy.login.secureSignIn}</span>
               </div>
-              <h2>Welcome <em>back.</em></h2>
-              <p className="lx-ch-sub">Sign in to access your account and listings.</p>
+              <h2>{copy.login.welcomeTitle} <em>{copy.login.welcomeEm}</em></h2>
+              <p className="lx-ch-sub">{copy.login.welcomeSub}</p>
             </div>
 
             {/* Error */}
@@ -784,7 +784,7 @@ export default function Login() {
 
               <Field
                 icon="📱"
-                label="Phone Number"
+                label={copy.login.phone}
                 value={phone}
                 onChange={e => setPhone(e.target.value)}
                 hasError={!!error}
@@ -792,7 +792,7 @@ export default function Login() {
 
               <Field
                 icon="🔒"
-                label="Password"
+                label={copy.login.password}
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
@@ -810,11 +810,11 @@ export default function Login() {
                 {loading ? (
                   <>
                     <div className="lx-spinner" />
-                    Authenticating…
+                    {copy.login.authenticating}
                     <div className="lx-progress" />
                   </>
                 ) : (
-                  <>Sign In →</>
+                  <>{copy.login.signInBtn}</>
                 )}
               </button>
 
@@ -822,13 +822,13 @@ export default function Login() {
 
             <div style={{ marginTop: 20 }}>
               <div className="lx-divider">
-                <span>New to Goovoiture?</span>
+                <span>{copy.login.divider}</span>
               </div>
             </div>
 
             <p className="lx-footer">
-              Don't have an account?{" "}
-              <Link to="/register">Create one free</Link>
+              {copy.login.footerQ}{" "}
+              <Link to="/register">{copy.login.footerLink}</Link>
             </p>
 
           </div>

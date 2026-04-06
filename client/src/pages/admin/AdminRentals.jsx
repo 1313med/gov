@@ -1,47 +1,55 @@
 import { useEffect, useState } from "react";
 import AdminLayout from "../../components/admin/AdminLayout";
-import { api } from "../../api/axios";
+import { getAdminRentals, updateRentalStatus } from "../../api/rental";
+
+function formatMoney(n) {
+  if (n == null || Number.isNaN(Number(n))) return "—";
+  return `${Number(n).toLocaleString()} MAD`;
+}
 
 function statusBadge(status) {
   const map = {
     approved: "adm-badge-approved",
     rejected: "adm-badge-rejected",
     pending: "adm-badge-pending",
-    sold: "adm-badge-sold",
+    unavailable: "adm-badge-unavailable",
   };
   const cls = map[status] || "adm-badge-neutral";
   const label = status ? String(status).replace(/^\w/, (c) => c.toUpperCase()) : "—";
   return <span className={`adm-badge ${cls}`}>{label}</span>;
 }
 
-export default function AdminSales() {
-  const [sales, setSales] = useState([]);
+export default function AdminRentals() {
+  const [rentals, setRentals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
 
-  const fetchSales = async () => {
+  const fetchRentals = async () => {
     setLoading(true);
-    const res = await api.get("/sale/admin");
-    setSales(res.data || []);
-    setLoading(false);
+    try {
+      const res = await getAdminRentals();
+      setRentals(res.data || []);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    fetchSales();
+    fetchRentals();
   }, []);
 
   const updateStatus = async (id, status) => {
     const confirmMsg =
       status === "approved"
-        ? "Approve this listing?"
-        : "Reject this listing?";
+        ? "Approve this rental listing?"
+        : "Reject this rental listing?";
 
     if (!window.confirm(confirmMsg)) return;
 
     try {
       setActionLoading(id);
-      await api.put(`/sale/admin/${id}/status`, { status });
-      fetchSales();
+      await updateRentalStatus(id, status);
+      fetchRentals();
     } finally {
       setActionLoading(null);
     }
@@ -53,59 +61,67 @@ export default function AdminSales() {
         <header className="adm-header">
           <div>
             <p className="adm-label">Moderation</p>
-            <h1 className="adm-title">Listings</h1>
+            <h1 className="adm-title">Rental listings</h1>
             <p className="adm-sub">
-              Approve or reject seller submissions. Changes apply immediately.
+              Review cars offered for rent. Only approved listings appear on the public rentals page.
             </p>
           </div>
-          <span className="adm-meta">{sales.length} total</span>
+          <span className="adm-meta">{rentals.length} total</span>
         </header>
 
         {loading ? (
           <div className="adm-card adm-card-pad">
             <div className="adm-loading">
               <div className="adm-spin" aria-hidden />
-              Loading listings…
+              Loading rentals…
             </div>
           </div>
         ) : (
           <div className="adm-card adm-card-pad">
             <div className="adm-sh" style={{ position: "relative", zIndex: 1 }}>
               <p className="adm-label">Queue</p>
-              <h2 className="adm-sh-title">All submissions</h2>
+              <h2 className="adm-sh-title">All rental cars</h2>
             </div>
             <div className="adm-table-wrap">
-              <table className="adm-table">
+              <table className="adm-table" style={{ minWidth: 720 }}>
                 <thead>
                   <tr>
                     <th>Title</th>
-                    <th>Seller</th>
+                    <th>Owner</th>
+                    <th>City</th>
+                    <th>Price / day</th>
                     <th>Status</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {sales.map((s) => (
-                    <tr key={s._id}>
-                      <td style={{ fontWeight: 600 }}>{s.title}</td>
-                      <td style={{ color: "#9a9ab0" }}>{s.sellerId?.name || "—"}</td>
-                      <td>{statusBadge(s.status)}</td>
+                  {rentals.map((r) => (
+                    <tr key={r._id}>
+                      <td style={{ fontWeight: 600 }}>{r.title}</td>
+                      <td style={{ color: "#9a9ab0" }}>
+                        {r.rentalOwnerId?.name || "—"}
+                      </td>
+                      <td style={{ color: "#9a9ab0" }}>{r.city || "—"}</td>
+                      <td style={{ fontFamily: "'DM Mono', monospace", fontSize: 12 }}>
+                        {formatMoney(r.pricePerDay)}
+                      </td>
+                      <td>{statusBadge(r.status)}</td>
                       <td>
                         <div className="adm-action-btns">
-                          {s.status === "pending" && (
+                          {r.status === "pending" && (
                             <>
                               <button
                                 type="button"
-                                disabled={actionLoading === s._id}
-                                onClick={() => updateStatus(s._id, "approved")}
+                                disabled={actionLoading === r._id}
+                                onClick={() => updateStatus(r._id, "approved")}
                                 className="adm-btn-sm adm-btn-ok"
                               >
                                 Approve
                               </button>
                               <button
                                 type="button"
-                                disabled={actionLoading === s._id}
-                                onClick={() => updateStatus(s._id, "rejected")}
+                                disabled={actionLoading === r._id}
+                                onClick={() => updateStatus(r._id, "rejected")}
                                 className="adm-btn-sm adm-btn-danger"
                               >
                                 Reject
@@ -116,10 +132,10 @@ export default function AdminSales() {
                       </td>
                     </tr>
                   ))}
-                  {sales.length === 0 && (
+                  {rentals.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="adm-empty">
-                        No listings found
+                      <td colSpan={6} className="adm-empty">
+                        No rental listings found
                       </td>
                     </tr>
                   )}

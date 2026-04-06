@@ -7,17 +7,35 @@ const STYLES = `
   .dh-legend {
     display: flex;
     align-items: center;
-    gap: 6px;
-    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 8px 10px;
+    margin-bottom: 16px;
     font-family: 'DM Mono', monospace;
-    font-size: 10px;
+    font-size: 9px;
     color: #5a5a72;
     letter-spacing: .08em;
+  }
+  @media (min-width: 480px) {
+    .dh-legend { font-size: 10px; margin-bottom: 20px; flex-wrap: nowrap; }
   }
   .dh-legend-track {
     display: flex;
     gap: 3px;
     align-items: center;
+  }
+  .dh-peak {
+    width: 100%;
+    text-align: center;
+    color: #3a3a52;
+    margin-top: 4px;
+  }
+  @media (min-width: 640px) {
+    .dh-peak {
+      width: auto;
+      margin-left: auto;
+      margin-top: 0;
+      text-align: right;
+    }
   }
   .dh-legend-cell {
     width: 14px;
@@ -28,9 +46,11 @@ const STYLES = `
   /* Grid */
   .dh-grid {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 8px;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px;
   }
+  @media (min-width: 400px) { .dh-grid { gap: 6px; } }
+  @media (min-width: 640px) { .dh-grid { gap: 8px; } }
 
   /* Cell */
   .dh-cell-wrap {
@@ -43,31 +63,43 @@ const STYLES = `
   .dh-cell {
     width: 100%;
     aspect-ratio: 1;
-    border-radius: 10px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: 'DM Mono', monospace;
-    font-size: 13px;
+    font-size: 10px;
     font-weight: 600;
     cursor: default;
     position: relative;
     border: 1px solid transparent;
     transition: transform .15s, box-shadow .15s;
   }
+  @media (min-width: 480px) {
+    .dh-cell { font-size: 12px; border-radius: 10px; }
+  }
+  @media (min-width: 768px) {
+    .dh-cell { font-size: 13px; }
+  }
 
-  .dh-cell:hover {
-    transform: scale(1.12);
-    z-index: 2;
+  @media (hover: hover) and (min-width: 768px) {
+    .dh-cell:hover {
+      transform: scale(1.08);
+      z-index: 2;
+    }
   }
 
   .dh-day {
     font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: .08em;
+    font-size: 8px;
+    letter-spacing: .06em;
     text-transform: uppercase;
     color: #5a5a72;
     text-align: center;
+    line-height: 1.2;
+  }
+  @media (min-width: 480px) {
+    .dh-day { font-size: 10px; letter-spacing: .08em; }
   }
 
   /* Tooltip */
@@ -177,10 +209,7 @@ export default function DemandHeatmap({ data }) {
           <span>More</span>
 
           {/* Max indicator */}
-          <span style={{
-            marginLeft: "auto",
-            color: "#3a3a52",
-          }}>
+          <span className="dh-peak">
             peak: <span style={{ color: "#2af5c0" }}>{max}</span> bookings
           </span>
         </div>

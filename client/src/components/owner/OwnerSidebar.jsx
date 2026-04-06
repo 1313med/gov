@@ -167,6 +167,73 @@ const STYLES = `
   .osb-item.active .osb-icon {
     animation: osb-glow 3s ease-in-out infinite;
   }
+
+  .osb-item-label {
+    flex: 1;
+    min-width: 0;
+  }
+
+  @media (max-width: 767px) {
+    .osb {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      top: auto;
+      width: 100%;
+      min-width: 100%;
+      min-height: unset;
+      height: auto;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      padding: 10px 6px calc(10px + env(safe-area-inset-bottom, 0px));
+      border-right: none;
+      border-top: 1px solid rgba(255,255,255,.1);
+      z-index: 50;
+      box-shadow: 0 -8px 32px rgba(0,0,0,.35);
+    }
+    .osb-brand,
+    .osb-divider,
+    .osb-nav-label,
+    .osb-footer {
+      display: none;
+    }
+    .osb nav {
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+      justify-content: space-around;
+      align-items: center;
+      gap: 2px;
+    }
+    .osb-item {
+      flex: 1;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 8px 4px;
+      margin: 0;
+      font-size: 10px;
+      text-align: center;
+      gap: 6px;
+      max-width: 88px;
+    }
+    .osb-item.active::before {
+      display: none;
+    }
+    .osb-item-label {
+      font-size: 9px;
+      line-height: 1.15;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .osb-icon {
+      width: 28px;
+      height: 28px;
+    }
+  }
 `;
 
 const MENU = [
@@ -210,7 +277,7 @@ export default function OwnerSidebar() {
                 <span className="osb-icon">
                   <Icon size={15}/>
                 </span>
-                {item.name}
+                <span className="osb-item-label">{item.name}</span>
               </Link>
             );
           })}
