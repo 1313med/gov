@@ -1,10 +1,11 @@
 const asyncHandler = require("express-async-handler");
 const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
+const emailService = require("../utils/emailService");
 
 // POST /api/auth/register
 exports.register = asyncHandler(async (req, res) => {
-  const { name, phone, password, role, city } = req.body;
+  const { name, phone, password, role, city, email } = req.body;
 
   if (!name || !phone || !password) {
     res.status(400);
@@ -18,12 +19,13 @@ exports.register = asyncHandler(async (req, res) => {
   }
 
   const user = await User.create({
-    name,
-    phone,
-    password,
+    name, phone, password, email,
     role: role || "customer",
     city,
   });
+
+  // Send welcome email (non-blocking)
+  if (user.email) emailService.sendWelcome(user).catch(() => {});
 
   res.status(201).json({
     _id: user._id,
@@ -46,6 +48,11 @@ exports.login = asyncHandler(async (req, res) => {
   if (!user) {
     res.status(401);
     throw new Error("Invalid credentials");
+  }
+
+  if (user.isBanned) {
+    res.status(403);
+    throw new Error("Your account has been suspended. Please contact support.");
   }
 
   const ok = await user.matchPassword(password);

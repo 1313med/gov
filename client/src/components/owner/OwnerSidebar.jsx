@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Car, PlusCircle, Calendar } from "lucide-react";
+import { LayoutDashboard, Car, PlusCircle, Calendar, Layers, ClipboardList } from "lucide-react";
 
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap');
@@ -237,10 +237,12 @@ const STYLES = `
 `;
 
 const MENU = [
-  { name: "Dashboard",  path: "/owner/analytics", icon: LayoutDashboard },
-  { name: "My Rentals", path: "/my-rentals",       icon: Car             },
-  { name: "Add Rental", path: "/add-rental",       icon: PlusCircle      },
-  { name: "Bookings",   path: "/owner/bookings",   icon: Calendar        },
+  { name: "Dashboard",    path: "/owner/analytics",      icon: LayoutDashboard },
+  { name: "My Fleet",     path: "/my-fleet",              icon: Layers          },
+  { name: "My Rentals",   path: "/my-rentals",            icon: Car             },
+  { name: "Add Rental",   path: "/add-rental",            icon: PlusCircle      },
+  { name: "Bookings",     path: "/owner/bookings-list",   icon: ClipboardList   },
+  { name: "Calendar",     path: "/owner/bookings",        icon: Calendar        },
 ];
 
 export default function OwnerSidebar() {

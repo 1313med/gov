@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { api } from "../api/axios";
 import { loadAuth } from "../utils/authStorage";
 import { useAppLang } from "../context/AppLangContext";
+import ReviewSection from "../components/ReviewSection";
+import MapView from "../components/MapView";
 
 const S = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap');
@@ -322,6 +324,7 @@ function Spec({ label, value }) {
 export default function CarDetails() {
   const { copy } = useAppLang();
   const { id } = useParams();
+  const navigate = useNavigate();
   const [car,         setCar        ] = useState(null);
   const [loading,     setLoading    ] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
@@ -464,6 +467,13 @@ export default function CarDetails() {
                 >
                   {copy.carDetails.whatsapp}
                 </a>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/messages?with=${seller?._id}&listing=${car._id}&model=SaleListing`)}
+                  className="cd-btn cd-btn-outline"
+                >
+                  ✉ Message seller
+                </button>
               </>
             ) : (
               <div className="cd-login-nudge">
@@ -477,6 +487,13 @@ export default function CarDetails() {
         </div>
 
       </div>
+
+      {/* Map + Reviews below main grid */}
+      <div style={{ maxWidth: 1240, margin: "0 auto", padding: "0 40px 80px" }}>
+        <MapView city={car.city} label={`${car.title} — ${car.city}`} />
+        <ReviewSection targetModel="SaleListing" targetId={car._id} />
+      </div>
+
     </div>
   );
 }

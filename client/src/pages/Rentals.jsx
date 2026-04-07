@@ -311,6 +311,9 @@ export default function Rentals() {
     maxPrice: "",
     startDate: "",
     endDate: "",
+    brand: "",
+    fuel: "",
+    gearbox: "",
   });
 
   const fetchRentals = async () => {
@@ -385,13 +388,26 @@ export default function Rentals() {
       </section>
 
       <div className="rp-main">
-        <div className="rp-filter-panel rp-fade" style={{ animationDelay: "60ms" }}>
+        <div className="rp-filter-panel rp-fade" style={{ animationDelay: "60ms", gridTemplateColumns: "repeat(4,1fr)" }}>
           <FloatInput placeholder={copy.rentals.cityPh} value={filters.city} onChange={(v) => setFilters({ ...filters, city: v })} />
+          <FloatInput placeholder="Brand (e.g. BMW)" value={filters.brand} onChange={(v) => setFilters({ ...filters, brand: v })} />
           <FloatInput type="number" placeholder={copy.rentals.minPh} value={filters.minPrice} onChange={(v) => setFilters({ ...filters, minPrice: v })} />
           <FloatInput type="number" placeholder={copy.rentals.maxPh} value={filters.maxPrice} onChange={(v) => setFilters({ ...filters, maxPrice: v })} />
           <DateField label={copy.rentals.start} value={filters.startDate} onChange={(v) => setFilters({ ...filters, startDate: v })} />
           <DateField label={copy.rentals.end} value={filters.endDate} onChange={(v) => setFilters({ ...filters, endDate: v })} />
-          <button type="button" className="rp-apply" onClick={fetchRentals}>
+          <div className="rp-input-wrap">
+            <select value={filters.fuel} onChange={(e) => setFilters({ ...filters, fuel: e.target.value })} className="rp-input" style={{ paddingTop: 13 }}>
+              <option value="">Any fuel</option>
+              {["Diesel","Petrol","Hybrid","Electric"].map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </div>
+          <div className="rp-input-wrap">
+            <select value={filters.gearbox} onChange={(e) => setFilters({ ...filters, gearbox: e.target.value })} className="rp-input" style={{ paddingTop: 13 }}>
+              <option value="">Any gearbox</option>
+              {["Manual","Automatic"].map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </div>
+          <button type="button" className="rp-apply rp-filter-panel" style={{ gridColumn: "1 / -1" }} onClick={fetchRentals}>
             {copy.rentals.apply}
           </button>
         </div>

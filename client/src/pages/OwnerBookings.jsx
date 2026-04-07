@@ -268,31 +268,29 @@ export default function OwnerBookings() {
 
             {selectedBooking.status === "pending" && (
               <div className="flex gap-3 mt-6">
-
                 <button
-                  onClick={() =>
-                    updateStatus(
-                      selectedBooking._id,
-                      "confirmed"
-                    )
-                  }
+                  onClick={() => updateStatus(selectedBooking._id, "confirmed")}
                   className="flex-1 bg-green-600 text-white py-2 rounded-xl hover:bg-green-700"
                 >
                   Accept
                 </button>
-
                 <button
-                  onClick={() =>
-                    updateStatus(
-                      selectedBooking._id,
-                      "rejected"
-                    )
-                  }
+                  onClick={() => updateStatus(selectedBooking._id, "rejected")}
                   className="flex-1 bg-red-600 text-white py-2 rounded-xl hover:bg-red-700"
                 >
                   Reject
                 </button>
+              </div>
+            )}
 
+            {selectedBooking.status === "confirmed" && (
+              <div className="mt-6">
+                <button
+                  onClick={() => updateStatus(selectedBooking._id, "completed")}
+                  className="w-full bg-purple-600 text-white py-2 rounded-xl hover:bg-purple-700"
+                >
+                  ✓ Mark as Completed
+                </button>
               </div>
             )}
 

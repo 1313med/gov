@@ -11,3 +11,9 @@ export const updateBookingStatus = (id, status) =>
 
 export const updateBookingDates = (id, data) =>
   api.put(`/bookings/${id}/dates`, data);
+
+export const markBookingPaid = (id) =>
+  api.put(`/bookings/${id}/paid`);
+
+export const updateBookingMedia = (id, data) =>
+  api.put(`/bookings/${id}/media`, data);

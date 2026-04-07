@@ -10,15 +10,21 @@ const saleListingSchema = new mongoose.Schema(
     price: { type: Number, required: true },
     city: { type: String, required: true },
 
-    // car details
+    // Car details
     brand: { type: String, required: true },
     model: { type: String, required: true },
     year: { type: Number, required: true },
     mileage: { type: Number },
     fuel: { type: String },     // diesel / petrol / hybrid / electric
     gearbox: { type: String },  // manual / automatic
+    color: { type: String },
+    doors: { type: Number },
+    seats: { type: Number },
+    features: [{ type: String }], // AC, GPS, Bluetooth, etc.
 
-    images: [{ type: String }], // image URLs (later we use Cloudinary)
+    images: [{ type: String }],
+
+    viewCount: { type: Number, default: 0 },
 
     status: {
       type: String,
@@ -28,5 +34,21 @@ const saleListingSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Full-text search index
+saleListingSchema.index({
+  title: "text",
+  brand: "text",
+  model: "text",
+  city: "text",
+  description: "text",
+});
+
+// Performance indexes
+saleListingSchema.index({ status: 1 });
+saleListingSchema.index({ sellerId: 1 });
+saleListingSchema.index({ city: 1 });
+saleListingSchema.index({ brand: 1 });
+saleListingSchema.index({ price: 1 });
 
 module.exports = mongoose.model("SaleListing", saleListingSchema);

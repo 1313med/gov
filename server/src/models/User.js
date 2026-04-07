@@ -15,14 +15,23 @@ const userSchema = new mongoose.Schema(
     },
 
     city: { type: String },
+    bio: { type: String },
+    avatar: { type: String },
 
-    // ⭐ Favorites MUST be inside schema (this was broken before)
-    favorites: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "SaleListing" }
-    ]
+    // Account status (admin can ban)
+    isActive: { type: Boolean, default: true },
+    isBanned: { type: Boolean, default: false },
+
+    // Favorites
+    favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "SaleListing" }],
+    rentalFavorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "RentalListing" }],
   },
   { timestamps: true }
 );
+
+// Performance index
+userSchema.index({ phone: 1 });
+userSchema.index({ email: 1 });
 
 // Hash password before save
 userSchema.pre("save", async function () {

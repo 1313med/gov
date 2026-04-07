@@ -5,6 +5,9 @@ import { api } from "../api/axios";
 const NewSale = () => {
   const navigate = useNavigate();
 
+  const FEATURES = ["Air conditioning", "GPS", "Bluetooth", "Backup camera", "Sunroof", "Leather seats", "Heated seats", "USB port", "Cruise control", "Parking sensors"];
+  const [features, setFeatures] = useState([]);
+
   const [formData, setFormData] = useState({
     title: "",
     brand: "",
@@ -15,6 +18,9 @@ const NewSale = () => {
     city: "",
     fuel: "",
     gearbox: "",
+    color: "",
+    doors: "",
+    seats: "",
     description: "",
     images: [],
   });
@@ -79,6 +85,11 @@ const NewSale = () => {
       await api.post("/sale", {
         ...formData,
         price: Number(formData.price),
+        year: Number(formData.year),
+        mileage: formData.mileage ? Number(formData.mileage) : undefined,
+        doors: formData.doors ? Number(formData.doors) : undefined,
+        seats: formData.seats ? Number(formData.seats) : undefined,
+        features,
       });
 
       navigate("/my-sales");
@@ -122,8 +133,35 @@ const NewSale = () => {
               <Input name="mileage" placeholder="Mileage (km)" value={formData.mileage} onChange={handleChange} />
               <Input name="price" placeholder="Price (MAD)" value={formData.price} onChange={handleChange} />
               <Input name="city" placeholder="City" value={formData.city} onChange={handleChange} />
-              <Input name="fuel" placeholder="Fuel (Diesel, Petrol...)" value={formData.fuel} onChange={handleChange} />
-              <Input name="gearbox" placeholder="Gearbox (Manual / Auto)" value={formData.gearbox} onChange={handleChange} />
+              <Input name="color" placeholder="Color (e.g. Black)" value={formData.color} onChange={handleChange} />
+              <Input name="doors" placeholder="Doors (e.g. 4)" value={formData.doors} onChange={handleChange} />
+              <Input name="seats" placeholder="Seats (e.g. 5)" value={formData.seats} onChange={handleChange} />
+              <select name="fuel" value={formData.fuel} onChange={handleChange} className="w-full rounded-xl border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black">
+                <option value="">Fuel type</option>
+                {["Diesel","Petrol","Hybrid","Electric"].map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+              <select name="gearbox" value={formData.gearbox} onChange={handleChange} className="w-full rounded-xl border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black">
+                <option value="">Gearbox</option>
+                {["Manual","Automatic"].map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+            </div>
+
+            {/* Features */}
+            <div className="mt-6">
+              <p className="text-sm font-semibold mb-3 text-gray-700">Features & Extras</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {["Air conditioning","GPS","Bluetooth","Backup camera","Sunroof","Leather seats","Heated seats","USB port","Cruise control","Parking sensors"].map((f) => (
+                  <label key={f} className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={features.includes(f)}
+                      onChange={() => setFeatures(prev => prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f])}
+                      className="accent-black"
+                    />
+                    {f}
+                  </label>
+                ))}
+              </div>
             </div>
 
             <textarea

@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { api } from "../api/axios";
 import { useAppLang } from "../context/AppLangContext";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
+import { loadAuth } from "../utils/authStorage";
+import ReviewSection from "../components/ReviewSection";
+import MapView from "../components/MapView";
 
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&family=DM+Mono:wght@400;500&display=swap');
@@ -119,6 +122,22 @@ const STYLES = `
   .rd-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 10px 28px rgba(124,107,255,.35); }
   .rd-btn:disabled { opacity: .45; cursor: not-allowed; }
 
+  /* Offers */
+  .rd-offers { display: flex; flex-direction: column; gap: 10px; }
+  .rd-offer {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 14px 16px; border-radius: 14px;
+    background: rgba(251,191,36,.07); border: 1px solid rgba(251,191,36,.2);
+  }
+  .rd-offer-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .rd-offer-title { font-family: var(--head); font-size: 14px; font-weight: 600; color: #fbbf24; margin: 0 0 3px; }
+  .rd-offer-summary { font-size: 12px; color: var(--muted); margin: 0; }
+  .rd-offer-desc { font-size: 11px; color: var(--muted); margin: 4px 0 0; opacity: .75; }
+  .rd-discount-row {
+    display: flex; justify-content: space-between; font-size: 13px;
+    color: #4ade80; margin-bottom: 8px; font-weight: 500;
+  }
+
   .rd-skel { animation: rd-pulse 1.2s ease-in-out infinite; }
   @keyframes rd-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
   .rd-skel-box { height: min(52vh, 440px); background: var(--s2); border-radius: 18px; border: 1px solid var(--border); }
@@ -141,6 +160,8 @@ const ICONS = {
 export default function RentalDetails() {
   const { copy } = useAppLang();
   const { id } = useParams();
+  const navigate = useNavigate();
+  const auth = loadAuth();
 
   const [rental, setRental] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -153,6 +174,7 @@ export default function RentalDetails() {
   const [bookingMessage, setBookingMessage] = useState(null);
 
   const [bookedDates, setBookedDates] = useState([]);
+  const [blockedDates, setBlockedDates] = useState([]);
 
   const [dark, setDark] = useState(() => {
     const saved = localStorage.getItem("rental-details-theme");
@@ -176,8 +198,23 @@ export default function RentalDetails() {
 
   const days = calculateDays();
 
-  const totalPrice =
-    rental && days > 0 ? days * rental.pricePerDay : 0;
+  const basePrice = rental && days > 0 ? days * rental.pricePerDay : 0;
+
+  // Find the best active offer that applies for the selected days
+  const applicableOffers = rental
+    ? (rental.offers || []).filter((o) => o.isActive && days >= (o.minDays || 1))
+    : [];
+
+  let bestDiscount = 0;
+  let appliedOffer = null;
+  for (const o of applicableOffers) {
+    let saving = 0;
+    if (o.type === "free_days") saving = (o.freeExtraDays || 0) * (rental?.pricePerDay || 0);
+    else if (o.type === "percent_discount") saving = basePrice * ((o.discountPercent || 0) / 100);
+    if (saving > bestDiscount) { bestDiscount = saving; appliedOffer = o; }
+  }
+
+  const totalPrice = Math.max(0, basePrice - bestDiscount);
 
   useEffect(() => {
     localStorage.setItem("rental-details-theme", dark ? "dark" : "light");
@@ -187,7 +224,18 @@ export default function RentalDetails() {
     const loadRental = async () => {
       try {
         const res = await api.get(`/rental/${id}`);
-        setRental(res.data);
+        const rentalData = res.data;
+        setRental(rentalData);
+
+        // Owner blocked periods
+        if (rentalData.availability?.length) {
+          setBlockedDates(
+            rentalData.availability.map((r) => ({
+              from: new Date(r.startDate),
+              to: new Date(r.endDate),
+            }))
+          );
+        }
 
         const bookingsRes = await api.get(`/rental/${id}/bookings`);
 
@@ -217,6 +265,18 @@ export default function RentalDetails() {
         type: "error",
         code: "dates",
         text: copy.rentalDetails.selectDatesError,
+      });
+      return;
+    }
+
+    // Check against owner-blocked periods before hitting the server
+    const rangeOverlapsBlocked = blockedDates.some((b) => {
+      return startDate < b.to && endDate > b.from;
+    });
+    if (rangeOverlapsBlocked) {
+      setBookingMessage({
+        type: "error",
+        text: "This car is not available on the selected dates. Please choose different dates.",
       });
       return;
     }
@@ -379,6 +439,33 @@ export default function RentalDetails() {
               </p>
             </div>
 
+            {/* ── Active Offers ── */}
+            {(rental.offers || []).filter((o) => o.isActive).length > 0 && (
+              <div className="rd-card" style={{ padding: "18px 20px" }}>
+                <p style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--muted)", margin: "0 0 12px" }}>
+                  Special Offers
+                </p>
+                <div className="rd-offers">
+                  {(rental.offers || []).filter((o) => o.isActive).map((o, i) => (
+                    <div key={i} className="rd-offer">
+                      <span className="rd-offer-icon">🏷️</span>
+                      <div>
+                        <p className="rd-offer-title">{o.title}</p>
+                        <p className="rd-offer-summary">
+                          {o.type === "free_days" && `Book ${o.minDays}+ days → get ${o.freeExtraDays} day${o.freeExtraDays > 1 ? "s" : ""} free`}
+                          {o.type === "percent_discount" && `Book ${o.minDays}+ days → ${o.discountPercent}% off total`}
+                          {o.type === "custom" && (o.description || "")}
+                        </p>
+                        {o.type !== "custom" && o.description && (
+                          <p className="rd-offer-desc">{o.description}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="rd-card rd-book">
               <h2 className="rd-book-h">{copy.rentalDetails.selectDates}</h2>
 
@@ -390,6 +477,7 @@ export default function RentalDetails() {
                   disabled={[
                     { before: new Date() },
                     ...bookedDates,
+                    ...blockedDates,
                   ]}
                 />
               </div>
@@ -404,9 +492,21 @@ export default function RentalDetails() {
                     <span>{copy.rentalDetails.days}</span>
                     <strong>{days}</strong>
                   </div>
+                  {appliedOffer && bestDiscount > 0 && (
+                    <>
+                      <div className="rd-sum-row">
+                        <span>Subtotal</span>
+                        <strong style={{ textDecoration: "line-through", opacity: .5 }}>{Number(basePrice).toLocaleString()} MAD</strong>
+                      </div>
+                      <div className="rd-discount-row">
+                        <span>🏷️ {appliedOffer.title}</span>
+                        <span>−{Number(bestDiscount).toLocaleString()} MAD</span>
+                      </div>
+                    </>
+                  )}
                   <div className="rd-sum-total">
                     <span>{copy.rentalDetails.total}</span>
-                    <span>{Number(totalPrice).toLocaleString()} MAD</span>
+                    <span style={appliedOffer ? { color: "#4ade80" } : {}}>{Number(totalPrice).toLocaleString()} MAD</span>
                   </div>
                 </div>
               )}
@@ -432,9 +532,34 @@ export default function RentalDetails() {
               >
                 {bookingLoading ? copy.rentalDetails.booking : copy.rentalDetails.bookNow}
               </button>
+
+              {/* Message owner */}
+              {auth?.token && rental?.rentalOwnerId && (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/messages?with=${rental.rentalOwnerId._id || rental.rentalOwnerId}&listing=${rental._id}&model=RentalListing`)}
+                  style={{
+                    width: "100%", marginTop: 10, padding: 14, border: "1px solid var(--border)",
+                    borderRadius: 12, background: "none", color: "var(--muted)",
+                    fontFamily: "var(--mono)", fontSize: 11, letterSpacing: ".1em",
+                    textTransform: "uppercase", cursor: "pointer", transition: "all .2s",
+                  }}
+                  onMouseEnter={(e) => { e.target.style.borderColor = "var(--violet)"; e.target.style.color = "var(--violet)"; }}
+                  onMouseLeave={(e) => { e.target.style.borderColor = "var(--border)"; e.target.style.color = "var(--muted)"; }}
+                >
+                  ✉ Message owner
+                </button>
+              )}
             </div>
           </aside>
         </div>
+
+        {/* Map + Reviews */}
+        <div style={{ marginTop: 32 }}>
+          <MapView city={rental.city} label={`${rental.title} — ${rental.city}`} />
+          <ReviewSection targetModel="RentalListing" targetId={rental._id} />
+        </div>
+
       </div>
     </div>
   );
