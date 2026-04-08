@@ -4,13 +4,20 @@ import AdminLayout from "../../components/admin/AdminLayout";
 
 const ROLES = ["", "customer", "seller", "rental_owner", "admin"];
 
+const ROLE_COLORS = {
+  admin:        { bg: "rgba(124,108,252,.14)", color: "#7c6cfc", border: "rgba(124,108,252,.28)" },
+  seller:       { bg: "rgba(96,165,250,.12)",  color: "#60a5fa", border: "rgba(96,165,250,.25)" },
+  rental_owner: { bg: "rgba(42,245,192,.12)",  color: "#2af5c0", border: "rgba(42,245,192,.25)" },
+  customer:     { bg: "rgba(255,255,255,.06)", color: "#8a8a9e", border: "rgba(255,255,255,.1)" },
+};
+
 export default function AdminUsers() {
-  const [users, setUsers] = useState([]);
-  const [total, setTotal] = useState(0);
+  const [users, setUsers]   = useState([]);
+  const [total, setTotal]   = useState(0);
   const [search, setSearch] = useState("");
-  const [role, setRole] = useState("");
-  const [page, setPage] = useState(1);
-  const [pages, setPages] = useState(1);
+  const [role, setRole]     = useState("");
+  const [page, setPage]     = useState(1);
+  const [pages, setPages]   = useState(1);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
@@ -18,7 +25,7 @@ export default function AdminUsers() {
     try {
       const params = new URLSearchParams({ page, limit: 20 });
       if (search) params.set("search", search);
-      if (role) params.set("role", role);
+      if (role)   params.set("role", role);
       const r = await api.get(`/admin/users?${params}`);
       setUsers(r.data.users);
       setTotal(r.data.total);
@@ -37,29 +44,22 @@ export default function AdminUsers() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this user? This cannot be undone.")) return;
+    if (!window.confirm("Delete this user? This cannot be undone.")) return;
     await api.delete(`/admin/users/${id}`);
     load();
   };
 
-  const roleBadge = (r) => {
-    const colors = { admin: "#7c3aed", seller: "#0284c7", rental_owner: "#0891b2", customer: "#6b7280" };
-    return (
-      <span style={{
-        background: colors[r] + "1a", color: colors[r],
-        border: `1px solid ${colors[r]}33`,
-        borderRadius: 999, padding: "2px 10px", fontSize: 11, fontWeight: 600,
-      }}>{r}</span>
-    );
-  };
-
   return (
     <AdminLayout>
-      <div style={{ padding: "0 0 40px" }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 6 }}>User Management</h1>
-        <p style={{ color: "#6b7280", fontSize: 14, marginBottom: 24 }}>
-          {total} total users
-        </p>
+      <div className="adm-page">
+        <div className="adm-header">
+          <div>
+            <p className="adm-label">Admin</p>
+            <h1 className="adm-title">Users</h1>
+            <p className="adm-sub">Manage accounts — pause or remove users as needed.</p>
+          </div>
+          <span className="adm-meta">{total} total</span>
+        </div>
 
         {/* Filters */}
         <form onSubmit={handleSearch} style={{ display: "flex", gap: 10, marginBottom: 24, flexWrap: "wrap" }}>
@@ -69,119 +69,135 @@ export default function AdminUsers() {
             placeholder="Search by name, phone, email…"
             style={{
               flex: 1, minWidth: 200, padding: "10px 14px",
-              border: "1px solid #e5e7eb", borderRadius: 10, fontSize: 14, outline: "none",
+              background: "rgba(255,255,255,.04)",
+              border: "1px solid rgba(255,255,255,.1)",
+              borderRadius: 10, fontSize: 13, outline: "none",
+              color: "#e8e8f0", fontFamily: "'DM Mono', monospace",
             }}
           />
           <select
             value={role}
             onChange={(e) => { setRole(e.target.value); setPage(1); }}
-            style={{ padding: "10px 14px", border: "1px solid #e5e7eb", borderRadius: 10, fontSize: 14, background: "#fff", outline: "none" }}
+            style={{
+              padding: "10px 14px",
+              background: "rgba(255,255,255,.04)",
+              border: "1px solid rgba(255,255,255,.1)",
+              borderRadius: 10, fontSize: 13, color: "#e8e8f0",
+              fontFamily: "'DM Mono', monospace", outline: "none",
+            }}
           >
-            {ROLES.map((r) => <option key={r} value={r}>{r || "All roles"}</option>)}
+            {ROLES.map((r) => <option key={r} value={r} style={{ background: "#111118" }}>{r || "All roles"}</option>)}
           </select>
-          <button
-            type="submit"
-            style={{ padding: "10px 20px", background: "#141412", color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: "pointer" }}
-          >
-            Search
-          </button>
+          <button type="submit" className="adm-btn adm-btn-pri">Search</button>
         </form>
 
-        {loading ? (
-          <p style={{ color: "#9ca3af" }}>Loading…</p>
-        ) : (
-          <>
-            <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", overflow: "hidden" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-                <thead>
-                  <tr style={{ background: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
-                    {["Name", "Phone", "Email", "Role", "Status", "Joined", "Actions"].map((h) => (
-                      <th key={h} style={{ padding: "12px 16px", textAlign: "left", fontWeight: 600, color: "#374151" }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((u) => (
-                    <tr key={u._id} style={{ borderBottom: "1px solid #f3f4f6" }}>
-                      <td style={{ padding: "12px 16px", fontWeight: 500 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                          <div style={{
-                            width: 32, height: 32, borderRadius: "50%", background: "#e5e7eb",
-                            overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center",
-                            fontSize: 13, fontWeight: 700, color: "#374151", flexShrink: 0,
-                          }}>
-                            {u.avatar ? <img src={u.avatar} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : u.name[0]}
-                          </div>
-                          {u.name}
-                        </div>
-                      </td>
-                      <td style={{ padding: "12px 16px", color: "#6b7280" }}>{u.phone}</td>
-                      <td style={{ padding: "12px 16px", color: "#6b7280" }}>{u.email || "—"}</td>
-                      <td style={{ padding: "12px 16px" }}>{roleBadge(u.role)}</td>
-                      <td style={{ padding: "12px 16px" }}>
-                        {u.isBanned
-                          ? <span style={{ color: "#dc2626", fontSize: 12, fontWeight: 600 }}>Banned</span>
-                          : <span style={{ color: "#059669", fontSize: 12, fontWeight: 600 }}>Active</span>}
-                      </td>
-                      <td style={{ padding: "12px 16px", color: "#6b7280" }}>
-                        {new Date(u.createdAt).toLocaleDateString()}
-                      </td>
-                      <td style={{ padding: "12px 16px" }}>
-                        <div style={{ display: "flex", gap: 8 }}>
-                          {u.role !== "admin" && (
-                            <button
-                              onClick={() => handleBan(u._id, u.isBanned)}
-                              style={{
-                                padding: "5px 12px", fontSize: 11, fontWeight: 600,
-                                border: `1px solid ${u.isBanned ? "#059669" : "#dc2626"}`,
-                                color: u.isBanned ? "#059669" : "#dc2626",
-                                background: "none", borderRadius: 7, cursor: "pointer",
-                              }}
-                            >
-                              {u.isBanned ? "Unban" : "Ban"}
-                            </button>
-                          )}
-                          {u.role !== "admin" && (
-                            <button
-                              onClick={() => handleDelete(u._id)}
-                              style={{
-                                padding: "5px 12px", fontSize: 11, fontWeight: 600,
-                                border: "1px solid #e5e7eb", color: "#6b7280",
-                                background: "none", borderRadius: 7, cursor: "pointer",
-                              }}
-                            >
-                              Delete
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <div className="adm-card">
+          {loading ? (
+            <div className="adm-loading">
+              <div className="adm-spin" />
+              Loading users…
             </div>
-
-            {/* Pagination */}
-            {pages > 1 && (
-              <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 24 }}>
-                {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    style={{
-                      width: 36, height: 36, borderRadius: 8, border: "1px solid #e5e7eb",
-                      background: p === page ? "#141412" : "#fff",
-                      color: p === page ? "#fff" : "#374151",
-                      fontSize: 13, fontWeight: 600, cursor: "pointer",
-                    }}
-                  >
-                    {p}
-                  </button>
-                ))}
+          ) : users.length === 0 ? (
+            <div className="adm-empty">No users found.</div>
+          ) : (
+            <div className="adm-card-pad">
+              <div className="adm-table-wrap">
+                <table className="adm-table">
+                  <thead>
+                    <tr>
+                      {["User", "Phone", "Email", "Role", "Status", "Joined", "Actions"].map((h) => (
+                        <th key={h}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map((u) => {
+                      const rc = ROLE_COLORS[u.role] || ROLE_COLORS.customer;
+                      return (
+                        <tr key={u._id}>
+                          <td>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                              <div style={{
+                                width: 32, height: 32, borderRadius: "50%",
+                                background: "rgba(124,108,252,.2)",
+                                overflow: "hidden", display: "flex", alignItems: "center",
+                                justifyContent: "center", fontSize: 13, fontWeight: 700,
+                                color: "#7c6cfc", flexShrink: 0,
+                              }}>
+                                {u.avatar
+                                  ? <img src={u.avatar} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />
+                                  : u.name[0].toUpperCase()}
+                              </div>
+                              <span style={{ fontWeight: 600, color: "#e8e8f0" }}>{u.name}</span>
+                            </div>
+                          </td>
+                          <td style={{ color: "#8a8a9e" }}>{u.phone}</td>
+                          <td style={{ color: "#8a8a9e" }}>{u.email || "—"}</td>
+                          <td>
+                            <span className="adm-badge" style={{ background: rc.bg, color: rc.color, borderColor: rc.border }}>
+                              {u.role}
+                            </span>
+                          </td>
+                          <td>
+                            {u.isBanned
+                              ? <span className="adm-badge adm-badge-rejected">Banned</span>
+                              : <span className="adm-badge adm-badge-approved">Active</span>}
+                          </td>
+                          <td style={{ color: "#8a8a9e" }}>{new Date(u.createdAt).toLocaleDateString()}</td>
+                          <td>
+                            <div className="adm-action-btns">
+                              {u.role !== "admin" && (
+                                <button
+                                  onClick={() => handleBan(u._id, u.isBanned)}
+                                  className={`adm-btn-sm ${u.isBanned ? "adm-btn-ok" : "adm-btn-danger"}`}
+                                >
+                                  {u.isBanned ? "Unban" : "Ban"}
+                                </button>
+                              )}
+                              {u.role !== "admin" && (
+                                <button
+                                  onClick={() => handleDelete(u._id)}
+                                  className="adm-btn-sm"
+                                  style={{
+                                    background: "rgba(255,255,255,.04)",
+                                    borderColor: "rgba(255,255,255,.1)",
+                                    color: "#8a8a9e",
+                                  }}
+                                >
+                                  Delete
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
-            )}
-          </>
-        )}
+
+              {pages > 1 && (
+                <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 24 }}>
+                  {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p)}
+                      className="adm-btn-sm"
+                      style={{
+                        width: 36, height: 36, padding: 0,
+                        background: p === page ? "rgba(124,108,252,.2)" : "rgba(255,255,255,.04)",
+                        borderColor: p === page ? "rgba(124,108,252,.4)" : "rgba(255,255,255,.1)",
+                        color: p === page ? "#7c6cfc" : "#8a8a9e",
+                      }}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </AdminLayout>
   );

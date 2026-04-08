@@ -198,7 +198,7 @@ exports.getOwnerBookings = async (req, res, next) => {
     const rentals = await RentalListing.find({ rentalOwnerId: req.user._id }).select("_id");
     const rentalIds = rentals.map((r) => r._id);
     const bookings = await Booking.find({ rentalId: { $in: rentalIds } })
-      .populate("rentalId", "title pricePerDay city")
+      .populate("rentalId", "title pricePerDay city images")
       .populate("customerId", "name email phone")
       .sort({ startDate: -1 });
     res.json(bookings);

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, ClipboardList, CarFront } from "lucide-react";
+import { LayoutDashboard, ClipboardList, CarFront, Users } from "lucide-react";
 
 const ADM_STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Mono:wght@400;500&display=swap');
@@ -497,6 +497,7 @@ const NAV = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { to: "/admin/sales", label: "Sales", icon: ClipboardList },
   { to: "/admin/rentals", label: "Rentals", icon: CarFront },
+  { to: "/admin/users", label: "Users", icon: Users },
 ];
 
 export default function AdminLayout({ children }) {
