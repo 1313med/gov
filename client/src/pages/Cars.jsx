@@ -353,11 +353,117 @@ const STYLES = `
   .cp-top-kicker{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--violet);margin-bottom:8px;}
   .cp-top-title{font-family:var(--head);font-size:clamp(28px,4vw,44px);letter-spacing:-.04em;line-height:1.02;color:var(--txt);margin:0 0 8px;}
   .cp-top-sub{font-size:14px;color:var(--muted);font-family:var(--body);}
-  .cp-tabs{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:14px;border:1px solid var(--border);border-radius:18px;background:var(--s1);}
-  .cp-tab{padding:9px 14px;border-radius:999px;border:1px solid var(--border);background:var(--s2);font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:all .3s ease;}
-  .cp-tab.active{background:var(--violet-bg);color:var(--violet);border-color:var(--violet-bd);}
-  .cp-select{margin-left:auto;background:var(--s2);border:1px solid var(--border);border-radius:999px;padding:9px 12px;font-family:var(--mono);font-size:10px;color:var(--txt);outline:none;}
-  .cp-select + .cp-select{margin-left:0;}
+  /* ── Filter panel (unified) ── */
+  .cp-filter-panel {
+    max-width: 1200px;
+    margin: 24px auto 0;
+    padding: 0 20px;
+    position: relative; z-index: 10;
+  }
+  .cp-filter-card {
+    background: var(--s1);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: var(--filter-shadow);
+    overflow: hidden;
+    transition: background .35s, border-color .35s, box-shadow .35s;
+  }
+
+  /* Section label row */
+  .cp-filter-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .cp-filter-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .cp-filter-label::before {
+    content: '';
+    width: 14px; height: 1px;
+    background: var(--violet);
+    display: inline-block;
+  }
+
+  /* Category + quick-filter row */
+  .cp-tabs-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    background: var(--s2);
+    transition: background .35s, border-color .35s;
+  }
+  .cp-tab {
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--s1);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .2s ease;
+    flex-shrink: 0;
+  }
+  .cp-tab:hover { border-color: var(--violet-bd); color: var(--violet); }
+  .cp-tab.active { background: var(--violet-bg); color: var(--violet); border-color: var(--violet-bd); }
+
+  .cp-tabs-spacer { flex: 1; min-width: 8px; }
+  .cp-select {
+    background: var(--s1);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--txt);
+    outline: none;
+    cursor: pointer;
+    transition: border-color .2s, color .35s, background .35s;
+    flex-shrink: 0;
+  }
+  .cp-select:focus { border-color: var(--violet); }
+
+  /* Search inputs row */
+  .cp-inputs-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    gap: 12px;
+    padding: 16px 20px;
+    transition: background .35s;
+  }
+
+  /* Active filters badge */
+  .cp-active-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--violet-bg);
+    border: 1px solid var(--violet-bd);
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--violet);
+  }
+
+  /* Legacy cp-tabs kept for mobile panel compat */
+  .cp-tabs{display:none;}
   .cp-benefits{
     max-width:1200px;margin:22px auto 0;padding:0 20px;
     display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
@@ -604,28 +710,30 @@ const STYLES = `
   /* ═══════════ RESPONSIVE ═══════════ */
   @media (max-width: 1024px) {
     .cp-grid { grid-template-columns: repeat(2,1fr); }
-    .cp-filter-inner { grid-template-columns: 1fr 1fr 1fr; }
-    .cp-filter-inner .cars-input-wrap:first-child { grid-column: 1/-1; }
-    .cp-modal-grid{grid-template-columns:1fr;}
+    .cp-inputs-row { grid-template-columns: 1fr 1fr 1fr; }
+    .cp-inputs-row .cars-input-wrap:first-child { grid-column: 1/-1; }
+    .cp-modal-grid { grid-template-columns: 1fr; }
   }
   @media (max-width: 767px) {
     .cp-filter-bar { display: none; }
     .cp-filter-toggle-bar { display: block; }
+    .cp-inputs-row { grid-template-columns: 1fr 1fr; padding: 12px 14px; gap: 8px; }
+    .cp-inputs-row .cars-input-wrap:first-child { grid-column: 1/-1; }
+    .cp-tabs-row { padding: 12px 14px; gap: 6px; }
+    .cp-filter-panel { padding: 0 12px; }
     .cp-main { padding: 28px 16px 80px; }
-    .cp-top{padding:0 16px 6px;}
-    .cp-tabs{border-radius:14px;}
+    .cp-top { padding: 0 16px 6px; }
     .cp-grid { grid-template-columns: 1fr; gap: 14px; }
     .car-img-wrap { height: 210px; }
     .car-fav-btn { width: 40px; height: 40px; font-size: 16px; }
-    .cp-theme-bar { padding: 10px 16px; }
   }
   @media (max-width: 480px) {
-    .cp-filter-mobile-inner { grid-template-columns: 1fr; }
-    .cp-filter-mobile-inner .cars-input-wrap:first-child { grid-column: 1; }
+    .cp-inputs-row { grid-template-columns: 1fr; }
+    .cp-inputs-row .cars-input-wrap:first-child { grid-column: 1; }
     .cp-load-btn { width: 100%; text-align: center; padding: 14px; }
     .cp-load-wrap { padding: 0 16px; }
-    .cp-modal-title{font-size:24px;}
-    .cp-modal-img{height:240px;}
+    .cp-modal-title { font-size: 24px; }
+    .cp-modal-img { height: 240px; }
   }
 `;
 
@@ -706,7 +814,8 @@ export default function Cars() {
   const [page,      setPage     ] = useState(1);
   const [hasMore,   setHasMore  ] = useState(true);
   const [dark,      setDark     ] = useState(() => {
-    const saved = localStorage.getItem("cars-theme");
+    // Sync with global theme set by Navbar
+    const saved = localStorage.getItem("goo-theme") || localStorage.getItem("cars-theme");
     if (saved === "dark") return true;
     if (saved === "light") return false;
     return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false;
@@ -744,6 +853,7 @@ export default function Cars() {
   });
 
   useEffect(() => {
+    localStorage.setItem("goo-theme",  dark ? "dark" : "light");
     localStorage.setItem("cars-theme", dark ? "dark" : "light");
   }, [dark]);
 
@@ -806,17 +916,6 @@ export default function Cars() {
     <div className={`cp${dark ? " dark" : ""}`}>
       <style>{STYLES}</style>
 
-      {/* ══ THEME TOGGLE BAR ══════════════════════════════════════════════ */}
-      <div className="cp-theme-bar">
-        <button className="cp-theme-btn" onClick={() => setDark(d => !d)}>
-          <span className="cp-theme-icon">{dark ? ICONS.sun : ICONS.moon}</span>
-          <span>{dark ? copy.cars.themeLight : copy.cars.themeDark}</span>
-          <div className="cp-toggle-track">
-            <div className="cp-toggle-thumb"/>
-          </div>
-        </button>
-      </div>
-
       <section className="cp-top cp-fade">
         <div className="cp-top-head">
           <div>
@@ -826,52 +925,57 @@ export default function Cars() {
           </div>
           <Link to="/my-sales/new" className="cp-btn out">{copy.cars.sellYourCar}</Link>
         </div>
-        <div className="cp-tabs">
-          {TAB_KEYS.map((key) => (
-            <button key={key} type="button" className={`cp-tab${activeTab === key ? " active" : ""}`} onClick={() => setActiveTab(key)}>
-              {copy.cars.tabs[key]}
-            </button>
-          ))}
-          <select className="cp-select" value={priceKey} onChange={(e) => setPriceKey(e.target.value)}>
-            {PRICE_KEYS.map((k) => (
-              <option key={k} value={k}>{copy.cars.prices[k]}</option>
-            ))}
-          </select>
-          <select className="cp-select" value={locationKey} onChange={(e) => setLocationKey(e.target.value)}>
-            <option value={ALL_LOC}>{copy.cars.allCities}</option>
-            {[...new Set(cars.map((c) => c.city).filter(Boolean))].slice(0, 8).map((city) => (
-              <option key={city} value={city}>{city}</option>
-            ))}
-          </select>
-        </div>
       </section>
 
-      {/* ══ DESKTOP FILTERS ═══════════════════════════════════════════════ */}
-      <div className="cp-filter-bar cp-fade" style={{ animationDelay:"80ms" }}>
-        <div className="cp-filter-inner">{filterInputs}</div>
-      </div>
+      {/* ══ UNIFIED FILTER PANEL ══════════════════════════════════════════ */}
+      <div className="cp-filter-panel cp-fade" style={{ animationDelay: "80ms" }}>
+        <div className="cp-filter-card">
 
-      {/* ══ MOBILE FILTER TOGGLE ══════════════════════════════════════════ */}
-      <div className="cp-filter-toggle-bar cp-fade" style={{ animationDelay:"80ms" }}>
-        <button className="cp-filter-toggle-btn" onClick={() => setFilterOpen(o => !o)}>
-          <span className="cp-ftb-left">
-            <span className="cp-ftb-icon">{ICONS.filter}</span>
-            <span>{copy.cars.filters}</span>
+          {/* Row 1 — section label + active badge */}
+          <div className="cp-filter-section">
+            <span className="cp-filter-label">
+              {copy.cars.filters || "Filtres"}
+              {activeFilters > 0 && (
+                <span className="cp-active-badge">{activeFilters} {copy.cars.active || "actifs"}</span>
+              )}
+            </span>
             {activeFilters > 0 && (
-              <span style={{
-                background:"var(--violet-bg)", border:"1px solid var(--violet-bd)",
-                borderRadius:"99px", padding:"1px 8px",
-                fontFamily:"'DM Mono',monospace", fontSize:10, color:"var(--violet)",
-              }}>
-                {activeFilters} {copy.cars.active}
-              </span>
+              <button
+                onClick={() => setFilters({ search: "", brand: "", city: "", minPrice: "", maxPrice: "" })}
+                style={{ fontFamily:"var(--mono)", fontSize:10, color:"var(--muted)", background:"none", border:"none", cursor:"pointer", textDecoration:"underline" }}
+              >
+                {copy.cars.clearFilters || "Effacer"}
+              </button>
             )}
-          </span>
-          <span className={`cp-filter-chevron${filterOpen ? " open" : ""}`}>{ICONS.chevron}</span>
-        </button>
-      </div>
-      <div className={`cp-filter-mobile-panel${filterOpen ? " open" : ""}`}>
-        <div className="cp-filter-mobile-inner">{filterInputs}</div>
+          </div>
+
+          {/* Row 2 — category tabs + quick selects */}
+          <div className="cp-tabs-row">
+            {TAB_KEYS.map((key) => (
+              <button key={key} type="button" className={`cp-tab${activeTab === key ? " active" : ""}`} onClick={() => setActiveTab(key)}>
+                {copy.cars.tabs[key]}
+              </button>
+            ))}
+            <div className="cp-tabs-spacer" />
+            <select className="cp-select" value={priceKey} onChange={(e) => setPriceKey(e.target.value)}>
+              {PRICE_KEYS.map((k) => (
+                <option key={k} value={k}>{copy.cars.prices[k]}</option>
+              ))}
+            </select>
+            <select className="cp-select" value={locationKey} onChange={(e) => setLocationKey(e.target.value)}>
+              <option value={ALL_LOC}>{copy.cars.allCities}</option>
+              {[...new Set(cars.map((c) => c.city).filter(Boolean))].slice(0, 8).map((city) => (
+                <option key={city} value={city}>{city}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Row 3 — text search inputs */}
+          <div className="cp-inputs-row">
+            {filterInputs}
+          </div>
+
+        </div>
       </div>
 
       {/* ══ MAIN ══════════════════════════════════════════════════════════ */}

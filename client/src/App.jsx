@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import Home from "./pages/Home2.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
@@ -28,10 +28,22 @@ import MyFleet from "./pages/MyFleet";
 import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
 
+/* Paths where Navbar should not render (they have their own full-page nav) */
+const NO_NAV_PREFIXES = [
+  "/admin",
+  "/dashboard",
+  "/my-sales",
+];
+
 export default function App() {
+  const { pathname } = useLocation();
+  const isHome = pathname === "/";
+  const hasSidebar = NO_NAV_PREFIXES.some((p) => pathname.startsWith(p));
+  const showNav = !isHome && !hasSidebar;
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
+      {showNav && <Navbar />}
 
       <Routes>
         {/* Public */}

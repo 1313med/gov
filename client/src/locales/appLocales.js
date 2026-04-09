@@ -7,6 +7,7 @@ const commonEn = {
   addCar: "+ Add Car",
   login: "Login",
   logout: "Logout",
+  getStarted: "Get Started",
   langAria: "Language",
 };
 
@@ -17,6 +18,7 @@ const commonFr = {
   addCar: "+ Vendre",
   login: "Connexion",
   logout: "Déconnexion",
+  getStarted: "S'inscrire",
   langAria: "Langue",
 };
 
@@ -48,6 +50,7 @@ const carsEn = {
   maxPricePh: "Max price",
   filters: "Filters",
   active: "active",
+  clearFilters: "Clear filters",
   results: "cars available",
   sortedBy: "Sorted by latest",
   noImage: "No Image",
@@ -93,6 +96,7 @@ const carsFr = {
   maxPricePh: "Prix max",
   filters: "Filtres",
   active: "actifs",
+  clearFilters: "Effacer",
   results: "voitures disponibles",
   sortedBy: "Tri : plus récent",
   noImage: "Sans image",

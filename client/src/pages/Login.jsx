@@ -668,7 +668,7 @@ export default function Login() {
       const role = res.data.role;
       if      (role === "admin")        navigate("/admin");
       else if (role === "seller")       navigate("/dashboard");
-      else if (role === "rental_owner") navigate("/dashboard");
+      else if (role === "rental_owner") navigate("/owner/analytics");
       else                              navigate("/");
     } catch (err) {
       setError(err?.response?.data?.message || "Invalid credentials. Please try again.");
