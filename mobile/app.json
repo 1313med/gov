@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "Goovoiture",
+    "slug": "goovoiture",
+    "version": "1.0.0",
+    "scheme": "goovoiture",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.goovoiture.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Used to take photos of cars for listings.",
+        "NSPhotoLibraryUsageDescription": "Used to select car photos for listings.",
+        "NSLocationWhenInUseUsageDescription": "Used to show your location on the map and tag car listings."
+      }
+    },
+    "android": {
+      "package": "com.goovoiture.app",
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-camera",
+        { "cameraPermission": "Allow Goovoiture to access your camera." }
+      ],
+      [
+        "expo-image-picker",
+        { "photosPermission": "Allow Goovoiture to access your photos." }
+      ],
+      [
+        "expo-location",
+        { "locationWhenInUsePermission": "Allow Goovoiture to use your location." }
+      ],
+      "expo-notifications"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
