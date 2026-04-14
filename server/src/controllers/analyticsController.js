@@ -1,423 +1,188 @@
 const Booking = require("../models/Booking");
 const RentalListing = require("../models/RentalListing");
+const Maintenance = require("../models/Maintenance");
+const { suggestPrice } = require("../utils/pricingEngine");
 
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+function getPeriodStart(period) {
+  const now = Date.now();
+  switch (period) {
+    case "today": {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+    case "7d":  return new Date(now - 7  * 86400000);
+    case "3m":  return new Date(now - 90 * 86400000);
+    case "1y":  return new Date(now - 365 * 86400000);
+    case "30d":
+    default:    return new Date(now - 30 * 86400000);
+  }
+}
+
+function daysBetween(a, b) {
+  return Math.max(0, (new Date(b) - new Date(a)) / 86400000);
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/analytics/owner  (main dashboard data)
+// ---------------------------------------------------------------------------
 exports.getOwnerAnalytics = async (req, res, next) => {
   try {
+    const ownerId  = req.user._id;
+    const period   = req.query.period || "30d";
+    const startDate = getPeriodStart(period);
+    const now       = new Date();
 
-    const ownerId = req.user._id;
-
-    /*
-    |--------------------------------------------------------------------------
-    | Period filter
-    |--------------------------------------------------------------------------
-    */
-
-    const period = req.query.period || "30d";
-
-    let startDate = null;
-    const now = new Date();
-
-    if (period === "today") {
-      startDate = new Date(now.setHours(0,0,0,0));
+    // 1. Owner's active rentals
+    const rentals = await RentalListing.find({ rentalOwnerId: ownerId, deletedAt: null });
+    const rentalIds = rentals.map((r) => r._id);
+    if (!rentalIds.length) {
+      return res.json(emptyAnalytics());
     }
 
-    if (period === "7d") {
-      startDate = new Date(Date.now() - 7*24*60*60*1000);
-    }
+    // 2. All bookings in period (single query — eliminates N+1)
+    const bookings = await Booking.find({
+      rentalId: { $in: rentalIds },
+      startDate: { $gte: startDate },
+      deletedAt: null,
+    }).populate("rentalId", "title pricePerDay");
 
-    if (period === "30d") {
-      startDate = new Date(Date.now() - 30*24*60*60*1000);
-    }
+    // 3. Previous period bookings (for growth calculation)
+    const periodMs = now - startDate;
+    const prevStart = new Date(startDate - periodMs);
+    const prevBookings = await Booking.find({
+      rentalId: { $in: rentalIds },
+      startDate: { $gte: prevStart, $lt: startDate },
+      deletedAt: null,
+    }).populate("rentalId", "pricePerDay");
 
-    if (period === "3m") {
-      startDate = new Date(Date.now() - 90*24*60*60*1000);
-    }
+    // 4. Maintenance costs in period
+    const maintenanceCosts = await Maintenance.aggregate([
+      { $match: { rentalId: { $in: rentalIds }, date: { $gte: startDate }, deletedAt: null } },
+      { $group: { _id: null, total: { $sum: "$cost" } } },
+    ]);
+    const totalMaintenanceCost = maintenanceCosts[0]?.total || 0;
 
-    if (period === "1y") {
-      startDate = new Date(Date.now() - 365*24*60*60*1000);
-    }
+    // --------------- Revenue using stored totalAmount ---------------
+    const confirmedOrCompleted = bookings.filter(
+      (b) => b.status === "confirmed" || b.status === "completed"
+    );
 
-    /*
-    |--------------------------------------------------------------------------
-    | Owner rentals
-    |--------------------------------------------------------------------------
-    */
-
-    const rentals = await RentalListing.find({
-      rentalOwnerId: ownerId
+    let totalRevenue = 0;
+    confirmedOrCompleted.forEach((b) => {
+      totalRevenue += b.totalAmount || 0;
     });
 
-    const rentalIds = rentals.map(r => r._id);
+    let previousRevenue = 0;
+    prevBookings
+      .filter((b) => b.status === "confirmed" || b.status === "completed")
+      .forEach((b) => { previousRevenue += b.totalAmount || 0; });
 
-    /*
-    |--------------------------------------------------------------------------
-    | Bookings (ALL statuses)
-    |--------------------------------------------------------------------------
-    */
+    const netProfit = totalRevenue - totalMaintenanceCost;
+    const revenueGrowth = previousRevenue > 0
+      ? Math.round(((totalRevenue - previousRevenue) / previousRevenue) * 100)
+      : 0;
 
-    const bookingQuery = {
-      rentalId: { $in: rentalIds }
-    };
+    // --------------- Period days for avgDailyRevenue ---------------
+    const periodDays = Math.max(1, daysBetween(startDate, now));
+    const avgDailyRevenue = Math.round(totalRevenue / periodDays);
 
-    if (startDate) {
-      bookingQuery.startDate = { $gte: startDate };
-    }
+    // --------------- Booking status breakdown ---------------
+    const statusCounts = { confirmed: 0, pending: 0, rejected: 0, cancelled: 0, completed: 0 };
+    bookings.forEach((b) => { if (statusCounts[b.status] !== undefined) statusCounts[b.status]++; });
 
-    const bookings = await Booking.find(bookingQuery).populate("rentalId");
-
-    /*
-    |--------------------------------------------------------------------------
-    | Booking status breakdown
-    |--------------------------------------------------------------------------
-    */
-
-    const bookingStatus = {
-      confirmed: 0,
-      pending: 0,
-      rejected: 0,
-      cancelled: 0
-    };
-
-    bookings.forEach(b => {
-      if (bookingStatus[b.status] !== undefined) {
-        bookingStatus[b.status]++;
-      }
-    });
-
-    const bookingStatusData = [
-      { name: "Confirmed", value: bookingStatus.confirmed },
-      { name: "Pending", value: bookingStatus.pending },
-      { name: "Rejected", value: bookingStatus.rejected },
-      { name: "Cancelled", value: bookingStatus.cancelled }
-    ];
-
-    /*
-    |--------------------------------------------------------------------------
-    | Total bookings
-    |--------------------------------------------------------------------------
-    */
-
-    const totalBookings = bookings.length;
-
-    /*
-    |--------------------------------------------------------------------------
-    | Monthly revenue
-    |--------------------------------------------------------------------------
-    */
-
-    const monthlyRevenueMap = {};
-
-    bookings.forEach(b => {
-
-      if (!b.rentalId) return;
-
-      const month = new Date(b.startDate).toLocaleString("default", {
-        month: "short"
-      });
-
-      const days =
-        (new Date(b.endDate) - new Date(b.startDate)) /
-        (1000 * 60 * 60 * 24);
-
-      const revenue = days * b.rentalId.pricePerDay;
-
-      if (!monthlyRevenueMap[month]) monthlyRevenueMap[month] = 0;
-
-      monthlyRevenueMap[month] += revenue;
-    });
-
-    const monthlyRevenue = Object.keys(monthlyRevenueMap).map(month => ({
-      month,
-      revenue: monthlyRevenueMap[month]
+    const bookingStatusData = Object.entries(statusCounts).map(([name, value]) => ({
+      name: name.charAt(0).toUpperCase() + name.slice(1),
+      value,
     }));
 
-    /*
-    |--------------------------------------------------------------------------
-    | Booking trends
-    |--------------------------------------------------------------------------
-    */
-
+    // --------------- Monthly revenue (aggregated in JS — data already loaded) ---------------
+    const monthlyRevenueMap = {};
     const trendMap = {};
 
-    bookings.forEach(b => {
-
-      const month = new Date(b.startDate).toLocaleString("default", {
-        month: "short"
-      });
-
-      if (!trendMap[month]) trendMap[month] = 0;
-
-      trendMap[month]++;
+    confirmedOrCompleted.forEach((b) => {
+      const month = new Date(b.startDate).toLocaleString("default", { month: "short" });
+      monthlyRevenueMap[month] = (monthlyRevenueMap[month] || 0) + (b.totalAmount || 0);
+      trendMap[month] = (trendMap[month] || 0) + 1;
     });
 
-    const bookingTrends = Object.keys(trendMap).map(month => ({
-      month,
-      bookings: trendMap[month]
-    }));
+    const monthlyRevenue = Object.entries(monthlyRevenueMap).map(([month, revenue]) => ({ month, revenue }));
+    const bookingTrends  = Object.entries(trendMap).map(([month, count]) => ({ month, bookings: count }));
 
-    /*
-    |--------------------------------------------------------------------------
-    | Upcoming rentals
-    |--------------------------------------------------------------------------
-    */
-
-    const today = new Date();
-
+    // --------------- Upcoming rentals ---------------
     const upcomingRentals = bookings
-      .filter(b => new Date(b.startDate) > today)
-      .sort((a,b) => new Date(a.startDate) - new Date(b.startDate))
-      .slice(0,5);
+      .filter((b) => new Date(b.startDate) > now && b.status === "confirmed")
+      .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
+      .slice(0, 5);
 
-    /*
-    |--------------------------------------------------------------------------
-    | Most rented car
-    |--------------------------------------------------------------------------
-    */
-
+    // --------------- Most rented car ---------------
     const carCounts = {};
-
-    bookings.forEach(b => {
-
+    bookings.forEach((b) => {
       if (!b.rentalId) return;
-
-      const carId = b.rentalId._id.toString();
-
-      if (!carCounts[carId]) {
-        carCounts[carId] = {
-          title: b.rentalId.title,
-          count: 0
-        };
-      }
-
-      carCounts[carId].count++;
+      const id = b.rentalId._id.toString();
+      if (!carCounts[id]) carCounts[id] = { title: b.rentalId.title, count: 0 };
+      carCounts[id].count++;
     });
+    const mostRentedCar = Object.values(carCounts).sort((a, b) => b.count - a.count)[0] || null;
 
-    let mostRentedCar = null;
-
-    Object.values(carCounts).forEach(car => {
-      if (!mostRentedCar || car.count > mostRentedCar.count) {
-        mostRentedCar = car;
-      }
-    });
-
-    /*
-    |--------------------------------------------------------------------------
-    | Fleet performance
-    |--------------------------------------------------------------------------
-    */
-
-    const fleetPerformance = [];
-
-    for (const rental of rentals) {
-
+    // --------------- Fleet performance (pure in-memory, all data loaded) ---------------
+    const fleetPerformance = rentals.map((rental) => {
       const rentalBookings = bookings.filter(
-        b => b.rentalId?._id.toString() === rental._id.toString()
+        (b) => b.rentalId?._id.toString() === rental._id.toString() &&
+               (b.status === "confirmed" || b.status === "completed")
       );
 
       let revenue = 0;
       let bookedDays = 0;
-
-      rentalBookings.forEach(b => {
-
-        const days =
-          (new Date(b.endDate) - new Date(b.startDate)) /
-          (1000 * 60 * 60 * 24);
-
-        bookedDays += days;
-        revenue += days * rental.pricePerDay;
-
+      rentalBookings.forEach((b) => {
+        revenue += b.totalAmount || 0;
+        bookedDays += daysBetween(b.startDate, b.endDate);
       });
 
-      let availableDays = 0;
+      const utilization = periodDays > 0 ? Math.min(100, Math.round((bookedDays / periodDays) * 100)) : 0;
 
-      rental.availability.forEach(range => {
-
-        const days =
-          (new Date(range.endDate) - new Date(range.startDate)) /
-          (1000 * 60 * 60 * 24);
-
-        availableDays += days;
-
-      });
-
-      const utilization =
-        availableDays > 0
-          ? Math.round((bookedDays / availableDays) * 100)
-          : 0;
-
-      fleetPerformance.push({
-        title: rental.title,
-        bookings: rentalBookings.length,
+      return {
+        title:     rental.title,
+        rentalId:  rental._id,
+        bookings:  rentalBookings.length,
         revenue,
-        utilization
-      });
-    }
+        utilization,
+        pricePerDay: rental.pricePerDay,
+      };
+    }).sort((a, b) => b.revenue - a.revenue);
 
-    fleetPerformance.sort((a,b) => b.revenue - a.revenue);
-
-    /*
-    |--------------------------------------------------------------------------
-    | Occupancy rate
-    |--------------------------------------------------------------------------
-    */
-
+    // --------------- Occupancy rate (fleet-wide) ---------------
     let totalBookedDays = 0;
-    let totalAvailableDays = 0;
+    confirmedOrCompleted.forEach((b) => { totalBookedDays += daysBetween(b.startDate, b.endDate); });
+    const totalCapacityDays = rentals.length * periodDays;
+    const occupancyRate = totalCapacityDays > 0
+      ? Math.min(100, Math.round((totalBookedDays / totalCapacityDays) * 100))
+      : 0;
 
-    bookings.forEach(b => {
-
-      const days =
-        (new Date(b.endDate) - new Date(b.startDate)) /
-        (1000 * 60 * 60 * 24);
-
-      totalBookedDays += days;
-    });
-
-    rentals.forEach(r => {
-
-      r.availability.forEach(range => {
-
-        const days =
-          (new Date(range.endDate) - new Date(range.startDate)) /
-          (1000 * 60 * 60 * 24);
-
-        totalAvailableDays += days;
-
-      });
-
-    });
-
-    const occupancyRate =
-      totalAvailableDays > 0
-        ? Math.round((totalBookedDays / totalAvailableDays) * 100)
-        : 0;
-
-    /*
-    |--------------------------------------------------------------------------
-    | Demand heatmap
-    |--------------------------------------------------------------------------
-    */
-
-    const weekdayMap = [0,0,0,0,0,0,0];
-
-    bookings.forEach(b => {
-
+    // --------------- Demand heatmap (day of week) ---------------
+    const weekdayMap = [0, 0, 0, 0, 0, 0, 0];
+    bookings.forEach((b) => {
       let current = new Date(b.startDate);
-      let end = new Date(b.endDate);
-
-      current.setHours(0,0,0,0);
-      end.setHours(0,0,0,0);
-
+      current.setHours(0, 0, 0, 0);
+      const end = new Date(b.endDate);
       while (current <= end) {
-
-        const dayIndex = current.getDay();
-
-        weekdayMap[dayIndex]++;
-
+        weekdayMap[current.getDay()]++;
         current.setDate(current.getDate() + 1);
       }
-
     });
-
-    const dayNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-
-    const demandHeatmap = dayNames.map((day,i) => ({
-      day,
-      demand: weekdayMap[i]
-    }));
-
-    /*
-    |--------------------------------------------------------------------------
-    | Revenue totals
-    |--------------------------------------------------------------------------
-    */
-
-    let totalRevenue = 0;
-
-    bookings.forEach(b => {
-
-      if (!b.rentalId) return;
-
-      const days =
-        (new Date(b.endDate) - new Date(b.startDate)) /
-        (1000 * 60 * 60 * 24);
-
-      totalRevenue += days * b.rentalId.pricePerDay;
-
-    });
-
-    /*
-    |--------------------------------------------------------------------------
-    | Previous period revenue
-    |--------------------------------------------------------------------------
-    */
-
-    let previousStart = null;
-    let previousEnd = startDate;
-
-    if (startDate) {
-
-      const diff = Date.now() - startDate.getTime();
-
-      previousStart = new Date(startDate.getTime() - diff);
-
-    }
-
-    let previousBookings = [];
-
-    if (previousStart) {
-
-      previousBookings = await Booking.find({
-        rentalId: { $in: rentalIds },
-        startDate: {
-          $gte: previousStart,
-          $lt: previousEnd
-        }
-      }).populate("rentalId");
-
-    }
-
-    let previousRevenue = 0;
-
-    previousBookings.forEach(b => {
-
-      if (!b.rentalId) return;
-
-      const days =
-        (new Date(b.endDate) - new Date(b.startDate)) /
-        (1000 * 60 * 60 * 24);
-
-      previousRevenue += days * b.rentalId.pricePerDay;
-
-    });
-
-    /*
-    |--------------------------------------------------------------------------
-    | Revenue growth
-    |--------------------------------------------------------------------------
-    */
-
-    let revenueGrowth = 0;
-
-    if (previousRevenue > 0) {
-
-      revenueGrowth =
-        ((totalRevenue - previousRevenue) / previousRevenue) * 100;
-
-      revenueGrowth = Math.round(revenueGrowth);
-
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Response
-    |--------------------------------------------------------------------------
-    */
+    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const demandHeatmap = dayNames.map((day, i) => ({ day, demand: weekdayMap[i] }));
 
     res.json({
-      totalBookings,
+      totalBookings:   bookings.length,
       totalRevenue,
+      netProfit,
+      totalMaintenanceCost,
       revenueGrowth,
+      avgDailyRevenue,
       monthlyRevenue,
       bookingTrends,
       bookingStatusData,
@@ -425,10 +190,165 @@ exports.getOwnerAnalytics = async (req, res, next) => {
       mostRentedCar,
       fleetPerformance,
       occupancyRate,
-      demandHeatmap
+      demandHeatmap,
+      previousRevenue,
+    });
+  } catch (error) { next(error); }
+};
+
+// ---------------------------------------------------------------------------
+// GET /api/analytics/owner/insights  (smart recommendations)
+// ---------------------------------------------------------------------------
+exports.getOwnerInsights = async (req, res, next) => {
+  try {
+    const ownerId = req.user._id;
+    const period  = req.query.period || "30d";
+    const startDate = getPeriodStart(period);
+    const now = new Date();
+    const periodDays = Math.max(1, daysBetween(startDate, now));
+
+    const rentals = await RentalListing.find({ rentalOwnerId: ownerId, deletedAt: null });
+    const rentalIds = rentals.map((r) => r._id);
+    const insights = [];
+
+    if (!rentalIds.length) return res.json({ insights: [] });
+
+    const bookings = await Booking.find({
+      rentalId: { $in: rentalIds },
+      startDate: { $gte: startDate },
+      status: { $in: ["confirmed", "completed"] },
+      deletedAt: null,
     });
 
-  } catch (error) {
-    next(error);
-  }
+    // Weekend vs weekday demand
+    const weekdayCount = [0, 0, 0, 0, 0, 0, 0];
+    bookings.forEach((b) => {
+      let cur = new Date(b.startDate);
+      cur.setHours(0, 0, 0, 0);
+      const end = new Date(b.endDate);
+      while (cur <= end) {
+        weekdayCount[cur.getDay()]++;
+        cur.setDate(cur.getDate() + 1);
+      }
+    });
+    const weekendDemand  = (weekdayCount[0] + weekdayCount[6]) / 2 || 0;
+    const weekdayDemand  = (weekdayCount[1] + weekdayCount[2] + weekdayCount[3] + weekdayCount[4] + weekdayCount[5]) / 5 || 0;
+    const weekendRatio   = weekdayDemand > 0 ? weekendDemand / weekdayDemand : 0;
+
+    // Per-car analysis
+    for (const rental of rentals) {
+      const carBookings = bookings.filter(
+        (b) => b.rentalId.toString() === rental._id.toString()
+      );
+
+      const bookedDays = carBookings.reduce((acc, b) => acc + daysBetween(b.startDate, b.endDate), 0);
+      const occupancy  = Math.min(100, Math.round((bookedDays / periodDays) * 100));
+      const revenue    = carBookings.reduce((acc, b) => acc + (b.totalAmount || 0), 0);
+
+      // Insight: Zero bookings
+      if (carBookings.length === 0) {
+        insights.push({
+          type:    "alert",
+          carId:   rental._id,
+          carTitle: rental.title,
+          title:   `"${rental.title}" has 0 bookings this period`,
+          action:  `Consider lowering the price (currently ${rental.pricePerDay} MAD/day) or adding a promotional offer.`,
+          potentialRevenueGain: null,
+        });
+        continue;
+      }
+
+      // Insight: Low occupancy (< 25%)
+      if (occupancy < 25) {
+        const { suggestedPrice } = suggestPrice(rental.pricePerDay, { occupancyRate: occupancy });
+        const priceDiff = rental.pricePerDay - suggestedPrice;
+        insights.push({
+          type:    "warning",
+          carId:   rental._id,
+          carTitle: rental.title,
+          title:   `"${rental.title}" has only ${occupancy}% occupancy`,
+          action:  `Lower price from ${rental.pricePerDay} to ${suggestedPrice} MAD/day (−${priceDiff} MAD). Estimated revenue increase: +${Math.round(priceDiff * periodDays * 0.3)} MAD if occupancy reaches 40%.`,
+          potentialRevenueGain: Math.round(priceDiff * periodDays * 0.3),
+        });
+      }
+
+      // Insight: Weekend surcharge opportunity
+      if (weekendRatio > 1.5 && occupancy >= 30) {
+        const { suggestedPrice: weekendPrice } = suggestPrice(rental.pricePerDay, { weekendDemandRatio: weekendRatio });
+        if (weekendPrice > rental.pricePerDay) {
+          insights.push({
+            type:    "opportunity",
+            carId:   rental._id,
+            carTitle: rental.title,
+            title:   `High weekend demand for "${rental.title}"`,
+            action:  `Weekend bookings are ${Math.round(weekendRatio * 100 - 100)}% above weekday average. Add a weekend surcharge: suggest ${weekendPrice} MAD/day on weekends.`,
+            potentialRevenueGain: Math.round((weekendPrice - rental.pricePerDay) * 8), // ~8 weekend days/month
+          });
+        }
+      }
+
+      // Insight: High performer — suggest premium pricing
+      if (occupancy >= 70) {
+        const { suggestedPrice: premiumPrice } = suggestPrice(rental.pricePerDay, { occupancyRate: occupancy });
+        if (premiumPrice > rental.pricePerDay) {
+          insights.push({
+            type:    "opportunity",
+            carId:   rental._id,
+            carTitle: rental.title,
+            title:   `"${rental.title}" is in high demand (${occupancy}% occupancy)`,
+            action:  `You can raise the price to ${premiumPrice} MAD/day (+${premiumPrice - rental.pricePerDay} MAD). High demand supports a premium.`,
+            potentialRevenueGain: Math.round((premiumPrice - rental.pricePerDay) * bookedDays),
+          });
+        }
+      }
+
+      // Insight: Maintenance due soon
+      const nextMaintenance = await Maintenance.findOne({
+        rentalId: rental._id,
+        nextServiceDate: { $lte: new Date(Date.now() + 14 * 86400000) }, // within 14 days
+        deletedAt: null,
+      }).sort({ nextServiceDate: 1 });
+
+      if (nextMaintenance) {
+        const daysUntil = Math.ceil(daysBetween(now, nextMaintenance.nextServiceDate));
+        insights.push({
+          type:     "maintenance",
+          carId:    rental._id,
+          carTitle: rental.title,
+          title:    `Maintenance due for "${rental.title}" in ${daysUntil} day(s)`,
+          action:   `Service type: ${nextMaintenance.type}. Due: ${new Date(nextMaintenance.nextServiceDate).toLocaleDateString()}. Block the calendar to avoid booking conflicts.`,
+          potentialRevenueGain: null,
+        });
+      }
+    }
+
+    // Sort: alerts first, then warnings, then opportunities
+    const order = { alert: 0, maintenance: 1, warning: 2, opportunity: 3 };
+    insights.sort((a, b) => (order[a.type] ?? 99) - (order[b.type] ?? 99));
+
+    res.json({ insights });
+  } catch (error) { next(error); }
 };
+
+// ---------------------------------------------------------------------------
+// Helper — empty analytics response when owner has no rentals
+// ---------------------------------------------------------------------------
+function emptyAnalytics() {
+  return {
+    totalBookings: 0,
+    totalRevenue: 0,
+    netProfit: 0,
+    totalMaintenanceCost: 0,
+    revenueGrowth: 0,
+    avgDailyRevenue: 0,
+    monthlyRevenue: [],
+    bookingTrends: [],
+    bookingStatusData: [],
+    upcomingRentals: [],
+    mostRentedCar: null,
+    fleetPerformance: [],
+    occupancyRate: 0,
+    demandHeatmap: [],
+    previousRevenue: 0,
+  };
+}

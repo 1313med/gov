@@ -40,13 +40,15 @@ const bookingSchema = new mongoose.Schema(
         uploadedAt: { type: Date, default: Date.now },
       },
     ],
+
+    // Soft delete
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
 
-// Performance indexes
-bookingSchema.index({ customerId: 1 });
-bookingSchema.index({ rentalId: 1 });
+bookingSchema.index({ customerId: 1, deletedAt: 1 });
+bookingSchema.index({ rentalId: 1, deletedAt: 1 });
 bookingSchema.index({ status: 1 });
 
 module.exports = mongoose.model("Booking", bookingSchema);

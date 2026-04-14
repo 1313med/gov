@@ -1,17 +1,7 @@
 import { api } from "./axios";
 
-/*
-|--------------------------------------------------------------------------
-| OWNER ANALYTICS
-|--------------------------------------------------------------------------
-*/
+export const getOwnerAnalytics = (period = "30d") =>
+  api.get("/analytics/owner", { params: { period } }).then((r) => r.data);
 
-export const getOwnerAnalytics = async (period = "30d") => {
-
-  const { data } = await api.get("/analytics/owner", {
-    params: { period }
-  });
-
-  return data;
-
-};
+export const getOwnerInsights = (period = "30d") =>
+  api.get("/analytics/owner/insights", { params: { period } }).then((r) => r.data);

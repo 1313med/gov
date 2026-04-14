@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { loadAuth } from "../utils/authStorage";
+import { api } from "../api/axios";
 import OwnerLayout from "../components/owner/OwnerLayout";
 import { Plus, X, Pencil, Check, Trash2, ImagePlus, CalendarOff, Tag, ToggleLeft, ToggleRight } from "lucide-react";
 
-const API = "http://localhost:5000/api";
 
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap');
@@ -111,7 +109,6 @@ function offerSummary(o) {
 const BLANK_OFFER = { type: "free_days", title: "", description: "", minDays: 3, freeExtraDays: 1, discountPercent: 10 };
 
 export default function MyFleet() {
-  const { token } = loadAuth();
   const navigate = useNavigate();
 
   const [cars, setCars] = useState([]);
@@ -128,13 +125,11 @@ export default function MyFleet() {
   const [newOffer, setNewOffer] = useState(BLANK_OFFER);
   const [showOfferForm, setShowOfferForm] = useState(false);
 
-  const headers = { Authorization: `Bearer ${token}` };
-
   useEffect(() => { fetchFleet(); }, []);
 
   async function fetchFleet() {
     try {
-      const { data } = await axios.get(`${API}/rental/owner/mine`, { headers });
+      const { data } = await api.get("/rental/owner/mine");
       setCars(data);
     } catch { setCars([]); }
     finally { setLoading(false); }
@@ -182,7 +177,7 @@ export default function MyFleet() {
     if (!editing) return;
     setSaving(true);
     try {
-      const { data } = await axios.put(`${API}/rental/${editing._id}`, { pricePerDay: Number(price), images, availability, offers }, { headers });
+      const { data } = await api.put(`/rental/${editing._id}`, { pricePerDay: Number(price), images, availability, offers });
       setCars((p) => p.map((c) => (c._id === data._id ? data : c)));
       closeEdit();
     } catch (err) { alert(err.response?.data?.message || "Failed to save"); }
@@ -192,7 +187,7 @@ export default function MyFleet() {
   async function handleDelete(id) {
     if (!confirm("Delete this rental listing? This cannot be undone.")) return;
     try {
-      await axios.delete(`${API}/rental/${id}`, { headers });
+      await api.delete(`/rental/${id}`);
       setCars((p) => p.filter((c) => c._id !== id));
     } catch { alert("Failed to delete"); }
   }

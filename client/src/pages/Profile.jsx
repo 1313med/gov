@@ -13,7 +13,7 @@ export default function Profile() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!auth?.token) { navigate("/login"); return; }
+    if (!auth?._id) { navigate("/login"); return; }
     getMyProfile().then((r) => {
       const u = r.data;
       setForm({

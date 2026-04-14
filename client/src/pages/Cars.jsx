@@ -881,13 +881,13 @@ export default function Cars() {
 
   /* ── Favorites ── */
   useEffect(() => {
-    if (!auth?.token) return;
+    if (!auth?._id) return;
     getFavorites().then((res) => setFavorites(res.data.map((x) => x._id)));
   }, []);
 
   const toggleFavorite = async (carId, e) => {
     e.preventDefault();
-    if (!auth?.token) return alert(copy.cars.favLogin);
+    if (!auth?._id) return alert(copy.cars.favLogin);
     const isFav = favorites.includes(carId);
     try {
       if (isFav) { await removeFavorite(carId); setFavorites((p) => p.filter((id) => id !== carId)); }

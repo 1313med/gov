@@ -454,7 +454,7 @@ export default function CarDetails() {
             </Link>
             <p className="cd-seller-sub">{copy.carDetails.verifiedSeller}</p>
 
-            {auth?.token ? (
+            {auth?._id ? (
               <>
                 <a href={`tel:${seller?.phone}`} className="cd-btn cd-btn-dark">
                   {copy.carDetails.callSeller}

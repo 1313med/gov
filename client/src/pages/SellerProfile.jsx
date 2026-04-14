@@ -62,7 +62,7 @@ export default function SellerProfile() {
               </p>
             </div>
 
-            {auth?.token && (
+            {auth?._id && (
               <div className="flex gap-3">
                 <a
                   href={`tel:${seller.phone}`}

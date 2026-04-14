@@ -12,9 +12,10 @@ export function SocketProvider({ children }) {
 
   useEffect(() => {
     const auth = loadAuth();
-    if (!auth?.token || !auth?._id) return;
+    if (!auth?._id) return;
 
-    const socket = io("http://localhost:5000", { transports: ["websocket"] });
+    const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+    const socket = io(SOCKET_URL, { transports: ["websocket"] });
     socketRef.current = socket;
 
     // Join personal room

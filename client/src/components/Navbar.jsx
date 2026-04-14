@@ -317,9 +317,11 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem("goo-theme", dark ? "dark" : "light");
-    // Keep Cars page in sync
-    localStorage.setItem("cars-theme", dark ? "dark" : "light");
+    const mode = dark ? "dark" : "light";
+    localStorage.setItem("goo-theme", mode);
+    localStorage.setItem("cars-theme", mode);
+    localStorage.setItem("rentals-theme", mode);
+    window.dispatchEvent(new Event("goovoiture-theme"));
   }, [dark]);
 
   function logout() {
@@ -327,7 +329,7 @@ export default function Navbar() {
     navigate("/login");
   }
 
-  const isLoggedIn = !!auth?.token;
+  const isLoggedIn = !!auth?._id;
 
   return (
     <>

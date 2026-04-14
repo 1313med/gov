@@ -52,7 +52,7 @@ export default function ReviewSection({ targetModel, targetId }) {
       </div>
 
       {/* Write a review */}
-      {auth?.token ? (
+      {auth?._id ? (
         <form onSubmit={handleSubmit} style={{
           background: "#f9fafb", border: "1px solid #e5e7eb",
           borderRadius: 14, padding: 20, marginBottom: 24,

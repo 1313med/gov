@@ -13,7 +13,7 @@ const notify = async (userId, message, type) => {
 // CUSTOMER – My bookings
 exports.getMyBookings = async (req, res, next) => {
   try {
-    const bookings = await Booking.find({ customerId: req.user._id })
+    const bookings = await Booking.find({ customerId: req.user._id, deletedAt: null })
       .populate("rentalId")
       .sort({ createdAt: -1 });
     res.json(bookings);
@@ -23,10 +23,10 @@ exports.getMyBookings = async (req, res, next) => {
 // RENTAL OWNER – Bookings for my rentals
 exports.getBookingsForOwner = async (req, res, next) => {
   try {
-    const rentals = await RentalListing.find({ rentalOwnerId: req.user._id }).select("_id");
+    const rentals = await RentalListing.find({ rentalOwnerId: req.user._id, deletedAt: null }).select("_id");
     const rentalIds = rentals.map((r) => r._id);
 
-    const bookings = await Booking.find({ rentalId: { $in: rentalIds } })
+    const bookings = await Booking.find({ rentalId: { $in: rentalIds }, deletedAt: null })
       .populate("rentalId")
       .populate("customerId", "name phone email")
       .sort({ createdAt: -1 });
@@ -44,7 +44,7 @@ exports.updateBookingStatus = async (req, res, next) => {
       return res.status(400).json({ message: "Invalid status" });
     }
 
-    const booking = await Booking.findById(req.params.id).populate("rentalId");
+    const booking = await Booking.findOne({ _id: req.params.id, deletedAt: null }).populate("rentalId");
     if (!booking) return res.status(404).json({ message: "Booking not found" });
 
     if (booking.rentalId.rentalOwnerId.toString() !== req.user._id.toString()) {
@@ -52,22 +52,49 @@ exports.updateBookingStatus = async (req, res, next) => {
     }
 
     if (status === "confirmed") {
+      // Check there's no other confirmed booking on overlapping dates
       const conflict = await Booking.findOne({
         rentalId: booking.rentalId._id,
         status: "confirmed",
         _id: { $ne: booking._id },
         startDate: { $lt: booking.endDate },
         endDate: { $gt: booking.startDate },
+        deletedAt: null,
       });
       if (conflict) {
         return res.status(400).json({ message: "This car is already booked for these dates" });
+      }
+
+      // AUTO-REJECT all other PENDING bookings that overlap with the now-confirmed one
+      const overlappingPending = await Booking.find({
+        rentalId: booking.rentalId._id,
+        status: "pending",
+        _id: { $ne: booking._id },
+        startDate: { $lt: booking.endDate },
+        endDate: { $gt: booking.startDate },
+        deletedAt: null,
+      });
+
+      if (overlappingPending.length > 0) {
+        const rentalTitle = booking.rentalId.title;
+
+        await Promise.all(
+          overlappingPending.map(async (overlap) => {
+            overlap.status = "rejected";
+            await overlap.save();
+            await notify(
+              overlap.customerId,
+              `Your booking request for "${rentalTitle}" was not available — the owner confirmed another booking for those dates.`,
+              "rejected"
+            );
+          })
+        );
       }
     }
 
     booking.status = status;
     await booking.save();
 
-    // Fetch customer for email
     const customer = await User.findById(booking.customerId);
     const rental = booking.rentalId;
 
@@ -88,7 +115,7 @@ exports.updateBookingStatus = async (req, res, next) => {
 // CUSTOMER – Cancel own booking
 exports.cancelBooking = async (req, res, next) => {
   try {
-    const booking = await Booking.findById(req.params.id).populate("rentalId");
+    const booking = await Booking.findOne({ _id: req.params.id, deletedAt: null }).populate("rentalId");
     if (!booking) return res.status(404).json({ message: "Booking not found" });
 
     if (booking.customerId.toString() !== req.user._id.toString()) {
@@ -103,7 +130,6 @@ exports.cancelBooking = async (req, res, next) => {
     booking.cancelledAt = new Date();
     await booking.save();
 
-    // Notify owner
     const rental = booking.rentalId;
     await notify(
       rental.rentalOwnerId,
@@ -118,7 +144,7 @@ exports.cancelBooking = async (req, res, next) => {
 // RENTAL OWNER – Update condition photos & documents
 exports.updateBookingMedia = async (req, res, next) => {
   try {
-    const booking = await Booking.findById(req.params.id).populate("rentalId");
+    const booking = await Booking.findOne({ _id: req.params.id, deletedAt: null }).populate("rentalId");
     if (!booking) return res.status(404).json({ message: "Booking not found" });
     if (booking.rentalId.rentalOwnerId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Forbidden" });
@@ -134,7 +160,7 @@ exports.updateBookingMedia = async (req, res, next) => {
 // RENTAL OWNER – Toggle payment status
 exports.markBookingPaid = async (req, res, next) => {
   try {
-    const booking = await Booking.findById(req.params.id).populate("rentalId");
+    const booking = await Booking.findOne({ _id: req.params.id, deletedAt: null }).populate("rentalId");
     if (!booking) return res.status(404).json({ message: "Booking not found" });
     if (booking.rentalId.rentalOwnerId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Forbidden" });
@@ -146,11 +172,11 @@ exports.markBookingPaid = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
-// RENTAL OWNER – Update booking dates (Drag & Resize)
+// RENTAL OWNER – Update booking dates (Drag & Resize in calendar)
 exports.updateBookingDates = async (req, res, next) => {
   try {
     const { startDate, endDate } = req.body;
-    const booking = await Booking.findById(req.params.id).populate("rentalId");
+    const booking = await Booking.findOne({ _id: req.params.id, deletedAt: null }).populate("rentalId");
 
     if (!booking) return res.status(404).json({ message: "Booking not found" });
     if (booking.rentalId.rentalOwnerId.toString() !== req.user._id.toString()) {
@@ -159,16 +185,20 @@ exports.updateBookingDates = async (req, res, next) => {
 
     const start = new Date(startDate);
     const end = new Date(endDate);
-    if (end <= start) return res.status(400).json({ message: "Invalid dates" });
+    if (isNaN(start) || isNaN(end) || end <= start) {
+      return res.status(400).json({ message: "Invalid dates" });
+    }
 
+    // Prevent double-booking on the new dates
     const conflict = await Booking.findOne({
       rentalId: booking.rentalId._id,
       status: "confirmed",
       _id: { $ne: booking._id },
       startDate: { $lt: end },
       endDate: { $gt: start },
+      deletedAt: null,
     });
-    if (conflict) return res.status(400).json({ message: "Dates conflict with another booking" });
+    if (conflict) return res.status(400).json({ message: "Dates conflict with another confirmed booking" });
 
     booking.startDate = start;
     booking.endDate = end;

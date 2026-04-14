@@ -534,7 +534,7 @@ export default function RentalDetails() {
               </button>
 
               {/* Message owner */}
-              {auth?.token && rental?.rentalOwnerId && (
+              {auth?._id && rental?.rentalOwnerId && (
                 <button
                   type="button"
                   onClick={() => navigate(`/messages?with=${rental.rentalOwnerId._id || rental.rentalOwnerId}&listing=${rental._id}&model=RentalListing`)}

@@ -45,7 +45,7 @@ export default function Messages() {
   const bottomRef = useRef(null);
 
   useEffect(() => {
-    if (!auth?.token) { navigate("/login"); return; }
+    if (!auth?._id) { navigate("/login"); return; }
     clearMessageBadge();
     loadConversations();
   }, []);
