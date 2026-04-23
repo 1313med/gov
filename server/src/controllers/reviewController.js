@@ -1,5 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const Review = require("../models/Review");
+const Booking = require("../models/Booking");
 
 // GET /api/reviews/:targetModel/:targetId
 exports.getReviews = asyncHandler(async (req, res) => {
@@ -29,6 +30,20 @@ exports.createReview = asyncHandler(async (req, res) => {
   if (!rating || rating < 1 || rating > 5) {
     res.status(400);
     throw new Error("Rating must be between 1 and 5");
+  }
+
+  // Gate: rental reviews require a completed booking by this user
+  if (targetModel === "RentalListing") {
+    const hasCompleted = await Booking.findOne({
+      customerId: req.user._id,
+      rentalId:   targetId,
+      status:     "completed",
+      deletedAt:  null,
+    });
+    if (!hasCompleted) {
+      res.status(403);
+      throw new Error("You can only review a rental after completing a booking");
+    }
   }
 
   const existing = await Review.findOne({

@@ -6,11 +6,13 @@ const {
   addRentalFavorite, removeRentalFavorite, getRentalFavorites,
   getSellerProfile,
   getMyProfile, updateMyProfile,
+  updateDriverLicense,
 } = require("../controllers/userController");
 
 // Profile
 router.get("/me", protect, getMyProfile);
 router.put("/me", protect, updateMyProfile);
+router.put("/me/license", protect, updateDriverLicense);
 
 // Sale favorites
 router.get("/favorites", protect, getFavorites);

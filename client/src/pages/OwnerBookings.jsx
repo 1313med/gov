@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import {
-  getOwnerBookings,
   updateBookingStatus,
   updateBookingDates,
+  markBookingPaid,
 } from "../api/booking";
+import { getOwnerBookingsCalendar } from "../api/rental";
 import SellerLayout from "../components/seller/SellerLayout";
 import "../styles/ownerCalendar.css";
 
@@ -53,7 +54,7 @@ export default function OwnerBookings() {
 
   const loadBookings = async () => {
     try {
-      const res = await getOwnerBookings();
+      const res = await getOwnerBookingsCalendar();
       setBookings(res.data);
 
       const calendarEvents = res.data.map((b) => ({
@@ -77,17 +78,20 @@ export default function OwnerBookings() {
   const updateStatus = async (id, status) => {
     try {
       await updateBookingStatus(id, status);
-
-      setBookings((prev) =>
-        prev.map((b) =>
-          b._id === id ? { ...b, status } : b
-        )
-      );
-
       setSelectedBooking(null);
       loadBookings();
     } catch {
       alert("Failed to update booking");
+    }
+  };
+
+  const togglePaid = async (booking) => {
+    try {
+      const res = await markBookingPaid(booking._id);
+      setSelectedBooking(res.data);
+      loadBookings();
+    } catch {
+      alert("Failed to update payment status");
     }
   };
 
@@ -260,8 +264,27 @@ export default function OwnerBookings() {
               </p>
 
               <p>
+                <strong>Email:</strong>{" "}
+                {selectedBooking.customerId?.email || "—"}
+              </p>
+
+              <p>
                 <strong>Status:</strong>{" "}
                 {selectedBooking.status}
+              </p>
+
+              <p>
+                <strong>Amount:</strong>{" "}
+                {selectedBooking.totalAmount != null
+                  ? `${Number(selectedBooking.totalAmount).toLocaleString()} MAD`
+                  : "—"}
+              </p>
+
+              <p>
+                <strong>Payment:</strong>{" "}
+                <span style={{ color: selectedBooking.isPaid ? "#34d399" : "#f5a623" }}>
+                  {selectedBooking.isPaid ? `Paid${selectedBooking.paidAt ? ` on ${new Date(selectedBooking.paidAt).toLocaleDateString()}` : ""}` : "Unpaid"}
+                </span>
               </p>
 
             </div>
@@ -284,12 +307,22 @@ export default function OwnerBookings() {
             )}
 
             {selectedBooking.status === "confirmed" && (
-              <div className="mt-6">
+              <div className="mt-6 flex flex-col gap-2">
                 <button
                   onClick={() => updateStatus(selectedBooking._id, "completed")}
                   className="w-full bg-purple-600 text-white py-2 rounded-xl hover:bg-purple-700"
                 >
                   ✓ Mark as Completed
+                </button>
+                <button
+                  onClick={() => togglePaid(selectedBooking)}
+                  className={`w-full py-2 rounded-xl text-sm font-medium transition-colors ${
+                    selectedBooking.isPaid
+                      ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      : "bg-emerald-600 text-white hover:bg-emerald-700"
+                  }`}
+                >
+                  {selectedBooking.isPaid ? "Mark as Unpaid" : "$ Mark as Paid"}
                 </button>
               </div>
             )}

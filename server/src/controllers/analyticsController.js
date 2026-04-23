@@ -43,12 +43,37 @@ exports.getOwnerAnalytics = async (req, res, next) => {
       return res.json(emptyAnalytics());
     }
 
-    // 2. All bookings in period (single query — eliminates N+1)
-    const bookings = await Booking.find({
-      rentalId: { $in: rentalIds },
-      startDate: { $gte: startDate },
-      deletedAt: null,
-    }).populate("rentalId", "title pricePerDay");
+    const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+    // 2. Run in parallel:
+    //    a) All bookings in period (for fleet/occupancy/heatmap/upcoming)
+    //    b) MongoDB aggregation for monthly revenue + trends (avoids JS group-by)
+    //    c) Previous period bookings (for growth)
+    const [bookings, monthlyAgg] = await Promise.all([
+      Booking.find({
+        rentalId: { $in: rentalIds },
+        startDate: { $gte: startDate },
+        deletedAt: null,
+      }).populate("rentalId", "title pricePerDay"),
+      Booking.aggregate([
+        {
+          $match: {
+            rentalId: { $in: rentalIds },
+            startDate: { $gte: startDate },
+            deletedAt: null,
+            status: { $in: ["confirmed", "completed"] },
+          },
+        },
+        {
+          $group: {
+            _id: { year: { $year: "$startDate" }, month: { $month: "$startDate" } },
+            revenue: { $sum: "$totalAmount" },
+            count:   { $sum: 1 },
+          },
+        },
+        { $sort: { "_id.year": 1, "_id.month": 1 } },
+      ]),
+    ]);
 
     // 3. Previous period bookings (for growth calculation)
     const periodMs = now - startDate;
@@ -72,8 +97,13 @@ exports.getOwnerAnalytics = async (req, res, next) => {
     );
 
     let totalRevenue = 0;
+    let collectedRevenue = 0;
+    let pendingRevenue = 0;
     confirmedOrCompleted.forEach((b) => {
-      totalRevenue += b.totalAmount || 0;
+      const amt = b.totalAmount || 0;
+      totalRevenue += amt;
+      if (b.isPaid) collectedRevenue += amt;
+      else pendingRevenue += amt;
     });
 
     let previousRevenue = 0;
@@ -99,18 +129,15 @@ exports.getOwnerAnalytics = async (req, res, next) => {
       value,
     }));
 
-    // --------------- Monthly revenue (aggregated in JS — data already loaded) ---------------
-    const monthlyRevenueMap = {};
-    const trendMap = {};
-
-    confirmedOrCompleted.forEach((b) => {
-      const month = new Date(b.startDate).toLocaleString("default", { month: "short" });
-      monthlyRevenueMap[month] = (monthlyRevenueMap[month] || 0) + (b.totalAmount || 0);
-      trendMap[month] = (trendMap[month] || 0) + 1;
-    });
-
-    const monthlyRevenue = Object.entries(monthlyRevenueMap).map(([month, revenue]) => ({ month, revenue }));
-    const bookingTrends  = Object.entries(trendMap).map(([month, count]) => ({ month, bookings: count }));
+    // --------------- Monthly revenue (from MongoDB $group aggregation) ---------------
+    const monthlyRevenue = monthlyAgg.map(({ _id, revenue }) => ({
+      month: MONTH_NAMES[_id.month - 1],
+      revenue,
+    }));
+    const bookingTrends = monthlyAgg.map(({ _id, count }) => ({
+      month: MONTH_NAMES[_id.month - 1],
+      bookings: count,
+    }));
 
     // --------------- Upcoming rentals ---------------
     const upcomingRentals = bookings
@@ -179,6 +206,8 @@ exports.getOwnerAnalytics = async (req, res, next) => {
     res.json({
       totalBookings:   bookings.length,
       totalRevenue,
+      collectedRevenue,
+      pendingRevenue,
       netProfit,
       totalMaintenanceCost,
       revenueGrowth,
@@ -331,12 +360,72 @@ exports.getOwnerInsights = async (req, res, next) => {
 };
 
 // ---------------------------------------------------------------------------
+// GET /api/analytics/owner/pricing  — suggested price per car
+// ---------------------------------------------------------------------------
+exports.getOwnerPricing = async (req, res, next) => {
+  try {
+    const ownerId = req.user._id;
+    const now     = new Date();
+    const startDate = new Date(now - 30 * 86400000);
+
+    const rentals = await RentalListing.find({ rentalOwnerId: ownerId, deletedAt: null });
+    if (!rentals.length) return res.json({ suggestions: [] });
+
+    const rentalIds = rentals.map((r) => r._id);
+    const periodDays = 30;
+
+    const bookings = await Booking.find({
+      rentalId: { $in: rentalIds },
+      startDate: { $gte: startDate },
+      status: { $in: ["confirmed", "completed"] },
+      deletedAt: null,
+    });
+
+    // Weekend demand ratio (fleet-wide)
+    const wdCount = [0, 0, 0, 0, 0, 0, 0];
+    bookings.forEach((b) => {
+      let cur = new Date(b.startDate); cur.setHours(0, 0, 0, 0);
+      const end = new Date(b.endDate);
+      while (cur <= end) { wdCount[cur.getDay()]++; cur.setDate(cur.getDate() + 1); }
+    });
+    const weekendDemand  = (wdCount[0] + wdCount[6]) / 2 || 0;
+    const weekdayDemand  = (wdCount[1] + wdCount[2] + wdCount[3] + wdCount[4] + wdCount[5]) / 5 || 0;
+    const weekendDemandRatio = weekdayDemand > 0 ? weekendDemand / weekdayDemand : 1;
+
+    const suggestions = rentals.map((rental) => {
+      const carBookings = bookings.filter((b) => b.rentalId.toString() === rental._id.toString());
+      const bookedDays  = carBookings.reduce((acc, b) => acc + daysBetween(b.startDate, b.endDate), 0);
+      const occupancyRate = Math.min(100, Math.round((bookedDays / periodDays) * 100));
+
+      const { suggestedPrice, adjustments } = suggestPrice(rental.pricePerDay, {
+        occupancyRate,
+        weekendDemandRatio,
+      });
+
+      return {
+        rentalId:      rental._id,
+        title:         rental.title,
+        currentPrice:  rental.pricePerDay,
+        suggestedPrice,
+        occupancyRate,
+        adjustments,
+        difference:    suggestedPrice - rental.pricePerDay,
+      };
+    });
+
+    res.json({ suggestions });
+  } catch (error) { next(error); }
+};
+
+// ---------------------------------------------------------------------------
 // Helper — empty analytics response when owner has no rentals
 // ---------------------------------------------------------------------------
 function emptyAnalytics() {
   return {
     totalBookings: 0,
     totalRevenue: 0,
+    collectedRevenue: 0,
+    pendingRevenue: 0,
     netProfit: 0,
     totalMaintenanceCost: 0,
     revenueGrowth: 0,

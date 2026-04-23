@@ -101,6 +101,43 @@ exports.sendListingRejected = (listing, user) =>
       </div>`,
   });
 
+exports.sendPasswordReset = (user, resetUrl) =>
+  send({
+    to: user.email,
+    subject: "Reset your Goovoiture password",
+    html: `
+      <div style="font-family:sans-serif;max-width:560px;margin:auto">
+        <h2 style="color:#141412">Password Reset Request</h2>
+        <p>Hi ${user.name}, you requested to reset your password.</p>
+        <p>Click the button below within <strong>1 hour</strong> to set a new password:</p>
+        <p style="text-align:center;margin:28px 0">
+          <a href="${resetUrl}" style="background:#7c6bff;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block">
+            Reset Password
+          </a>
+        </p>
+        <p style="color:#888;font-size:13px">If you did not request this, you can safely ignore this email — your password will not change.</p>
+        <p style="color:#aaa;font-size:12px;word-break:break-all">Or copy this link: ${resetUrl}</p>
+      </div>`,
+  });
+
+exports.sendEmailVerification = (user, verifyUrl) =>
+  send({
+    to: user.email,
+    subject: "Verify your Goovoiture email address",
+    html: `
+      <div style="font-family:sans-serif;max-width:560px;margin:auto">
+        <h2 style="color:#141412">Verify Your Email</h2>
+        <p>Hi ${user.name}, please verify your email address to unlock all features.</p>
+        <p>The link expires in <strong>24 hours</strong>.</p>
+        <p style="text-align:center;margin:28px 0">
+          <a href="${verifyUrl}" style="background:#0c9966;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block">
+            Verify Email
+          </a>
+        </p>
+        <p style="color:#aaa;font-size:12px;word-break:break-all">Or copy this link: ${verifyUrl}</p>
+      </div>`,
+  });
+
 exports.sendNewMessage = (sender, recipient, preview) =>
   send({
     to: recipient.email,
@@ -113,3 +150,42 @@ exports.sendNewMessage = (sender, recipient, preview) =>
         <p><a href="${process.env.CLIENT_URL}/messages">View conversation →</a></p>
       </div>`,
   });
+
+exports.sendMaintenanceReminder = (owner, records) => {
+  const rows = records.map((r) => `
+    <tr>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0">${r.rentalId?.title || "—"}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0">${r.type}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0">${r.nextServiceDate ? new Date(r.nextServiceDate).toLocaleDateString() : "—"}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0">${r.nextServiceMileage ? r.nextServiceMileage.toLocaleString() + " km" : "—"}</td>
+    </tr>
+  `).join("");
+
+  return send({
+    to: owner.email,
+    subject: `Maintenance reminder — ${records.length} service(s) due soon`,
+    html: `
+      <div style="font-family:sans-serif;max-width:600px;margin:auto">
+        <h2 style="color:#141412">Maintenance Due Soon</h2>
+        <p>Hi ${owner.name}, you have <strong>${records.length}</strong> scheduled maintenance service(s) coming up within the next 7 days.</p>
+        <table style="width:100%;border-collapse:collapse;margin:20px 0">
+          <thead>
+            <tr style="background:#f8f8f8">
+              <th style="padding:10px 12px;text-align:left;font-size:12px;color:#888;text-transform:uppercase">Car</th>
+              <th style="padding:10px 12px;text-align:left;font-size:12px;color:#888;text-transform:uppercase">Type</th>
+              <th style="padding:10px 12px;text-align:left;font-size:12px;color:#888;text-transform:uppercase">Due Date</th>
+              <th style="padding:10px 12px;text-align:left;font-size:12px;color:#888;text-transform:uppercase">Mileage</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <p>Block your calendar to avoid booking conflicts during the service period.</p>
+        <p style="text-align:center;margin:24px 0">
+          <a href="${process.env.CLIENT_URL}/owner/maintenance" style="background:#7c6bff;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block">
+            View Maintenance Log
+          </a>
+        </p>
+      </div>`,
+  });
+};
+

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Car, PlusCircle, Calendar, Layers, ClipboardList } from "lucide-react";
+import { LayoutDashboard, Car, PlusCircle, Calendar, Layers, ClipboardList, Wrench } from "lucide-react";
 
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap');
@@ -243,6 +243,7 @@ const MENU = [
   { name: "Add Rental",   path: "/add-rental",            icon: PlusCircle      },
   { name: "Bookings",     path: "/owner/bookings-list",   icon: ClipboardList   },
   { name: "Calendar",     path: "/owner/bookings",        icon: Calendar        },
+  { name: "Maintenance",  path: "/owner/maintenance",     icon: Wrench          },
 ];
 
 export default function OwnerSidebar() {

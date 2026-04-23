@@ -27,6 +27,10 @@ import OwnerAnalytics from "./pages/OwnerAnalytics";
 import MyFleet from "./pages/MyFleet";
 import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import VerifyEmail from "./pages/VerifyEmail";
+import MaintenancePage from "./pages/MaintenancePage";
 
 /* Paths where Navbar should not render (they have their own full-page nav) */
 const NO_NAV_PREFIXES = [
@@ -54,6 +58,9 @@ export default function App() {
         <Route path="/rentals/:id" element={<RentalDetails />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/verify-email/:token" element={<VerifyEmail />} />
         <Route path="/seller/:id" element={<SellerProfile />} />
 
         {/* Authenticated – any role */}
@@ -72,7 +79,8 @@ export default function App() {
         <Route path="/owner-bookings"       element={<ProtectedRoute roles={["rental_owner"]}><OwnerBookings /></ProtectedRoute>} />
         <Route path="/owner/bookings-list"  element={<ProtectedRoute roles={["rental_owner"]}><OwnerBookingsList /></ProtectedRoute>} />
         <Route path="/add-rental"     element={<ProtectedRoute roles={["rental_owner"]}><AddRental /></ProtectedRoute>} />
-        <Route path="/owner/analytics" element={<ProtectedRoute roles={["rental_owner"]}><OwnerAnalytics /></ProtectedRoute>} />
+        <Route path="/owner/analytics"     element={<ProtectedRoute roles={["rental_owner"]}><OwnerAnalytics /></ProtectedRoute>} />
+        <Route path="/owner/maintenance"   element={<ProtectedRoute roles={["rental_owner"]}><MaintenancePage /></ProtectedRoute>} />
 
         {/* Seller */}
         <Route path="/dashboard"      element={<ProtectedRoute roles={["seller","admin"]}><Dashboard /></ProtectedRoute>} />

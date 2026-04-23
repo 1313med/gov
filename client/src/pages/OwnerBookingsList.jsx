@@ -493,7 +493,7 @@ const STYLES = `
 `;
 
 const STATUS_FILTERS = ["all", "pending", "confirmed", "completed", "rejected", "cancelled"];
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 20;
 
 /* ─── media panel ─────────────────────────────────────────────────────── */
 function BookingMediaPanel({ booking, onSaved }) {
@@ -624,7 +624,11 @@ function BookingMediaPanel({ booking, onSaved }) {
 
 /* ─── main page ───────────────────────────────────────────────────────── */
 export default function OwnerBookingsList() {
+  // Server-provided paginated bookings for the current page
   const [bookings,  setBookings]  = useState([]);
+  // Server-provided aggregate stats (always over ALL bookings, not just current page)
+  const [stats,     setStats]     = useState({ total: 0, pending: 0, confirmed: 0, completed: 0, revenue: 0 });
+  const [totalPages, setTotalPages] = useState(0);
   const [loading,   setLoading]   = useState(true);
   const [filter,    setFilter]    = useState("all");
   const [search,    setSearch]    = useState("");
@@ -632,19 +636,28 @@ export default function OwnerBookingsList() {
   const [expanded,  setExpanded]  = useState(null);
   const [page,      setPage]      = useState(1);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(page, filter); }, [page, filter]);
 
-  async function load() {
-    try { const { data } = await getOwnerBookings(); setBookings(data); }
-    catch { setBookings([]); }
-    finally { setLoading(false); }
+  async function load(p, f) {
+    setLoading(true);
+    try {
+      const { data } = await getOwnerBookings({ page: p, limit: PAGE_SIZE, status: f });
+      setBookings(data.bookings || []);
+      setStats(data.stats || { total: 0, pending: 0, confirmed: 0, completed: 0, revenue: 0 });
+      setTotalPages(data.pages || 0);
+    } catch {
+      setBookings([]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function changeStatus(id, status) {
     setActing(id);
     try {
       await updateBookingStatus(id, status);
-      setBookings((p) => p.map((b) => b._id === id ? { ...b, status } : b));
+      // Reload current page so stats refresh too
+      load(page, filter);
     } catch (e) { alert(e?.response?.data?.message || "Failed"); }
     finally { setActing(null); }
   }
@@ -662,34 +675,24 @@ export default function OwnerBookingsList() {
     setBookings((p) => p.map((b) => b._id === updated._id ? { ...b, conditionPhotos: updated.conditionPhotos, documents: updated.documents } : b));
   }
 
-  // derive stats
-  const total     = bookings.length;
-  const pending   = bookings.filter((b) => b.status === "pending").length;
-  const confirmed = bookings.filter((b) => b.status === "confirmed").length;
-  const completed = bookings.filter((b) => b.status === "completed").length;
-  const revenue   = bookings.filter((b) => b.isPaid).reduce((s, b) => s + (b.totalAmount || 0), 0);
+  // Client-side search within the current page's loaded data
+  const visible = bookings.filter((b) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (
+      b.rentalId?.title?.toLowerCase().includes(q) ||
+      b.customerId?.name?.toLowerCase().includes(q) ||
+      b.customerId?.phone?.includes(q) ||
+      b.customerId?.email?.toLowerCase().includes(q) ||
+      b._id.includes(q)
+    );
+  });
 
-  // filter + search
-  const filtered = bookings
-    .filter((b) => filter === "all" || b.status === filter)
-    .filter((b) => {
-      if (!search.trim()) return true;
-      const q = search.toLowerCase();
-      return (
-        b.rentalId?.title?.toLowerCase().includes(q) ||
-        b.customerId?.name?.toLowerCase().includes(q) ||
-        b.customerId?.phone?.includes(q) ||
-        b.customerId?.email?.toLowerCase().includes(q) ||
-        b._id.includes(q)
-      );
-    });
-
-  // pagination
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const visible    = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  // Destructure server stats for header cards
+  const { total, pending, confirmed, completed, revenue } = stats;
 
   function handleFilterChange(f) { setFilter(f); setPage(1); }
-  function handleSearch(e)       { setSearch(e.target.value); setPage(1); }
+  function handleSearch(e)       { setSearch(e.target.value); }
 
   return (
     <OwnerLayout>
@@ -703,7 +706,7 @@ export default function OwnerBookingsList() {
             <p className="obl-sub">Manage status · payments · condition photos · documents</p>
           </div>
           <div className="obl-export-row">
-            <button className="obl-exp-btn obl-exp-csv" onClick={() => exportCSV(filtered)} title="Export current view to CSV">
+            <button className="obl-exp-btn obl-exp-csv" onClick={() => exportCSV(visible)} title="Export current view to CSV">
               <FileSpreadsheet size={14} />
               Export CSV
             </button>
@@ -762,19 +765,20 @@ export default function OwnerBookingsList() {
           </div>
         </div>
 
-        {/* ── filter pills ── */}
+        {/* ── filter pills — counts come from server stats (always total, not paged) ── */}
         <div className="obl-filters">
-          {STATUS_FILTERS.map((s) => (
-            <button
-              key={s}
-              className={`obl-pill${filter === s ? " active" : ""}`}
-              onClick={() => handleFilterChange(s)}
-            >
-              {s === "all"
-                ? `All (${bookings.length})`
-                : `${s.charAt(0).toUpperCase() + s.slice(1)} (${bookings.filter((b) => b.status === s).length})`}
-            </button>
-          ))}
+          {STATUS_FILTERS.map((s) => {
+            const count = s === "all" ? stats.total : (stats[s] ?? 0);
+            return (
+              <button
+                key={s}
+                className={`obl-pill${filter === s ? " active" : ""}`}
+                onClick={() => handleFilterChange(s)}
+              >
+                {`${s === "all" ? "All" : s.charAt(0).toUpperCase() + s.slice(1)} (${count})`}
+              </button>
+            );
+          })}
         </div>
 
         {/* ── content ── */}
@@ -783,7 +787,7 @@ export default function OwnerBookingsList() {
             <div className="obl-loading-spin" />
             Loading bookings…
           </div>
-        ) : filtered.length === 0 ? (
+        ) : visible.length === 0 ? (
           <div className="obl-empty">
             {search || filter !== "all" ? "No bookings match your filters." : "No bookings yet."}
           </div>
@@ -915,7 +919,7 @@ export default function OwnerBookingsList() {
               </table>
             </div>
 
-            {/* pagination */}
+            {/* server-side pagination */}
             {totalPages > 1 && (
               <div className="obl-pagination">
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (

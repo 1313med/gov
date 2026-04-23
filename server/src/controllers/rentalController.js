@@ -158,6 +158,15 @@ exports.createBooking = async (req, res, next) => {
       return res.status(400).json({ message: "You cannot book your own rental" });
     }
 
+    // Require driver license on file before booking
+    const customer = await User.findById(req.user._id).select("driverLicense");
+    if (!customer?.driverLicense?.number || !customer?.driverLicense?.imageUrl) {
+      return res.status(400).json({
+        message: "Please upload your driving license in your profile before booking a car.",
+        code: "DRIVER_LICENSE_REQUIRED",
+      });
+    }
+
     // Check confirmed booking conflicts
     const conflict = await Booking.findOne({
       rentalId,
@@ -180,12 +189,19 @@ exports.createBooking = async (req, res, next) => {
       });
     }
 
-    const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    // Use UTC midnight-to-midnight diff to avoid DST/timezone edge cases
+    const MS_PER_DAY = 24 * 60 * 60 * 1000;
+    const startUTC = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate());
+    const endUTC   = Date.UTC(end.getUTCFullYear(),   end.getUTCMonth(),   end.getUTCDate());
+    const days = Math.max(1, Math.ceil((endUTC - startUTC) / MS_PER_DAY));
 
     // Apply best active offer
     let totalAmount = days * rental.pricePerDay;
     let appliedOffer = null;
-    const activeOffers = (rental.offers || []).filter((o) => o.isActive && days >= o.minDays);
+    const now = new Date();
+    const activeOffers = (rental.offers || []).filter(
+      (o) => o.isActive && days >= o.minDays && (!o.expiresAt || new Date(o.expiresAt) > now)
+    );
 
     let bestSaving = 0;
     for (const offer of activeOffers) {
@@ -219,15 +235,17 @@ exports.createBooking = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
-// Rental owner bookings
+// Rental owner bookings (used by the calendar view — returns all bookings as a flat array)
 exports.getOwnerBookings = async (req, res, next) => {
   try {
     const rentals = await RentalListing.find({ rentalOwnerId: req.user._id, deletedAt: null }).select("_id");
     const rentalIds = rentals.map((r) => r._id);
+
     const bookings = await Booking.find({ rentalId: { $in: rentalIds }, deletedAt: null })
       .populate("rentalId", "title pricePerDay city images")
       .populate("customerId", "name email phone")
       .sort({ startDate: -1 });
+
     res.json(bookings);
   } catch (error) {
     next(error);

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/axios";
+import { updateBookingStatus, markBookingPaid } from "../api/booking";
 import OwnerLayout from "../components/owner/OwnerLayout";
 
 const S = `
@@ -225,17 +226,35 @@ export default function MyRentals() {
   const [bookings, setBookings] = useState([]);
   const [loading,  setLoading ] = useState(true);
   const [error,    setError   ] = useState("");
+  const [acting,   setActing  ] = useState(null); // bookingId being acted on
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await api.get("/rental/owner/bookings");
-        setBookings(Array.isArray(res.data) ? res.data : []);
-      } catch { setError("Failed to load bookings"); }
-      finally  { setLoading(false); }
-    };
-    load();
-  }, []);
+  const load = async () => {
+    try {
+      const res = await api.get("/rental/owner/bookings");
+      setBookings(Array.isArray(res.data) ? res.data : []);
+    } catch { setError("Failed to load bookings"); }
+    finally  { setLoading(false); }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const changeStatus = async (id, status) => {
+    setActing(id);
+    try {
+      await updateBookingStatus(id, status);
+      await load();
+    } catch (e) { alert(e?.response?.data?.message || "Failed to update"); }
+    finally { setActing(null); }
+  };
+
+  const togglePaid = async (id) => {
+    setActing(id);
+    try {
+      const { data } = await markBookingPaid(id);
+      setBookings((prev) => prev.map((b) => b._id === id ? { ...b, isPaid: data.isPaid, paidAt: data.paidAt } : b));
+    } catch { alert("Failed to update payment"); }
+    finally { setActing(null); }
+  };
 
   const confirmed = bookings.filter(b => b.status === "confirmed").length;
   const pending   = bookings.filter(b => b.status === "pending").length;
@@ -375,15 +394,55 @@ export default function MyRentals() {
                       <p className="mr-info-val">
                         <strong>{days}</strong>
                         <span style={{color:"var(--muted)", fontSize:11}}> days</span>
-                        {total > 0 && (
+                        {b.totalAmount > 0 && (
                           <>
                             <span style={{color:"var(--dim)", margin:"0 6px"}}>·</span>
-                            <strong style={{color:"#7c6cfc"}}>{total.toLocaleString()} MAD</strong>
+                            <strong style={{color:"#7c6cfc"}}>{Number(b.totalAmount).toLocaleString()} MAD</strong>
                           </>
                         )}
                       </p>
                     </div>
 
+                  </div>
+
+                  {/* Action row */}
+                  <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginTop:18, paddingTop:14, borderTop:"1px solid var(--border)" }}>
+                    {b.status === "pending" && (
+                      <>
+                        <button
+                          disabled={acting === b._id}
+                          onClick={() => changeStatus(b._id, "confirmed")}
+                          style={{ padding:"6px 14px", borderRadius:8, fontSize:11, fontFamily:"var(--mono)", border:"1px solid rgba(42,245,192,.3)", background:"rgba(42,245,192,.08)", color:"#2af5c0", cursor:"pointer" }}
+                        >
+                          ✓ Confirm
+                        </button>
+                        <button
+                          disabled={acting === b._id}
+                          onClick={() => changeStatus(b._id, "rejected")}
+                          style={{ padding:"6px 14px", borderRadius:8, fontSize:11, fontFamily:"var(--mono)", border:"1px solid rgba(252,108,108,.3)", background:"rgba(252,108,108,.08)", color:"#fc6c6c", cursor:"pointer" }}
+                        >
+                          ✗ Reject
+                        </button>
+                      </>
+                    )}
+                    {b.status === "confirmed" && (
+                      <>
+                        <button
+                          disabled={acting === b._id}
+                          onClick={() => changeStatus(b._id, "completed")}
+                          style={{ padding:"6px 14px", borderRadius:8, fontSize:11, fontFamily:"var(--mono)", border:"1px solid rgba(124,108,252,.3)", background:"rgba(124,108,252,.08)", color:"#a78bfa", cursor:"pointer" }}
+                        >
+                          ✓ Mark Completed
+                        </button>
+                        <button
+                          disabled={acting === b._id}
+                          onClick={() => togglePaid(b._id)}
+                          style={{ padding:"6px 14px", borderRadius:8, fontSize:11, fontFamily:"var(--mono)", border:`1px solid ${b.isPaid ? "rgba(52,211,153,.3)" : "rgba(245,166,35,.3)"}`, background: b.isPaid ? "rgba(52,211,153,.08)" : "rgba(245,166,35,.08)", color: b.isPaid ? "#34d399" : "#f5a623", cursor:"pointer" }}
+                        >
+                          {b.isPaid ? "✓ Paid" : "$ Mark Paid"}
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               );

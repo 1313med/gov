@@ -67,6 +67,28 @@ exports.updateMyProfile = asyncHandler(async (req, res) => {
   res.json(updated);
 });
 
+// ── DRIVER LICENSE ─────────────────────────────────────────────────────────
+
+exports.updateDriverLicense = asyncHandler(async (req, res) => {
+  const { number, expiryDate, imageUrl } = req.body;
+  const user = await User.findById(req.user._id);
+
+  if (!number || !imageUrl) {
+    res.status(400);
+    throw new Error("License number and image are required");
+  }
+
+  user.driverLicense = {
+    number:     number.trim(),
+    expiryDate: expiryDate ? new Date(expiryDate) : null,
+    imageUrl,
+    verified:   false, // reset verification when re-uploaded
+  };
+  await user.save();
+  const updated = await User.findById(user._id).select("-password");
+  res.json(updated);
+});
+
 // ── SELLER PROFILE (PUBLIC) ────────────────────────────────────────────────
 
 exports.getSellerProfile = asyncHandler(async (req, res) => {

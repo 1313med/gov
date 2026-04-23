@@ -180,7 +180,14 @@ export default function AddRental() {
               <Field label="Fuel Policy" name="fuelPolicy" value={form.fuelPolicy} onChange={handleChange} placeholder="e.g. Full-to-Full" required={false} />
             </div>
             <div style={{ marginTop: 14 }}>
-              <Field label="Cancellation Policy" name="cancelPolicy" value={form.cancelPolicy} onChange={handleChange} placeholder="e.g. Free cancellation 24h before pickup" required={false} />
+              <div className="ar-field">
+                <label className="ar-label">Cancellation Policy</label>
+                <select className="ar-select" name="cancelPolicy" value={form.cancelPolicy} onChange={handleChange}>
+                  <option value="flexible">Flexible — free cancellation up to 24h before pickup</option>
+                  <option value="moderate">Moderate — 50% penalty if cancelled within 48h of pickup</option>
+                  <option value="strict">Strict — no refund if cancelled within 72h of pickup</option>
+                </select>
+              </div>
             </div>
           </div>
 

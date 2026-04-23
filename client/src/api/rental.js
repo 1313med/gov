@@ -7,6 +7,9 @@ export const getApprovedRentals = (params = {}) =>
 // Rental owner
 export const getMyRentals = () => api.get("/rental/mine");
 
+// All bookings for the owner's calendar (flat array, date-windowed)
+export const getOwnerBookingsCalendar = () => api.get("/rental/owner/bookings");
+
 // Admin
 export const getAdminRentals = () => api.get("/rental/admin");
 export const updateRentalStatus = (id, status) =>

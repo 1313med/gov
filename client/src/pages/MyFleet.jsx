@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/axios";
+import { getOwnerPricing } from "../api/analytics";
 import OwnerLayout from "../components/owner/OwnerLayout";
-import { Plus, X, Pencil, Check, Trash2, ImagePlus, CalendarOff, Tag, ToggleLeft, ToggleRight } from "lucide-react";
+import { Plus, X, Pencil, Check, Trash2, ImagePlus, CalendarOff, Tag, ToggleLeft, ToggleRight, TrendingUp, TrendingDown } from "lucide-react";
 
 
 const STYLES = `
@@ -112,9 +113,11 @@ export default function MyFleet() {
   const navigate = useNavigate();
 
   const [cars, setCars] = useState([]);
+  const [pricing, setPricing] = useState({});  // rentalId → suggestion
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [applyingPrice, setApplyingPrice] = useState(null);
 
   const [price, setPrice] = useState("");
   const [images, setImages] = useState([]);
@@ -125,7 +128,7 @@ export default function MyFleet() {
   const [newOffer, setNewOffer] = useState(BLANK_OFFER);
   const [showOfferForm, setShowOfferForm] = useState(false);
 
-  useEffect(() => { fetchFleet(); }, []);
+  useEffect(() => { fetchFleet(); fetchPricing(); }, []);
 
   async function fetchFleet() {
     try {
@@ -133,6 +136,25 @@ export default function MyFleet() {
       setCars(data);
     } catch { setCars([]); }
     finally { setLoading(false); }
+  }
+
+  async function fetchPricing() {
+    try {
+      const { suggestions } = await getOwnerPricing();
+      const map = {};
+      suggestions.forEach((s) => { map[s.rentalId] = s; });
+      setPricing(map);
+    } catch { /* non-critical */ }
+  }
+
+  async function applySuggestedPrice(carId, suggestedPrice) {
+    setApplyingPrice(carId);
+    try {
+      const { data } = await api.put(`/rental/${carId}`, { pricePerDay: suggestedPrice });
+      setCars((p) => p.map((c) => c._id === carId ? { ...c, pricePerDay: data.pricePerDay } : c));
+      setPricing((p) => ({ ...p, [carId]: { ...p[carId], currentPrice: suggestedPrice, difference: 0 } }));
+    } catch { alert("Failed to apply price"); }
+    finally { setApplyingPrice(null); }
   }
 
   function openEdit(car) {
@@ -222,7 +244,37 @@ export default function MyFleet() {
                     <p className="mf-card-title">{car.title}</p>
                     <p className="mf-card-meta">{car.brand} {car.model} · {car.year} · {car.city}</p>
                     <p className="mf-card-price">{car.pricePerDay} MAD / day</p>
-                    <div className="mf-card-badges">
+
+                    {/* Pricing suggestion badge */}
+                    {pricing[car._id] && pricing[car._id].difference !== 0 && (
+                      <div style={{
+                        display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 6,
+                        background: pricing[car._id].difference > 0 ? "rgba(42,245,192,.07)" : "rgba(248,113,113,.07)",
+                        border: `1px solid ${pricing[car._id].difference > 0 ? "rgba(42,245,192,.25)" : "rgba(248,113,113,.25)"}`,
+                        borderRadius: 8, padding: "7px 10px", marginTop: 8,
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          {pricing[car._id].difference > 0
+                            ? <TrendingUp size={12} color="#2af5c0" />
+                            : <TrendingDown size={12} color="#f87171" />}
+                          <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: pricing[car._id].difference > 0 ? "#2af5c0" : "#f87171" }}>
+                            Suggested: {pricing[car._id].suggestedPrice} MAD ({pricing[car._id].difference > 0 ? "+" : ""}{pricing[car._id].difference} MAD)
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => applySuggestedPrice(car._id, pricing[car._id].suggestedPrice)}
+                          disabled={applyingPrice === car._id}
+                          style={{
+                            background: "none", border: "1px solid rgba(124,108,252,.4)", borderRadius: 6, padding: "3px 9px",
+                            fontFamily: "'DM Mono',monospace", fontSize: 9, color: "#7c6cfc", cursor: "pointer", whiteSpace: "nowrap",
+                          }}
+                        >
+                          {applyingPrice === car._id ? "…" : "Apply"}
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="mf-card-badges" style={{ marginTop: 8 }}>
                       <span className={`mf-status ${car.status}`}>{car.status}</span>
                       {activeOffers.length > 0 && <span className="mf-offer-badge"><Tag size={9} /> {activeOffers.length} offer{activeOffers.length > 1 ? "s" : ""}</span>}
                     </div>
@@ -315,6 +367,7 @@ export default function MyFleet() {
                       <button className="mf-blocked-remove" onClick={() => removeOffer(i)}><X size={13} /></button>
                     </div>
                     <p className="mf-offer-item-meta">{offerSummary(o)}</p>
+                    {o.expiresAt && <p className="mf-offer-item-desc" style={{ color: "#f87171" }}>Expires: {new Date(o.expiresAt).toLocaleDateString()}</p>}
                     {o.description && <p className="mf-offer-item-desc">{o.description}</p>}
                   </div>
                 ))}
@@ -360,6 +413,10 @@ export default function MyFleet() {
                     )}
                   </div>
                 )}
+                <div>
+                  <label className="mf-label">Expires on (optional)</label>
+                  <input type="date" className="mf-input" min={today} value={newOffer.expiresAt || ""} onChange={(e) => setNewOffer((p) => ({ ...p, expiresAt: e.target.value || null }))} />
+                </div>
                 <div style={{ display: "flex", gap: 8 }}>
                   <button className="mf-btn mf-btn-primary" style={{ flex: 1 }} onClick={addOffer} disabled={!newOffer.title.trim()}><Check size={13} /> Add offer</button>
                   <button className="mf-btn mf-btn-danger" style={{ flex: "0 0 auto", width: 40 }} onClick={() => setShowOfferForm(false)}><X size={13} /></button>

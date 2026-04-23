@@ -17,6 +17,7 @@ const { Server } = require("socket.io");
 const app = require("./app");
 const connectDB = require("./config/db");
 const { setIo } = require("./utils/socketManager");
+const maintenanceCron = require("./utils/maintenanceCron");
 const logger = require("./utils/logger");
 
 const PORT = process.env.PORT || 5000;
@@ -50,6 +51,7 @@ io.on("connection", (socket) => {
 
 connectDB()
   .then(() => {
+    maintenanceCron.start();
     server.listen(PORT, () => {
       logger.info(`Server running on port ${PORT} [${process.env.NODE_ENV || "development"}]`);
     });

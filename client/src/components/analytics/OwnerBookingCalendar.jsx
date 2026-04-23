@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import {
-  getOwnerBookings,
   updateBookingStatus,
   updateBookingDates,
 } from "../../api/booking";
+import { getOwnerBookingsCalendar } from "../../api/rental";
 
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
@@ -476,7 +476,7 @@ export default function OwnerBookingCalendar() {
   }, []);
 
   const loadBookings = async () => {
-    const res = await getOwnerBookings();
+    const res = await getOwnerBookingsCalendar();
     setEvents(
       res.data.map((b) => ({
         id: b._id,

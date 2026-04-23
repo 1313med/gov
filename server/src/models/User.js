@@ -25,6 +25,23 @@ const userSchema = new mongoose.Schema(
     // Soft delete (null = active, Date = deleted)
     deletedAt: { type: Date, default: null },
 
+    // Email verification
+    isEmailVerified:          { type: Boolean, default: false },
+    emailVerificationToken:   { type: String, select: false },
+    emailVerificationExpires: { type: Date,   select: false },
+
+    // Password reset
+    passwordResetToken:   { type: String, select: false },
+    passwordResetExpires: { type: Date,   select: false },
+
+    // Driver license (required before renting)
+    driverLicense: {
+      number:     { type: String, default: null },
+      expiryDate: { type: Date,   default: null },
+      imageUrl:   { type: String, default: null },
+      verified:   { type: Boolean, default: false }, // admin can mark verified
+    },
+
     // Favorites
     favorites:       [{ type: mongoose.Schema.Types.ObjectId, ref: "SaleListing" }],
     rentalFavorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "RentalListing" }],

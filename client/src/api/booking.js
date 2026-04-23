@@ -3,8 +3,9 @@ import { api } from "./axios";
 export const getMyBookings = () =>
   api.get("/bookings/mine");
 
-export const getOwnerBookings = () =>
-  api.get("/bookings/owner");
+// params: { page, limit, status }
+export const getOwnerBookings = (params = {}) =>
+  api.get("/bookings/owner", { params });
 
 export const updateBookingStatus = (id, status) =>
   api.put(`/bookings/${id}/status`, { status });

@@ -27,8 +27,13 @@ const rentalListingSchema = new mongoose.Schema(
     features: [{ type: String }],
 
     // Rental-specific
-    fuelPolicy:    { type: String },
-    cancelPolicy:  { type: String },
+    fuelPolicy: { type: String },
+    // flexible = free up to 24h before | moderate = 50% refund up to 48h | strict = no refund within 72h
+    cancelPolicy: {
+      type: String,
+      enum: ["flexible", "moderate", "strict"],
+      default: "flexible",
+    },
     minRentalDays: { type: Number, default: 1 },
 
     images: [{ type: String }],
@@ -64,6 +69,7 @@ const rentalListingSchema = new mongoose.Schema(
         freeExtraDays:   { type: Number, default: 0 },
         discountPercent: { type: Number, default: 0 },
         isActive:        { type: Boolean, default: true },
+        expiresAt:       { type: Date, default: null },  // null = never expires
       },
     ],
 

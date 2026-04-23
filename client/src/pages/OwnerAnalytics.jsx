@@ -312,9 +312,10 @@ export default function OwnerAnalytics() {
         {/* ── 6 KPI CARDS ── */}
         <div className="oa-kpi-grid-6">
           <KpiCard label="Total Bookings"  value={analytics.totalBookings}               icon={Calendar}    color="#7c6cfc" delay={0} />
-          <KpiCard label="Total Revenue"   value={`${fmt(analytics.totalRevenue)} MAD`}  icon={DollarSign}  color="#2af5c0" delay={60} />
-          <KpiCard label="Net Profit"      value={`${fmt(analytics.netProfit)} MAD`}     icon={TrendingUp}  color="#34d399" delay={120}
-            sub={analytics.totalMaintenanceCost > 0 ? `−${fmt(analytics.totalMaintenanceCost)} MAD maintenance` : undefined} />
+          <KpiCard label="Total Revenue"   value={`${fmt(analytics.totalRevenue)} MAD`}  icon={DollarSign}  color="#2af5c0" delay={60}
+            sub={analytics.pendingRevenue > 0 ? `${fmt(analytics.pendingRevenue)} MAD unpaid` : undefined} />
+          <KpiCard label="Collected"       value={`${fmt(analytics.collectedRevenue ?? 0)} MAD`} icon={TrendingUp} color="#34d399" delay={120}
+            sub={analytics.totalMaintenanceCost > 0 ? `−${fmt(analytics.totalMaintenanceCost)} MAD costs` : undefined} />
           <KpiCard label="Avg Daily Rev"   value={`${fmt(analytics.avgDailyRevenue)} MAD`} icon={Zap}       color="#f5a623" delay={180} />
           <KpiCard label="Occupancy"       value={`${analytics.occupancyRate}%`}          icon={Car}        color="#60a5fa" delay={240} />
           <KpiCard label="Upcoming"        value={analytics.upcomingRentals?.length || 0} icon={Calendar}   color="#a78bfa" delay={300} />

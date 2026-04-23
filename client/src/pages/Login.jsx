@@ -799,7 +799,14 @@ export default function Login() {
                 hasError={!!error}
               />
 
-              <div style={{ height: 4 }} />
+              <div style={{ textAlign: "right", marginTop: -4 }}>
+                <Link
+                  to="/forgot-password"
+                  style={{ fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.06em", color: "var(--p2)", textDecoration: "none", opacity: 0.85 }}
+                >
+                  Forgot password?
+                </Link>
+              </div>
 
               <button
                 ref={btnRef}
