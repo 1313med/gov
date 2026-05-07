@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert, RefreshControl, Image, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { getMySales, deleteSale, markAsSold } from "../src/api/sale";
 import { useAppLang } from "../src/context/AppLangContext";
 import { resolveMediaUrl } from "../src/utils/mediaUrl";
-import { C } from "../src/theme";
+import { useTheme } from "../src/context/ThemeContext";
 
 const STATUS = {
   pending:  { bg:"rgba(245,158,11,0.1)",  border:"rgba(245,158,11,0.3)",  text:"#f59e0b" },
@@ -16,6 +16,8 @@ const STATUS = {
 
 export default function MySalesScreen() {
   const { lang } = useAppLang();
+  const { colors: C } = useTheme();
+  const s = useMemo(() => createMySalesStyles(C), [C]);
   const router = useRouter();
   const fr = lang === "fr";
   const [sales, setSales] = useState([]);
@@ -67,7 +69,7 @@ export default function MySalesScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={C.primary} />}
         ListEmptyComponent={
           <View style={s.empty}>
-            <Ionicons name="pricetag-outline" size={56} color="#4b5563" />
+            <Ionicons name="pricetag-outline" size={56} color={C.muted} />
             <Text style={s.emptyTitle}>{fr ? "Aucune annonce" : "No listings yet"}</Text>
             <TouchableOpacity onPress={() => router.push("/new-sale")} style={s.emptyBtn}>
               <Ionicons name="add-circle-outline" size={18} color="#fff" />
@@ -82,7 +84,7 @@ export default function MySalesScreen() {
             <View style={s.card}>
               {uri
                 ? <Image source={{ uri }} style={s.cardImg} resizeMode="cover" />
-                : <View style={s.cardImgPlaceholder}><Ionicons name="car-outline" size={48} color="#4b5563" /></View>
+                : <View style={s.cardImgPlaceholder}><Ionicons name="car-outline" size={48} color={C.muted} /></View>
               }
               <View style={s.cardBody}>
                 <View style={s.cardTopRow}>
@@ -111,23 +113,25 @@ export default function MySalesScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  center: { flex:1, backgroundColor: C.bg, alignItems:"center", justifyContent:"center" },
-  fab: { position:"absolute", bottom:24, right:24, zIndex:10, backgroundColor: C.primary, borderRadius:28, width:56, height:56, alignItems:"center", justifyContent:"center", elevation:8 },
-  empty: { alignItems:"center", paddingVertical:64 },
-  emptyTitle: { color: C.white, fontWeight:"700", fontSize:18, marginTop:16, marginBottom:20 },
-  emptyBtn: { backgroundColor: C.primary, borderRadius:12, paddingHorizontal:24, paddingVertical:12, flexDirection:"row", alignItems:"center", gap:8 },
-  emptyBtnText: { color:"#fff", fontWeight:"700" },
-  card: { backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:16, marginBottom:16, overflow:"hidden" },
-  cardImg: { width:"100%", height:160 },
-  cardImgPlaceholder: { width:"100%", height:160, backgroundColor: C.surface, alignItems:"center", justifyContent:"center" },
-  cardBody: { padding:16 },
-  cardTopRow: { flexDirection:"row", alignItems:"flex-start", justifyContent:"space-between", marginBottom:8 },
-  cardTitle: { color: C.white, fontWeight:"700", fontSize:15, flex:1, marginRight:8 },
-  cardPrice: { color: C.primary, fontWeight:"700" },
-  badge: { alignSelf:"flex-start", borderWidth:1, borderRadius:20, paddingHorizontal:12, paddingVertical:4, marginBottom:12 },
-  badgeText: { fontSize:12, fontWeight:"700", textTransform:"capitalize" },
-  actionsRow: { flexDirection:"row", gap:8 },
-  actionBtn: { flex:1, borderWidth:1, borderRadius:12, paddingVertical:10, alignItems:"center" },
-  actionBtnText: { fontSize:13, fontWeight:"500" },
-});
+function createMySalesStyles(C) {
+  return StyleSheet.create({
+    center: { flex:1, backgroundColor: C.bg, alignItems:"center", justifyContent:"center" },
+    fab: { position:"absolute", bottom:24, right:24, zIndex:10, backgroundColor: C.primary, borderRadius:28, width:56, height:56, alignItems:"center", justifyContent:"center", elevation:8 },
+    empty: { alignItems:"center", paddingVertical:64 },
+    emptyTitle: { color: C.white, fontWeight:"700", fontSize:18, marginTop:16, marginBottom:20 },
+    emptyBtn: { backgroundColor: C.primary, borderRadius:12, paddingHorizontal:24, paddingVertical:12, flexDirection:"row", alignItems:"center", gap:8 },
+    emptyBtnText: { color:"#fff", fontWeight:"700" },
+    card: { backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:16, marginBottom:16, overflow:"hidden" },
+    cardImg: { width:"100%", height:160 },
+    cardImgPlaceholder: { width:"100%", height:160, backgroundColor: C.surface, alignItems:"center", justifyContent:"center" },
+    cardBody: { padding:16 },
+    cardTopRow: { flexDirection:"row", alignItems:"flex-start", justifyContent:"space-between", marginBottom:8 },
+    cardTitle: { color: C.white, fontWeight:"700", fontSize:15, flex:1, marginRight:8 },
+    cardPrice: { color: C.primary, fontWeight:"700" },
+    badge: { alignSelf:"flex-start", borderWidth:1, borderRadius:20, paddingHorizontal:12, paddingVertical:4, marginBottom:12 },
+    badgeText: { fontSize:12, fontWeight:"700", textTransform:"capitalize" },
+    actionsRow: { flexDirection:"row", gap:8 },
+    actionBtn: { flex:1, borderWidth:1, borderRadius:12, paddingVertical:10, alignItems:"center" },
+    actionBtnText: { fontSize:13, fontWeight:"500" },
+  });
+}

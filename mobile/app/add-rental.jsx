@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator, Image, KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -7,7 +7,7 @@ import * as Location from "expo-location";
 import { createRental } from "../src/api/rental";
 import { uploadListingImages } from "../src/api/upload";
 import { useAppLang } from "../src/context/AppLangContext";
-import { C } from "../src/theme";
+import { useTheme } from "../src/context/ThemeContext";
 
 const FIELDS = [
   { key:"title",       label:{ en:"Title", fr:"Titre" },                     ph:{ en:"e.g. BMW X5 Premium", fr:"ex. BMW X5 Premium" } },
@@ -23,6 +23,8 @@ const FIELDS = [
 
 export default function AddRentalScreen() {
   const { lang } = useAppLang();
+  const { colors: C } = useTheme();
+  const s = useMemo(() => createAddRentalStyles(C), [C]);
   const router = useRouter();
   const fr = lang === "fr";
 
@@ -144,7 +146,7 @@ export default function AddRentalScreen() {
               <View style={s.cityRow}>
                 <TextInput
                   value={form[f.key]} onChangeText={v => set(f.key, v)}
-                  placeholder={f.ph[lang] || f.ph.en} placeholderTextColor="#4b5563"
+                  placeholder={f.ph[lang] || f.ph.en} placeholderTextColor={C.muted}
                   style={s.cityInput}
                 />
                 <TouchableOpacity onPress={detectLocation} disabled={locating} style={s.gpsBtn}>
@@ -155,7 +157,7 @@ export default function AddRentalScreen() {
             ) : (
               <TextInput
                 value={form[f.key]} onChangeText={v => set(f.key, v)}
-                placeholder={f.ph[lang] || f.ph.en} placeholderTextColor="#4b5563"
+                placeholder={f.ph[lang] || f.ph.en} placeholderTextColor={C.muted}
                 keyboardType={f.keyboard || "default"} multiline={f.multi}
                 numberOfLines={f.multi ? 4 : 1}
                 style={[s.input, f.multi && { textAlignVertical:"top", height:100 }]}
@@ -175,22 +177,24 @@ export default function AddRentalScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  section: { marginBottom:24 },
-  sectionTitle: { color: C.white, fontWeight:"700", fontSize:15, marginBottom:12 },
-  sectionSub: { color: C.muted, fontWeight:"400", fontSize:13 },
-  photosGrid: { flexDirection:"row", flexWrap:"wrap", gap:12 },
-  photoThumb: { width:96, height:96, borderRadius:12 },
-  removeBtn: { position:"absolute", top:-8, right:-8, backgroundColor:"#ef4444", borderRadius:10, padding:3 },
-  addPhotoBtn: { width:96, height:96, backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderStyle:"dashed", borderRadius:12, alignItems:"center", justifyContent:"center" },
-  addPhotoBtnText: { color: C.muted, fontSize:11, marginTop:4 },
-  fieldWrap: { marginBottom:16 },
-  fieldLabel: { color:"#94a3b8", fontSize:11, textTransform:"uppercase", letterSpacing:0.5, marginBottom:6 },
-  input: { backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:12, color: C.white, paddingVertical:12, paddingHorizontal:16 },
-  cityRow: { backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:12, flexDirection:"row", alignItems:"center", paddingRight:8 },
-  cityInput: { flex:1, color: C.white, paddingVertical:12, paddingHorizontal:16 },
-  gpsBtn: { backgroundColor:"rgba(124,107,255,0.15)", borderWidth:1, borderColor:"rgba(124,107,255,0.4)", borderRadius:8, paddingHorizontal:8, paddingVertical:6, flexDirection:"row", alignItems:"center" },
-  gpsBtnText: { color: C.primary, fontSize:12, marginLeft:4 },
-  submitBtn: { backgroundColor: C.primary, borderRadius:12, paddingVertical:16, alignItems:"center", marginTop:8, marginBottom:32 },
-  submitBtnText: { color:"#fff", fontWeight:"700", fontSize:15 },
-});
+function createAddRentalStyles(C) {
+  return StyleSheet.create({
+    section: { marginBottom:24 },
+    sectionTitle: { color: C.white, fontWeight:"700", fontSize:15, marginBottom:12 },
+    sectionSub: { color: C.muted, fontWeight:"400", fontSize:13 },
+    photosGrid: { flexDirection:"row", flexWrap:"wrap", gap:12 },
+    photoThumb: { width:96, height:96, borderRadius:12 },
+    removeBtn: { position:"absolute", top:-8, right:-8, backgroundColor:"#ef4444", borderRadius:10, padding:3 },
+    addPhotoBtn: { width:96, height:96, backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderStyle:"dashed", borderRadius:12, alignItems:"center", justifyContent:"center" },
+    addPhotoBtnText: { color: C.muted, fontSize:11, marginTop:4 },
+    fieldWrap: { marginBottom:16 },
+    fieldLabel: { color: C.label, fontSize:11, textTransform:"uppercase", letterSpacing:0.5, marginBottom:6 },
+    input: { backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:12, color: C.white, paddingVertical:12, paddingHorizontal:16 },
+    cityRow: { backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:12, flexDirection:"row", alignItems:"center", paddingRight:8 },
+    cityInput: { flex:1, color: C.white, paddingVertical:12, paddingHorizontal:16 },
+    gpsBtn: { backgroundColor: C.pillBg, borderWidth:1, borderColor: C.pillBorder, borderRadius:8, paddingHorizontal:8, paddingVertical:6, flexDirection:"row", alignItems:"center" },
+    gpsBtnText: { color: C.primary, fontSize:12, marginLeft:4 },
+    submitBtn: { backgroundColor: C.primary, borderRadius:12, paddingVertical:16, alignItems:"center", marginTop:8, marginBottom:32 },
+    submitBtnText: { color:"#fff", fontWeight:"700", fontSize:15 },
+  });
+}

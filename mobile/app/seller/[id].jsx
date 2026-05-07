@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, StyleSheet, Image } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,12 +9,14 @@ import ReviewSection from "../../src/components/ReviewSection";
 import { useAuth } from "../../src/context/AuthContext";
 import { useAppLang } from "../../src/context/AppLangContext";
 import { resolveMediaUrl } from "../../src/utils/mediaUrl";
-import { C } from "../../src/theme";
+import { useTheme } from "../../src/context/ThemeContext";
 
 export default function SellerProfileScreen() {
   const { id } = useLocalSearchParams();
   const { auth } = useAuth();
   const { lang } = useAppLang();
+  const { colors: C } = useTheme();
+  const s = useMemo(() => createSellerProfileStyles(C), [C]);
   const router = useRouter();
   const fr = lang === "fr";
 
@@ -109,27 +111,29 @@ export default function SellerProfileScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  center: { flex:1, backgroundColor: C.bg, alignItems:"center", justifyContent:"center" },
-  white: { color: C.white },
-  hero: { backgroundColor: C.surface, borderBottomWidth:1, borderBottomColor: C.border, paddingHorizontal:16, paddingTop:24, paddingBottom:32, alignItems:"center" },
-  avatar: { width:96, height:96, borderRadius:48, backgroundColor:"rgba(124,107,255,0.2)", borderWidth:2, borderColor: C.primary, alignItems:"center", justifyContent:"center", marginBottom:12 },
-  avatarImg: { width:96, height:96, borderRadius:48, marginBottom:12, borderWidth:2, borderColor: C.primary },
-  avatarText: { color: C.primary, fontWeight:"700", fontSize:32 },
-  name: { color: C.white, fontWeight:"700", fontSize:20, marginBottom:6 },
-  verifiedRow: { flexDirection:"row", alignItems:"center", marginBottom:6 },
-  verifiedText: { color: C.green, fontSize:13, marginLeft:4 },
-  cityRow: { flexDirection:"row", alignItems:"center", marginBottom:4 },
-  cityText: { color: C.muted, fontSize:13, marginLeft:4 },
-  bio: { color:"#cbd5e1", fontSize:13, textAlign:"center", marginTop:8, lineHeight:20, paddingHorizontal:16 },
-  statsRow: { flexDirection:"row", gap:16, marginTop:20 },
-  statBox: { backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:16, paddingHorizontal:32, paddingVertical:12, alignItems:"center" },
-  statVal: { color: C.primary, fontWeight:"700", fontSize:20 },
-  statLabel: { color: C.muted, fontSize:11, marginTop:2 },
-  contactBtn: { marginTop:20, backgroundColor: C.primary, borderRadius:12, paddingHorizontal:32, paddingVertical:12, flexDirection:"row", alignItems:"center" },
-  contactBtnText: { color:"#fff", fontWeight:"700", marginLeft:8 },
-  section: { padding:16 },
-  sectionTitle: { color: C.white, fontWeight:"700", fontSize:17, marginBottom:16 },
-  empty: { alignItems:"center", paddingVertical:40 },
-  emptyText: { color: C.muted, fontSize:13, marginTop:12 },
-});
+function createSellerProfileStyles(C) {
+  return StyleSheet.create({
+    center: { flex:1, backgroundColor: C.bg, alignItems:"center", justifyContent:"center" },
+    white: { color: C.white },
+    hero: { backgroundColor: C.surface, borderBottomWidth:1, borderBottomColor: C.border, paddingHorizontal:16, paddingTop:24, paddingBottom:32, alignItems:"center" },
+    avatar: { width:96, height:96, borderRadius:48, backgroundColor: C.pillBg, borderWidth:2, borderColor: C.primary, alignItems:"center", justifyContent:"center", marginBottom:12 },
+    avatarImg: { width:96, height:96, borderRadius:48, marginBottom:12, borderWidth:2, borderColor: C.primary },
+    avatarText: { color: C.primary, fontWeight:"700", fontSize:32 },
+    name: { color: C.white, fontWeight:"700", fontSize:20, marginBottom:6 },
+    verifiedRow: { flexDirection:"row", alignItems:"center", marginBottom:6 },
+    verifiedText: { color: C.green, fontSize:13, marginLeft:4 },
+    cityRow: { flexDirection:"row", alignItems:"center", marginBottom:4 },
+    cityText: { color: C.muted, fontSize:13, marginLeft:4 },
+    bio: { color: C.slate, fontSize:13, textAlign:"center", marginTop:8, lineHeight:20, paddingHorizontal:16 },
+    statsRow: { flexDirection:"row", gap:16, marginTop:20 },
+    statBox: { backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:16, paddingHorizontal:32, paddingVertical:12, alignItems:"center" },
+    statVal: { color: C.primary, fontWeight:"700", fontSize:20 },
+    statLabel: { color: C.muted, fontSize:11, marginTop:2 },
+    contactBtn: { marginTop:20, backgroundColor: C.primary, borderRadius:12, paddingHorizontal:32, paddingVertical:12, flexDirection:"row", alignItems:"center" },
+    contactBtnText: { color:"#fff", fontWeight:"700", marginLeft:8 },
+    section: { padding:16 },
+    sectionTitle: { color: C.white, fontWeight:"700", fontSize:17, marginBottom:16 },
+    empty: { alignItems:"center", paddingVertical:40 },
+    emptyText: { color: C.muted, fontSize:13, marginTop:12 },
+  });
+}

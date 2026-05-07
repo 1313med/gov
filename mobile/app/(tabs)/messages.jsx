@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { View, Text, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { getConversations, getMessages, sendMessage } from "../../src/api/message";
@@ -6,12 +6,14 @@ import { useAuth } from "../../src/context/AuthContext";
 import { useSocket } from "../../src/context/SocketContext";
 import { useAppLang } from "../../src/context/AppLangContext";
 import { useRouter } from "expo-router";
-import { C } from "../../src/theme";
+import { useTheme } from "../../src/context/ThemeContext";
 
 export default function MessagesScreen() {
   const { auth } = useAuth();
   const { clearMessageBadge } = useSocket();
   const { lang } = useAppLang();
+  const { colors: C } = useTheme();
+  const s = useMemo(() => createMessagesStyles(C), [C]);
   const router = useRouter();
   const fr = lang === "fr";
   const [conversations, setConversations] = useState([]);
@@ -47,7 +49,7 @@ export default function MessagesScreen() {
 
   if (!auth) return (
     <View style={s.center}>
-      <Ionicons name="chatbubbles-outline" size={56} color="#4b5563" />
+      <Ionicons name="chatbubbles-outline" size={56} color={C.muted} />
       <Text style={s.emptyTitle}>{fr?"Messages":"Messages"}</Text>
       <Text style={s.emptySub}>{fr?"Connectez-vous pour voir vos messages":"Login to view your messages"}</Text>
       <TouchableOpacity onPress={() => router.push("/(auth)/login")} style={s.loginBtn}>
@@ -73,7 +75,7 @@ export default function MessagesScreen() {
             return (
               <View style={[s.msgWrap, isMe ? s.msgMe : s.msgThem]}>
                 <View style={[s.msgBubble, isMe ? s.bubbleMe : s.bubbleThem]}>
-                  <Text style={s.msgText}>{item.text}</Text>
+                  <Text style={[s.msgText, isMe ? s.msgTextMe : s.msgTextThem]}>{item.text}</Text>
                 </View>
                 <Text style={s.msgTime}>{new Date(item.createdAt).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}</Text>
               </View>
@@ -100,7 +102,7 @@ export default function MessagesScreen() {
         ? <View style={s.center}><ActivityIndicator color={C.primary} size="large" /></View>
         : conversations.length === 0
           ? <View style={s.center}>
-              <Ionicons name="chatbubbles-outline" size={56} color="#4b5563" />
+              <Ionicons name="chatbubbles-outline" size={56} color={C.muted} />
               <Text style={s.emptyTitle}>{fr?"Aucun message":"No messages yet"}</Text>
               <Text style={s.emptySub}>{fr?"Contactez un vendeur depuis une annonce.":"Contact a seller from a listing."}</Text>
             </View>
@@ -124,33 +126,37 @@ export default function MessagesScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  header: { paddingTop:56, paddingBottom:16, paddingHorizontal:16, backgroundColor: C.surface, borderBottomWidth:1, borderBottomColor: C.border },
-  headerTitle: { color: C.white, fontWeight:"700", fontSize:20 },
-  center: { flex:1, alignItems:"center", justifyContent:"center", padding:24 },
-  emptyTitle: { color: C.white, fontWeight:"700", fontSize:18, marginTop:16, marginBottom:8 },
-  emptySub: { color: C.muted, fontSize:13, textAlign:"center" },
-  loginBtn: { backgroundColor: C.primary, borderRadius:12, paddingHorizontal:24, paddingVertical:12, marginTop:16 },
-  loginBtnText: { color:"#fff", fontWeight:"700" },
-  chatHeader: { paddingTop:56, paddingBottom:16, paddingHorizontal:16, backgroundColor: C.surface, borderBottomWidth:1, borderBottomColor: C.border, flexDirection:"row", alignItems:"center" },
-  chatAvatar: { width:36, height:36, borderRadius:18, backgroundColor:"rgba(124,107,255,0.2)", alignItems:"center", justifyContent:"center", marginRight:12 },
-  chatAvatarText: { color: C.primary, fontWeight:"700" },
-  chatName: { color: C.white, fontWeight:"700", fontSize:16, flex:1 },
-  msgWrap: { marginBottom:12, maxWidth:"75%" },
-  msgMe: { alignSelf:"flex-end" },
-  msgThem: { alignSelf:"flex-start" },
-  msgBubble: { borderRadius:16, paddingHorizontal:16, paddingVertical:10 },
-  bubbleMe: { backgroundColor: C.primary },
-  bubbleThem: { backgroundColor: C.card, borderWidth:1, borderColor: C.border },
-  msgText: { color:"#fff", fontSize:14 },
-  msgTime: { color: C.muted, fontSize:11, marginTop:4, paddingHorizontal:4 },
-  inputBar: { paddingHorizontal:16, paddingVertical:12, backgroundColor: C.surface, borderTopWidth:1, borderTopColor: C.border, flexDirection:"row", alignItems:"center" },
-  inputWrap: { flex:1, backgroundColor: C.card, borderRadius:12, borderWidth:1, borderColor: C.border, paddingHorizontal:12, marginRight:8 },
-  msgInput: { color: C.white, paddingVertical:10, maxHeight:100 },
-  sendBtn: { width:44, height:44, backgroundColor: C.primary, borderRadius:12, alignItems:"center", justifyContent:"center" },
-  convCard: { backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:16, flexDirection:"row", alignItems:"center", paddingHorizontal:16, paddingVertical:16, marginBottom:12 },
-  convAvatar: { width:48, height:48, borderRadius:24, backgroundColor:"rgba(124,107,255,0.2)", alignItems:"center", justifyContent:"center", marginRight:12 },
-  convAvatarText: { color: C.primary, fontWeight:"700", fontSize:18 },
-  convName: { color: C.white, fontWeight:"700", marginBottom:4 },
-  convLast: { color: C.muted, fontSize:13 },
-});
+function createMessagesStyles(C) {
+  return StyleSheet.create({
+    header: { paddingTop:56, paddingBottom:16, paddingHorizontal:16, backgroundColor: C.surface, borderBottomWidth:1, borderBottomColor: C.border },
+    headerTitle: { color: C.white, fontWeight:"700", fontSize:20 },
+    center: { flex:1, alignItems:"center", justifyContent:"center", padding:24 },
+    emptyTitle: { color: C.white, fontWeight:"700", fontSize:18, marginTop:16, marginBottom:8 },
+    emptySub: { color: C.muted, fontSize:13, textAlign:"center" },
+    loginBtn: { backgroundColor: C.primary, borderRadius:12, paddingHorizontal:24, paddingVertical:12, marginTop:16 },
+    loginBtnText: { color:"#fff", fontWeight:"700" },
+    chatHeader: { paddingTop:56, paddingBottom:16, paddingHorizontal:16, backgroundColor: C.surface, borderBottomWidth:1, borderBottomColor: C.border, flexDirection:"row", alignItems:"center" },
+    chatAvatar: { width:36, height:36, borderRadius:18, backgroundColor: C.pillBg, alignItems:"center", justifyContent:"center", marginRight:12 },
+    chatAvatarText: { color: C.primary, fontWeight:"700" },
+    chatName: { color: C.white, fontWeight:"700", fontSize:16, flex:1 },
+    msgWrap: { marginBottom:12, maxWidth:"75%" },
+    msgMe: { alignSelf:"flex-end" },
+    msgThem: { alignSelf:"flex-start" },
+    msgBubble: { borderRadius:16, paddingHorizontal:16, paddingVertical:10 },
+    bubbleMe: { backgroundColor: C.primary },
+    bubbleThem: { backgroundColor: C.card, borderWidth:1, borderColor: C.border },
+    msgText: { fontSize:14 },
+    msgTextMe: { color:"#fff" },
+    msgTextThem: { color: C.white },
+    msgTime: { color: C.muted, fontSize:11, marginTop:4, paddingHorizontal:4 },
+    inputBar: { paddingHorizontal:16, paddingVertical:12, backgroundColor: C.surface, borderTopWidth:1, borderTopColor: C.border, flexDirection:"row", alignItems:"center" },
+    inputWrap: { flex:1, backgroundColor: C.card, borderRadius:12, borderWidth:1, borderColor: C.border, paddingHorizontal:12, marginRight:8 },
+    msgInput: { color: C.white, paddingVertical:10, maxHeight:100 },
+    sendBtn: { width:44, height:44, backgroundColor: C.primary, borderRadius:12, alignItems:"center", justifyContent:"center" },
+    convCard: { backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:16, flexDirection:"row", alignItems:"center", paddingHorizontal:16, paddingVertical:16, marginBottom:12 },
+    convAvatar: { width:48, height:48, borderRadius:24, backgroundColor: C.pillBg, alignItems:"center", justifyContent:"center", marginRight:12 },
+    convAvatarText: { color: C.primary, fontWeight:"700", fontSize:18 },
+    convName: { color: C.white, fontWeight:"700", marginBottom:4 },
+    convLast: { color: C.muted, fontSize:13 },
+  });
+}

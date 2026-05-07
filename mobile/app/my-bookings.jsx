@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert, RefreshControl, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { getMyBookings, cancelBooking } from "../src/api/booking";
 import { useAppLang } from "../src/context/AppLangContext";
-import { C } from "../src/theme";
+import { useTheme } from "../src/context/ThemeContext";
 
 const ST = {
   pending:   { bg:"rgba(245,158,11,0.1)",  border:"rgba(245,158,11,0.3)",  text:"#f59e0b", icon:"time-outline" },
@@ -15,6 +15,8 @@ const ST = {
 
 export default function MyBookingsScreen() {
   const { lang } = useAppLang();
+  const { colors: C } = useTheme();
+  const s = useMemo(() => createMyBookingsStyles(C), [C]);
   const router = useRouter();
   const fr = lang === "fr";
   const [bookings, setBookings] = useState([]);
@@ -39,7 +41,7 @@ export default function MyBookingsScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={C.primary} />}
         ListEmptyComponent={
           <View style={s.center}>
-            <Ionicons name="calendar-outline" size={56} color="#4b5563" />
+            <Ionicons name="calendar-outline" size={56} color={C.muted} />
             <Text style={s.emptyTitle}>{fr?"Aucune réservation":"No bookings yet"}</Text>
             <TouchableOpacity onPress={() => router.push("/(tabs)/rentals")} style={s.btn}><Text style={s.btnText}>{fr?"Voir les locations":"Browse Rentals"}</Text></TouchableOpacity>
           </View>
@@ -77,22 +79,24 @@ export default function MyBookingsScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  center: { flex:1, alignItems:"center", justifyContent:"center", padding:24 },
-  emptyTitle: { color: C.white, fontWeight:"700", fontSize:18, marginTop:16, marginBottom:16 },
-  btn: { backgroundColor: C.primary, borderRadius:12, paddingHorizontal:24, paddingVertical:12 },
-  btnText: { color:"#fff", fontWeight:"700" },
-  card: { backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:16, padding:16, marginBottom:16 },
-  cardTitle: { color: C.white, fontWeight:"700", fontSize:16, marginBottom:10 },
-  badge: { alignSelf:"flex-start", flexDirection:"row", alignItems:"center", paddingHorizontal:10, paddingVertical:4, borderRadius:20, borderWidth:1, marginBottom:12, gap:4 },
-  badgeText: { fontSize:12, fontWeight:"700", textTransform:"capitalize" },
-  datesRow: { flexDirection:"row", gap:12, marginBottom:12 },
-  dateBox: { flex:1, backgroundColor: C.surface, borderRadius:12, borderWidth:1, borderColor: C.border, padding:10 },
-  dateLabel: { color: C.muted, fontSize:11, marginBottom:2 },
-  dateVal: { color: C.white, fontWeight:"500", fontSize:13 },
-  totalRow: { flexDirection:"row", alignItems:"center", justifyContent:"space-between" },
-  totalLabel: { color: C.muted, fontSize:13 },
-  totalVal: { color: C.primary, fontWeight:"700", fontSize:18 },
-  cancelBtn: { marginTop:12, borderWidth:1, borderColor:"rgba(239,68,68,0.4)", borderRadius:12, paddingVertical:10, alignItems:"center" },
-  cancelText: { color: C.red, fontWeight:"500", fontSize:14 },
-});
+function createMyBookingsStyles(C) {
+  return StyleSheet.create({
+    center: { flex:1, alignItems:"center", justifyContent:"center", padding:24 },
+    emptyTitle: { color: C.white, fontWeight:"700", fontSize:18, marginTop:16, marginBottom:16 },
+    btn: { backgroundColor: C.primary, borderRadius:12, paddingHorizontal:24, paddingVertical:12 },
+    btnText: { color:"#fff", fontWeight:"700" },
+    card: { backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:16, padding:16, marginBottom:16 },
+    cardTitle: { color: C.white, fontWeight:"700", fontSize:16, marginBottom:10 },
+    badge: { alignSelf:"flex-start", flexDirection:"row", alignItems:"center", paddingHorizontal:10, paddingVertical:4, borderRadius:20, borderWidth:1, marginBottom:12, gap:4 },
+    badgeText: { fontSize:12, fontWeight:"700", textTransform:"capitalize" },
+    datesRow: { flexDirection:"row", gap:12, marginBottom:12 },
+    dateBox: { flex:1, backgroundColor: C.surface, borderRadius:12, borderWidth:1, borderColor: C.border, padding:10 },
+    dateLabel: { color: C.muted, fontSize:11, marginBottom:2 },
+    dateVal: { color: C.white, fontWeight:"500", fontSize:13 },
+    totalRow: { flexDirection:"row", alignItems:"center", justifyContent:"space-between" },
+    totalLabel: { color: C.muted, fontSize:13 },
+    totalVal: { color: C.primary, fontWeight:"700", fontSize:18 },
+    cancelBtn: { marginTop:12, borderWidth:1, borderColor:"rgba(239,68,68,0.4)", borderRadius:12, paddingVertical:10, alignItems:"center" },
+    cancelText: { color: C.red, fontWeight:"500", fontSize:14 },
+  });
+}

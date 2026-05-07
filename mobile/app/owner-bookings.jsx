@@ -25,7 +25,7 @@ import { uploadListingImages } from "../src/api/upload";
 import { submitCustomerFeedback, getFeedbackForBooking, getFeedbackForCustomer } from "../src/api/customerFeedback";
 import { useAppLang } from "../src/context/AppLangContext";
 import { useAuth } from "../src/context/AuthContext";
-import { C } from "../src/theme";
+import { useTheme } from "../src/context/ThemeContext";
 import { resolveMediaUrl } from "../src/utils/mediaUrl";
 import { openExternalUrl } from "../src/utils/openExternalUrl";
 
@@ -43,7 +43,186 @@ const STATUS = {
 
 const FILTERS = ["all", "pending", "confirmed", "completed", "rejected", "cancelled"];
 
+function createOwnerBookingsStyles(C) {
+  return {
+    a: StyleSheet.create({
+      btn: { flex: 1, minWidth: "30%", borderWidth: 1, borderRadius: 12, paddingVertical: 10, alignItems: "center" },
+      btnText: { fontSize: 12, fontWeight: "600" },
+    }),
+    m: StyleSheet.create({
+      wrap: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: C.border },
+      section: { color: C.muted, fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 },
+      tabs: { flexDirection: "row", gap: 8, marginBottom: 10 },
+      tab: { flex: 1, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: C.border, alignItems: "center", backgroundColor: C.surface },
+      tabOn: { borderColor: "#34d399", backgroundColor: "rgba(52,211,153,0.08)" },
+      tabOnAfter: { borderColor: "#f87171", backgroundColor: "rgba(248,113,113,0.08)" },
+      tabText: { color: C.muted, fontSize: 12, fontWeight: "600" },
+      tabTextOn: { color: C.white },
+      grid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+      thumb: { width: 72, height: 72, borderRadius: 10, overflow: "hidden" },
+      img: { width: "100%", height: "100%" },
+      rm: { position: "absolute", top: 2, right: 2, backgroundColor: "rgba(0,0,0,0.65)", borderRadius: 12, padding: 4 },
+      add: { width: 72, height: 72, borderRadius: 10, borderWidth: 1, borderColor: "rgba(124,107,255,0.35)", borderStyle: "dashed", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(124,107,255,0.05)" },
+      docRow: { flexDirection: "row", gap: 8, marginBottom: 8 },
+      docInput: { flex: 1, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, color: C.white, fontSize: 13 },
+      docBtn: { backgroundColor: C.primary, borderRadius: 10, paddingHorizontal: 14, justifyContent: "center" },
+      docBtnText: { color: "#fff", fontWeight: "700", fontSize: 12 },
+      docItem: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: C.surface, borderRadius: 10, padding: 10, marginBottom: 6, borderWidth: 1, borderColor: C.border },
+      docName: { flex: 1, color: C.white, fontSize: 13 },
+      docLink: { color: C.primary, fontSize: 12, fontWeight: "600" },
+      save: { backgroundColor: C.primary, borderRadius: 12, paddingVertical: 14, alignItems: "center", marginTop: 14 },
+      saveText: { color: "#fff", fontWeight: "700", fontSize: 14 },
+    }),
+    f: StyleSheet.create({
+      overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.75)", justifyContent: "center", padding: 20 },
+      box: { backgroundColor: C.card, borderRadius: 16, padding: 18, borderWidth: 1, borderColor: C.border },
+      title: { color: C.white, fontWeight: "800", fontSize: 18 },
+      sub: { color: C.muted, fontSize: 12, marginBottom: 12 },
+      lbl: { color: C.muted, fontSize: 11, marginTop: 10, marginBottom: 6, textTransform: "uppercase" },
+      row: { flexDirection: "row", gap: 10, marginBottom: 12 },
+      big: { flex: 1, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: C.border, alignItems: "center", backgroundColor: C.surface },
+      bigGood: { borderColor: "#34d399", backgroundColor: "rgba(52,211,153,0.1)" },
+      bigBad: { borderColor: "#f87171", backgroundColor: "rgba(248,113,113,0.1)" },
+      bigT: { color: C.white, fontWeight: "700", fontSize: 13 },
+      q: { marginBottom: 12 },
+      qLabel: { color: C.slate, fontSize: 13, marginBottom: 6 },
+      qBtns: { flexDirection: "row", gap: 8 },
+      qBtn: { flex: 1, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: C.border, alignItems: "center", backgroundColor: C.surface },
+      qBtnYes: { borderColor: "#34d399", backgroundColor: "rgba(52,211,153,0.1)" },
+      qBtnNo: { borderColor: "#f87171", backgroundColor: "rgba(248,113,113,0.1)" },
+      qBtnT: { color: C.muted, fontSize: 12, fontWeight: "600" },
+      qBtnTOn: { color: C.white },
+      note: { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 10, color: C.white, minHeight: 72, textAlignVertical: "top" },
+      actions: { flexDirection: "row", gap: 10, marginTop: 16 },
+      cancel: { flex: 1, padding: 12, alignItems: "center", borderRadius: 12, borderWidth: 1, borderColor: C.border },
+      cancelT: { color: C.muted, fontWeight: "600" },
+      ok: { flex: 1, padding: 12, alignItems: "center", borderRadius: 12, backgroundColor: C.primary },
+      okT: { color: "#fff", fontWeight: "700" },
+    }),
+    cp: StyleSheet.create({
+      overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.8)", justifyContent: "center", padding: 16 },
+      box: {
+        backgroundColor: C.card,
+        borderRadius: 16,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: C.border,
+        maxHeight: "90%",
+      },
+      headRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
+      title: { color: C.white, fontWeight: "800", fontSize: 18, flex: 1 },
+      hint: {
+        flexDirection: "row",
+        alignItems: "flex-start",
+        gap: 10,
+        backgroundColor: "rgba(245,158,11,0.12)",
+        borderRadius: 12,
+        padding: 12,
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: "rgba(245,158,11,0.35)",
+      },
+      hintText: { color: "#fde68a", fontSize: 13, flex: 1, lineHeight: 19 },
+      warn: { color: C.amber, fontSize: 13, marginBottom: 8 },
+      name: { color: C.white, fontWeight: "700", fontSize: 17 },
+      meta: { color: C.muted, fontSize: 12, marginBottom: 14, lineHeight: 18 },
+      section: {
+        color: C.muted,
+        fontSize: 11,
+        textTransform: "uppercase",
+        letterSpacing: 0.6,
+        marginTop: 12,
+        marginBottom: 6,
+      },
+      line: { color: C.slate, fontSize: 13, marginBottom: 8 },
+      docImg: {
+        width: "100%",
+        height: 140,
+        borderRadius: 12,
+        backgroundColor: C.surface,
+        marginBottom: 4,
+      },
+      tapHint: { color: C.primary, fontSize: 12, fontWeight: "600", marginBottom: 10 },
+      missing: { color: C.muted, fontStyle: "italic", fontSize: 13, marginBottom: 8 },
+      sum: { color: C.slate, fontSize: 12, marginBottom: 10, lineHeight: 18 },
+      emptyFb: { color: C.muted, fontSize: 13, marginBottom: 8, lineHeight: 19 },
+      err: { color: C.red, fontSize: 13, marginBottom: 8 },
+      fbCard: {
+        backgroundColor: C.surface,
+        borderRadius: 12,
+        padding: 12,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: C.border,
+      },
+      fbWho: { color: C.white, fontSize: 13, fontWeight: "600", marginBottom: 4 },
+      fbOverall: { fontSize: 13, fontWeight: "700", marginBottom: 6 },
+      fbGood: { color: "#4ade80" },
+      fbBad: { color: "#f87171" },
+      fbFlags: { color: C.muted, fontSize: 11, lineHeight: 16 },
+      fbNote: { color: C.slate, fontSize: 12, marginTop: 8, fontStyle: "italic" },
+      closeBtn: {
+        marginTop: 14,
+        paddingVertical: 14,
+        borderRadius: 12,
+        backgroundColor: C.primary,
+        alignItems: "center",
+      },
+      closeBtnT: { color: "#fff", fontWeight: "700", fontSize: 15 },
+    }),
+    s: StyleSheet.create({
+      center: { flex: 1, backgroundColor: C.bg, alignItems: "center", justifyContent: "center" },
+      statsRow: { backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border, paddingVertical: 10 },
+      statsContent: { paddingHorizontal: 12, gap: 8 },
+      statCard: { backgroundColor: C.card, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingVertical: 10, paddingHorizontal: 14, marginRight: 8, minWidth: 88, alignItems: "center" },
+      statVal: { color: C.primary, fontWeight: "800", fontSize: 16 },
+      statLbl: { color: C.muted, fontSize: 9, marginTop: 4, textTransform: "uppercase" },
+      filterBar: { paddingHorizontal: 16, paddingVertical: 10, backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border },
+      filterTab: { marginRight: 8, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, backgroundColor: C.card, borderColor: C.border },
+      filterTabActive: { backgroundColor: C.pillBg, borderColor: C.primary },
+      filterTabText: { color: C.muted, fontSize: 12, fontWeight: "500", textTransform: "capitalize" },
+      filterTabTextActive: { color: C.primary },
+      empty: { alignItems: "center", paddingVertical: 64 },
+      emptyTitle: { color: C.white, fontWeight: "700", fontSize: 18, marginTop: 16 },
+      card: { backgroundColor: C.card, borderWidth: 1, borderColor: C.border, borderRadius: 16, padding: 16, marginBottom: 16 },
+      cardTop: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 12 },
+      thumb: { width: 56, height: 44, borderRadius: 8, backgroundColor: C.surface },
+      thumbPh: { alignItems: "center", justifyContent: "center" },
+      rentalTitle: { color: C.white, fontWeight: "700", fontSize: 15 },
+      sub: { color: C.muted, fontSize: 12, marginTop: 2 },
+      customerRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
+      customerAvatar: { width: 28, height: 28, borderRadius: 14, backgroundColor: C.pillBg, alignItems: "center", justifyContent: "center", marginRight: 8 },
+      customerAvatarText: { color: C.primary, fontSize: 11, fontWeight: "700" },
+      customerName: { color: C.white, fontWeight: "600", fontSize: 14 },
+      customerContact: { color: C.muted, fontSize: 11, marginTop: 2 },
+      profileLink: { color: C.primary, fontSize: 11, marginTop: 4, fontWeight: "600" },
+      badge: { alignSelf: "flex-start", flexDirection: "row", alignItems: "center", borderWidth: 1, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4, marginBottom: 12, gap: 4 },
+      badgeText: { fontSize: 12, fontWeight: "700", textTransform: "capitalize" },
+      datesRow: { flexDirection: "row", gap: 8, marginBottom: 12 },
+      dateBox: { flex: 1, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 10 },
+      dateLabel: { color: C.muted, fontSize: 11, marginBottom: 2 },
+      dateVal: { color: C.white, fontWeight: "500", fontSize: 12 },
+      offer: { color: "#fbbf24", fontSize: 12, marginBottom: 8 },
+      paidRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
+      paidText: { color: C.green, fontSize: 12, fontWeight: "500", marginLeft: 4 },
+      actionsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+      pages: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 8, marginTop: 8 },
+      pageBtn: { width: 36, height: 36, borderRadius: 8, borderWidth: 1, borderColor: C.border, alignItems: "center", justifyContent: "center", backgroundColor: C.card },
+      pageBtnOn: { backgroundColor: C.pillBg, borderColor: C.primary },
+      pageBtnT: { color: C.muted, fontWeight: "600" },
+      pageBtnTOn: { color: C.primary },
+      rated: { color: C.green, fontSize: 12, fontWeight: "600", paddingVertical: 10 },
+    }),
+  };
+}
+
+function useOwnerBookingsStyles() {
+  const { colors: C } = useTheme();
+  return useMemo(() => ({ C, ...createOwnerBookingsStyles(C) }), [C]);
+}
+
 function ActionBtn({ label, variant, onPress }) {
+  const { C, a } = useOwnerBookingsStyles();
   const colors = {
     green: { bg: "rgba(52,211,153,0.1)", border: "rgba(52,211,153,0.3)", text: "#34d399" },
     red: { bg: "rgba(239,68,68,0.1)", border: "rgba(239,68,68,0.3)", text: "#ef4444" },
@@ -58,12 +237,8 @@ function ActionBtn({ label, variant, onPress }) {
   );
 }
 
-const a = StyleSheet.create({
-  btn: { flex: 1, minWidth: "30%", borderWidth: 1, borderRadius: 12, paddingVertical: 10, alignItems: "center" },
-  btnText: { fontSize: 12, fontWeight: "600" },
-});
-
 function BookingMediaPanel({ booking, fr, onUpdated }) {
+  const { C, m } = useOwnerBookingsStyles();
   const [tab, setTab] = useState("before");
   const [before, setBefore] = useState(booking.conditionPhotos?.before || []);
   const [after, setAfter] = useState(booking.conditionPhotos?.after || []);
@@ -204,32 +379,8 @@ function BookingMediaPanel({ booking, fr, onUpdated }) {
   );
 }
 
-const m = StyleSheet.create({
-  wrap: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: C.border },
-  section: { color: C.muted, fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 },
-  tabs: { flexDirection: "row", gap: 8, marginBottom: 10 },
-  tab: { flex: 1, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: C.border, alignItems: "center", backgroundColor: C.surface },
-  tabOn: { borderColor: "#34d399", backgroundColor: "rgba(52,211,153,0.08)" },
-  tabOnAfter: { borderColor: "#f87171", backgroundColor: "rgba(248,113,113,0.08)" },
-  tabText: { color: C.muted, fontSize: 12, fontWeight: "600" },
-  tabTextOn: { color: C.white },
-  grid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  thumb: { width: 72, height: 72, borderRadius: 10, overflow: "hidden" },
-  img: { width: "100%", height: "100%" },
-  rm: { position: "absolute", top: 2, right: 2, backgroundColor: "rgba(0,0,0,0.65)", borderRadius: 12, padding: 4 },
-  add: { width: 72, height: 72, borderRadius: 10, borderWidth: 1, borderColor: "rgba(124,107,255,0.35)", borderStyle: "dashed", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(124,107,255,0.05)" },
-  docRow: { flexDirection: "row", gap: 8, marginBottom: 8 },
-  docInput: { flex: 1, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, color: C.white, fontSize: 13 },
-  docBtn: { backgroundColor: C.primary, borderRadius: 10, paddingHorizontal: 14, justifyContent: "center" },
-  docBtnText: { color: "#fff", fontWeight: "700", fontSize: 12 },
-  docItem: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: C.surface, borderRadius: 10, padding: 10, marginBottom: 6, borderWidth: 1, borderColor: C.border },
-  docName: { flex: 1, color: C.white, fontSize: 13 },
-  docLink: { color: C.primary, fontSize: 12, fontWeight: "600" },
-  save: { backgroundColor: C.primary, borderRadius: 12, paddingVertical: 14, alignItems: "center", marginTop: 14 },
-  saveText: { color: "#fff", fontWeight: "700", fontSize: 14 },
-});
-
 function FeedbackModal({ visible, booking, fr, onClose, onSaved }) {
+  const { C, f } = useOwnerBookingsStyles();
   const [overall, setOverall] = useState(null);
   const [hadDamage, setHadDamage] = useState(null);
   const [returnedOnTime, setReturnedOnTime] = useState(null);
@@ -349,34 +500,8 @@ function FeedbackModal({ visible, booking, fr, onClose, onSaved }) {
   );
 }
 
-const f = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.75)", justifyContent: "center", padding: 20 },
-  box: { backgroundColor: C.card, borderRadius: 16, padding: 18, borderWidth: 1, borderColor: C.border },
-  title: { color: C.white, fontWeight: "800", fontSize: 18 },
-  sub: { color: C.muted, fontSize: 12, marginBottom: 12 },
-  lbl: { color: C.muted, fontSize: 11, marginTop: 10, marginBottom: 6, textTransform: "uppercase" },
-  row: { flexDirection: "row", gap: 10, marginBottom: 12 },
-  big: { flex: 1, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: C.border, alignItems: "center", backgroundColor: C.surface },
-  bigGood: { borderColor: "#34d399", backgroundColor: "rgba(52,211,153,0.1)" },
-  bigBad: { borderColor: "#f87171", backgroundColor: "rgba(248,113,113,0.1)" },
-  bigT: { color: C.white, fontWeight: "700", fontSize: 13 },
-  q: { marginBottom: 12 },
-  qLabel: { color: C.slate, fontSize: 13, marginBottom: 6 },
-  qBtns: { flexDirection: "row", gap: 8 },
-  qBtn: { flex: 1, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: C.border, alignItems: "center", backgroundColor: C.surface },
-  qBtnYes: { borderColor: "#34d399", backgroundColor: "rgba(52,211,153,0.1)" },
-  qBtnNo: { borderColor: "#f87171", backgroundColor: "rgba(248,113,113,0.1)" },
-  qBtnT: { color: C.muted, fontSize: 12, fontWeight: "600" },
-  qBtnTOn: { color: C.white },
-  note: { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 10, color: C.white, minHeight: 72, textAlignVertical: "top" },
-  actions: { flexDirection: "row", gap: 10, marginTop: 16 },
-  cancel: { flex: 1, padding: 12, alignItems: "center", borderRadius: 12, borderWidth: 1, borderColor: C.border },
-  cancelT: { color: C.muted, fontWeight: "600" },
-  ok: { flex: 1, padding: 12, alignItems: "center", borderRadius: 12, backgroundColor: C.primary },
-  okT: { color: "#fff", fontWeight: "700" },
-});
-
 function CustomerProfileModal({ visible, booking, fr, ownerId, onClose }) {
+  const { C, cp } = useOwnerBookingsStyles();
   const customer = booking?.customerId;
   const cid =
     customer && typeof customer === "object" && customer._id != null
@@ -584,81 +709,10 @@ function CustomerProfileModal({ visible, booking, fr, ownerId, onClose }) {
   );
 }
 
-const cp = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.8)", justifyContent: "center", padding: 16 },
-  box: {
-    backgroundColor: C.card,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: C.border,
-    maxHeight: "90%",
-  },
-  headRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
-  title: { color: C.white, fontWeight: "800", fontSize: 18, flex: 1 },
-  hint: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 10,
-    backgroundColor: "rgba(245,158,11,0.12)",
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "rgba(245,158,11,0.35)",
-  },
-  hintText: { color: "#fde68a", fontSize: 13, flex: 1, lineHeight: 19 },
-  warn: { color: C.amber, fontSize: 13, marginBottom: 8 },
-  name: { color: C.white, fontWeight: "700", fontSize: 17 },
-  meta: { color: C.muted, fontSize: 12, marginBottom: 14, lineHeight: 18 },
-  section: {
-    color: C.muted,
-    fontSize: 11,
-    textTransform: "uppercase",
-    letterSpacing: 0.6,
-    marginTop: 12,
-    marginBottom: 6,
-  },
-  line: { color: C.slate, fontSize: 13, marginBottom: 8 },
-  docImg: {
-    width: "100%",
-    height: 140,
-    borderRadius: 12,
-    backgroundColor: C.surface,
-    marginBottom: 4,
-  },
-  tapHint: { color: C.primary, fontSize: 12, fontWeight: "600", marginBottom: 10 },
-  missing: { color: C.muted, fontStyle: "italic", fontSize: 13, marginBottom: 8 },
-  sum: { color: C.slate, fontSize: 12, marginBottom: 10, lineHeight: 18 },
-  emptyFb: { color: C.muted, fontSize: 13, marginBottom: 8, lineHeight: 19 },
-  err: { color: C.red, fontSize: 13, marginBottom: 8 },
-  fbCard: {
-    backgroundColor: C.surface,
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: C.border,
-  },
-  fbWho: { color: C.white, fontSize: 13, fontWeight: "600", marginBottom: 4 },
-  fbOverall: { fontSize: 13, fontWeight: "700", marginBottom: 6 },
-  fbGood: { color: "#4ade80" },
-  fbBad: { color: "#f87171" },
-  fbFlags: { color: C.muted, fontSize: 11, lineHeight: 16 },
-  fbNote: { color: C.slate, fontSize: 12, marginTop: 8, fontStyle: "italic" },
-  closeBtn: {
-    marginTop: 14,
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: C.primary,
-    alignItems: "center",
-  },
-  closeBtnT: { color: "#fff", fontWeight: "700", fontSize: 15 },
-});
-
 export default function OwnerBookingsScreen() {
   const { lang } = useAppLang();
   const { auth } = useAuth();
+  const { C, s } = useOwnerBookingsStyles();
   const fr = lang === "fr";
   const [bookings, setBookings] = useState([]);
   const [stats, setStats] = useState(DEFAULT_STATS);
@@ -817,7 +871,7 @@ export default function OwnerBookingsScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.primary} />}
         ListEmptyComponent={
           <View style={s.empty}>
-            <Ionicons name="clipboard-outline" size={56} color="#4b5563" />
+            <Ionicons name="clipboard-outline" size={56} color={C.muted} />
             <Text style={s.emptyTitle}>{fr ? "Aucune réservation" : "No bookings"}</Text>
           </View>
         }
@@ -956,47 +1010,3 @@ export default function OwnerBookingsScreen() {
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  center: { flex: 1, backgroundColor: C.bg, alignItems: "center", justifyContent: "center" },
-  statsRow: { backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border, paddingVertical: 10 },
-  statsContent: { paddingHorizontal: 12, gap: 8 },
-  statCard: { backgroundColor: C.card, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingVertical: 10, paddingHorizontal: 14, marginRight: 8, minWidth: 88, alignItems: "center" },
-  statVal: { color: C.primary, fontWeight: "800", fontSize: 16 },
-  statLbl: { color: C.muted, fontSize: 9, marginTop: 4, textTransform: "uppercase" },
-  filterBar: { paddingHorizontal: 16, paddingVertical: 10, backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border },
-  filterTab: { marginRight: 8, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, backgroundColor: C.card, borderColor: C.border },
-  filterTabActive: { backgroundColor: "rgba(124,107,255,0.15)", borderColor: C.primary },
-  filterTabText: { color: C.muted, fontSize: 12, fontWeight: "500", textTransform: "capitalize" },
-  filterTabTextActive: { color: C.primary },
-  empty: { alignItems: "center", paddingVertical: 64 },
-  emptyTitle: { color: C.white, fontWeight: "700", fontSize: 18, marginTop: 16 },
-  card: { backgroundColor: C.card, borderWidth: 1, borderColor: C.border, borderRadius: 16, padding: 16, marginBottom: 16 },
-  cardTop: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 12 },
-  thumb: { width: 56, height: 44, borderRadius: 8, backgroundColor: C.surface },
-  thumbPh: { alignItems: "center", justifyContent: "center" },
-  rentalTitle: { color: C.white, fontWeight: "700", fontSize: 15 },
-  sub: { color: C.muted, fontSize: 12, marginTop: 2 },
-  customerRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
-  customerAvatar: { width: 28, height: 28, borderRadius: 14, backgroundColor: "rgba(124,107,255,0.2)", alignItems: "center", justifyContent: "center", marginRight: 8 },
-  customerAvatarText: { color: C.primary, fontSize: 11, fontWeight: "700" },
-  customerName: { color: C.white, fontWeight: "600", fontSize: 14 },
-  customerContact: { color: C.muted, fontSize: 11, marginTop: 2 },
-  profileLink: { color: C.primary, fontSize: 11, marginTop: 4, fontWeight: "600" },
-  badge: { alignSelf: "flex-start", flexDirection: "row", alignItems: "center", borderWidth: 1, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4, marginBottom: 12, gap: 4 },
-  badgeText: { fontSize: 12, fontWeight: "700", textTransform: "capitalize" },
-  datesRow: { flexDirection: "row", gap: 8, marginBottom: 12 },
-  dateBox: { flex: 1, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 10 },
-  dateLabel: { color: C.muted, fontSize: 11, marginBottom: 2 },
-  dateVal: { color: C.white, fontWeight: "500", fontSize: 12 },
-  offer: { color: "#fbbf24", fontSize: 12, marginBottom: 8 },
-  paidRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
-  paidText: { color: C.green, fontSize: 12, fontWeight: "500", marginLeft: 4 },
-  actionsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  pages: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 8, marginTop: 8 },
-  pageBtn: { width: 36, height: 36, borderRadius: 8, borderWidth: 1, borderColor: C.border, alignItems: "center", justifyContent: "center", backgroundColor: C.card },
-  pageBtnOn: { backgroundColor: "rgba(124,107,255,0.2)", borderColor: C.primary },
-  pageBtnT: { color: C.muted, fontWeight: "600" },
-  pageBtnTOn: { color: C.primary },
-  rated: { color: C.green, fontSize: 12, fontWeight: "600", paddingVertical: 10 },
-});

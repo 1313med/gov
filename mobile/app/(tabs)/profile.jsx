@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator, Image, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
@@ -7,7 +7,8 @@ import { getMyProfile, updateMyProfile, updateDriverLicense, updateNationalId } 
 import { uploadAvatarFile, uploadListingImages } from "../../src/api/upload";
 import { useAuth } from "../../src/context/AuthContext";
 import { useAppLang } from "../../src/context/AppLangContext";
-import { C } from "../../src/theme";
+import { useTheme } from "../../src/context/ThemeContext";
+import ThemeToggle from "../../src/components/ThemeToggle";
 import { resolveMediaUrl } from "../../src/utils/mediaUrl";
 
 const ROLES = { customer:{en:"Customer",fr:"Client"}, seller:{en:"Seller",fr:"Vendeur"}, rental_owner:{en:"Rental Owner",fr:"Propriétaire"}, admin:{en:"Admin",fr:"Admin"} };
@@ -15,8 +16,10 @@ const ROLES = { customer:{en:"Customer",fr:"Client"}, seller:{en:"Seller",fr:"Ve
 export default function ProfileScreen() {
   const { auth, logout } = useAuth();
   const { lang, setLang } = useAppLang();
+  const { colors: C } = useTheme();
   const router = useRouter();
   const fr = lang === "fr";
+  const s = useMemo(() => createProfileStyles(C), [C]);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -269,26 +272,29 @@ export default function ProfileScreen() {
         </View>
 
         <Text style={s.sectionLabel}>{fr?"Mon compte":"My Account"}</Text>
-        <NavItem icon="notifications-outline" label={fr?"Notifications":"Notifications"} onPress={() => router.push("/notifications")} />
-        {auth.role==="customer" && <NavItem icon="calendar-outline" label={fr?"Mes réservations":"My Bookings"} onPress={() => router.push("/my-bookings")} />}
+        <NavItem s={s} C={C} icon="notifications-outline" label={fr?"Notifications":"Notifications"} onPress={() => router.push("/notifications")} />
+        {auth.role==="customer" && <NavItem s={s} C={C} icon="calendar-outline" label={fr?"Mes réservations":"My Bookings"} onPress={() => router.push("/my-bookings")} />}
         {auth.role==="seller" && <>
-          <NavItem icon="list-outline"       label={fr?"Mes annonces":"My Sales"}     onPress={() => router.push("/my-sales")} />
-          <NavItem icon="add-circle-outline" label={fr?"Nouvelle annonce":"New Listing"} onPress={() => router.push("/new-sale")} />
+          <NavItem s={s} C={C} icon="list-outline"       label={fr?"Mes annonces":"My Sales"}     onPress={() => router.push("/my-sales")} />
+          <NavItem s={s} C={C} icon="add-circle-outline" label={fr?"Nouvelle annonce":"New Listing"} onPress={() => router.push("/new-sale")} />
         </>}
         {auth.role==="rental_owner" && <>
-          <NavItem icon="analytics-outline"  label={fr?"Statistiques & analyses":"Analytics & insights"} onPress={() => router.push("/owner-analytics")} />
-          <NavItem icon="car-outline"        label={fr?"Mon parc":"My Fleet"}         onPress={() => router.push("/my-fleet")} />
-          <NavItem icon="clipboard-outline"  label={fr?"Réservations":"Bookings"}     onPress={() => router.push("/owner-bookings")} />
-          <NavItem icon="add-circle-outline" label={fr?"Ajouter location":"Add Rental"} onPress={() => router.push("/add-rental")} />
+          <NavItem s={s} C={C} icon="analytics-outline"  label={fr?"Statistiques & analyses":"Analytics & insights"} onPress={() => router.push("/owner-analytics")} />
+          <NavItem s={s} C={C} icon="car-outline"        label={fr?"Mon parc":"My Fleet"}         onPress={() => router.push("/my-fleet")} />
+          <NavItem s={s} C={C} icon="clipboard-outline"  label={fr?"Réservations":"Bookings"}     onPress={() => router.push("/owner-bookings")} />
+          <NavItem s={s} C={C} icon="add-circle-outline" label={fr?"Ajouter location":"Add Rental"} onPress={() => router.push("/add-rental")} />
         </>}
 
-        <Text style={s.sectionLabel}>{fr?"Langue":"Language"}</Text>
-        <View style={s.langRow}>
-          {["en","fr"].map(l => (
-            <TouchableOpacity key={l} onPress={() => setLang(l)} style={[s.langBtn, lang===l && s.langBtnActive]}>
-              <Text style={[s.langText, lang===l && s.langTextActive]}>{l==="en"?"English":"Français"}</Text>
-            </TouchableOpacity>
-          ))}
+        <Text style={s.sectionLabel}>{fr ? "Langue & apparence" : "Language & appearance"}</Text>
+        <View style={s.themeLangRow}>
+          <ThemeToggle />
+          <View style={s.langRowInner}>
+            {["en", "fr"].map((l) => (
+              <TouchableOpacity key={l} onPress={() => setLang(l)} style={[s.langBtn, lang === l && s.langBtnActive]}>
+                <Text style={[s.langText, lang === l && s.langTextActive]}>{l === "en" ? "English" : "Français"}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
         <TouchableOpacity onPress={handleLogout} style={s.logoutBtn}>
@@ -300,7 +306,7 @@ export default function ProfileScreen() {
   );
 }
 
-function NavItem({ icon, label, onPress }) {
+function NavItem({ icon, label, onPress, s, C }) {
   return (
     <TouchableOpacity onPress={onPress} style={s.navItem}>
       <Ionicons name={icon} size={18} color={C.primary} />
@@ -310,7 +316,8 @@ function NavItem({ icon, label, onPress }) {
   );
 }
 
-const s = StyleSheet.create({
+function createProfileStyles(C) {
+  const styles = StyleSheet.create({
   center: { flex:1, backgroundColor: C.bg, alignItems:"center", justifyContent:"center", padding:24 },
   emptyTitle: { color: C.white, fontWeight:"700", fontSize:20, marginTop:16, marginBottom:16 },
   btn: { backgroundColor: C.primary, borderRadius:12, paddingHorizontal:24, paddingVertical:12 },
@@ -345,11 +352,14 @@ const s = StyleSheet.create({
   docThumb: { width:"100%", height:160, resizeMode:"cover" },
   navItem: { backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:12, flexDirection:"row", alignItems:"center", paddingHorizontal:16, paddingVertical:14, marginBottom:8, gap:12 },
   navLabel: { color: C.white, fontWeight:"500", flex:1 },
-  langRow: { flexDirection:"row", gap:12, marginBottom:8 },
+  themeLangRow: { gap:12, marginBottom:8 },
+  langRowInner: { flexDirection:"row", gap:12 },
   langBtn: { flex:1, backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:12, paddingVertical:12, alignItems:"center" },
   langBtnActive: { backgroundColor:"rgba(124,107,255,0.15)", borderColor: C.primary },
   langText: { color: C.muted, fontWeight:"700" },
   langTextActive: { color: C.primary },
   logoutBtn: { backgroundColor:"rgba(239,68,68,0.08)", borderWidth:1, borderColor:"rgba(239,68,68,0.25)", borderRadius:16, flexDirection:"row", alignItems:"center", paddingHorizontal:16, paddingVertical:16, marginTop:8, marginBottom:32, gap:12 },
   logoutText: { color: C.red, fontWeight:"500" },
-});
+  });
+  return styles;
+}

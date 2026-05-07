@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet, RefreshControl } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAppLang } from "../src/context/AppLangContext";
+import { useTheme } from "../src/context/ThemeContext";
 import { getOwnerAnalytics, getOwnerInsights } from "../src/api/analytics";
-import { C } from "../src/theme";
 
 const PERIODS = [
   { key: "today", en: "Today", fr: "Aujourd'hui" },
@@ -13,7 +13,57 @@ const PERIODS = [
   { key: "1y", en: "1 year", fr: "1 an" },
 ];
 
-function Kpi({ label, value, sub, color = C.primary }) {
+function createOwnerAnalyticsStyles(C) {
+  const r = StyleSheet.create({
+    row: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: C.border },
+    label: { color: C.muted, fontSize: 13, flex: 1 },
+    val: { color: C.white, fontSize: 13, fontWeight: "600" },
+    valBold: { color: C.primary },
+  });
+
+  const k = StyleSheet.create({
+    card: { width: "48%", backgroundColor: C.card, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 12, marginBottom: 10 },
+    label: { color: C.muted, fontSize: 10, textTransform: "uppercase", marginBottom: 6 },
+    value: { fontSize: 16, fontWeight: "700" },
+    sub: { color: C.muted, fontSize: 11, marginTop: 4 },
+  });
+
+  const s = StyleSheet.create({
+    center: { flex: 1, backgroundColor: C.bg, alignItems: "center", justifyContent: "center", padding: 24 },
+    muted: { color: C.muted, marginTop: 12, fontSize: 13 },
+    err: { color: C.white, textAlign: "center", marginTop: 12 },
+    header: { paddingTop: 16, paddingHorizontal: 16, paddingBottom: 8 },
+    title: { color: C.white, fontSize: 22, fontWeight: "800" },
+    sub: { color: C.muted, fontSize: 13, marginTop: 4 },
+    periodRow: { flexDirection: "row", gap: 8, marginTop: 16, paddingBottom: 4 },
+    periodChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: C.card, borderWidth: 1, borderColor: C.border },
+    periodChipOn: { backgroundColor: C.pillBg, borderColor: C.primary },
+    periodText: { color: C.muted, fontSize: 12, fontWeight: "600" },
+    periodTextOn: { color: C.primary },
+    kpiGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", paddingHorizontal: 16 },
+    card: { marginHorizontal: 16, marginBottom: 14, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, borderRadius: 16, padding: 16 },
+    cardTitle: { color: C.white, fontWeight: "700", fontSize: 16, marginBottom: 8 },
+    highlight: { color: C.primary, fontWeight: "700", fontSize: 15 },
+    fleetRow: { paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: C.border },
+    fleetTitle: { color: C.white, fontWeight: "600", fontSize: 14 },
+    fleetMeta: { color: C.muted, fontSize: 12, marginTop: 4 },
+    heatRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 },
+    heatCell: { backgroundColor: C.surface, borderRadius: 10, padding: 10, minWidth: 52, alignItems: "center", borderWidth: 1, borderColor: C.border },
+    heatDay: { color: C.muted, fontSize: 10 },
+    heatVal: { color: C.white, fontWeight: "700", marginTop: 4 },
+    upRow: { paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: C.border },
+    upTitle: { color: C.white, fontWeight: "600" },
+    insight: { backgroundColor: C.surface, borderRadius: 12, padding: 12, marginBottom: 10, borderWidth: 1, borderColor: C.border },
+    insightAlert: { borderColor: "rgba(239,68,68,0.4)" },
+    insightWarn: { borderColor: "rgba(245,158,11,0.4)" },
+    insightTitle: { color: C.white, fontWeight: "700", fontSize: 13, marginBottom: 6 },
+    insightAction: { color: C.slate, fontSize: 12, lineHeight: 18 },
+  });
+
+  return { r, k, s };
+}
+
+function Kpi({ label, value, sub, color, k }) {
   return (
     <View style={k.card}>
       <Text style={k.label}>{label}</Text>
@@ -23,8 +73,19 @@ function Kpi({ label, value, sub, color = C.primary }) {
   );
 }
 
+function Row({ label, value, bold, r }) {
+  return (
+    <View style={r.row}>
+      <Text style={r.label}>{label}</Text>
+      <Text style={[r.val, bold && r.valBold]}>{value}</Text>
+    </View>
+  );
+}
+
 export default function OwnerAnalyticsScreen() {
   const { lang } = useAppLang();
+  const { colors: C } = useTheme();
+  const { r, k, s } = useMemo(() => createOwnerAnalyticsStyles(C), [C]);
   const fr = lang === "fr";
   const [period, setPeriod] = useState("30d");
   const [data, setData] = useState(null);
@@ -92,19 +153,19 @@ export default function OwnerAnalyticsScreen() {
       </View>
 
       <View style={s.kpiGrid}>
-        <Kpi label={fr ? "Chiffre d'affaires" : "Total revenue"} value={fmtMoney(data.totalRevenue)} sub={fr ? "Période sélectionnée" : "Selected period"} />
-        <Kpi label={fr ? "Réservations" : "Bookings"} value={String(data.totalBookings ?? 0)} color={C.accent} />
-        <Kpi label={fr ? "Occupation" : "Occupancy"} value={`${data.occupancyRate ?? 0}%`} sub={fr ? "Flotte" : "Fleet-wide"} color={C.green} />
-        <Kpi label={fr ? "Marge nette" : "Net (after maintenance)"} value={fmtMoney(data.netProfit)} color={data.netProfit >= 0 ? C.green : C.red} />
+        <Kpi k={k} label={fr ? "Chiffre d'affaires" : "Total revenue"} value={fmtMoney(data.totalRevenue)} sub={fr ? "Période sélectionnée" : "Selected period"} color={C.primary} />
+        <Kpi k={k} label={fr ? "Réservations" : "Bookings"} value={String(data.totalBookings ?? 0)} color={C.accent} />
+        <Kpi k={k} label={fr ? "Occupation" : "Occupancy"} value={`${data.occupancyRate ?? 0}%`} sub={fr ? "Flotte" : "Fleet-wide"} color={C.green} />
+        <Kpi k={k} label={fr ? "Marge nette" : "Net (after maintenance)"} value={fmtMoney(data.netProfit)} color={data.netProfit >= 0 ? C.green : C.red} />
       </View>
 
       <View style={s.card}>
         <Text style={s.cardTitle}>{fr ? "Encaissement" : "Payments"}</Text>
-        <Row label={fr ? "Encaissé" : "Collected"} value={fmtMoney(data.collectedRevenue)} />
-        <Row label={fr ? "En attente" : "Pending"} value={fmtMoney(data.pendingRevenue)} />
-        <Row label={fr ? "Coût entretien" : "Maintenance"} value={fmtMoney(data.totalMaintenanceCost)} />
-        <Row label={fr ? "Évolution CA" : "Revenue vs prev."} value={growthStr} bold />
-        <Row label={fr ? "CA moy. / jour" : "Avg. daily revenue"} value={fmtMoney(data.avgDailyRevenue)} />
+        <Row r={r} label={fr ? "Encaissé" : "Collected"} value={fmtMoney(data.collectedRevenue)} />
+        <Row r={r} label={fr ? "En attente" : "Pending"} value={fmtMoney(data.pendingRevenue)} />
+        <Row r={r} label={fr ? "Coût entretien" : "Maintenance"} value={fmtMoney(data.totalMaintenanceCost)} />
+        <Row r={r} label={fr ? "Évolution CA" : "Revenue vs prev."} value={growthStr} bold />
+        <Row r={r} label={fr ? "CA moy. / jour" : "Avg. daily revenue"} value={fmtMoney(data.avgDailyRevenue)} />
       </View>
 
       {data.mostRentedCar && (
@@ -119,7 +180,7 @@ export default function OwnerAnalyticsScreen() {
         <View style={s.card}>
           <Text style={s.cardTitle}>{fr ? "Statut des réservations" : "Booking status"}</Text>
           {data.bookingStatusData.map((row) => (
-            <Row key={row.name} label={row.name} value={String(row.value)} />
+            <Row r={r} key={row.name} label={row.name} value={String(row.value)} />
           ))}
         </View>
       )}
@@ -182,58 +243,3 @@ export default function OwnerAnalyticsScreen() {
     </ScrollView>
   );
 }
-
-function Row({ label, value, bold }) {
-  return (
-    <View style={r.row}>
-      <Text style={r.label}>{label}</Text>
-      <Text style={[r.val, bold && r.valBold]}>{value}</Text>
-    </View>
-  );
-}
-
-const r = StyleSheet.create({
-  row: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: C.border },
-  label: { color: C.muted, fontSize: 13, flex: 1 },
-  val: { color: C.white, fontSize: 13, fontWeight: "600" },
-  valBold: { color: C.primary },
-});
-
-const k = StyleSheet.create({
-  card: { width: "48%", backgroundColor: C.card, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 12, marginBottom: 10 },
-  label: { color: C.muted, fontSize: 10, textTransform: "uppercase", marginBottom: 6 },
-  value: { fontSize: 16, fontWeight: "700" },
-  sub: { color: C.muted, fontSize: 11, marginTop: 4 },
-});
-
-const s = StyleSheet.create({
-  center: { flex: 1, backgroundColor: C.bg, alignItems: "center", justifyContent: "center", padding: 24 },
-  muted: { color: C.muted, marginTop: 12, fontSize: 13 },
-  err: { color: C.white, textAlign: "center", marginTop: 12 },
-  header: { paddingTop: 16, paddingHorizontal: 16, paddingBottom: 8 },
-  title: { color: C.white, fontSize: 22, fontWeight: "800" },
-  sub: { color: C.muted, fontSize: 13, marginTop: 4 },
-  periodRow: { flexDirection: "row", gap: 8, marginTop: 16, paddingBottom: 4 },
-  periodChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: C.card, borderWidth: 1, borderColor: C.border },
-  periodChipOn: { backgroundColor: "rgba(124,107,255,0.2)", borderColor: C.primary },
-  periodText: { color: C.muted, fontSize: 12, fontWeight: "600" },
-  periodTextOn: { color: C.primary },
-  kpiGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", paddingHorizontal: 16 },
-  card: { marginHorizontal: 16, marginBottom: 14, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, borderRadius: 16, padding: 16 },
-  cardTitle: { color: C.white, fontWeight: "700", fontSize: 16, marginBottom: 8 },
-  highlight: { color: C.primary, fontWeight: "700", fontSize: 15 },
-  fleetRow: { paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: C.border },
-  fleetTitle: { color: C.white, fontWeight: "600", fontSize: 14 },
-  fleetMeta: { color: C.muted, fontSize: 12, marginTop: 4 },
-  heatRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 },
-  heatCell: { backgroundColor: C.surface, borderRadius: 10, padding: 10, minWidth: 52, alignItems: "center", borderWidth: 1, borderColor: C.border },
-  heatDay: { color: C.muted, fontSize: 10 },
-  heatVal: { color: C.white, fontWeight: "700", marginTop: 4 },
-  upRow: { paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: C.border },
-  upTitle: { color: C.white, fontWeight: "600" },
-  insight: { backgroundColor: C.surface, borderRadius: 12, padding: 12, marginBottom: 10, borderWidth: 1, borderColor: C.border },
-  insightAlert: { borderColor: "rgba(239,68,68,0.4)" },
-  insightWarn: { borderColor: "rgba(245,158,11,0.4)" },
-  insightTitle: { color: C.white, fontWeight: "700", fontSize: 13, marginBottom: 6 },
-  insightAction: { color: C.slate, fontSize: 12, lineHeight: 18 },
-});

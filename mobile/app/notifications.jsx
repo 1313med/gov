@@ -1,12 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { getNotifications, markAsRead } from "../src/api/notification";
 import { useSocket } from "../src/context/SocketContext";
 import { useAppLang } from "../src/context/AppLangContext";
-import { C } from "../src/theme";
-
-const ICONS = { booking:["calendar",C.primary], message:["chatbubble",C.accent], approval:["checkmark-circle",C.green], rejection:["close-circle",C.red], default:["notifications",C.primary] };
+import { useTheme } from "../src/context/ThemeContext";
 
 function timeAgo(date, fr) {
   const mins = Math.floor((Date.now() - new Date(date)) / 60000);
@@ -18,6 +16,18 @@ function timeAgo(date, fr) {
 export default function NotificationsScreen() {
   const { clearNotificationBadge } = useSocket();
   const { lang } = useAppLang();
+  const { colors: C } = useTheme();
+  const s = useMemo(() => createNotificationsStyles(C), [C]);
+  const ICONS = useMemo(
+    () => ({
+      booking: ["calendar", C.primary],
+      message: ["chatbubble", C.accent],
+      approval: ["checkmark-circle", C.green],
+      rejection: ["close-circle", C.red],
+      default: ["notifications", C.primary],
+    }),
+    [C],
+  );
   const fr = lang === "fr";
   const [notifs, setNotifs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -42,7 +52,7 @@ export default function NotificationsScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={C.primary} />}
         ListEmptyComponent={
           <View style={s.center}>
-            <Ionicons name="notifications-off-outline" size={56} color="#4b5563" />
+            <Ionicons name="notifications-off-outline" size={56} color={C.muted} />
             <Text style={s.emptyTitle}>{fr?"Aucune notification":"No notifications"}</Text>
           </View>
         }
@@ -64,15 +74,17 @@ export default function NotificationsScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  center: { flex:1, alignItems:"center", justifyContent:"center", padding:24 },
-  emptyTitle: { color: C.white, fontWeight:"700", fontSize:18, marginTop:16 },
-  card: { flexDirection:"row", alignItems:"flex-start", padding:16, marginBottom:12, borderRadius:16, borderWidth:1, gap:12 },
-  cardRead: { backgroundColor: C.card, borderColor: C.border },
-  cardUnread: { backgroundColor:"rgba(124,107,255,0.05)", borderColor:"rgba(124,107,255,0.2)" },
-  iconBox: { width:40, height:40, borderRadius:20, alignItems:"center", justifyContent:"center" },
-  msg: { color:"#cbd5e1", fontSize:13, lineHeight:20 },
-  msgUnread: { color: C.white, fontWeight:"500" },
-  time: { color: C.muted, fontSize:11, marginTop:4 },
-  dot: { width:8, height:8, borderRadius:4, backgroundColor: C.primary, marginTop:6 },
-});
+function createNotificationsStyles(C) {
+  return StyleSheet.create({
+    center: { flex:1, alignItems:"center", justifyContent:"center", padding:24 },
+    emptyTitle: { color: C.white, fontWeight:"700", fontSize:18, marginTop:16 },
+    card: { flexDirection:"row", alignItems:"flex-start", padding:16, marginBottom:12, borderRadius:16, borderWidth:1, gap:12 },
+    cardRead: { backgroundColor: C.card, borderColor: C.border },
+    cardUnread: { backgroundColor: C.pillBg, borderColor: C.pillBorder },
+    iconBox: { width:40, height:40, borderRadius:20, alignItems:"center", justifyContent:"center" },
+    msg: { color: C.slate, fontSize:13, lineHeight:20 },
+    msgUnread: { color: C.white, fontWeight:"500" },
+    time: { color: C.muted, fontSize:11, marginTop:4 },
+    dot: { width:8, height:8, borderRadius:4, backgroundColor: C.primary, marginTop:6 },
+  });
+}

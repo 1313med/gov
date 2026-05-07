@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { View, Text, FlatList, TextInput, TouchableOpacity, RefreshControl, Alert, ActivityIndicator, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -7,7 +7,7 @@ import { getApprovedSales } from "../../src/api/sale";
 import { addFavorite, removeFavorite, getFavorites } from "../../src/api/user";
 import { useAuth } from "../../src/context/AuthContext";
 import { useAppLang } from "../../src/context/AppLangContext";
-import { C } from "../../src/theme";
+import { useTheme } from "../../src/context/ThemeContext";
 
 const PRICES = [
   { label:"Any", key:"any" }, { label:"<200k", key:"u200", max:200000 },
@@ -17,6 +17,8 @@ const PRICES = [
 export default function CarsScreen() {
   const { auth } = useAuth();
   const { lang } = useAppLang();
+  const { colors: C } = useTheme();
+  const s = useMemo(() => createCarsStyles(C), [C]);
   const router = useRouter();
   const fr = lang === "fr";
   const [cars, setCars] = useState([]);
@@ -93,13 +95,13 @@ export default function CarsScreen() {
         </View>
         <View style={s.searchRow}>
           <Ionicons name="search-outline" size={18} color={C.muted} />
-          <TextInput value={search} onChangeText={setSearch} placeholder={fr?"Marque, modèle…":"Brand, model…"} placeholderTextColor="#4b5563" style={s.searchInput} />
+          <TextInput value={search} onChangeText={setSearch} placeholder={fr?"Marque, modèle…":"Brand, model…"} placeholderTextColor={C.muted} style={s.searchInput} />
           {!!search && <TouchableOpacity onPress={() => setSearch("")}><Ionicons name="close-circle" size={18} color={C.muted} /></TouchableOpacity>}
         </View>
         {showFilters && <>
           <View style={[s.searchRow, { marginBottom:8 }]}>
             <Ionicons name="location-outline" size={18} color={C.muted} />
-            <TextInput value={city} onChangeText={setCity} placeholder={fr?"Ville":"City"} placeholderTextColor="#4b5563" style={s.searchInput} />
+            <TextInput value={city} onChangeText={setCity} placeholder={fr?"Ville":"City"} placeholderTextColor={C.muted} style={s.searchInput} />
           </View>
           <View style={s.priceRow}>
             {PRICES.map(r => (
@@ -123,7 +125,7 @@ export default function CarsScreen() {
             ListFooterComponent={loadingMore ? <ActivityIndicator color={C.primary} style={{ paddingVertical:16 }} /> : null}
             ListEmptyComponent={
               <View style={s.empty}>
-                <Ionicons name="car-outline" size={56} color="#4b5563" />
+                <Ionicons name="car-outline" size={56} color={C.muted} />
                 <Text style={s.emptyTitle}>{fr?"Aucune voiture":"No cars found"}</Text>
                 <Text style={s.emptySub}>{fr?"Modifiez les filtres":"Try adjusting your filters"}</Text>
               </View>
@@ -134,21 +136,23 @@ export default function CarsScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  header: { paddingTop:56, paddingBottom:16, paddingHorizontal:16, backgroundColor: C.surface, borderBottomWidth:1, borderBottomColor: C.border },
-  headerTop: { flexDirection:"row", alignItems:"center", justifyContent:"space-between", marginBottom:12 },
-  headerTitle: { color: C.white, fontWeight:"700", fontSize:20 },
-  filterBtn: { flexDirection:"row", alignItems:"center", backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:12, paddingHorizontal:10, paddingVertical:6, gap:4 },
-  filterBtnActive: { backgroundColor:"rgba(124,107,255,0.15)", borderColor: C.primary },
-  filterText: { color: C.muted, fontSize:12, fontWeight:"600" },
-  searchRow: { backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:12, flexDirection:"row", alignItems:"center", paddingHorizontal:12, marginBottom:8 },
-  searchInput: { flex:1, color: C.white, paddingVertical:12, marginLeft:8 },
-  priceRow: { flexDirection:"row", gap:8 },
-  priceBtn: { flex:1, backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:12, paddingVertical:8, alignItems:"center" },
-  priceBtnActive: { backgroundColor:"rgba(124,107,255,0.15)", borderColor: C.primary },
-  priceBtnText: { color: C.muted, fontSize:11, fontWeight:"600" },
-  center: { flex:1, alignItems:"center", justifyContent:"center" },
-  empty: { alignItems:"center", paddingVertical:64 },
-  emptyTitle: { color: C.white, fontWeight:"700", fontSize:18, marginTop:16 },
-  emptySub: { color: C.muted, fontSize:13, marginTop:8 },
-});
+function createCarsStyles(C) {
+  return StyleSheet.create({
+    header: { paddingTop:56, paddingBottom:16, paddingHorizontal:16, backgroundColor: C.surface, borderBottomWidth:1, borderBottomColor: C.border },
+    headerTop: { flexDirection:"row", alignItems:"center", justifyContent:"space-between", marginBottom:12 },
+    headerTitle: { color: C.white, fontWeight:"700", fontSize:20 },
+    filterBtn: { flexDirection:"row", alignItems:"center", backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:12, paddingHorizontal:10, paddingVertical:6, gap:4 },
+    filterBtnActive: { backgroundColor: C.pillBg, borderColor: C.primary },
+    filterText: { color: C.muted, fontSize:12, fontWeight:"600" },
+    searchRow: { backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:12, flexDirection:"row", alignItems:"center", paddingHorizontal:12, marginBottom:8 },
+    searchInput: { flex:1, color: C.white, paddingVertical:12, marginLeft:8 },
+    priceRow: { flexDirection:"row", gap:8 },
+    priceBtn: { flex:1, backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:12, paddingVertical:8, alignItems:"center" },
+    priceBtnActive: { backgroundColor: C.pillBg, borderColor: C.primary },
+    priceBtnText: { color: C.muted, fontSize:11, fontWeight:"600" },
+    center: { flex:1, alignItems:"center", justifyContent:"center" },
+    empty: { alignItems:"center", paddingVertical:64 },
+    emptyTitle: { color: C.white, fontWeight:"700", fontSize:18, marginTop:16 },
+    emptySub: { color: C.muted, fontSize:13, marginTop:8 },
+  });
+}

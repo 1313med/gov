@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, Linking, Dimensions, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,7 +9,7 @@ import ReviewSection from "../../src/components/ReviewSection";
 import { useAuth } from "../../src/context/AuthContext";
 import { useAppLang } from "../../src/context/AppLangContext";
 import { resolveMediaUrl } from "../../src/utils/mediaUrl";
-import { C } from "../../src/theme";
+import { useTheme } from "../../src/context/ThemeContext";
 
 const { width } = Dimensions.get("window");
 
@@ -17,6 +17,8 @@ export default function CarDetailsScreen() {
   const { id } = useLocalSearchParams();
   const { auth } = useAuth();
   const { lang } = useAppLang();
+  const { colors: C } = useTheme();
+  const s = useMemo(() => createCarDetailStyles(C), [C]);
   const router = useRouter();
   const t = lang === "fr" ? fr : en;
 
@@ -60,7 +62,7 @@ export default function CarDetailsScreen() {
   if (loading) return <View style={s.center}><ActivityIndicator color={C.primary} size="large" /></View>;
   if (!car) return (
     <View style={s.center}>
-      <Ionicons name="car-outline" size={56} color="#4b5563" />
+      <Ionicons name="car-outline" size={56} color={C.muted} />
       <Text style={s.notFoundText}>{t.notFound}</Text>
     </View>
   );
@@ -85,7 +87,7 @@ export default function CarDetailsScreen() {
           </ScrollView>
         ) : (
           <View style={[{ width, height: 280 }, s.center]}>
-            <Ionicons name="car-outline" size={72} color="#4b5563" />
+            <Ionicons name="car-outline" size={72} color={C.muted} />
             <Text style={s.muted}>{t.noImage}</Text>
           </View>
         )}
@@ -234,45 +236,47 @@ const fr = {
   favLogin:"Connectez-vous pour sauvegarder", favFail:"Impossible de mettre à jour",
 };
 
-const s = StyleSheet.create({
-  center: { flex:1, alignItems:"center", justifyContent:"center", padding:24, backgroundColor: C.bg },
-  notFoundText: { color: C.white, fontWeight:"700", fontSize:18, marginTop:16 },
-  muted: { color: C.muted, marginTop:8 },
-  dotsRow: { position:"absolute", bottom:12, left:0, right:0, flexDirection:"row", justifyContent:"center", gap:6 },
-  dot: { borderRadius:4 },
-  dotActive: { width:16, height:8, backgroundColor: C.primary },
-  dotInactive: { width:8, height:8, backgroundColor:"rgba(255,255,255,0.4)" },
-  favBtn: { position:"absolute", top:16, right:16, backgroundColor:"rgba(5,6,15,0.8)", borderRadius:20, padding:10 },
-  soldBadge: { position:"absolute", top:16, left:16, backgroundColor:"#dc2626", borderRadius:20, paddingHorizontal:12, paddingVertical:4 },
-  approvedBadge: { position:"absolute", top:16, left:16, backgroundColor:"rgba(22,163,74,0.9)", borderRadius:20, paddingHorizontal:12, paddingVertical:4, flexDirection:"row", alignItems:"center" },
-  badgeText: { color:"#fff", fontSize:12, fontWeight:"700" },
-  body: { paddingHorizontal:16, paddingVertical:24 },
-  titleRow: { flexDirection:"row", alignItems:"flex-start", justifyContent:"space-between", marginBottom:8 },
-  title: { color: C.white, fontWeight:"700", fontSize:22, flex:1, marginRight:8 },
-  price: { color: C.primary, fontWeight:"700", fontSize:20 },
-  metaRow: { flexDirection:"row", alignItems:"center", marginBottom:16 },
-  metaText: { color: C.muted, fontSize:13, marginLeft:4 },
-  metaDot: { color: C.muted, marginHorizontal:8 },
-  card: { backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:16, padding:16, marginBottom:16 },
-  cardTitle: { color: C.white, fontWeight:"700", fontSize:15, marginBottom:12 },
-  specsGrid: { flexDirection:"row", flexWrap:"wrap", gap:12 },
-  specItem: { backgroundColor: C.surface, borderWidth:1, borderColor: C.border, borderRadius:12, paddingHorizontal:12, paddingVertical:10, width:"47%" },
-  specLabelRow: { flexDirection:"row", alignItems:"center", marginBottom:4 },
-  specLabel: { color: C.muted, fontSize:11, marginLeft:4 },
-  specValue: { color: C.white, fontWeight:"500", fontSize:13 },
-  descText: { color:"#cbd5e1", fontSize:13, lineHeight:20 },
-  sellerRow: { flexDirection:"row", alignItems:"center" },
-  sellerAvatar: { width:48, height:48, borderRadius:24, backgroundColor:"rgba(124,107,255,0.2)", alignItems:"center", justifyContent:"center", marginRight:12 },
-  sellerAvatarText: { color: C.primary, fontWeight:"700", fontSize:18 },
-  sellerName: { color: C.white, fontWeight:"700" },
-  verifiedText: { color: C.green, fontSize:12, marginLeft:4 },
-  actionsGap: { gap:12, marginBottom:24 },
-  callBtn: { backgroundColor:"#16a34a", borderRadius:12, paddingVertical:16, flexDirection:"row", alignItems:"center", justifyContent:"center" },
-  waBtn: { backgroundColor:"#25d366", borderRadius:12, paddingVertical:16, flexDirection:"row", alignItems:"center", justifyContent:"center" },
-  msgBtn: { backgroundColor:"rgba(124,107,255,0.15)", borderWidth:1, borderColor:"rgba(124,107,255,0.4)", borderRadius:12, paddingVertical:16, flexDirection:"row", alignItems:"center", justifyContent:"center" },
-  actionBtnText: { color:"#fff", fontWeight:"700", marginLeft:8 },
-  msgBtnText: { color: C.primary, fontWeight:"700", marginLeft:8 },
-  loginPrompt: { alignItems:"center", marginBottom:24 },
-  loginPromptText: { color:"#cbd5e1", fontSize:13, textAlign:"center", marginTop:8 },
-  loginLink: { color: C.primary, fontWeight:"700" },
-});
+function createCarDetailStyles(C) {
+  return StyleSheet.create({
+    center: { flex:1, alignItems:"center", justifyContent:"center", padding:24, backgroundColor: C.bg },
+    notFoundText: { color: C.white, fontWeight:"700", fontSize:18, marginTop:16 },
+    muted: { color: C.muted, marginTop:8 },
+    dotsRow: { position:"absolute", bottom:12, left:0, right:0, flexDirection:"row", justifyContent:"center", gap:6 },
+    dot: { borderRadius:4 },
+    dotActive: { width:16, height:8, backgroundColor: C.primary },
+    dotInactive: { width:8, height:8, backgroundColor:"rgba(255,255,255,0.4)" },
+    favBtn: { position:"absolute", top:16, right:16, backgroundColor: C.favScrim, borderRadius:20, padding:10 },
+    soldBadge: { position:"absolute", top:16, left:16, backgroundColor:"#dc2626", borderRadius:20, paddingHorizontal:12, paddingVertical:4 },
+    approvedBadge: { position:"absolute", top:16, left:16, backgroundColor:"rgba(22,163,74,0.9)", borderRadius:20, paddingHorizontal:12, paddingVertical:4, flexDirection:"row", alignItems:"center" },
+    badgeText: { color:"#fff", fontSize:12, fontWeight:"700" },
+    body: { paddingHorizontal:16, paddingVertical:24 },
+    titleRow: { flexDirection:"row", alignItems:"flex-start", justifyContent:"space-between", marginBottom:8 },
+    title: { color: C.white, fontWeight:"700", fontSize:22, flex:1, marginRight:8 },
+    price: { color: C.primary, fontWeight:"700", fontSize:20 },
+    metaRow: { flexDirection:"row", alignItems:"center", marginBottom:16 },
+    metaText: { color: C.muted, fontSize:13, marginLeft:4 },
+    metaDot: { color: C.muted, marginHorizontal:8 },
+    card: { backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:16, padding:16, marginBottom:16 },
+    cardTitle: { color: C.white, fontWeight:"700", fontSize:15, marginBottom:12 },
+    specsGrid: { flexDirection:"row", flexWrap:"wrap", gap:12 },
+    specItem: { backgroundColor: C.surface, borderWidth:1, borderColor: C.border, borderRadius:12, paddingHorizontal:12, paddingVertical:10, width:"47%" },
+    specLabelRow: { flexDirection:"row", alignItems:"center", marginBottom:4 },
+    specLabel: { color: C.muted, fontSize:11, marginLeft:4 },
+    specValue: { color: C.white, fontWeight:"500", fontSize:13 },
+    descText: { color: C.slate, fontSize:13, lineHeight:20 },
+    sellerRow: { flexDirection:"row", alignItems:"center" },
+    sellerAvatar: { width:48, height:48, borderRadius:24, backgroundColor: C.pillBg, alignItems:"center", justifyContent:"center", marginRight:12 },
+    sellerAvatarText: { color: C.primary, fontWeight:"700", fontSize:18 },
+    sellerName: { color: C.white, fontWeight:"700" },
+    verifiedText: { color: C.green, fontSize:12, marginLeft:4 },
+    actionsGap: { gap:12, marginBottom:24 },
+    callBtn: { backgroundColor:"#16a34a", borderRadius:12, paddingVertical:16, flexDirection:"row", alignItems:"center", justifyContent:"center" },
+    waBtn: { backgroundColor:"#25d366", borderRadius:12, paddingVertical:16, flexDirection:"row", alignItems:"center", justifyContent:"center" },
+    msgBtn: { backgroundColor: C.pillBg, borderWidth:1, borderColor: C.pillBorder, borderRadius:12, paddingVertical:16, flexDirection:"row", alignItems:"center", justifyContent:"center" },
+    actionBtnText: { color:"#fff", fontWeight:"700", marginLeft:8 },
+    msgBtnText: { color: C.primary, fontWeight:"700", marginLeft:8 },
+    loginPrompt: { alignItems:"center", marginBottom:24 },
+    loginPromptText: { color: C.slate, fontSize:13, textAlign:"center", marginTop:8 },
+    loginLink: { color: C.primary, fontWeight:"700" },
+  });
+}

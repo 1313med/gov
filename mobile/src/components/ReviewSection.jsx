@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import StarRating from "./StarRating";
 import { getReviews, createReview, deleteReview } from "../api/review";
 import { useAuth } from "../context/AuthContext";
-import { C } from "../theme";
+import { useTheme } from "../context/ThemeContext";
 
 function normalizeReviews(payload) {
   if (!payload) return [];
@@ -15,6 +15,8 @@ function normalizeReviews(payload) {
 
 export default function ReviewSection({ targetModel, targetId }) {
   const { auth } = useAuth();
+  const { colors: C } = useTheme();
+  const s = useMemo(() => createReviewStyles(C), [C]);
   const [reviews, setReviews] = useState([]);
   const [avgRating, setAvgRating] = useState(0);
   const [total, setTotal] = useState(0);
@@ -144,7 +146,8 @@ export default function ReviewSection({ targetModel, targetId }) {
   );
 }
 
-const s = StyleSheet.create({
+function createReviewStyles(C) {
+  return StyleSheet.create({
   wrap: { marginTop: 24 },
   headingRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 8 },
   heading: { color: C.white, fontWeight: "700", fontSize: 18 },
@@ -163,3 +166,4 @@ const s = StyleSheet.create({
   authorName: { color: C.white, fontWeight: "600" },
   reviewText: { color: C.slate, fontSize: 13, marginTop: 8, lineHeight: 20 },
 });
+}

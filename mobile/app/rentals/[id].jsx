@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, Dimensions, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,7 +9,7 @@ import ReviewSection from "../../src/components/ReviewSection";
 import { useAuth } from "../../src/context/AuthContext";
 import { useAppLang } from "../../src/context/AppLangContext";
 import { resolveMediaUrl } from "../../src/utils/mediaUrl";
-import { C } from "../../src/theme";
+import { useTheme } from "../../src/context/ThemeContext";
 
 const { width } = Dimensions.get("window");
 
@@ -34,7 +34,78 @@ function formatMad(amount, locale) {
   return `${n.toLocaleString(locale === "fr" ? "fr-FR" : "en-US", { maximumFractionDigits: 0 })} MAD`;
 }
 
+function createRentalPickerStyles(C) {
+  return StyleSheet.create({
+    label: { color: C.muted, fontSize: 12, marginBottom: 4 },
+    trigger: { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 12, flexDirection: "row", alignItems: "center" },
+    triggerText: { marginLeft: 8, fontSize: 13 },
+    picker: { backgroundColor: C.card, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginTop: 8, padding: 12 },
+    pickerRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 12 },
+    col: { alignItems: "center" },
+    colLabel: { color: C.muted, fontSize: 11, marginBottom: 4 },
+    colCtrl: { flexDirection: "row", alignItems: "center" },
+    ctrlBtn: { padding: 4 },
+    colVal: { color: C.white, fontWeight: "700", minWidth: 40, textAlign: "center" },
+    confirmBtn: { backgroundColor: C.primary, borderRadius: 12, paddingVertical: 8, alignItems: "center" },
+    confirmText: { color: "#fff", fontWeight: "700", fontSize: 13 },
+  });
+}
+
+function createRentalDetailScreenStyles(C) {
+  return StyleSheet.create({
+    center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: C.bg },
+    white: { color: C.white, fontWeight: "700", fontSize: 16 },
+    dotsRow: { position: "absolute", bottom: 12, left: 0, right: 0, flexDirection: "row", justifyContent: "center", gap: 6 },
+    dot: { borderRadius: 4 },
+    dotActive: { width: 16, height: 8, backgroundColor: C.primary },
+    dotInactive: { width: 8, height: 8, backgroundColor: "rgba(255,255,255,0.4)" },
+    favBtn: { position: "absolute", top: 16, right: 16, backgroundColor: C.favScrim, borderRadius: 20, padding: 10 },
+    priceBadge: { position: "absolute", bottom: 12, right: 16, backgroundColor: "rgba(124,107,255,0.9)", borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4 },
+    priceBadgeText: { color: "#fff", fontSize: 12, fontWeight: "700" },
+    body: { paddingHorizontal: 16, paddingVertical: 24 },
+    title: { color: C.white, fontWeight: "700", fontSize: 22, marginBottom: 4 },
+    metaRow: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
+    metaText: { color: C.muted, fontSize: 13, marginLeft: 4 },
+    metaDot: { color: C.muted, marginHorizontal: 8 },
+    card: { backgroundColor: C.card, borderWidth: 1, borderColor: C.border, borderRadius: 16, padding: 16, marginBottom: 16 },
+    cardTitle: { color: C.white, fontWeight: "700", fontSize: 15, marginBottom: 12 },
+    specsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
+    specItem: { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, width: "47%" },
+    specLabelRow: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
+    specLabel: { color: C.muted, fontSize: 11, marginLeft: 4 },
+    specValue: { color: C.white, fontWeight: "500", fontSize: 13 },
+    descText: { color: C.slate, fontSize: 13, lineHeight: 20 },
+    datesRow: { flexDirection: "row", gap: 12, marginBottom: 16 },
+    summaryBox: { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 12, marginBottom: 16 },
+    summaryRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 4 },
+    summaryLabel: { color: C.muted, fontSize: 13 },
+    summaryVal: { color: C.white, fontSize: 13 },
+    divider: { height: 1, backgroundColor: C.border, marginVertical: 8 },
+    totalLabel: { color: C.white, fontWeight: "700" },
+    totalVal: { color: C.primary, fontWeight: "700", fontSize: 18 },
+    bookBtn: { backgroundColor: C.primary, borderRadius: 12, paddingVertical: 16, alignItems: "center" },
+    bookBtnText: { color: "#fff", fontWeight: "700", fontSize: 15 },
+    loginBtn: { backgroundColor: C.pillBg, borderWidth: 1, borderColor: C.pillBorder, borderRadius: 12, paddingVertical: 16, alignItems: "center" },
+    loginBtnText: { color: C.primary, fontWeight: "700" },
+    contactBtn: { backgroundColor: C.card, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingVertical: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", marginBottom: 16 },
+    contactBtnText: { color: C.primary, fontWeight: "700", marginLeft: 8 },
+  });
+}
+
+function useRentalDetailSheets() {
+  const { colors: C } = useTheme();
+  return useMemo(
+    () => ({
+      C,
+      ds: createRentalPickerStyles(C),
+      s: createRentalDetailScreenStyles(C),
+    }),
+    [C],
+  );
+}
+
 function DatePicker({ label, value, onChange }) {
+  const { C, ds } = useRentalDetailSheets();
   const today = new Date();
   const [show, setShow] = useState(false);
   const [day, setDay] = useState(today.getDate());
@@ -91,6 +162,7 @@ export default function RentalDetailsScreen() {
   const { id } = useLocalSearchParams();
   const { auth } = useAuth();
   const { lang } = useAppLang();
+  const { C, s } = useRentalDetailSheets();
   const router = useRouter();
   const t = lang === "fr" ? fr : en;
 
@@ -183,7 +255,7 @@ export default function RentalDetailsScreen() {
           </ScrollView>
         ) : (
           <View style={[{ width, height: 280 }, s.center]}>
-            <Ionicons name="car-sport-outline" size={72} color="#4b5563" />
+            <Ionicons name="car-sport-outline" size={72} color={C.muted} />
           </View>
         )}
         {images.length > 1 && (
@@ -312,56 +384,4 @@ const fr = {
   errorTitle:"Erreur",
 };
 
-const ds = StyleSheet.create({
-  label: { color: C.muted, fontSize:12, marginBottom:4 },
-  trigger: { backgroundColor: C.surface, borderWidth:1, borderColor: C.border, borderRadius:12, paddingHorizontal:12, paddingVertical:12, flexDirection:"row", alignItems:"center" },
-  triggerText: { marginLeft:8, fontSize:13 },
-  picker: { backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:12, marginTop:8, padding:12 },
-  pickerRow: { flexDirection:"row", justifyContent:"space-between", marginBottom:12 },
-  col: { alignItems:"center" },
-  colLabel: { color: C.muted, fontSize:11, marginBottom:4 },
-  colCtrl: { flexDirection:"row", alignItems:"center" },
-  ctrlBtn: { padding:4 },
-  colVal: { color: C.white, fontWeight:"700", minWidth:40, textAlign:"center" },
-  confirmBtn: { backgroundColor: C.primary, borderRadius:12, paddingVertical:8, alignItems:"center" },
-  confirmText: { color:"#fff", fontWeight:"700", fontSize:13 },
-});
 
-const s = StyleSheet.create({
-  center: { flex:1, alignItems:"center", justifyContent:"center", backgroundColor: C.bg },
-  white: { color: C.white, fontWeight:"700", fontSize:16 },
-  dotsRow: { position:"absolute", bottom:12, left:0, right:0, flexDirection:"row", justifyContent:"center", gap:6 },
-  dot: { borderRadius:4 },
-  dotActive: { width:16, height:8, backgroundColor: C.primary },
-  dotInactive: { width:8, height:8, backgroundColor:"rgba(255,255,255,0.4)" },
-  favBtn: { position:"absolute", top:16, right:16, backgroundColor:"rgba(5,6,15,0.8)", borderRadius:20, padding:10 },
-  priceBadge: { position:"absolute", bottom:12, right:16, backgroundColor:"rgba(124,107,255,0.9)", borderRadius:20, paddingHorizontal:12, paddingVertical:4 },
-  priceBadgeText: { color:"#fff", fontSize:12, fontWeight:"700" },
-  body: { paddingHorizontal:16, paddingVertical:24 },
-  title: { color: C.white, fontWeight:"700", fontSize:22, marginBottom:4 },
-  metaRow: { flexDirection:"row", alignItems:"center", marginBottom:16 },
-  metaText: { color: C.muted, fontSize:13, marginLeft:4 },
-  metaDot: { color: C.muted, marginHorizontal:8 },
-  card: { backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:16, padding:16, marginBottom:16 },
-  cardTitle: { color: C.white, fontWeight:"700", fontSize:15, marginBottom:12 },
-  specsGrid: { flexDirection:"row", flexWrap:"wrap", gap:12 },
-  specItem: { backgroundColor: C.surface, borderWidth:1, borderColor: C.border, borderRadius:12, paddingHorizontal:12, paddingVertical:10, width:"47%" },
-  specLabelRow: { flexDirection:"row", alignItems:"center", marginBottom:4 },
-  specLabel: { color: C.muted, fontSize:11, marginLeft:4 },
-  specValue: { color: C.white, fontWeight:"500", fontSize:13 },
-  descText: { color:"#cbd5e1", fontSize:13, lineHeight:20 },
-  datesRow: { flexDirection:"row", gap:12, marginBottom:16 },
-  summaryBox: { backgroundColor: C.surface, borderWidth:1, borderColor: C.border, borderRadius:12, padding:12, marginBottom:16 },
-  summaryRow: { flexDirection:"row", justifyContent:"space-between", marginBottom:4 },
-  summaryLabel: { color: C.muted, fontSize:13 },
-  summaryVal: { color: C.white, fontSize:13 },
-  divider: { height:1, backgroundColor: C.border, marginVertical:8 },
-  totalLabel: { color: C.white, fontWeight:"700" },
-  totalVal: { color: C.primary, fontWeight:"700", fontSize:18 },
-  bookBtn: { backgroundColor: C.primary, borderRadius:12, paddingVertical:16, alignItems:"center" },
-  bookBtnText: { color:"#fff", fontWeight:"700", fontSize:15 },
-  loginBtn: { backgroundColor:"rgba(124,107,255,0.15)", borderWidth:1, borderColor:"rgba(124,107,255,0.4)", borderRadius:12, paddingVertical:16, alignItems:"center" },
-  loginBtnText: { color: C.primary, fontWeight:"700" },
-  contactBtn: { backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:12, paddingVertical:16, flexDirection:"row", alignItems:"center", justifyContent:"center", marginBottom:16 },
-  contactBtnText: { color: C.primary, fontWeight:"700", marginLeft:8 },
-});
