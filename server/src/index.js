@@ -25,14 +25,13 @@ const PORT = process.env.PORT || 5000;
 
 const server = http.createServer(app);
 
-const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
-  .split(",")
-  .map((o) => o.trim());
+const { loadAllowedOrigins, isOriginAllowed } = require("./utils/corsAllow");
+const allowedOrigins = loadAllowedOrigins();
 
 const io = new Server(server, {
   cors: {
     origin: (origin, cb) => {
-      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      if (isOriginAllowed(origin, allowedOrigins)) return cb(null, true);
       cb(new Error(`Socket CORS: origin ${origin} not allowed`));
     },
     methods: ["GET", "POST"],
@@ -54,7 +53,7 @@ connectDB()
   .then(() => {
     maintenanceCron.start();
     returnCron.start();
-    server.listen(PORT, () => {
+    server.listen(PORT, "0.0.0.0", () => {
       logger.info(`Server running on port ${PORT} [${process.env.NODE_ENV || "development"}]`);
     });
   })

@@ -83,6 +83,7 @@ export default function HomeScreen() {
             <NavItem icon="add-circle-outline"  label={fr?"Nouvelle annonce":"New Listing"} onPress={() => router.push("/new-sale")} color={C.accent} />
           </>}
           {auth.role === "rental_owner" && <>
+            <NavItem icon="analytics-outline"  label={fr?"Statistiques":"Analytics"}   onPress={() => router.push("/owner-analytics")} color={C.accent} />
             <NavItem icon="car-outline"         label={fr?"Mon parc":"My Fleet"}        onPress={() => router.push("/my-fleet")} />
             <NavItem icon="clipboard-outline"   label={fr?"Réservations":"Bookings"}    onPress={() => router.push("/owner-bookings")} />
             <NavItem icon="add-circle-outline"  label={fr?"Ajouter location":"Add Rental"} onPress={() => router.push("/add-rental")} color={C.accent} />

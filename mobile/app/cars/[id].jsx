@@ -32,7 +32,7 @@ export default function CarDetailsScreen() {
       .catch(() => Alert.alert("Error", "Failed to load car"))
       .finally(() => setLoading(false));
     if (auth) {
-      getFavorites().then(({ data }) => setIsFav(data.some(f => (f._id||f) === id))).catch(() => {});
+      getFavorites().then(({ data }) => setIsFav(Array.isArray(data) && data.some((f) => String(f._id || f) === String(id)))).catch(() => {});
     }
   }, [id]);
 
@@ -46,9 +46,12 @@ export default function CarDetailsScreen() {
 
   const contactSeller = async () => {
     if (!auth) return Alert.alert(t.signInContact);
+    const s = car?.sellerId || car?.seller;
+    const sid = s?._id;
+    if (!sid) return Alert.alert("Error", "Seller unavailable");
     setContacting(true);
     try {
-      await startConversation({ participantId: car.seller?._id });
+      await startConversation({ recipientId: sid, listingId: id, listingModel: "SaleListing" });
       router.push("/(tabs)/messages");
     } catch { Alert.alert("Failed to open conversation"); }
     setContacting(false);
@@ -62,6 +65,7 @@ export default function CarDetailsScreen() {
     </View>
   );
 
+  const seller = car.sellerId || car.seller;
   const images = car.images || [];
 
   return (
@@ -153,12 +157,12 @@ export default function CarDetailsScreen() {
         {/* Seller */}
         <View style={s.card}>
           <Text style={s.cardTitle}>{t.seller}</Text>
-          <TouchableOpacity onPress={() => router.push(`/seller/${car.seller?._id}`)} style={s.sellerRow}>
+          <TouchableOpacity onPress={() => seller?._id && router.push(`/seller/${seller._id}`)} style={s.sellerRow}>
             <View style={s.sellerAvatar}>
-              <Text style={s.sellerAvatarText}>{car.seller?.name?.[0]?.toUpperCase() || "?"}</Text>
+              <Text style={s.sellerAvatarText}>{seller?.name?.[0]?.toUpperCase() || "?"}</Text>
             </View>
             <View style={{ flex:1 }}>
-              <Text style={s.sellerName}>{car.seller?.name || t.unknownSeller}</Text>
+              <Text style={s.sellerName}>{seller?.name || t.unknownSeller}</Text>
               <View style={{ flexDirection:"row", alignItems:"center", marginTop:2 }}>
                 <Ionicons name="shield-checkmark" size={12} color={C.green} />
                 <Text style={s.verifiedText}>{t.verifiedSeller}</Text>
@@ -171,14 +175,14 @@ export default function CarDetailsScreen() {
         {/* Contact */}
         {auth ? (
           <View style={s.actionsGap}>
-            {car.seller?.phone && (
-              <TouchableOpacity onPress={() => Linking.openURL(`tel:${car.seller.phone}`)} style={s.callBtn}>
+            {seller?.phone && (
+              <TouchableOpacity onPress={() => Linking.openURL(`tel:${seller.phone}`)} style={s.callBtn}>
                 <Ionicons name="call" size={18} color="#fff" />
                 <Text style={s.actionBtnText}>{t.callSeller}</Text>
               </TouchableOpacity>
             )}
-            {car.seller?.phone && (
-              <TouchableOpacity onPress={() => Linking.openURL(`https://wa.me/${car.seller.phone}`)} style={s.waBtn}>
+            {seller?.phone && (
+              <TouchableOpacity onPress={() => Linking.openURL(`https://wa.me/${seller.phone}`)} style={s.waBtn}>
                 <Ionicons name="logo-whatsapp" size={18} color="#fff" />
                 <Text style={s.actionBtnText}>{t.whatsapp}</Text>
               </TouchableOpacity>

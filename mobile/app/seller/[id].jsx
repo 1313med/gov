@@ -32,7 +32,7 @@ export default function SellerProfileScreen() {
     if (!auth) return router.push("/(auth)/login");
     setContacting(true);
     try {
-      await startConversation({ participantId: id });
+      await startConversation({ recipientId: id });
       router.push("/(tabs)/messages");
     } catch { Alert.alert("Failed to start conversation"); }
     setContacting(false);

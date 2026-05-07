@@ -10,6 +10,9 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.goovoiture.app",
       "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsLocalNetworking": true
+        },
         "NSCameraUsageDescription": "Used to take photos of cars for listings.",
         "NSPhotoLibraryUsageDescription": "Used to select car photos for listings.",
         "NSLocationWhenInUseUsageDescription": "Used to show your location on the map and tag car listings."
@@ -17,6 +20,7 @@
     },
     "android": {
       "package": "com.goovoiture.app",
+      "usesCleartextTraffic": true,
       "permissions": [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",

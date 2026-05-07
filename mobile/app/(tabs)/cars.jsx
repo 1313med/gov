@@ -38,12 +38,26 @@ export default function CarsScreen() {
     try {
       const pr = PRICES.find(r => r.key === priceKey);
       const { data } = await getApprovedSales({ page: p, limit: 10, search: search||undefined, city: city||undefined, minPrice: pr?.min, maxPrice: pr?.max });
-      const list = data.cars || data;
-      reset ? (setCars(list), setPage(2)) : (setCars(prev => [...prev, ...list]), setPage(p+1));
-      setHasMore(list.length === 10);
+      const list = Array.isArray(data?.items)
+        ? data.items
+        : Array.isArray(data?.cars)
+          ? data.cars
+          : Array.isArray(data)
+            ? data
+            : [];
+      const pages = data?.pages ?? 1;
+      const curPage = data?.page ?? p;
+      if (reset) {
+        setCars(list);
+        setPage(2);
+      } else {
+        setCars((prev) => [...prev, ...list]);
+        setPage(p + 1);
+      }
+      setHasMore(curPage < pages && list.length > 0);
     } catch { Alert.alert("Error", fr ? "Échec du chargement" : "Failed to load cars"); }
     finally { setLoading(false); setRefreshing(false); setLoadingMore(false); }
-  }, [search, city, priceKey, page, hasMore]);
+  }, [search, city, priceKey, page, hasMore, fr]);
 
   useEffect(() => { load(true); }, [search, city, priceKey]);
   useEffect(() => { if (auth) getFavorites().then(({ data }) => setFavorites(data.map(f => f._id||f))).catch(() => {}); }, [auth]);

@@ -6,6 +6,7 @@ import { register as registerApi } from "../../src/api/auth";
 import { useAuth } from "../../src/context/AuthContext";
 import { useAppLang } from "../../src/context/AppLangContext";
 import { C } from "../../src/theme";
+import { getApiErrorMessage } from "../../src/utils/apiErrorMessage";
 
 const ROLES = [
   { key: "customer", icon: "person-outline" },
@@ -26,8 +27,12 @@ export default function RegisterScreen() {
   const handleRegister = async () => {
     if (!form.name || !form.phone || !form.city || !form.password) return Alert.alert("Please fill all fields");
     setLoading(true);
-    try { const { data } = await registerApi(form); await login(data); }
-    catch (e) { Alert.alert("Error", e?.response?.data?.message || c.regFail); }
+    try {
+      const { data } = await registerApi(form);
+      await login(data);
+    } catch (e) {
+      Alert.alert("Error", getApiErrorMessage(e, c.regFail));
+    }
     finally { setLoading(false); }
   };
 

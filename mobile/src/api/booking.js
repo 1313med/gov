@@ -2,13 +2,12 @@ import { api } from "./client";
 
 export const getMyBookings = () => api.get("/bookings/mine");
 export const cancelBooking = (id) => api.put(`/bookings/${id}/cancel`);
-export const getOwnerBookings = () => api.get("/bookings/owner");
+/** @param {{ page?: number, limit?: number, status?: string }} params */
+export const getOwnerBookings = (params) => api.get("/bookings/owner", { params });
 export const updateBookingStatus = (id, status) =>
   api.put(`/bookings/${id}/status`, { status });
 export const updateBookingDates = (id, data) =>
   api.put(`/bookings/${id}/dates`, data);
 export const markBookingPaid = (id) => api.put(`/bookings/${id}/paid`);
-export const updateBookingMedia = (id, formData) =>
-  api.put(`/bookings/${id}/media`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+/** JSON body: { conditionPhotos?: { before: string[], after: string[] }, documents?: Array<{name,url,fileType}> } */
+export const updateBookingMedia = (id, payload) => api.put(`/bookings/${id}/media`, payload);

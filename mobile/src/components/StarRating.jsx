@@ -5,7 +5,7 @@ export default function StarRating({ rating, onRate, size = 20 }) {
   return (
     <View style={s.row}>
       {[1,2,3,4,5].map((star) => (
-        <TouchableOpacity key={star} onPress={() => onRate && onRate(star)} activeOpacity={onRate ? 0.7 : 1}>
+        <TouchableOpacity key={star} disabled={!onRate} onPress={() => onRate?.(star)} activeOpacity={onRate ? 0.7 : 1}>
           <Ionicons
             name={rating >= star ? "star" : "star-outline"}
             size={size}

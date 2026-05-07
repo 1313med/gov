@@ -88,7 +88,7 @@ exports.getBookingsForOwner = async (req, res, next) => {
         total: 0,
         pages: 0,
         page: 1,
-        stats: { total: 0, pending: 0, confirmed: 0, completed: 0, revenue: 0 },
+        stats: { total: 0, pending: 0, confirmed: 0, completed: 0, rejected: 0, cancelled: 0, revenue: 0 },
       });
     }
 
@@ -102,6 +102,8 @@ exports.getBookingsForOwner = async (req, res, next) => {
           pending:   { $sum: { $cond: [{ $eq: ["$status", "pending"] },   1, 0] } },
           confirmed: { $sum: { $cond: [{ $eq: ["$status", "confirmed"] }, 1, 0] } },
           completed: { $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] } },
+          rejected:  { $sum: { $cond: [{ $eq: ["$status", "rejected"] },  1, 0] } },
+          cancelled: { $sum: { $cond: [{ $eq: ["$status", "cancelled"] }, 1, 0] } },
           revenue:   { $sum: { $cond: ["$isPaid", "$totalAmount", 0] } },
         },
       },
@@ -112,9 +114,11 @@ exports.getBookingsForOwner = async (req, res, next) => {
           pending:   statsResult.pending,
           confirmed: statsResult.confirmed,
           completed: statsResult.completed,
+          rejected:  statsResult.rejected,
+          cancelled: statsResult.cancelled,
           revenue:   statsResult.revenue,
         }
-      : { total: 0, pending: 0, confirmed: 0, completed: 0, revenue: 0 };
+      : { total: 0, pending: 0, confirmed: 0, completed: 0, rejected: 0, cancelled: 0, revenue: 0 };
 
     // 3. Build paginated query filter
     const filter = { rentalId: { $in: rentalIds }, deletedAt: null };

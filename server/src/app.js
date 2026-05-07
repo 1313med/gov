@@ -6,19 +6,16 @@ const morgan = require("morgan");
 const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
 const { authLimiter, apiLimiter } = require("./middlewares/rateLimiter");
 const logger = require("./utils/logger");
+const { loadAllowedOrigins, isOriginAllowed } = require("./utils/corsAllow");
 
 const app = express();
 
-// CORS — must specify exact origin for credentials (cookies) to work
-const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
-  .split(",")
-  .map((o) => o.trim());
+const allowedOrigins = loadAllowedOrigins();
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, curl, Postman)
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (isOriginAllowed(origin, allowedOrigins)) {
         return callback(null, true);
       }
       callback(new Error(`CORS: origin ${origin} not allowed`));

@@ -40,6 +40,7 @@ function RootNavigator() {
       <Stack.Screen name="my-fleet"         options={{ headerShown: true, headerTitle: "My Fleet",        headerStyle: hdr }} />
       <Stack.Screen name="add-rental"       options={{ headerShown: true, headerTitle: "Add Rental",      headerStyle: hdr }} />
       <Stack.Screen name="owner-bookings"   options={{ headerShown: true, headerTitle: "Bookings",        headerStyle: hdr }} />
+      <Stack.Screen name="owner-analytics"  options={{ headerShown: true, headerTitle: "Analytics",       headerStyle: hdr }} />
       <Stack.Screen name="notifications"    options={{ headerShown: true, headerTitle: "Notifications",   headerStyle: hdr }} />
     </Stack>
   );

@@ -6,6 +6,7 @@ import { login as loginApi } from "../../src/api/auth";
 import { useAuth } from "../../src/context/AuthContext";
 import { useAppLang } from "../../src/context/AppLangContext";
 import { C } from "../../src/theme";
+import { getApiErrorMessage } from "../../src/utils/apiErrorMessage";
 
 export default function LoginScreen() {
   const { login } = useAuth();
@@ -20,8 +21,12 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     if (!phone || !password) return Alert.alert("Please fill all fields");
     setLoading(true);
-    try { const { data } = await loginApi(phone, password); await login(data); }
-    catch { Alert.alert("Error", c.invalidCreds); }
+    try {
+      const { data } = await loginApi(phone, password);
+      await login(data);
+    } catch (e) {
+      Alert.alert("Error", getApiErrorMessage(e, c.invalidCreds));
+    }
     finally { setLoading(false); }
   };
 

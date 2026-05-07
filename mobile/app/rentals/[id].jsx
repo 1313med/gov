@@ -124,9 +124,12 @@ export default function RentalDetailsScreen() {
 
   const contactOwner = async () => {
     if (!auth) return Alert.alert(t.needAuth);
+    const o = rental?.rentalOwnerId || rental?.owner;
+    const oid = o?._id;
+    if (!oid) return Alert.alert("Error", "Owner unavailable");
     setContacting(true);
     try {
-      await startConversation({ participantId: rental.owner?._id });
+      await startConversation({ recipientId: oid, listingId: id, listingModel: "RentalListing" });
       router.push("/(tabs)/messages");
     } catch { Alert.alert("Failed to open conversation"); }
     setContacting(false);
