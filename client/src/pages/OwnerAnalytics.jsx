@@ -6,6 +6,8 @@ import BookingStatusChart from "../components/analytics/BookingStatusChart";
 import RevenuePerCarChart from "../components/analytics/RevenuePerCarChart";
 import DemandHeatmap from "../components/analytics/DemandHeatmap";
 import OwnerLayout from "../components/owner/OwnerLayout";
+import { useTheme } from "../context/ThemeContext";
+import { useAppLang } from "../context/AppLangContext";
 
 import {
   LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip,
@@ -24,21 +26,27 @@ const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap');
 
   .oa {
-    --bg:     #09090f;
-    --s1:     #111118;
-    --s2:     #16161f;
-    --border: rgba(255,255,255,0.07);
-    --bhi:    rgba(255,255,255,0.13);
-    --txt:    #e8e8f0;
-    --muted:  #5a5a72;
-    --violet: #7c6cfc;
-    --teal:   #2af5c0;
-    --amber:  #f5a623;
-    --blue:   #60a5fa;
-    --danger: #fc6c6c;
-    --green:  #34d399;
-    --head:   'Syne', sans-serif;
-    --mono:   'DM Mono', monospace;
+    /* LIGHT defaults */
+    --bg:       #f1f5f9;
+    --s1:       #ffffff;
+    --s2:       #f8fafc;
+    --border:   rgba(15, 23, 42, 0.09);
+    --bhi:      rgba(15, 23, 42, 0.18);
+    --txt:      #0f172a;
+    --muted:    #64748b;
+    --violet:   #6d28d9;
+    --teal:     #0d9488;
+    --amber:    #d97706;
+    --blue:     #2563eb;
+    --danger:   #dc2626;
+    --green:    #059669;
+    --tip-bg:   #ffffff;
+    --tip-bd:   rgba(15,23,42,0.12);
+    --tip-lbl:  #64748b;
+    --grid:     rgba(15,23,42,0.08);
+    --hover-vi: rgba(124,108,252,0.06);
+    --head:     'Syne', sans-serif;
+    --mono:     'DM Mono', monospace;
 
     font-family: var(--head);
     background: var(--bg);
@@ -49,6 +57,29 @@ const STYLES = `
     box-sizing: border-box;
     padding: clamp(16px, 4vw, 40px) clamp(14px, 3.5vw, 44px) clamp(40px, 6vw, 60px);
     overflow-x: hidden;
+    transition: background-color .3s ease, color .3s ease;
+  }
+
+  /* DARK overrides (added when user toggles dark or html.dark is set) */
+  .oa.dark, html.dark .oa {
+    --bg:       #09090f;
+    --s1:       #111118;
+    --s2:       #16161f;
+    --border:   rgba(255,255,255,0.07);
+    --bhi:      rgba(255,255,255,0.13);
+    --txt:      #e8e8f0;
+    --muted:    #5a5a72;
+    --violet:   #7c6cfc;
+    --teal:     #2af5c0;
+    --amber:    #f5a623;
+    --blue:     #60a5fa;
+    --danger:   #fc6c6c;
+    --green:    #34d399;
+    --tip-bg:   #16161f;
+    --tip-bd:   rgba(255,255,255,0.13);
+    --tip-lbl:  #5a5a72;
+    --grid:     rgba(255,255,255,0.04);
+    --hover-vi: rgba(124,108,252,0.04);
   }
 
   .oa-card {
@@ -112,7 +143,7 @@ const STYLES = `
   .oa-table td { padding: 12px 8px 12px 0; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--txt); vertical-align: middle; }
   .oa-table tr:last-child td { border-bottom: none; }
   .oa-table tbody tr { transition: background .15s; }
-  .oa-table tbody tr:hover td { background: rgba(124,108,252,.04); }
+  .oa-table tbody tr:hover td { background: var(--hover-vi); }
 
   .oa-rental { padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; transition: border-color .2s, background .2s; cursor: default; }
   .oa-rental:hover { border-color: var(--bhi); background: var(--s2); }
@@ -156,10 +187,10 @@ const STYLES = `
 const Tip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{ background: "#16161f", border: "1px solid rgba(255,255,255,.13)", borderRadius: 10, padding: "9px 13px", fontFamily: "'DM Mono',monospace", fontSize: 12, color: "#e8e8f0" }}>
-      <div style={{ color: "#5a5a72", marginBottom: 4 }}>{label}</div>
+    <div style={{ background: "var(--tip-bg)", border: "1px solid var(--tip-bd)", borderRadius: 10, padding: "9px 13px", fontFamily: "'DM Mono',monospace", fontSize: 12, color: "var(--txt)" }}>
+      <div style={{ color: "var(--tip-lbl)", marginBottom: 4 }}>{label}</div>
       {payload.map((p, i) => (
-        <div key={i} style={{ color: p.color || "#7c6cfc" }}>
+        <div key={i} style={{ color: p.color || "var(--violet)" }}>
           {p.name}: <strong>{p.value}</strong>
         </div>
       ))}
@@ -167,8 +198,8 @@ const Tip = ({ active, payload, label }) => {
   );
 };
 
-const TICK = { fill: "#5a5a72", fontSize: 11, fontFamily: "'DM Mono'" };
-const GRID = { stroke: "rgba(255,255,255,.04)", strokeDasharray: "4 4" };
+const TICK = { fill: "currentColor", fontSize: 11, fontFamily: "'DM Mono'", opacity: 0.6 };
+const GRID = { stroke: "var(--grid)", strokeDasharray: "4 4" };
 const AX   = { axisLine: false, tickLine: false };
 
 const SH = ({ eyebrow, title }) => (
@@ -209,7 +240,7 @@ const INSIGHT_CONFIG = {
   maintenance: { bg: "rgba(96,165,250,.08)",  border: "rgba(96,165,250,.22)",  iconBg: "rgba(96,165,250,.15)",  color: "#60a5fa",  Icon: Wrench },
 };
 
-function InsightCard({ insight }) {
+function InsightCard({ insight, gainLabel }) {
   const cfg = INSIGHT_CONFIG[insight.type] || INSIGHT_CONFIG.alert;
   const { Icon } = cfg;
   return (
@@ -222,7 +253,7 @@ function InsightCard({ insight }) {
         <p className="oa-insight-action">{insight.action}</p>
         {insight.potentialRevenueGain > 0 && (
           <p className="oa-insight-gain" style={{ color: cfg.color }}>
-            +{insight.potentialRevenueGain.toLocaleString()} MAD potential gain
+            +{insight.potentialRevenueGain.toLocaleString()} {gainLabel}
           </p>
         )}
       </div>
@@ -234,6 +265,10 @@ function InsightCard({ insight }) {
    MAIN PAGE
 ───────────────────────────────────────────────────────────────────── */
 export default function OwnerAnalytics() {
+  const { dark } = useTheme();
+  const { copy, lang } = useAppLang();
+  const t = copy.ownerAnalytics;
+  const oaCls = `oa${dark ? " dark" : ""}`;
   const [analytics, setAnalytics]     = useState(null);
   const [insights, setInsights]       = useState([]);
   const [loading, setLoading]         = useState(true);
@@ -267,10 +302,10 @@ export default function OwnerAnalytics() {
     return (
       <OwnerLayout>
         <style>{STYLES}</style>
-        <div className="oa oa-loading">
+        <div className={`${oaCls} oa-loading`}>
           <div style={{ textAlign: "center" }}>
             <div className="oa-spin" />
-            <p style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, color: "#5a5a72" }}>Loading analytics…</p>
+            <p style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, color: "var(--muted)" }}>{t.loading}</p>
           </div>
         </div>
       </OwnerLayout>
@@ -281,8 +316,8 @@ export default function OwnerAnalytics() {
     return (
       <OwnerLayout>
         <style>{STYLES}</style>
-        <div className="oa oa-loading">
-          <p style={{ fontFamily: "'DM Mono',monospace", color: "#5a5a72" }}>No analytics data</p>
+        <div className={`${oaCls} oa-loading`}>
+          <p style={{ fontFamily: "'DM Mono',monospace", color: "var(--muted)" }}>{t.noData}</p>
         </div>
       </OwnerLayout>
     );
@@ -291,18 +326,18 @@ export default function OwnerAnalytics() {
   const occupancyChart = [{ name: "occupancy", value: analytics.occupancyRate, fill: "#2af5c0" }];
   const growthPos = analytics.revenueGrowth >= 0;
   const xAxisTick = chartCompact ? { ...TICK, fontSize: 9 } : TICK;
-  const fmt = (n) => (n || 0).toLocaleString("fr-MA");
+  const fmt = (n) => (n || 0).toLocaleString(lang === "fr" ? "fr-MA" : "en-US");
 
   return (
     <OwnerLayout>
       <style>{STYLES}</style>
 
-      <div className="oa">
+      <div className={oaCls}>
         {/* ── HEADER ── */}
         <header className="oa-header oa-fade">
           <div>
-            <span className="oa-label">Dashboard</span>
-            <h1 className="oa-title">Owner Analytics</h1>
+            <span className="oa-label">{t.eyebrowDashboard}</span>
+            <h1 className="oa-title">{t.title}</h1>
           </div>
           <div style={{ flexShrink: 0 }}>
             <TimeFilter period={period} setPeriod={setPeriod} />
@@ -311,30 +346,30 @@ export default function OwnerAnalytics() {
 
         {/* ── 6 KPI CARDS ── */}
         <div className="oa-kpi-grid-6">
-          <KpiCard label="Total Bookings"  value={analytics.totalBookings}               icon={Calendar}    color="#7c6cfc" delay={0} />
-          <KpiCard label="Total Revenue"   value={`${fmt(analytics.totalRevenue)} MAD`}  icon={DollarSign}  color="#2af5c0" delay={60}
-            sub={analytics.pendingRevenue > 0 ? `${fmt(analytics.pendingRevenue)} MAD unpaid` : undefined} />
-          <KpiCard label="Collected"       value={`${fmt(analytics.collectedRevenue ?? 0)} MAD`} icon={TrendingUp} color="#34d399" delay={120}
-            sub={analytics.totalMaintenanceCost > 0 ? `−${fmt(analytics.totalMaintenanceCost)} MAD costs` : undefined} />
-          <KpiCard label="Avg Daily Rev"   value={`${fmt(analytics.avgDailyRevenue)} MAD`} icon={Zap}       color="#f5a623" delay={180} />
-          <KpiCard label="Occupancy"       value={`${analytics.occupancyRate}%`}          icon={Car}        color="#60a5fa" delay={240} />
-          <KpiCard label="Upcoming"        value={analytics.upcomingRentals?.length || 0} icon={Calendar}   color="#a78bfa" delay={300} />
+          <KpiCard label={t.kpi.totalBookings}  value={analytics.totalBookings}               icon={Calendar}    color="#7c6cfc" delay={0} />
+          <KpiCard label={t.kpi.totalRevenue}   value={`${fmt(analytics.totalRevenue)} MAD`}  icon={DollarSign}  color="#2af5c0" delay={60}
+            sub={analytics.pendingRevenue > 0 ? `${fmt(analytics.pendingRevenue)} ${t.kpi.unpaid}` : undefined} />
+          <KpiCard label={t.kpi.collected}      value={`${fmt(analytics.collectedRevenue ?? 0)} MAD`} icon={TrendingUp} color="#34d399" delay={120}
+            sub={analytics.totalMaintenanceCost > 0 ? `−${fmt(analytics.totalMaintenanceCost)} ${t.kpi.costs}` : undefined} />
+          <KpiCard label={t.kpi.avgDailyRev}    value={`${fmt(analytics.avgDailyRevenue)} MAD`} icon={Zap}       color="#f5a623" delay={180} />
+          <KpiCard label={t.kpi.occupancy}      value={`${analytics.occupancyRate}%`}          icon={Car}        color="#60a5fa" delay={240} />
+          <KpiCard label={t.kpi.upcoming}       value={analytics.upcomingRentals?.length || 0} icon={Calendar}   color="#a78bfa" delay={300} />
         </div>
 
         {/* ── SMART INSIGHTS ── */}
         {!insightsLoading && insights.length > 0 && (
           <div className="oa-card oa-card-pad oa-fade" style={{ marginBottom: 20, animationDelay: "340ms" }}>
-            <SH eyebrow="AI Advisor" title={
+            <SH eyebrow={t.insights.eyebrow} title={
               <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                Smart Insights
+                {t.insights.title}
                 <span style={{ background: "rgba(124,108,252,.15)", color: "#7c6cfc", borderRadius: 6, padding: "2px 8px", fontFamily: "'DM Mono',monospace", fontSize: 11 }}>
-                  {insights.length} action{insights.length !== 1 ? "s" : ""}
+                  {insights.length} {insights.length !== 1 ? t.insights.actionsMany : t.insights.actionsOne}
                 </span>
               </span>
             } />
             <div className="oa-insights-grid">
               {insights.map((insight, i) => (
-                <InsightCard key={i} insight={insight} />
+                <InsightCard key={i} insight={insight} gainLabel={t.insights.potentialGainSuffix} />
               ))}
             </div>
           </div>
@@ -342,7 +377,7 @@ export default function OwnerAnalytics() {
 
         {/* ── CALENDAR ── */}
         <div className="oa-card oa-card-pad-sm oa-fade" style={{ marginBottom: 20, animationDelay: "380ms" }}>
-          <SH eyebrow="Schedule" title="Booking Calendar" />
+          <SH eyebrow={t.schedule.eyebrow} title={t.schedule.title} />
           <OwnerBookingCalendar />
         </div>
 
@@ -351,8 +386,8 @@ export default function OwnerAnalytics() {
           <div className="oa-card oa-card-pad oa-fade" style={{ animationDelay: "420ms" }}>
             <div className="oa-rev-head">
               <div>
-                <span className="oa-label">Performance</span>
-                <p className="oa-rev-title">Revenue</p>
+                <span className="oa-label">{t.performance.eyebrow}</span>
+                <p className="oa-rev-title">{t.performance.title}</p>
                 <p className="oa-rev-amt">{fmt(analytics.totalRevenue)} MAD</p>
               </div>
               <div
@@ -388,8 +423,8 @@ export default function OwnerAnalytics() {
           </div>
 
           <div className="oa-card oa-card-pad oa-fade oa-radial-box" style={{ animationDelay: "450ms" }}>
-            <span className="oa-label">Fleet Usage</span>
-            <p style={{ fontSize: 15, fontWeight: 700, margin: "6px 0 0", letterSpacing: "-.015em" }}>Occupancy</p>
+            <span className="oa-label">{t.fleetUsage.eyebrow}</span>
+            <p style={{ fontSize: 15, fontWeight: 700, margin: "6px 0 0", letterSpacing: "-.015em" }}>{t.fleetUsage.title}</p>
             <div className="oa-radial-chart">
               <ResponsiveContainer width="100%" height="100%">
                 <RadialBarChart cx="50%" cy="50%" innerRadius="72%" outerRadius="100%" data={occupancyChart} startAngle={90} endAngle={-270} barSize={12}>
@@ -400,28 +435,28 @@ export default function OwnerAnalytics() {
                 </RadialBarChart>
               </ResponsiveContainer>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: "'DM Mono',monospace", fontSize: 11, color: "#5a5a72", marginTop: 4 }}>
-              <span className="oa-dot" style={{ color: "#2af5c0", background: "#2af5c0" }} />
-              of fleet active
+            <div style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: "'DM Mono',monospace", fontSize: 11, color: "var(--muted)", marginTop: 4 }}>
+              <span className="oa-dot" style={{ color: "var(--teal)", background: "var(--teal)" }} />
+              {t.fleetUsage.activeSuffix}
             </div>
           </div>
         </div>
 
         {/* ── REVENUE PER CAR ── */}
         <div className="oa-card oa-card-pad oa-fade" style={{ marginBottom: 20, animationDelay: "480ms" }}>
-          <SH eyebrow="Breakdown" title="Revenue per Car" />
+          <SH eyebrow={t.breakdown.eyebrow} title={t.breakdown.title} />
           <RevenuePerCarChart data={analytics.fleetPerformance || []} />
         </div>
 
         {/* ── BOOKING STATUS ── */}
         <div className="oa-card oa-card-pad oa-fade" style={{ marginBottom: 20, animationDelay: "510ms" }}>
-          <SH eyebrow="Overview" title="Booking Status" />
+          <SH eyebrow={t.bookingStatus.eyebrow} title={t.bookingStatus.title} />
           <BookingStatusChart data={analytics.bookingStatusData || []} />
         </div>
 
         {/* ── BOOKING TRENDS ── */}
         <div className="oa-card oa-card-pad oa-fade" style={{ marginBottom: 20, animationDelay: "540ms" }}>
-          <SH eyebrow="Activity" title="Booking Trends" />
+          <SH eyebrow={t.trends.eyebrow} title={t.trends.title} />
           <div className="oa-chart-h">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={analytics.bookingTrends || []} margin={{ top: 4, right: 4, bottom: chartCompact ? 4 : 0, left: chartCompact ? -8 : 0 }}>
@@ -438,43 +473,43 @@ export default function OwnerAnalytics() {
         {/* ── UPCOMING + FLEET TABLE ── */}
         <div className="oa-split-eq">
           <div className="oa-card oa-card-pad oa-fade" style={{ animationDelay: "570ms" }}>
-            <SH eyebrow="Scheduled" title="Upcoming Rentals" />
+            <SH eyebrow={t.upcomingRentals.eyebrow} title={t.upcomingRentals.title} />
             <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
               {analytics.upcomingRentals?.length ? (
                 analytics.upcomingRentals.map((b) => (
                   <div key={b._id} className="oa-rental">
                     <p style={{ fontWeight: 600, fontSize: 13.5, margin: "0 0 4px", lineHeight: 1.3 }}>{b.rentalId?.title}</p>
-                    <p style={{ fontFamily: "'DM Mono',monospace", fontSize: 11.5, color: "#5a5a72", margin: 0, lineHeight: 1.4 }}>
-                      {new Date(b.startDate).toLocaleDateString()} → {new Date(b.endDate).toLocaleDateString()}
+                    <p style={{ fontFamily: "'DM Mono',monospace", fontSize: 11.5, color: "var(--muted)", margin: 0, lineHeight: 1.4 }}>
+                      {new Date(b.startDate).toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US")} → {new Date(b.endDate).toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US")}
                     </p>
                   </div>
                 ))
               ) : (
-                <p style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, color: "#5a5a72", margin: 0 }}>No upcoming rentals</p>
+                <p style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, color: "var(--muted)", margin: 0 }}>{t.upcomingRentals.none}</p>
               )}
             </div>
           </div>
 
           <div className="oa-card oa-card-pad oa-fade" style={{ animationDelay: "600ms" }}>
-            <SH eyebrow="Vehicles" title="Fleet Performance" />
+            <SH eyebrow={t.fleetTable.eyebrow} title={t.fleetTable.title} />
             <div className="oa-table-scroll">
               <table className="oa-table">
                 <thead>
                   <tr>
-                    <th>Car</th>
-                    <th>Revenue</th>
-                    <th>Bookings</th>
-                    <th>Utilization</th>
+                    <th>{t.fleetTable.car}</th>
+                    <th>{t.fleetTable.revenue}</th>
+                    <th>{t.fleetTable.bookings}</th>
+                    <th>{t.fleetTable.utilization}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {analytics.fleetPerformance?.map((car, i) => (
                     <tr key={i}>
                       <td style={{ fontWeight: 600, maxWidth: 140 }}>{car.title}</td>
-                      <td style={{ color: "#7c6cfc", fontFamily: "'DM Mono',monospace", fontWeight: 500 }}>{fmt(car.revenue)} MAD</td>
-                      <td style={{ fontFamily: "'DM Mono',monospace", color: "#a0a0b8" }}>{car.bookings}</td>
+                      <td style={{ color: "var(--violet)", fontFamily: "'DM Mono',monospace", fontWeight: 500 }}>{fmt(car.revenue)} MAD</td>
+                      <td style={{ fontFamily: "'DM Mono',monospace", color: "var(--muted)" }}>{car.bookings}</td>
                       <td>
-                        <span style={{ background: "rgba(42,245,192,.1)", color: "#2af5c0", border: "1px solid rgba(42,245,192,.2)", borderRadius: 6, padding: "2px 8px", fontFamily: "'DM Mono',monospace", fontSize: 11.5, whiteSpace: "nowrap" }}>
+                        <span style={{ background: "rgba(42,245,192,.12)", color: "var(--teal)", border: "1px solid rgba(42,245,192,.28)", borderRadius: 6, padding: "2px 8px", fontFamily: "'DM Mono',monospace", fontSize: 11.5, whiteSpace: "nowrap" }}>
                           {car.utilization}%
                         </span>
                       </td>
@@ -488,7 +523,7 @@ export default function OwnerAnalytics() {
 
         {/* ── DEMAND HEATMAP ── */}
         <div className="oa-card oa-card-pad oa-fade" style={{ animationDelay: "630ms" }}>
-          <SH eyebrow="Patterns" title="Demand Heatmap" />
+          <SH eyebrow={t.heatmap.eyebrow} title={t.heatmap.title} />
           <DemandHeatmap data={analytics.demandHeatmap || []} />
         </div>
       </div>

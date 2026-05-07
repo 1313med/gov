@@ -4,6 +4,7 @@ import { getApprovedSales } from "../api/sale";
 import { addFavorite, removeFavorite, getFavorites } from "../api/user";
 import { loadAuth } from "../utils/authStorage";
 import { useAppLang } from "../context/AppLangContext";
+import { useTheme } from "../context/ThemeContext";
 
 /* ─────────────────────────────────────────────────────────────────────────
    STYLES — light default, dark via .cp.dark
@@ -810,16 +811,10 @@ const ALL_LOC = "__all__";
 /* ═══════════════════════════════════════════════════════════════════════ */
 export default function Cars() {
   const { copy } = useAppLang();
+  const { dark } = useTheme();
   const [cars,      setCars     ] = useState([]);
   const [page,      setPage     ] = useState(1);
   const [hasMore,   setHasMore  ] = useState(true);
-  const [dark,      setDark     ] = useState(() => {
-    // Sync with global theme set by Navbar
-    const saved = localStorage.getItem("goo-theme") || localStorage.getItem("cars-theme");
-    if (saved === "dark") return true;
-    if (saved === "light") return false;
-    return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false;
-  });
   const [filterOpen,setFilterOpen] = useState(false);
 
   const [filters, setFilters] = useState({
@@ -851,11 +846,6 @@ export default function Cars() {
     if (activeTab === "sedan") return /(sedan|series|classe|class|a4|a6|c-?class|e-?class|s-?class)/i.test(hay);
     return true;
   });
-
-  useEffect(() => {
-    localStorage.setItem("goo-theme",  dark ? "dark" : "light");
-    localStorage.setItem("cars-theme", dark ? "dark" : "light");
-  }, [dark]);
 
   /* ── Debounce ── */
   useEffect(() => {

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
+import { useAppLang } from "../../context/AppLangContext";
 
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;600&display=swap');
@@ -125,25 +126,39 @@ const STYLES = `
     border: 1px dashed rgba(255,255,255,.1);
     border-radius: 14px;
   }
+
+  /* ─── LIGHT THEME OVERRIDES ─── */
+  html.light .rpc-chip {
+    background: rgba(15,23,42,.04);
+    border-color: rgba(15,23,42,.10);
+  }
+  html.light .rpc-chip-title { color: #475569; }
+  html.light .rpc-share-h { color: #64748b; }
+  html.light .rpc-share-name { color: #475569; }
+  html.light .rpc-share-track { background: rgba(15,23,42,.08); }
+  html.light .rpc-empty {
+    color: #64748b;
+    border-color: rgba(15,23,42,.14);
+  }
 `;
 
-const CustomTooltip = ({ active, payload, label }) => {
+const CustomTooltip = ({ active, payload, label, revenueLabel }) => {
   if (!active || !payload?.length) return null;
   return (
     <div
       style={{
-        background: "#16161f",
-        border: "1px solid rgba(255,255,255,.13)",
+        background: "var(--tip-bg, #16161f)",
+        border: "1px solid var(--tip-bd, rgba(255,255,255,.13))",
         borderRadius: 10,
         padding: "10px 14px",
         fontFamily: "'DM Mono', monospace",
         fontSize: 12,
-        color: "#e8e8f0",
+        color: "var(--txt, #e8e8f0)",
       }}
     >
-      <div style={{ color: "#5a5a72", marginBottom: 4 }}>{label}</div>
+      <div style={{ color: "var(--tip-lbl, #5a5a72)", marginBottom: 4 }}>{label}</div>
       <div style={{ color: "#7c6cfc" }}>
-        Revenue: <strong>${payload[0].value?.toLocaleString()}</strong>
+        {revenueLabel}: <strong>${payload[0].value?.toLocaleString()}</strong>
       </div>
     </div>
   );
@@ -159,7 +174,7 @@ const CustomLabel = ({ x, y, width, value, narrow }) => {
       style={{
         fontFamily: "'DM Mono', monospace",
         fontSize: 10,
-        fill: "#5a5a72",
+        fill: "var(--muted, #5a5a72)",
         fontWeight: 500,
       }}
     >
@@ -172,6 +187,8 @@ const COLORS = ["#7c6cfc", "#2af5c0", "#f5a623", "#60a5fa", "#fc6c6c", "#a78bfa"
 
 export default function RevenuePerCarChart({ data }) {
   const [narrow, setNarrow] = useState(false);
+  const { copy } = useAppLang();
+  const tr = copy.analyticsCommon.revenuePerCar;
 
   useEffect(() => {
     const q = () => setNarrow(window.innerWidth < 640);
@@ -184,7 +201,7 @@ export default function RevenuePerCarChart({ data }) {
     return (
       <>
         <style>{STYLES}</style>
-        <div className="rpc-empty">No revenue data available</div>
+        <div className="rpc-empty">{tr.empty}</div>
       </>
     );
   }
@@ -239,11 +256,11 @@ export default function RevenuePerCarChart({ data }) {
                 ))}
               </defs>
 
-              <CartesianGrid vertical={false} stroke="rgba(255,255,255,.04)" strokeDasharray="4 4" />
+              <CartesianGrid vertical={false} stroke="var(--grid, rgba(255,255,255,.04))" strokeDasharray="4 4" />
 
               <XAxis
                 dataKey="title"
-                tick={{ fill: "#5a5a72", fontSize: narrow ? 9 : 11, fontFamily: "'DM Mono'" }}
+                tick={{ fill: "var(--muted, #5a5a72)", fontSize: narrow ? 9 : 11, fontFamily: "'DM Mono'" }}
                 axisLine={false}
                 tickLine={false}
                 interval={0}
@@ -255,13 +272,13 @@ export default function RevenuePerCarChart({ data }) {
 
               <YAxis
                 width={narrow ? 36 : 44}
-                tick={{ fill: "#5a5a72", fontSize: narrow ? 9 : 11, fontFamily: "'DM Mono'" }}
+                tick={{ fill: "var(--muted, #5a5a72)", fontSize: narrow ? 9 : 11, fontFamily: "'DM Mono'" }}
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={(v) => `$${v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v}`}
               />
 
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,.03)", radius: 8 }} />
+              <Tooltip content={<CustomTooltip revenueLabel={tr.revenue} />} cursor={{ fill: "var(--hover-vi, rgba(255,255,255,.03))", radius: 8 }} />
 
               <Bar
                 dataKey="revenue"
@@ -285,7 +302,7 @@ export default function RevenuePerCarChart({ data }) {
       </div>
 
       <div>
-        <div className="rpc-share-h">Share of total revenue</div>
+        <div className="rpc-share-h">{tr.shareTitle}</div>
         <div className="rpc-share-list">
           {sorted.map((car, i) => {
             const pct = Math.round((car.revenue / totalRev) * 100);

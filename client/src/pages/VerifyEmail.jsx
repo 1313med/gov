@@ -1,16 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/axios";
+import { useAppLang } from "../context/AppLangContext";
 
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap');
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg0:#05060f; --border2:rgba(255,255,255,0.14);
-  --p1:#7c6bff; --p2:#a78bfa; --p3:#38bdf8;
-  --ink3:rgba(255,255,255,0.4); --danger:#ff6b6b;
-  --sans:'Inter',sans-serif; --display:'Syne',sans-serif; --mono:'Space Mono',monospace;
-}
 .ve-root { min-height:100vh; background:var(--bg0); display:flex; align-items:center; justify-content:center; font-family:var(--sans); position:relative; overflow:hidden; padding:24px; }
 .ve-bg { position:fixed; inset:0; z-index:0; pointer-events:none; background:radial-gradient(ellipse 80% 70% at 10% 20%,rgba(124,107,255,0.18) 0%,transparent 60%),radial-gradient(ellipse 60% 60% at 90% 80%,rgba(56,189,248,0.12) 0%,transparent 60%),var(--bg0); }
 .ve-orb { position:fixed; z-index:0; pointer-events:none; border-radius:50%; filter:blur(80px); mix-blend-mode:screen; }
@@ -35,22 +30,24 @@ const CSS = `
 `;
 
 export default function VerifyEmail() {
+  const { copy } = useAppLang();
+  const t = copy.verifyEmail;
   const { token } = useParams();
-  const [status, setStatus] = useState("loading"); // loading | success | error
+  const [status, setStatus] = useState("loading");
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    if (!token) { setStatus("error"); setMessage("No verification token found."); return; }
+    if (!token) { setStatus("error"); setMessage(t.noToken); return; }
     api.get(`/auth/verify-email/${token}`)
       .then((res) => { setMessage(res.data.message); setStatus("success"); })
       .catch((err) => {
-        setMessage(err?.response?.data?.message || "Verification failed. The link may have expired.");
+        setMessage(err?.response?.data?.message || t.failedFallback);
         setStatus("error");
       });
-  }, [token]);
+  }, [token, t.noToken, t.failedFallback]);
 
   return (
-    <div className="ve-root">
+    <div className="ve-root gv-auth">
       <style>{CSS}</style>
       <div className="ve-bg" />
       <div className="ve-orb ve-orb1" />
@@ -65,27 +62,27 @@ export default function VerifyEmail() {
         {status === "loading" && (
           <>
             <div className="ve-spinner" />
-            <h1 className="ve-title">Verifying your email…</h1>
-            <p className="ve-sub">Just a moment, please.</p>
+            <h1 className="ve-title">{t.loadingTitle}</h1>
+            <p className="ve-sub">{t.loadingSub}</p>
           </>
         )}
 
         {status === "success" && (
           <>
             <div className="ve-success-ring">✓</div>
-            <h1 className="ve-title">Email verified!</h1>
-            <p className="ve-sub">{message}<br/>You can now access all features of your account.</p>
-            <Link to="/" className="ve-btn">Go to homepage</Link>
+            <h1 className="ve-title">{t.successTitle}</h1>
+            <p className="ve-sub">{message}<br/>{t.successSub}</p>
+            <Link to="/" className="ve-btn">{t.goHome}</Link>
           </>
         )}
 
         {status === "error" && (
           <>
             <div className="ve-icon">✉</div>
-            <h1 className="ve-title">Verification failed</h1>
+            <h1 className="ve-title">{t.failedTitle}</h1>
             <div className="ve-error">{message}</div>
-            <p className="ve-sub">Request a new verification link from your profile settings.</p>
-            <Link to="/" className="ve-btn">Back to homepage</Link>
+            <p className="ve-sub">{t.failedSub}</p>
+            <Link to="/" className="ve-btn">{t.back}</Link>
           </>
         )}
       </div>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { api } from "../api/axios";
 import { useAppLang } from "../context/AppLangContext";
+import { useTheme } from "../context/ThemeContext";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
 import { loadAuth } from "../utils/authStorage";
@@ -162,6 +163,7 @@ export default function RentalDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const auth = loadAuth();
+  const { dark, toggle: toggleTheme } = useTheme();
 
   const [rental, setRental] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -175,13 +177,6 @@ export default function RentalDetails() {
 
   const [bookedDates, setBookedDates] = useState([]);
   const [blockedDates, setBlockedDates] = useState([]);
-
-  const [dark, setDark] = useState(() => {
-    const saved = localStorage.getItem("rental-details-theme");
-    if (saved === "dark") return true;
-    if (saved === "light") return false;
-    return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false;
-  });
 
   const startDate = range?.from;
   const endDate = range?.to;
@@ -215,10 +210,6 @@ export default function RentalDetails() {
   }
 
   const totalPrice = Math.max(0, basePrice - bestDiscount);
-
-  useEffect(() => {
-    localStorage.setItem("rental-details-theme", dark ? "dark" : "light");
-  }, [dark]);
 
   useEffect(() => {
     const loadRental = async () => {
@@ -345,7 +336,7 @@ export default function RentalDetails() {
             {ICONS.arrow}
             {copy.rentalDetails.backLong}
           </Link>
-          <button type="button" className="rd-theme" onClick={() => setDark((d) => !d)}>
+          <button type="button" className="rd-theme" onClick={toggleTheme}>
             <span className="rd-icon">{dark ? ICONS.sun : ICONS.moon}</span>
             <span>{dark ? copy.rentalDetails.themeLight : copy.rentalDetails.themeDark}</span>
             <span className="rd-track">
@@ -374,7 +365,7 @@ export default function RentalDetails() {
           {ICONS.arrow}
           {copy.rentalDetails.backLong}
         </Link>
-        <button type="button" className="rd-theme" onClick={() => setDark((d) => !d)}>
+        <button type="button" className="rd-theme" onClick={toggleTheme}>
           <span className="rd-icon">{dark ? ICONS.sun : ICONS.moon}</span>
           <span>{dark ? copy.rentalDetails.themeLight : copy.rentalDetails.themeDark}</span>
           <span className="rd-track">

@@ -12,29 +12,7 @@ const CSS = `
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-:root {
-  --bg0:    #05060f;
-  --bg1:    #080c1a;
-  --bg2:    #0e1228;
-  --glass:  rgba(255,255,255,0.04);
-  --glass2: rgba(255,255,255,0.07);
-  --border: rgba(255,255,255,0.08);
-  --border2:rgba(255,255,255,0.14);
-  --p1:     #7c6bff;
-  --p2:     #a78bfa;
-  --p3:     #38bdf8;
-  --p-glow: rgba(124,107,255,0.35);
-  --ink:    #ffffff;
-  --ink2:   rgba(255,255,255,0.7);
-  --ink3:   rgba(255,255,255,0.4);
-  --ink4:   rgba(255,255,255,0.2);
-  --danger: #ff6b6b;
-  --sans:   'Inter', sans-serif;
-  --display:'Syne', sans-serif;
-  --mono:   'Space Mono', monospace;
-}
-
-/* ── ROOT WRAP ── */
+/* ── ROOT WRAP (theme tokens: .gv-auth on element + theme-screens.css) ── */
 .lx-root {
   min-height: 100vh;
   background: var(--bg0);
@@ -168,7 +146,7 @@ const CSS = `
 }
 .lx-logo-text {
   font-family: var(--display); font-size: 17px; font-weight: 700;
-  color: #fff; letter-spacing: -0.03em;
+  color: var(--ink); letter-spacing: -0.03em;
 }
 .lx-logo-text span { color: var(--p2); }
 
@@ -191,7 +169,7 @@ const CSS = `
   font-family: var(--display);
   font-size: clamp(38px, 4vw, 64px);
   font-weight: 800; line-height: 0.92; letter-spacing: -0.04em;
-  color: #fff; margin-bottom: 22px;
+  color: var(--ink); margin-bottom: 22px;
 }
 .lx-hero h1 em {
   font-style: italic;
@@ -236,7 +214,7 @@ const CSS = `
 .lx-stat {}
 .lx-stat-num {
   font-family: var(--display); font-size: 22px; font-weight: 800;
-  color: #fff; letter-spacing: -0.03em; line-height: 1;
+  color: var(--ink); letter-spacing: -0.03em; line-height: 1;
 }
 .lx-stat-num span {
   background: linear-gradient(90deg, var(--p1), var(--p2));
@@ -325,7 +303,7 @@ const CSS = `
 }
 .lx-ch h2 {
   font-family: var(--display); font-size: 32px; font-weight: 800;
-  letter-spacing: -0.04em; line-height: 1; color: #fff; margin-bottom: 8px;
+  letter-spacing: -0.04em; line-height: 1; color: var(--ink); margin-bottom: 8px;
 }
 .lx-ch h2 em {
   font-style: italic;
@@ -376,7 +354,7 @@ const CSS = `
   border-radius: 14px;
   padding: 20px 16px 8px 44px;
   font-family: var(--mono); font-size: 13px;
-  color: #fff; outline: none;
+  color: var(--ink); outline: none;
   transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
   caret-color: var(--p2);
 }
@@ -471,7 +449,7 @@ const CSS = `
 .lx-spinner {
   width: 16px; height: 16px; border-radius: 50%;
   border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: #fff;
+  border-top-color: var(--ink);
   animation: spin 0.7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -671,14 +649,14 @@ export default function Login() {
       else if (role === "rental_owner") navigate("/owner/analytics");
       else                              navigate("/");
     } catch (err) {
-      setError(err?.response?.data?.message || "Invalid credentials. Please try again.");
+      setError(err?.response?.data?.message || copy.login.invalidCreds);
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="lx-root">
+    <div className="lx-root gv-auth">
       <style>{CSS}</style>
 
       {/* Background layers */}
@@ -804,7 +782,7 @@ export default function Login() {
                   to="/forgot-password"
                   style={{ fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.06em", color: "var(--p2)", textDecoration: "none", opacity: 0.85 }}
                 >
-                  Forgot password?
+                  {copy.login.forgotLink}
                 </Link>
               </div>
 

@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { loadAuth, clearAuth } from "../utils/authStorage";
 import { useAppLang } from "../context/AppLangContext";
 import { useSocket } from "../context/SocketContext";
+import { useTheme } from "../context/ThemeContext";
 import LangSwitch from "./LangSwitch";
 
 /* ─────────────────────────────────────────────────────────
@@ -294,35 +295,140 @@ const STYLES = `
     .gn-inner { padding: 0 16px; }
     .gn-logo { margin-right: auto; font-size: 18px; }
   }
+
+  /* ── Profile avatar button ── */
+  .gn-profile-wrap { position: relative; }
+
+  .gn-av-btn {
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 2px solid rgba(124,107,255,.3);
+    background: rgba(124,107,255,.1);
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; padding: 0;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px; font-weight: 700; color: #7c6bff;
+    transition: border-color .2s, box-shadow .2s;
+    flex-shrink: 0;
+  }
+  .gn-av-btn:hover { border-color: #7c6bff; box-shadow: 0 0 0 3px rgba(124,107,255,.15); }
+  .gn-av-btn img { width: 100%; height: 100%; object-fit: cover; }
+  .gn.dark .gn-av-btn { border-color: rgba(124,107,255,.35); background: rgba(124,107,255,.12); }
+  .gn.dark .gn-av-btn:hover { border-color: #7c6bff; box-shadow: 0 0 0 3px rgba(124,107,255,.18); }
+
+  /* ── Dropdown panel ── */
+  .gn-drop {
+    position: absolute; top: calc(100% + 10px); right: 0;
+    width: 230px;
+    background: #fff;
+    border: 1px solid rgba(12,26,86,.1);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(12,26,86,.14);
+    overflow: hidden; z-index: 400;
+    animation: gn-drop-in .15s ease;
+  }
+  @keyframes gn-drop-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .gn.dark .gn-drop {
+    background: #0e0f1e;
+    border-color: rgba(255,255,255,.1);
+    box-shadow: 0 8px 32px rgba(0,0,0,.45);
+  }
+
+  .gn-drop-head {
+    padding: 14px 16px 12px;
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid rgba(12,26,86,.07);
+  }
+  .gn.dark .gn-drop-head { border-color: rgba(255,255,255,.07); }
+
+  .gn-drop-av {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 2px solid rgba(124,107,255,.25);
+    background: rgba(124,107,255,.1);
+    overflow: hidden; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Poppins', sans-serif;
+    font-size: 16px; font-weight: 700; color: #7c6bff;
+  }
+  .gn-drop-av img { width: 100%; height: 100%; object-fit: cover; }
+
+  .gn-drop-info { min-width: 0; }
+  .gn-drop-name {
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px; font-weight: 600; color: #0b163d;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .gn.dark .gn-drop-name { color: #f5f7ff; }
+  .gn-drop-role {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; font-weight: 500;
+    color: #7c6bff; text-transform: uppercase; letter-spacing: .06em;
+    margin-top: 2px;
+  }
+
+  .gn-drop-body { padding: 6px 0; }
+
+  .gn-drop-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 16px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px; font-weight: 500; color: #374151;
+    text-decoration: none; cursor: pointer;
+    width: 100%; border: none; background: none; text-align: left;
+    transition: background .15s, color .15s;
+  }
+  .gn-drop-item:hover { background: rgba(124,107,255,.07); color: #7c6bff; }
+  .gn.dark .gn-drop-item { color: #bcc5e8; }
+  .gn.dark .gn-drop-item:hover { background: rgba(124,107,255,.1); color: #9b8cff; }
+
+  .gn-drop-item.red:hover { background: rgba(239,68,68,.07); color: #ef4444; }
+  .gn.dark .gn-drop-item.red:hover { background: rgba(239,68,68,.08); color: #f87171; }
+
+  .gn-drop-sep { height: 1px; background: rgba(12,26,86,.07); margin: 4px 12px; }
+  .gn.dark .gn-drop-sep { background: rgba(255,255,255,.07); }
 `;
 
+const ROLE_LABELS = {
+  customer:     "Customer",
+  rental_owner: "Rental Owner",
+  seller:       "Seller",
+  admin:        "Admin",
+};
+
 /* SVG icons */
-const MOON = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M14.5 3.8a8.7 8.7 0 1 0 5.7 13.9 9 9 0 0 1-5.7-13.9Z"/></svg>;
-const SUN  = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.8v2M12 19.2v2M21.2 12h-2M4.8 12h-2M18.6 5.4l-1.4 1.4M6.8 17.2l-1.4 1.4M18.6 18.6l-1.4-1.4M6.8 6.8 5.4 5.4"/></svg>;
-const MSG  = <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>;
-const BELL = <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>;
-const USER = <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
+const MOON     = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M14.5 3.8a8.7 8.7 0 1 0 5.7 13.9 9 9 0 0 1-5.7-13.9Z"/></svg>;
+const SUN      = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.8v2M12 19.2v2M21.2 12h-2M4.8 12h-2M18.6 5.4l-1.4 1.4M6.8 17.2l-1.4 1.4M18.6 18.6l-1.4-1.4M6.8 6.8 5.4 5.4"/></svg>;
+const MSG      = <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>;
+const BELL     = <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>;
+const ICO_USER = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
+const ICO_CAL  = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
+const ICO_CAR  = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h13l4 4v4a2 2 0 0 1-2 2h-2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>;
+const ICO_DASH = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>;
+const ICO_OUT  = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>;
 
 export default function Navbar() {
   const navigate = useNavigate();
   const auth = loadAuth();
   const { copy } = useAppLang();
   const { unreadNotifications, unreadMessages } = useSocket() || {};
+  const { dark, toggle: toggleTheme } = useTheme();
 
-  const [dark, setDark] = useState(() => {
-    const saved = localStorage.getItem("goo-theme");
-    if (saved) return saved === "dark";
-    return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false;
-  });
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuOpen,    setMenuOpen]    = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef(null);
 
   useEffect(() => {
-    const mode = dark ? "dark" : "light";
-    localStorage.setItem("goo-theme", mode);
-    localStorage.setItem("cars-theme", mode);
-    localStorage.setItem("rentals-theme", mode);
-    window.dispatchEvent(new Event("goovoiture-theme"));
-  }, [dark]);
+    function handleClickOutside(e) {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   function logout() {
     clearAuth();
@@ -354,7 +460,7 @@ export default function Navbar() {
             <LangSwitch />
 
             {/* Theme */}
-            <button className="gn-theme" onClick={() => setDark(d => !d)} aria-label="Toggle theme">
+            <button className="gn-theme" onClick={toggleTheme} aria-label="Toggle theme">
               {dark ? SUN : MOON}
               <div className="gn-toggle-track">
                 <div className="gn-toggle-thumb" />
@@ -381,17 +487,97 @@ export default function Navbar() {
                   )}
                 </Link>
 
-                {/* Profile */}
-                <Link to="/profile" className="gn-icon-btn" title="Profile">
-                  {USER}
-                </Link>
+                {/* Profile avatar + dropdown */}
+                <div className="gn-profile-wrap" ref={profileRef}>
+                  <button
+                    className="gn-av-btn"
+                    onClick={() => setProfileOpen(o => !o)}
+                    aria-label="Profile menu"
+                  >
+                    {auth.avatar
+                      ? <img src={auth.avatar} alt={auth.name} />
+                      : (auth.name?.[0]?.toUpperCase() || "?")}
+                  </button>
 
-                <div className="gn-sep" />
+                  {profileOpen && (
+                    <div className="gn-drop">
+                      {/* User info header */}
+                      <div className="gn-drop-head">
+                        <div className="gn-drop-av">
+                          {auth.avatar
+                            ? <img src={auth.avatar} alt={auth.name} />
+                            : (auth.name?.[0]?.toUpperCase() || "?")}
+                        </div>
+                        <div className="gn-drop-info">
+                          <div className="gn-drop-name">{auth.name}</div>
+                          <div className="gn-drop-role">
+                            {ROLE_LABELS[auth.role] || auth.role}
+                          </div>
+                        </div>
+                      </div>
 
-                {/* Logout */}
-                <button onClick={logout} className="gn-pill solid">
-                  {copy.common.logout}
-                </button>
+                      {/* Links */}
+                      <div className="gn-drop-body">
+                        <Link
+                          to="/profile"
+                          className="gn-drop-item"
+                          onClick={() => setProfileOpen(false)}
+                        >
+                          {ICO_USER} My Profile
+                        </Link>
+
+                        {auth.role === "customer" && (
+                          <Link
+                            to="/my-bookings"
+                            className="gn-drop-item"
+                            onClick={() => setProfileOpen(false)}
+                          >
+                            {ICO_CAL} My Bookings
+                          </Link>
+                        )}
+
+                        {auth.role === "rental_owner" && (
+                          <Link
+                            to="/my-fleet"
+                            className="gn-drop-item"
+                            onClick={() => setProfileOpen(false)}
+                          >
+                            {ICO_CAR} My Fleet
+                          </Link>
+                        )}
+
+                        {auth.role === "seller" && (
+                          <Link
+                            to="/dashboard"
+                            className="gn-drop-item"
+                            onClick={() => setProfileOpen(false)}
+                          >
+                            {ICO_DASH} Dashboard
+                          </Link>
+                        )}
+
+                        {auth.role === "admin" && (
+                          <Link
+                            to="/admin"
+                            className="gn-drop-item"
+                            onClick={() => setProfileOpen(false)}
+                          >
+                            {ICO_DASH} Admin Panel
+                          </Link>
+                        )}
+
+                        <div className="gn-drop-sep" />
+
+                        <button
+                          onClick={() => { logout(); setProfileOpen(false); }}
+                          className="gn-drop-item red"
+                        >
+                          {ICO_OUT} Sign Out
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </>
             )}
 

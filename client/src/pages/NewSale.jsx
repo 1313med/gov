@@ -1,11 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/axios";
+import { useAppLang } from "../context/AppLangContext";
+
+const FEATURE_KEYS = ["Air conditioning", "GPS", "Bluetooth", "Backup camera", "Sunroof", "Leather seats", "Heated seats", "USB port", "Cruise control", "Parking sensors"];
+const FUEL_KEYS = ["Diesel", "Petrol", "Hybrid", "Electric"];
+const GEARBOX_KEYS = ["Manual", "Automatic"];
 
 const NewSale = () => {
   const navigate = useNavigate();
+  const { copy } = useAppLang();
+  const t = copy.saleForm;
 
-  const FEATURES = ["Air conditioning", "GPS", "Bluetooth", "Backup camera", "Sunroof", "Leather seats", "Heated seats", "USB port", "Cruise control", "Parking sensors"];
   const [features, setFeatures] = useState([]);
 
   const [formData, setFormData] = useState({
@@ -57,14 +63,14 @@ const NewSale = () => {
 
   // ================= VALIDATION =================
   const validateForm = () => {
-    if (!formData.title) return "Title is required";
-    if (!formData.brand) return "Brand is required";
-    if (!formData.model) return "Model is required";
-    if (!formData.year) return "Year is required";
-    if (!formData.price) return "Price is required";
-    if (!formData.city) return "City is required";
-    if (!formData.description) return "Description is required";
-    if (formData.images.length === 0) return "At least one image is required";
+    if (!formData.title) return t.errors.titleRequired;
+    if (!formData.brand) return t.errors.brandRequired;
+    if (!formData.model) return t.errors.modelRequired;
+    if (!formData.year) return t.errors.yearRequired;
+    if (!formData.price) return t.errors.priceRequired;
+    if (!formData.city) return t.errors.cityRequired;
+    if (!formData.description) return t.errors.descriptionRequired;
+    if (formData.images.length === 0) return t.errors.imagesRequired;
     return null;
   };
 
@@ -94,7 +100,7 @@ const NewSale = () => {
 
       navigate("/my-sales");
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to create listing");
+      setError(err.response?.data?.message || t.errors.createFail);
     } finally {
       setLoading(false);
     }
@@ -102,19 +108,19 @@ const NewSale = () => {
 
   // ================= UI =================
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 py-12 px-6 transition-colors">
       <div className="max-w-5xl mx-auto">
 
         {/* Header */}
         <div className="mb-10">
-          <h1 className="text-4xl font-extrabold">Add a new car</h1>
-          <p className="mt-2 text-gray-600">
-            Fill in the details below to publish your car listing
+          <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white">{t.newTitle}</h1>
+          <p className="mt-2 text-gray-600 dark:text-slate-400">
+            {t.newSub}
           </p>
         </div>
 
         {error && (
-          <div className="mb-6 rounded-xl bg-red-50 text-red-600 px-4 py-3">
+          <div className="mb-6 rounded-xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-300 px-4 py-3 border border-red-100 dark:border-red-900">
             {error}
           </div>
         )}
@@ -122,43 +128,43 @@ const NewSale = () => {
         <form onSubmit={handleSubmit} className="space-y-12">
 
           {/* ================= BASIC INFO ================= */}
-          <section className="bg-white rounded-3xl border shadow-sm p-8">
-            <h2 className="text-2xl font-semibold mb-6">Car information</h2>
+          <section className="bg-white dark:bg-slate-900 rounded-3xl border border-gray-200 dark:border-slate-700 shadow-sm p-8">
+            <h2 className="text-2xl font-semibold mb-6 text-slate-900 dark:text-white">{t.sectionInfo}</h2>
 
             <div className="grid sm:grid-cols-2 gap-5">
-              <Input name="title" placeholder="Listing title" value={formData.title} onChange={handleChange} />
-              <Input name="brand" placeholder="Brand" value={formData.brand} onChange={handleChange} />
-              <Input name="model" placeholder="Model" value={formData.model} onChange={handleChange} />
-              <Input name="year" placeholder="Year" value={formData.year} onChange={handleChange} />
-              <Input name="mileage" placeholder="Mileage (km)" value={formData.mileage} onChange={handleChange} />
-              <Input name="price" placeholder="Price (MAD)" value={formData.price} onChange={handleChange} />
-              <Input name="city" placeholder="City" value={formData.city} onChange={handleChange} />
-              <Input name="color" placeholder="Color (e.g. Black)" value={formData.color} onChange={handleChange} />
-              <Input name="doors" placeholder="Doors (e.g. 4)" value={formData.doors} onChange={handleChange} />
-              <Input name="seats" placeholder="Seats (e.g. 5)" value={formData.seats} onChange={handleChange} />
-              <select name="fuel" value={formData.fuel} onChange={handleChange} className="w-full rounded-xl border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black">
-                <option value="">Fuel type</option>
-                {["Diesel","Petrol","Hybrid","Electric"].map(o => <option key={o} value={o}>{o}</option>)}
+              <Input name="title"   placeholder={t.titlePh}    value={formData.title}   onChange={handleChange} />
+              <Input name="brand"   placeholder={t.brand}      value={formData.brand}   onChange={handleChange} />
+              <Input name="model"   placeholder={t.model}      value={formData.model}   onChange={handleChange} />
+              <Input name="year"    placeholder={t.year}       value={formData.year}    onChange={handleChange} />
+              <Input name="mileage" placeholder={t.mileagePh}  value={formData.mileage} onChange={handleChange} />
+              <Input name="price"   placeholder={t.pricePh}    value={formData.price}   onChange={handleChange} />
+              <Input name="city"    placeholder={t.city}       value={formData.city}    onChange={handleChange} />
+              <Input name="color"   placeholder={t.colorPh}    value={formData.color}   onChange={handleChange} />
+              <Input name="doors"   placeholder={t.doorsPh}    value={formData.doors}   onChange={handleChange} />
+              <Input name="seats"   placeholder={t.seatsPh}    value={formData.seats}   onChange={handleChange} />
+              <select name="fuel" value={formData.fuel} onChange={handleChange} className="w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-violet-500">
+                <option value="">{t.fuelType}</option>
+                {FUEL_KEYS.map(o => <option key={o} value={o}>{t.fuelOptions[o]}</option>)}
               </select>
-              <select name="gearbox" value={formData.gearbox} onChange={handleChange} className="w-full rounded-xl border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black">
-                <option value="">Gearbox</option>
-                {["Manual","Automatic"].map(o => <option key={o} value={o}>{o}</option>)}
+              <select name="gearbox" value={formData.gearbox} onChange={handleChange} className="w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-violet-500">
+                <option value="">{t.gearbox}</option>
+                {GEARBOX_KEYS.map(o => <option key={o} value={o}>{t.gearboxOptions[o]}</option>)}
               </select>
             </div>
 
             {/* Features */}
             <div className="mt-6">
-              <p className="text-sm font-semibold mb-3 text-gray-700">Features & Extras</p>
+              <p className="text-sm font-semibold mb-3 text-gray-700 dark:text-slate-300">{t.featuresHeader}</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {["Air conditioning","GPS","Bluetooth","Backup camera","Sunroof","Leather seats","Heated seats","USB port","Cruise control","Parking sensors"].map((f) => (
-                  <label key={f} className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                {FEATURE_KEYS.map((f) => (
+                  <label key={f} className="flex items-center gap-2 text-sm text-gray-600 dark:text-slate-400 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={features.includes(f)}
                       onChange={() => setFeatures(prev => prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f])}
-                      className="accent-black"
+                      className="accent-black dark:accent-violet-500"
                     />
-                    {f}
+                    {t.features[f]}
                   </label>
                 ))}
               </div>
@@ -166,23 +172,23 @@ const NewSale = () => {
 
             <textarea
               name="description"
-              className="mt-5 w-full rounded-xl border px-4 py-3 h-32 resize-none focus:outline-none focus:ring-2 focus:ring-black"
-              placeholder="Describe the car condition, history, extras..."
+              className="mt-5 w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-4 py-3 h-32 resize-none focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-violet-500"
+              placeholder={t.descriptionPh}
               value={formData.description}
               onChange={handleChange}
             />
           </section>
 
           {/* ================= IMAGES ================= */}
-          <section className="bg-white rounded-3xl border shadow-sm p-8">
-            <h2 className="text-2xl font-semibold mb-6">Photos</h2>
+          <section className="bg-white dark:bg-slate-900 rounded-3xl border border-gray-200 dark:border-slate-700 shadow-sm p-8">
+            <h2 className="text-2xl font-semibold mb-6 text-slate-900 dark:text-white">{t.sectionPhotos}</h2>
 
             <button
               type="button"
               onClick={openCloudinaryWidget}
-              className="px-5 py-3 bg-black text-white rounded-xl font-medium hover:opacity-90"
+              className="px-5 py-3 bg-black dark:bg-violet-600 text-white rounded-xl font-medium hover:opacity-90"
             >
-              Upload images
+              {t.uploadImages}
             </button>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-6">
@@ -190,7 +196,8 @@ const NewSale = () => {
                 <div key={index} className="relative group">
                   <img
                     src={img}
-                    className="w-full h-32 object-cover rounded-xl border"
+                    className="w-full h-32 object-cover rounded-xl border border-gray-200 dark:border-slate-600"
+                    alt=""
                   />
 
                   <button
@@ -203,7 +210,7 @@ const NewSale = () => {
                     }
                     className="absolute top-2 right-2 bg-black text-white text-xs px-3 py-1 rounded-full opacity-0 group-hover:opacity-100 transition"
                   >
-                    Remove
+                    {t.removeImage}
                   </button>
                 </div>
               ))}
@@ -215,9 +222,9 @@ const NewSale = () => {
             <button
               type="submit"
               disabled={loading}
-              className="px-8 py-4 bg-black text-white rounded-2xl text-lg font-semibold hover:opacity-90 disabled:opacity-60"
+              className="px-8 py-4 bg-black dark:bg-violet-600 text-white rounded-2xl text-lg font-semibold hover:opacity-90 disabled:opacity-60"
             >
-              {loading ? "Publishing..." : "Publish car"}
+              {loading ? t.publishing : t.publishBtn}
             </button>
           </div>
 
@@ -234,7 +241,7 @@ const Input = ({ name, placeholder, value, onChange }) => (
     placeholder={placeholder}
     value={value}
     onChange={onChange}
-    className="w-full rounded-xl border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
+    className="w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-violet-500"
   />
 );
 

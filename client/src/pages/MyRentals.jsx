@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "../api/axios";
 import { updateBookingStatus, markBookingPaid } from "../api/booking";
 import OwnerLayout from "../components/owner/OwnerLayout";
+import { useAppLang } from "../context/AppLangContext";
 
 const S = `
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Mono:wght@400;500&display=swap');
@@ -203,17 +204,21 @@ const S = `
 `;
 
 /* ── Status helpers ────────────────────────────────────────────────────── */
-const STATUS = {
-  confirmed: { color:"#2af5c0", bg:"rgba(42,245,192,.1)",  bd:"rgba(42,245,192,.25)", label:"Confirmed" },
-  pending:   { color:"#f5a623", bg:"rgba(245,166,35,.1)",  bd:"rgba(245,166,35,.25)",  label:"Pending"   },
-  rejected:  { color:"#fc6c6c", bg:"rgba(252,108,108,.1)", bd:"rgba(252,108,108,.25)", label:"Rejected"  },
-  default:   { color:"#7c6cfc", bg:"rgba(124,108,252,.1)", bd:"rgba(124,108,252,.25)", label:"Booked"    },
-};
-const ss = (s) => STATUS[s] || STATUS.default;
+function buildStatus(tb) {
+  return {
+    confirmed: { color:"#2af5c0", bg:"rgba(42,245,192,.1)",  bd:"rgba(42,245,192,.25)", label: tb.confirmed },
+    pending:   { color:"#f5a623", bg:"rgba(245,166,35,.1)",  bd:"rgba(245,166,35,.25)",  label: tb.pending   },
+    rejected:  { color:"#fc6c6c", bg:"rgba(252,108,108,.1)", bd:"rgba(252,108,108,.25)", label: tb.rejected  },
+    completed: { color:"#a78bfa", bg:"rgba(124,108,252,.1)", bd:"rgba(124,108,252,.25)", label: tb.completed },
+    cancelled: { color:"#94a3b8", bg:"rgba(148,163,184,.1)", bd:"rgba(148,163,184,.25)", label: tb.cancelled },
+    default:   { color:"#7c6cfc", bg:"rgba(124,108,252,.1)", bd:"rgba(124,108,252,.25)", label: tb.booked    },
+  };
+}
 
 /* ── Date range formatter ─────────────────────────────────────────────── */
-function fmtDate(d) {
-  return new Date(d).toLocaleDateString("en-GB", { day:"2-digit", month:"short", year:"numeric" });
+function fmtDate(d, lang) {
+  const loc = lang === "fr" ? "fr-FR" : "en-GB";
+  return new Date(d).toLocaleDateString(loc, { day:"2-digit", month:"short", year:"numeric" });
 }
 
 function daysBetween(a, b) {
@@ -223,6 +228,12 @@ function daysBetween(a, b) {
 
 /* ═══════════════════════════════════════════════════════════════════════ */
 export default function MyRentals() {
+  const { copy, lang } = useAppLang();
+  const t = copy.myRentals;
+  const numLocale = lang === "fr" ? "fr-FR" : "en-US";
+  const STATUS = buildStatus(t.badge);
+  const ss = (s) => STATUS[s] || STATUS.default;
+
   const [bookings, setBookings] = useState([]);
   const [loading,  setLoading ] = useState(true);
   const [error,    setError   ] = useState("");
@@ -232,7 +243,7 @@ export default function MyRentals() {
     try {
       const res = await api.get("/rental/owner/bookings");
       setBookings(Array.isArray(res.data) ? res.data : []);
-    } catch { setError("Failed to load bookings"); }
+    } catch { setError(t.loadFail); }
     finally  { setLoading(false); }
   };
 
@@ -243,7 +254,7 @@ export default function MyRentals() {
     try {
       await updateBookingStatus(id, status);
       await load();
-    } catch (e) { alert(e?.response?.data?.message || "Failed to update"); }
+    } catch (e) { alert(e?.response?.data?.message || t.updateFail); }
     finally { setActing(null); }
   };
 
@@ -252,7 +263,7 @@ export default function MyRentals() {
     try {
       const { data } = await markBookingPaid(id);
       setBookings((prev) => prev.map((b) => b._id === id ? { ...b, isPaid: data.isPaid, paidAt: data.paidAt } : b));
-    } catch { alert("Failed to update payment"); }
+    } catch { alert(t.paymentFail); }
     finally { setActing(null); }
   };
 
@@ -267,9 +278,9 @@ export default function MyRentals() {
 
         {/* ── Header ── */}
         <div className="mr-header mr-fade" style={{animationDelay:"0ms"}}>
-          <p className="mr-eyebrow">Owner Panel</p>
-          <h1 className="mr-title">Rental Bookings</h1>
-          <p className="mr-sub">Track who booked your cars and when</p>
+          <p className="mr-eyebrow">{t.eyebrow}</p>
+          <h1 className="mr-title">{t.title}</h1>
+          <p className="mr-sub">{t.sub}</p>
         </div>
 
         {/* ── Summary strip ── */}
@@ -277,21 +288,21 @@ export default function MyRentals() {
           <div className="mr-summary mr-fade" style={{animationDelay:"60ms"}}>
             <div className="mr-summary-cell">
               <div className="mr-summary-n">{bookings.length}</div>
-              <div className="mr-summary-l">Total Bookings</div>
+              <div className="mr-summary-l">{t.summary.total}</div>
             </div>
             <div className="mr-summary-cell">
               <div className="mr-summary-n" style={{color:"#2af5c0"}}>{confirmed}</div>
-              <div className="mr-summary-l">Confirmed</div>
+              <div className="mr-summary-l">{t.summary.confirmed}</div>
             </div>
             <div className="mr-summary-cell">
               <div className="mr-summary-n" style={{color:"#f5a623"}}>{pending}</div>
-              <div className="mr-summary-l">Pending</div>
+              <div className="mr-summary-l">{t.summary.pending}</div>
             </div>
             <div className="mr-summary-cell">
               <div className="mr-summary-n" style={{color:"#7c6cfc"}}>
                 {bookings.reduce((s,b) => s + daysBetween(b.startDate, b.endDate), 0)}
               </div>
-              <div className="mr-summary-l">Total Days</div>
+              <div className="mr-summary-l">{t.summary.days}</div>
             </div>
           </div>
         )}
@@ -313,7 +324,7 @@ export default function MyRentals() {
         {error && (
           <div className="mr-state mr-fade">
             <div className="mr-state-icon">⚠️</div>
-            <p className="mr-state-title">Something went wrong</p>
+            <p className="mr-state-title">{t.errorTitle}</p>
             <p className="mr-state-sub">{error}</p>
           </div>
         )}
@@ -322,8 +333,8 @@ export default function MyRentals() {
         {!loading && !error && bookings.length === 0 && (
           <div className="mr-state mr-fade">
             <div className="mr-state-icon">📋</div>
-            <p className="mr-state-title">No bookings yet</p>
-            <p className="mr-state-sub">Your rentals haven't been booked yet</p>
+            <p className="mr-state-title">{t.empty}</p>
+            <p className="mr-state-sub">{t.emptySub}</p>
           </div>
         )}
 
@@ -351,7 +362,7 @@ export default function MyRentals() {
                       <div className="mr-car-meta">
                         <span>{b.rentalId?.city}</span>
                         <span className="mr-car-meta-dot"/>
-                        <span>{b.rentalId?.pricePerDay} MAD / day</span>
+                        <span>{b.rentalId?.pricePerDay} {t.pricePerDay}</span>
                       </div>
                     </div>
 
@@ -371,16 +382,16 @@ export default function MyRentals() {
                   <div className="mr-card-bottom">
 
                     <div className="mr-info-block">
-                      <p className="mr-info-lbl">Dates</p>
+                      <p className="mr-info-lbl">{t.info.dates}</p>
                       <div className="mr-date-range">
-                        <span>{fmtDate(b.startDate)}</span>
+                        <span>{fmtDate(b.startDate, lang)}</span>
                         <span className="mr-date-arrow">→</span>
-                        <span>{fmtDate(b.endDate)}</span>
+                        <span>{fmtDate(b.endDate, lang)}</span>
                       </div>
                     </div>
 
                     <div className="mr-info-block">
-                      <p className="mr-info-lbl">Customer</p>
+                      <p className="mr-info-lbl">{t.info.customer}</p>
                       <p className="mr-info-val">
                         <strong>{b.customerId?.name}</strong>
                       </p>
@@ -390,14 +401,14 @@ export default function MyRentals() {
                     </div>
 
                     <div className="mr-info-block">
-                      <p className="mr-info-lbl">Duration · Revenue</p>
+                      <p className="mr-info-lbl">{t.info.revenue}</p>
                       <p className="mr-info-val">
                         <strong>{days}</strong>
-                        <span style={{color:"var(--muted)", fontSize:11}}> days</span>
+                        <span style={{color:"var(--muted)", fontSize:11}}> {t.daysWord}</span>
                         {b.totalAmount > 0 && (
                           <>
                             <span style={{color:"var(--dim)", margin:"0 6px"}}>·</span>
-                            <strong style={{color:"#7c6cfc"}}>{Number(b.totalAmount).toLocaleString()} MAD</strong>
+                            <strong style={{color:"#7c6cfc"}}>{Number(b.totalAmount).toLocaleString(numLocale)} MAD</strong>
                           </>
                         )}
                       </p>
@@ -414,14 +425,14 @@ export default function MyRentals() {
                           onClick={() => changeStatus(b._id, "confirmed")}
                           style={{ padding:"6px 14px", borderRadius:8, fontSize:11, fontFamily:"var(--mono)", border:"1px solid rgba(42,245,192,.3)", background:"rgba(42,245,192,.08)", color:"#2af5c0", cursor:"pointer" }}
                         >
-                          ✓ Confirm
+                          {t.actions.confirm}
                         </button>
                         <button
                           disabled={acting === b._id}
                           onClick={() => changeStatus(b._id, "rejected")}
                           style={{ padding:"6px 14px", borderRadius:8, fontSize:11, fontFamily:"var(--mono)", border:"1px solid rgba(252,108,108,.3)", background:"rgba(252,108,108,.08)", color:"#fc6c6c", cursor:"pointer" }}
                         >
-                          ✗ Reject
+                          {t.actions.reject}
                         </button>
                       </>
                     )}
@@ -432,14 +443,14 @@ export default function MyRentals() {
                           onClick={() => changeStatus(b._id, "completed")}
                           style={{ padding:"6px 14px", borderRadius:8, fontSize:11, fontFamily:"var(--mono)", border:"1px solid rgba(124,108,252,.3)", background:"rgba(124,108,252,.08)", color:"#a78bfa", cursor:"pointer" }}
                         >
-                          ✓ Mark Completed
+                          {t.actions.markCompleted}
                         </button>
                         <button
                           disabled={acting === b._id}
                           onClick={() => togglePaid(b._id)}
                           style={{ padding:"6px 14px", borderRadius:8, fontSize:11, fontFamily:"var(--mono)", border:`1px solid ${b.isPaid ? "rgba(52,211,153,.3)" : "rgba(245,166,35,.3)"}`, background: b.isPaid ? "rgba(52,211,153,.08)" : "rgba(245,166,35,.08)", color: b.isPaid ? "#34d399" : "#f5a623", cursor:"pointer" }}
                         >
-                          {b.isPaid ? "✓ Paid" : "$ Mark Paid"}
+                          {b.isPaid ? t.actions.paid : t.actions.markPaid}
                         </button>
                       </>
                     )}

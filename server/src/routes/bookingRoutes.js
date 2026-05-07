@@ -9,11 +9,13 @@ const {
   updateBookingDates,
   markBookingPaid,
   updateBookingMedia,
+  confirmReturn,
 } = require("../controllers/bookingController");
 
 // Customer
-router.get("/mine", protect, role("customer"), getMyBookings);
-router.put("/:id/cancel", protect, role("customer"), cancelBooking);
+router.get("/mine",           protect, role("customer"), getMyBookings);
+router.put("/:id/cancel",     protect, role("customer"), cancelBooking);
+router.put("/:id/confirm-return", protect, role("customer"), confirmReturn);
 
 // Rental owner
 router.get("/owner", protect, role("rental_owner"), getBookingsForOwner);

@@ -1,3 +1,30 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ─────────────────────────────────────────────────────────
+   Global theme baseline
+   The ThemeProvider toggles `.dark` / `.light` on <html> and
+   sets data-theme. These rules give every page a sensible
+   default background + text color in both modes, so pages
+   that don't define their own theme still respect the
+   user's choice.
+───────────────────────────────────────────────────────── */
+:root {
+  color-scheme: light;
+  --app-bg: #f8fafc;
+  --app-fg: #0b163d;
+}
+
+html.dark {
+  color-scheme: dark;
+  --app-bg: #05060f;
+  --app-fg: #e8e8f0;
+}
+
+html,
+body {
+  background-color: var(--app-bg);
+  color: var(--app-fg);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}

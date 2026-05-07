@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { loadAuth, clearAuth } from "../utils/authStorage";
 import { useState, useEffect, useRef } from "react";
 import { useAppLang } from "../context/AppLangContext";
+import { useTheme } from "../context/ThemeContext";
 
 /* ──────────────────────────────────────────────
    Scroll reveal — IntersectionObserver, no lib
@@ -343,6 +344,82 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   background:var(--ink);color:var(--bg);border:1px solid var(--ink);
 }
 .hx-npill.sl:hover{background:var(--gold);border-color:var(--gold);color:#000;}
+
+/* ── Profile avatar button ── */
+.hx-profile-wrap { position:relative; }
+.hx-av-btn {
+  width:36px;height:36px;border-radius:50%;
+  border:2px solid rgba(124,107,255,.35);
+  background:rgba(124,107,255,.12);
+  overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;padding:0;
+  font-family:var(--sans);font-size:13px;font-weight:700;color:#7c6bff;
+  transition:border-color .2s,box-shadow .2s;flex-shrink:0;
+}
+.hx-av-btn:hover{border-color:#7c6bff;box-shadow:0 0 0 3px rgba(124,107,255,.16);}
+.hx-av-btn img{width:100%;height:100%;object-fit:cover;}
+
+/* ── Dropdown ── */
+.hx-drop {
+  position:absolute;top:calc(100% + 10px);right:0;
+  width:230px;
+  background:#fff;
+  border:1px solid rgba(12,26,86,.1);
+  border-radius:16px;
+  box-shadow:0 8px 32px rgba(12,26,86,.15);
+  overflow:hidden;z-index:400;
+  animation:hx-drop-in .15s ease;
+}
+@keyframes hx-drop-in{
+  from{opacity:0;transform:translateY(-6px);}
+  to{opacity:1;transform:translateY(0);}
+}
+.dark .hx-drop{
+  background:#0e0f1e;
+  border-color:rgba(255,255,255,.1);
+  box-shadow:0 8px 32px rgba(0,0,0,.45);
+}
+.hx-drop-head {
+  padding:14px 16px 12px;
+  display:flex;align-items:center;gap:12px;
+  border-bottom:1px solid rgba(12,26,86,.07);
+}
+.dark .hx-drop-head{border-color:rgba(255,255,255,.07);}
+.hx-drop-av {
+  width:40px;height:40px;border-radius:50%;
+  border:2px solid rgba(124,107,255,.25);
+  background:rgba(124,107,255,.1);
+  overflow:hidden;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--sans);font-size:16px;font-weight:700;color:#7c6bff;
+}
+.hx-drop-av img{width:100%;height:100%;object-fit:cover;}
+.hx-drop-name {
+  font-family:var(--sans);font-size:13px;font-weight:600;color:#0b163d;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.dark .hx-drop-name{color:#f5f7ff;}
+.hx-drop-role {
+  font-family:var(--mono);font-size:10px;font-weight:500;
+  color:#7c6bff;text-transform:uppercase;letter-spacing:.06em;margin-top:2px;
+}
+.hx-drop-body{padding:6px 0;}
+.hx-drop-item {
+  display:flex;align-items:center;gap:10px;
+  padding:9px 16px;
+  font-family:var(--sans);font-size:13px;font-weight:500;color:#374151;
+  text-decoration:none;cursor:pointer;
+  width:100%;border:none;background:none;text-align:left;
+  transition:background .15s,color .15s;
+}
+.hx-drop-item:hover{background:rgba(124,107,255,.07);color:#7c6bff;}
+.dark .hx-drop-item{color:#bcc5e8;}
+.dark .hx-drop-item:hover{background:rgba(124,107,255,.1);color:#9b8cff;}
+.hx-drop-item.red:hover{background:rgba(239,68,68,.07);color:#ef4444;}
+.dark .hx-drop-item.red:hover{background:rgba(239,68,68,.08);color:#f87171;}
+.hx-drop-sep{height:1px;background:rgba(12,26,86,.07);margin:4px 12px;}
+.dark .hx-drop-sep{background:rgba(255,255,255,.07);}
 
 .hx-burger {
   display:none;flex-direction:column;gap:5px;
@@ -1119,13 +1196,10 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
 function HomeInner() {
   const { lang, setLang, copy } = useAppLang();
   const [auth, setAuth] = useState(() => loadAuth());
-  const [dark, setDark] = useState(() => {
-    const saved = localStorage.getItem("home2-theme");
-    if (saved === "dark") return true;
-    if (saved === "light") return false;
-    return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false;
-  });
-  const [menu, setMenu] = useState(false);
+  const { dark, toggle: toggleTheme } = useTheme();
+  const [menu,        setMenu]        = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef(null);
 
   const heroImgRef   = useRef(null);
   const svcHdrRef    = useReveal(0.08);
@@ -1142,8 +1216,13 @@ function HomeInner() {
     img.onload = () => { if (heroImgRef.current) heroImgRef.current.classList.add("ldd"); };
   }, []);
   useEffect(() => {
-    localStorage.setItem("home2-theme", dark ? "dark" : "light");
-  }, [dark]);
+    function handleClickOutside(e) {
+      if (profileRef.current && !profileRef.current.contains(e.target))
+        setProfileOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   function logout() { clearAuth(); setAuth(null); }
 
@@ -1186,7 +1265,77 @@ function HomeInner() {
             </button>
           </div>
           {auth ? (
-            <button onClick={logout} className="hx-npill gh">{copy.home.nav.logout}</button>
+            <div className="hx-profile-wrap" ref={profileRef}>
+              <button
+                className="hx-av-btn"
+                onClick={() => setProfileOpen(o => !o)}
+                aria-label="Profile menu"
+              >
+                {auth.avatar
+                  ? <img src={auth.avatar} alt={auth.name} />
+                  : (auth.name?.[0]?.toUpperCase() || "?")}
+              </button>
+
+              {profileOpen && (
+                <div className="hx-drop">
+                  <div className="hx-drop-head">
+                    <div className="hx-drop-av">
+                      {auth.avatar
+                        ? <img src={auth.avatar} alt={auth.name} />
+                        : (auth.name?.[0]?.toUpperCase() || "?")}
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <div className="hx-drop-name">{auth.name}</div>
+                      <div className="hx-drop-role">
+                        {{ customer: "Customer", rental_owner: "Rental Owner", seller: "Seller", admin: "Admin" }[auth.role] || auth.role}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="hx-drop-body">
+                    <Link to="/profile" className="hx-drop-item" onClick={() => setProfileOpen(false)}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                      My Profile
+                    </Link>
+
+                    {auth.role === "customer" && (
+                      <Link to="/my-bookings" className="hx-drop-item" onClick={() => setProfileOpen(false)}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        My Bookings
+                      </Link>
+                    )}
+
+                    {auth.role === "rental_owner" && (
+                      <Link to="/my-fleet" className="hx-drop-item" onClick={() => setProfileOpen(false)}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h13l4 4v4a2 2 0 0 1-2 2h-2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+                        My Fleet
+                      </Link>
+                    )}
+
+                    {auth.role === "seller" && (
+                      <Link to="/dashboard" className="hx-drop-item" onClick={() => setProfileOpen(false)}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                        Dashboard
+                      </Link>
+                    )}
+
+                    {auth.role === "admin" && (
+                      <Link to="/admin" className="hx-drop-item" onClick={() => setProfileOpen(false)}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                        Admin Panel
+                      </Link>
+                    )}
+
+                    <div className="hx-drop-sep" />
+
+                    <button onClick={() => { logout(); setProfileOpen(false); }} className="hx-drop-item red">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
             <>
               <Link to="/login"    className="hx-npill gh">{copy.home.nav.login}</Link>
@@ -1195,7 +1344,7 @@ function HomeInner() {
           )}
           <button
             className="hx-theme"
-            onClick={() => setDark(d => !d)}
+            onClick={toggleTheme}
             aria-label={dark ? copy.home.nav.themeLight : copy.home.nav.themeDark}
           >
             {dark ? "☀" : "☾"}
@@ -1210,13 +1359,23 @@ function HomeInner() {
       <div className={`hx-drawer${menu ? " open" : ""}`}>
         <Link to="/cars"    className="hx-dlink" onClick={() => setMenu(false)}>{copy.home.drawer.buyCars}</Link>
         <Link to="/rentals" className="hx-dlink" onClick={() => setMenu(false)}>{copy.home.drawer.rentCar}</Link>
-        {auth
-          ? <button onClick={() => { logout(); setMenu(false); }} className="hx-dlink">{copy.home.drawer.logout}</button>
-          : <>
-              <Link to="/login"    className="hx-dlink" onClick={() => setMenu(false)}>{copy.home.drawer.login}</Link>
-              <Link to="/register" className="hx-dlink" onClick={() => setMenu(false)}>{copy.home.drawer.getStarted}</Link>
-            </>
-        }
+        {auth ? (
+          <>
+            <Link to="/profile"    className="hx-dlink" onClick={() => setMenu(false)}>My Profile</Link>
+            {auth.role === "customer"     && <Link to="/my-bookings" className="hx-dlink" onClick={() => setMenu(false)}>My Bookings</Link>}
+            {auth.role === "rental_owner" && <Link to="/my-fleet"    className="hx-dlink" onClick={() => setMenu(false)}>My Fleet</Link>}
+            {auth.role === "seller"       && <Link to="/dashboard"   className="hx-dlink" onClick={() => setMenu(false)}>Dashboard</Link>}
+            {auth.role === "admin"        && <Link to="/admin"       className="hx-dlink" onClick={() => setMenu(false)}>Admin Panel</Link>}
+            <button onClick={() => { logout(); setMenu(false); }} className="hx-dlink" style={{ background:"none", border:"none", cursor:"pointer", textAlign:"left", width:"100%", color:"#ef4444" }}>
+              {copy.home.drawer.logout}
+            </button>
+          </>
+        ) : (
+          <>
+            <Link to="/login"    className="hx-dlink" onClick={() => setMenu(false)}>{copy.home.drawer.login}</Link>
+            <Link to="/register" className="hx-dlink" onClick={() => setMenu(false)}>{copy.home.drawer.getStarted}</Link>
+          </>
+        )}
       </div>
 
       {/* ═══ HERO ═══ */}

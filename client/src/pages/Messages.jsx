@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { getConversations, getMessages, sendMessage, startConversation } from "../api/message";
 import { loadAuth } from "../utils/authStorage";
 import { useSocket } from "../context/SocketContext";
+import { useAppLang } from "../context/AppLangContext";
 
 const S = `
   .msg { display:flex; height:calc(100vh - 64px); background:#f5f5f7; font-family:sans-serif; }
@@ -36,6 +37,9 @@ export default function Messages() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { clearMessageBadge } = useSocket();
+  const { copy, lang } = useAppLang();
+  const t = copy.messages;
+  const timeLocale = lang === "fr" ? "fr-FR" : "en-US";
 
   const [conversations, setConversations] = useState([]);
   const [active, setActive] = useState(null);
@@ -101,11 +105,11 @@ export default function Messages() {
       {/* Conversation list */}
       <div className="msg-list">
         <div className="msg-list-head">
-          <h2 className="msg-list-title">Messages</h2>
+          <h2 className="msg-list-title">{t.title}</h2>
         </div>
         <div className="msg-list-items">
           {conversations.length === 0 && (
-            <p style={{ padding: "20px 18px", fontSize: 13, color: "#9ca3af" }}>No conversations yet.</p>
+            <p style={{ padding: "20px 18px", fontSize: 13, color: "#9ca3af" }}>{t.emptyConversations}</p>
           )}
           {conversations.map((conv) => {
             const other = getOtherParticipant(conv);
@@ -117,10 +121,10 @@ export default function Messages() {
                 onClick={() => selectConversation(conv)}
               >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <p className="msg-conv-name">{other?.name || "User"}</p>
+                  <p className="msg-conv-name">{other?.name || t.user}</p>
                   {unread > 0 && <span className="msg-conv-badge">{unread}</span>}
                 </div>
-                <p className="msg-conv-preview">{conv.lastMessage || "No messages yet"}</p>
+                <p className="msg-conv-preview">{conv.lastMessage || t.noMessages}</p>
               </div>
             );
           })}
@@ -130,11 +134,11 @@ export default function Messages() {
       {/* Chat window */}
       <div className="msg-chat">
         {!active ? (
-          <div className="msg-empty">Select a conversation to start chatting</div>
+          <div className="msg-empty">{t.selectConversation}</div>
         ) : (
           <>
             <div className="msg-chat-head">
-              {getOtherParticipant(active)?.name || "Chat"}
+              {getOtherParticipant(active)?.name || t.chatFallback}
             </div>
 
             <div className="msg-chat-body">
@@ -145,7 +149,7 @@ export default function Messages() {
                     <div className={`msg-bubble ${isMe ? "me" : "them"}`}>
                       {m.text}
                       <div className="msg-bubble-meta">
-                        {new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        {new Date(m.createdAt).toLocaleTimeString(timeLocale, { hour: "2-digit", minute: "2-digit" })}
                       </div>
                     </div>
                   </div>
@@ -157,12 +161,12 @@ export default function Messages() {
             <form className="msg-input-row" onSubmit={handleSend}>
               <input
                 className="msg-input"
-                placeholder="Type a message…"
+                placeholder={t.composePh}
                 value={text}
                 onChange={(e) => setText(e.target.value)}
               />
               <button className="msg-send" type="submit" disabled={sending || !text.trim()}>
-                Send
+                {t.send}
               </button>
             </form>
           </>

@@ -2,16 +2,21 @@ import { useEffect, useState } from "react";
 import { getMySales, deleteSale, updateSaleStatus } from "../api/sale";
 import { Link } from "react-router-dom";
 import SellerLayout from "../components/seller/SellerLayout";
+import { useAppLang } from "../context/AppLangContext";
 
 const statusStyle = (status) => {
   const s = (status || "").toLowerCase();
-  if (s === "approved") return "bg-green-100 text-green-700";
-  if (s === "rejected") return "bg-red-100 text-red-700";
-  if (s === "sold") return "bg-gray-200 text-gray-800";
-  return "bg-orange-100 text-orange-700";
+  if (s === "approved") return "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300";
+  if (s === "rejected") return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
+  if (s === "sold") return "bg-gray-200 text-gray-800 dark:bg-slate-700 dark:text-slate-200";
+  return "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300";
 };
 
 export default function MySales() {
+  const { copy, lang } = useAppLang();
+  const t = copy.mySales;
+  const numLocale = lang === "fr" ? "fr-FR" : "en-US";
+
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -24,7 +29,7 @@ export default function MySales() {
       const res = await getMySales();
       setSales(Array.isArray(res.data) ? res.data : []);
     } catch (e) {
-      setError(e?.response?.data?.message || "Failed to load your listings");
+      setError(e?.response?.data?.message || t.loadFail);
     } finally {
       setLoading(false);
     }
@@ -32,16 +37,17 @@ export default function MySales() {
 
   useEffect(() => {
     fetchSales();
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
   }, []);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this listing?")) return;
+    if (!window.confirm(t.confirmDelete)) return;
 
     try {
       await deleteSale(id);
       setSales((prev) => prev.filter((s) => s._id !== id));
     } catch {
-      alert("Delete failed");
+      alert(t.deleteFail);
     }
   };
 
@@ -56,8 +62,13 @@ export default function MySales() {
         )
       );
     } catch {
-      alert("Failed to update status");
+      alert(t.statusUpdateFail);
     }
+  };
+
+  const localizeStatus = (s) => {
+    const k = (s || "").toLowerCase();
+    return t.status[k] || s;
   };
 
   return (
@@ -65,45 +76,45 @@ export default function MySales() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-extrabold">My Listings</h1>
-          <p className="text-gray-600 mt-1">
-            Manage and track your car listings
+          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white">{t.title}</h1>
+          <p className="text-gray-600 dark:text-slate-400 mt-1">
+            {t.sub}
           </p>
         </div>
 
         <Link
           to="/my-sales/new"
-          className="px-6 py-3 bg-black text-white rounded-2xl font-semibold hover:opacity-90 w-fit"
+          className="px-6 py-3 bg-black dark:bg-violet-600 text-white rounded-2xl font-semibold hover:opacity-90 w-fit"
         >
-          + Add Car
+          {t.addCar}
         </Link>
       </div>
 
       {/* States */}
       {loading && (
-        <div className="bg-white rounded-2xl border p-8 shadow-sm">
-          Loading your listings...
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-700 p-8 shadow-sm text-slate-700 dark:text-slate-300">
+          {t.loading}
         </div>
       )}
 
       {error && (
-        <div className="bg-white rounded-2xl border p-8 shadow-sm text-red-600">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-700 p-8 shadow-sm text-red-600 dark:text-red-400">
           {error}
         </div>
       )}
 
       {!loading && sales.length === 0 && (
-        <div className="bg-white rounded-2xl border p-10 shadow-sm text-center">
-          <p className="text-xl font-semibold">No listings yet</p>
-          <p className="text-gray-600 mt-2">
-            Add your first car to start selling
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-700 p-10 shadow-sm text-center">
+          <p className="text-xl font-semibold text-slate-900 dark:text-white">{t.empty}</p>
+          <p className="text-gray-600 dark:text-slate-400 mt-2">
+            {t.emptySub}
           </p>
 
           <Link
             to="/my-sales/new"
-            className="inline-block mt-6 px-6 py-3 bg-black text-white rounded-xl hover:opacity-90"
+            className="inline-block mt-6 px-6 py-3 bg-black dark:bg-violet-600 text-white rounded-xl hover:opacity-90"
           >
-            Add Car
+            {t.addCarPlain}
           </Link>
         </div>
       )}
@@ -117,18 +128,19 @@ export default function MySales() {
             return (
               <div
                 key={s._id}
-                className="bg-white rounded-3xl border shadow-sm overflow-hidden hover:shadow-md transition"
+                className="bg-white dark:bg-slate-900 rounded-3xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden hover:shadow-md transition"
               >
                 {/* Image */}
-                <div className="h-48 bg-gray-100">
+                <div className="h-48 bg-gray-100 dark:bg-slate-800">
                   {image ? (
                     <img
                       src={image}
                       className="w-full h-full object-cover"
+                      alt={s.title}
                     />
                   ) : (
-                    <div className="h-full flex items-center justify-center text-gray-400">
-                      No image
+                    <div className="h-full flex items-center justify-center text-gray-400 dark:text-slate-500">
+                      {t.noImage}
                     </div>
                   )}
                 </div>
@@ -136,7 +148,7 @@ export default function MySales() {
                 {/* Content */}
                 <div className="p-5 space-y-3">
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold text-lg leading-tight">
+                    <h3 className="font-semibold text-lg leading-tight text-slate-900 dark:text-white">
                       {s.title}
                     </h3>
 
@@ -145,41 +157,41 @@ export default function MySales() {
                         s.status
                       )}`}
                     >
-                      {s.status}
+                      {localizeStatus(s.status)}
                     </span>
                   </div>
 
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-slate-400">
                     {s.brand} {s.model} • {s.year}
                   </p>
 
-                  <p className="text-sm text-gray-500">{s.city}</p>
+                  <p className="text-sm text-gray-500 dark:text-slate-500">{s.city}</p>
 
-                  <p className="text-xl font-bold">
-                    {s.price.toLocaleString()} MAD
+                  <p className="text-xl font-bold text-slate-900 dark:text-white">
+                    {Number(s.price || 0).toLocaleString(numLocale)} MAD
                   </p>
 
                   {/* Actions */}
                   <div className="flex flex-wrap gap-2 pt-2">
                     <button
                       onClick={() => toggleStatus(s)}
-                      className="px-4 py-2 text-sm rounded-xl bg-gray-900 text-white hover:opacity-90"
+                      className="px-4 py-2 text-sm rounded-xl bg-gray-900 dark:bg-violet-600 text-white hover:opacity-90"
                     >
-                      {s.status === "sold" ? "Mark Active" : "Mark Sold"}
+                      {s.status === "sold" ? t.markActive : t.markSold}
                     </button>
 
                     <Link
                       to={`/my-sales/edit/${s._id}`}
-                      className="px-4 py-2 text-sm rounded-xl border hover:bg-gray-100"
+                      className="px-4 py-2 text-sm rounded-xl border border-gray-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-800"
                     >
-                      Edit
+                      {t.edit}
                     </Link>
 
                     <button
                       onClick={() => handleDelete(s._id)}
-                      className="px-4 py-2 text-sm rounded-xl border border-red-200 text-red-600 hover:bg-red-50"
+                      className="px-4 py-2 text-sm rounded-xl border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
                     >
-                      Delete
+                      {t.delete}
                     </button>
                   </div>
                 </div>

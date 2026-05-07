@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getApprovedRentals } from "../api/rental";
 import { useAppLang } from "../context/AppLangContext";
+import { useTheme } from "../context/ThemeContext";
 
 const FAV_STORAGE_KEY = "goovoiture-rental-favorites";
 
@@ -660,15 +661,10 @@ function SkeletonCard() {
 export default function Rentals() {
   const { copy } = useAppLang();
   const navigate = useNavigate();
+  const { dark } = useTheme();
 
   const [rentals, setRentals] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [dark, setDark] = useState(() => {
-    const saved = localStorage.getItem("goo-theme") || localStorage.getItem("rentals-theme");
-    if (saved === "dark") return true;
-    if (saved === "light") return false;
-    return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false;
-  });
   const [activeTab, setActiveTab] = useState("all");
   const [locationKey, setLocationKey] = useState(ALL_LOC);
   const [sortKey, setSortKey] = useState("default");
@@ -713,16 +709,6 @@ export default function Rentals() {
   };
 
   useEffect(() => { fetchRentals(); }, []);
-
-  useEffect(() => {
-    const syncDarkFromNav = () => {
-      const s = localStorage.getItem("goo-theme");
-      if (s === "dark" || s === "light") setDark(s === "dark");
-    };
-    window.addEventListener("goovoiture-theme", syncDarkFromNav);
-    syncDarkFromNav();
-    return () => window.removeEventListener("goovoiture-theme", syncDarkFromNav);
-  }, []);
 
   useEffect(() => {
     try {

@@ -1,18 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/axios";
+import { useAppLang } from "../context/AppLangContext";
 
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap');
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg0:#05060f; --bg1:#080c1a; --glass:rgba(255,255,255,0.04);
-  --border:rgba(255,255,255,0.08); --border2:rgba(255,255,255,0.14);
-  --p1:#7c6bff; --p2:#a78bfa; --p3:#38bdf8; --p-glow:rgba(124,107,255,0.35);
-  --ink:#ffffff; --ink2:rgba(255,255,255,0.7); --ink3:rgba(255,255,255,0.4);
-  --ink4:rgba(255,255,255,0.2); --danger:#ff6b6b;
-  --sans:'Inter',sans-serif; --display:'Syne',sans-serif; --mono:'Space Mono',monospace;
-}
 .fp-root { min-height:100vh; background:var(--bg0); display:flex; align-items:center; justify-content:center; font-family:var(--sans); position:relative; overflow:hidden; padding:24px; }
 .fp-bg { position:fixed; inset:0; z-index:0; pointer-events:none; background:radial-gradient(ellipse 80% 70% at 10% 20%,rgba(124,107,255,0.18) 0%,transparent 60%),radial-gradient(ellipse 60% 60% at 90% 80%,rgba(56,189,248,0.12) 0%,transparent 60%),var(--bg0); }
 .fp-orb { position:fixed; z-index:0; pointer-events:none; border-radius:50%; filter:blur(80px); mix-blend-mode:screen; }
@@ -43,6 +36,8 @@ const CSS = `
 `;
 
 export default function ForgotPassword() {
+  const { copy } = useAppLang();
+  const t = copy.forgotPassword;
   const [email,   setEmail]   = useState("");
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState("");
@@ -55,14 +50,14 @@ export default function ForgotPassword() {
       await api.post("/auth/forgot-password", { email });
       setSent(true);
     } catch (err) {
-      setError(err?.response?.data?.message || "Something went wrong. Please try again.");
+      setError(err?.response?.data?.message || t.failed);
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="fp-root">
+    <div className="fp-root gv-auth">
       <style>{CSS}</style>
       <div className="fp-bg" />
       <div className="fp-orb fp-orb1" />
@@ -74,17 +69,16 @@ export default function ForgotPassword() {
           <span className="fp-logo-text">Goo<span>voiture</span></span>
         </Link>
 
-        <h1 className="fp-title">Forgot password?</h1>
+        <h1 className="fp-title">{t.title}</h1>
         <p className="fp-sub">
-          Enter your email address and we'll send you a link to reset your password.
+          {t.sub}
         </p>
 
         {error && <div className="fp-error">⚠ {error}</div>}
 
         {sent ? (
           <div className="fp-success">
-            Check your inbox — if an account with that email exists, a reset link has been sent.
-            The link expires in 1 hour.
+            {t.success}
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
@@ -92,7 +86,7 @@ export default function ForgotPassword() {
               <input
                 type="email"
                 className="fp-input"
-                placeholder="your@email.com"
+                placeholder={t.emailPh}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -101,13 +95,13 @@ export default function ForgotPassword() {
             </div>
             <button type="submit" className="fp-submit" disabled={loading}>
               {loading && <span className="fp-spinner" />}
-              {loading ? "Sending…" : "Send reset link"}
+              {loading ? t.sending : t.send}
             </button>
           </form>
         )}
 
         <Link to="/login" className="fp-back">
-          Back to <span>Sign in</span>
+          {t.backText}<span>{t.backLink}</span>
         </Link>
       </div>
     </div>

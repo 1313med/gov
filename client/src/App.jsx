@@ -46,7 +46,7 @@ export default function App() {
   const showNav = !isHome && !hasSidebar;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-[#05060f] dark:text-gray-100 transition-colors duration-300">
       {showNav && <Navbar />}
 
       <Routes>

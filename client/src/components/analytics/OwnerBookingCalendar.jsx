@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   updateBookingStatus,
   updateBookingDates,
 } from "../../api/booking";
 import { getOwnerBookingsCalendar } from "../../api/rental";
+import { useAppLang } from "../../context/AppLangContext";
 
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
@@ -13,12 +14,13 @@ import parse from "date-fns/parse";
 import startOfWeek from "date-fns/startOfWeek";
 import getDay from "date-fns/getDay";
 import enUS from "date-fns/locale/en-US";
+import fr from "date-fns/locale/fr";
 
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 
 const DragCalendar = withDragAndDrop(Calendar);
-const locales = { "en-US": enUS };
+const locales = { "en-US": enUS, fr };
 const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
 
 const UI_STYLES = `
@@ -152,6 +154,8 @@ const UI_STYLES = `
   .obc-m-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
   .obc-m-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: #e8e8f0; }
   .obc-m-empty { text-align: center; padding: 44px 16px; font-family: 'DM Mono', monospace; font-size: 12px; color: #4a4a62; }
+  .obc-m-date { color: #5a5a72; }
+  html.light .obc-m-date { color: #64748b; }
 
   .obc-modal-bg {
     position: fixed; inset: 0;
@@ -221,6 +225,96 @@ const UI_STYLES = `
     color: #fc6c6c;
   }
   .obc-btn-no:hover { background: rgba(252,108,108,.2); box-shadow: 0 8px 24px rgba(252,108,108,.1); }
+
+  /* ─── LIGHT THEME OVERRIDES ─── */
+  html.light .obc-pill {
+    color: #475569;
+    background: rgba(15,23,42,.04);
+    border-color: rgba(15,23,42,.10);
+  }
+  html.light .obc-count {
+    color: #6d28d9;
+    background: rgba(124,108,252,.10);
+    border-color: rgba(124,108,252,.28);
+  }
+  html.light .obc-leg { color: #64748b; }
+
+  html.light .obc-cal-surface {
+    background: #ffffff;
+    border-color: rgba(15,23,42,.08);
+    box-shadow: inset 0 1px 0 rgba(15,23,42,.03), 0 1px 2px rgba(15,23,42,.04);
+  }
+
+  html.light .obc-tb-btn {
+    background: rgba(15,23,42,.04);
+    border-color: rgba(15,23,42,.10);
+    color: #475569;
+  }
+  html.light .obc-tb-btn:hover {
+    background: rgba(124,108,252,.10);
+    border-color: rgba(124,108,252,.30);
+    color: #1e293b;
+  }
+  html.light .obc-tb-label { color: #0f172a; }
+
+  html.light .obc-tb-view {
+    background: rgba(15,23,42,.03);
+    border-color: rgba(15,23,42,.08);
+    color: #64748b;
+  }
+  html.light .obc-tb-view:hover { border-color: rgba(124,108,252,.28); color: #334155; }
+  html.light .obc-tb-view.on {
+    background: rgba(124,108,252,.14);
+    border-color: rgba(124,108,252,.42);
+    color: #4c1d95;
+  }
+
+  html.light .obc-mobile-strip::-webkit-scrollbar-thumb { background: rgba(15,23,42,.18); }
+  html.light .obc-day-pill {
+    background: #ffffff;
+    border-color: rgba(15,23,42,.10);
+  }
+  html.light .obc-day-pill:hover { border-color: rgba(124,108,252,.30); }
+  html.light .obc-day-pill.sel {
+    background: rgba(124,108,252,.14);
+    border-color: rgba(124,108,252,.45);
+    box-shadow: 0 0 16px rgba(124,108,252,.10);
+  }
+  html.light .obc-day-pill .w { color: #64748b; }
+  html.light .obc-day-pill.sel .w { color: #6d28d9; }
+  html.light .obc-day-pill .n { color: #475569; }
+  html.light .obc-day-pill.sel .n { color: #1e293b; }
+  html.light .obc-day-dot { background: #94a3b8; }
+
+  html.light .obc-m-card {
+    background: #ffffff;
+    border-color: rgba(15,23,42,.10);
+  }
+  html.light .obc-m-card:hover { background: #f8fafc; border-color: rgba(124,108,252,.25); }
+  html.light .obc-m-title { color: #0f172a; }
+  html.light .obc-m-empty { color: #94a3b8; }
+
+  html.light .obc-modal-bg { background: rgba(15,23,42,.45); }
+  html.light .obc-modal {
+    background: linear-gradient(165deg, #ffffff 0%, #f8fafc 45%);
+    border-color: rgba(15,23,42,.10);
+    box-shadow: 0 32px 90px rgba(15,23,42,.20), 0 0 0 1px rgba(124,108,252,.08) inset;
+  }
+  html.light .obc-modal-x {
+    background: rgba(15,23,42,.04);
+    border-color: rgba(15,23,42,.10);
+    color: #64748b;
+  }
+  html.light .obc-modal-x:hover {
+    background: rgba(124,108,252,.10);
+    border-color: rgba(124,108,252,.30);
+    color: #1e293b;
+  }
+  html.light .obc-modal-k { color: #64748b; }
+  html.light .obc-modal-h { color: #0f172a; }
+  html.light .obc-modal-row { border-bottom-color: rgba(15,23,42,.06); }
+  html.light .obc-modal-row .l { color: #64748b; }
+  html.light .obc-modal-row .v { color: #1e293b; }
 `;
 
 const CALENDAR_CSS = `
@@ -391,6 +485,70 @@ const CALENDAR_CSS = `
   .obc-wrap .rbc-addons-dnd-resizable-month-event-anchor {
     background: rgba(255,255,255,.25) !important;
   }
+
+  /* ─── LIGHT THEME OVERRIDES (react-big-calendar) ─── */
+  html.light .obc-wrap .rbc-calendar,
+  html.light .obc-wrap .rbc-month-view,
+  html.light .obc-wrap .rbc-time-view,
+  html.light .obc-wrap .rbc-agenda-view,
+  html.light .obc-wrap .rbc-header,
+  html.light .obc-wrap .rbc-month-row,
+  html.light .obc-wrap .rbc-day-bg,
+  html.light .obc-wrap .rbc-time-content,
+  html.light .obc-wrap .rbc-time-header,
+  html.light .obc-wrap .rbc-time-header-content,
+  html.light .obc-wrap .rbc-time-gutter,
+  html.light .obc-wrap .rbc-timeslot-group,
+  html.light .obc-wrap .rbc-time-slot,
+  html.light .obc-wrap .rbc-agenda-table,
+  html.light .obc-wrap .rbc-agenda-date-cell,
+  html.light .obc-wrap .rbc-agenda-time-cell,
+  html.light .obc-wrap .rbc-agenda-event-cell {
+    color: #475569 !important;
+  }
+  html.light .obc-wrap .rbc-header {
+    color: #475569 !important;
+    border-bottom: 1px solid rgba(15,23,42,.10) !important;
+  }
+  html.light .obc-wrap .rbc-header + .rbc-header {
+    border-left: 1px solid rgba(15,23,42,.07) !important;
+  }
+  html.light .obc-wrap .rbc-day-bg + .rbc-day-bg {
+    border-left: 1px solid rgba(15,23,42,.06) !important;
+  }
+  html.light .obc-wrap .rbc-month-row + .rbc-month-row {
+    border-top: 1px solid rgba(15,23,42,.06) !important;
+  }
+  html.light .obc-wrap .rbc-off-range-bg { background: rgba(15,23,42,.03) !important; }
+  html.light .obc-wrap .rbc-off-range .rbc-button-link { color: #cbd5e1 !important; }
+  html.light .obc-wrap .rbc-today { background: rgba(124,108,252,.08) !important; }
+  html.light .obc-wrap .rbc-button-link { color: #475569 !important; }
+  html.light .obc-wrap .rbc-date-cell.rbc-now .rbc-button-link {
+    color: #6d28d9 !important;
+  }
+  html.light .obc-wrap .rbc-day-bg:hover { background: rgba(124,108,252,.06) !important; }
+  html.light .obc-wrap .rbc-show-more { color: #6d28d9 !important; }
+  html.light .obc-wrap .rbc-time-header.rbc-overflowing {
+    border-right: 1px solid rgba(15,23,42,.08) !important;
+  }
+  html.light .obc-wrap .rbc-timeslot-group {
+    border-bottom: 1px solid rgba(15,23,42,.06) !important;
+  }
+  html.light .obc-wrap .rbc-time-slot { color: #94a3b8 !important; }
+  html.light .obc-wrap .rbc-agenda-view table.rbc-agenda-table tbody > tr > td {
+    border-left: 1px solid rgba(15,23,42,.08) !important;
+  }
+  html.light .obc-wrap .rbc-agenda-view table.rbc-agenda-table tbody > tr {
+    border-bottom: 1px solid rgba(15,23,42,.06) !important;
+  }
+  html.light .obc-wrap .rbc-agenda-view table.rbc-agenda-table thead > tr > th {
+    border-bottom: 1px solid rgba(15,23,42,.10) !important;
+    color: #64748b !important;
+  }
+  html.light .obc-wrap .rbc-agenda-empty { color: #64748b !important; }
+  html.light .obc-wrap .rbc-addons-dnd-resizable-month-event-anchor {
+    background: rgba(15,23,42,.18) !important;
+  }
 `;
 
 const CAR_COLORS = ["#7c6cfc", "#2af5c0", "#f5a623", "#fc6c6c", "#60a5fa", "#a78bfa"];
@@ -404,18 +562,16 @@ function getCarColor(car) {
   return CAR_COLORS[Math.abs(hash % CAR_COLORS.length)];
 }
 
-const STATUS_STYLE = {
-  confirmed: { bg: "rgba(42,245,192,.12)", color: "#2af5c0", border: "rgba(42,245,192,.25)", label: "Confirmed" },
-  pending: { bg: "rgba(245,166,35,.12)", color: "#f5a623", border: "rgba(245,166,35,.25)", label: "Pending" },
-  rejected: { bg: "rgba(252,108,108,.12)", color: "#fc6c6c", border: "rgba(252,108,108,.25)", label: "Rejected" },
-  default: { bg: "rgba(124,108,252,.12)", color: "#7c6cfc", border: "rgba(124,108,252,.25)", label: "Booked" },
-};
-
-function statusStyle(status) {
-  return STATUS_STYLE[status] || STATUS_STYLE.default;
+function buildStatusStyles(tc) {
+  return {
+    confirmed: { bg: "rgba(42,245,192,.12)", color: "#2af5c0", border: "rgba(42,245,192,.25)", label: tc.statusConfirmed },
+    pending:   { bg: "rgba(245,166,35,.12)", color: "#f5a623", border: "rgba(245,166,35,.25)", label: tc.statusPending },
+    rejected:  { bg: "rgba(252,108,108,.12)", color: "#fc6c6c", border: "rgba(252,108,108,.25)", label: tc.statusRejected },
+    default:   { bg: "rgba(124,108,252,.12)", color: "#7c6cfc", border: "rgba(124,108,252,.25)", label: tc.statusBooked },
+  };
 }
 
-function CustomToolbar({ label, onNavigate, onView, view }) {
+function CustomToolbar({ label, onNavigate, onView, view, tc }) {
   return (
     <div className="obc-tb">
       <div className="obc-tb-nav">
@@ -423,7 +579,7 @@ function CustomToolbar({ label, onNavigate, onView, view }) {
           ←
         </button>
         <button type="button" className="obc-tb-btn" onClick={() => onNavigate("TODAY")}>
-          Today
+          {tc.today}
         </button>
         <button type="button" className="obc-tb-btn" onClick={() => onNavigate("NEXT")}>
           →
@@ -431,14 +587,19 @@ function CustomToolbar({ label, onNavigate, onView, view }) {
       </div>
       <span className="obc-tb-label">{label}</span>
       <div className="obc-tb-views">
-        {["month", "week", "day", "agenda"].map((v) => (
+        {[
+          { key: "month", label: tc.viewMonth },
+          { key: "week", label: tc.viewWeek },
+          { key: "day", label: tc.viewDay },
+          { key: "agenda", label: tc.viewAgenda },
+        ].map((v) => (
           <button
-            key={v}
+            key={v.key}
             type="button"
-            className={`obc-tb-view${view === v ? " on" : ""}`}
-            onClick={() => onView(v)}
+            className={`obc-tb-view${view === v.key ? " on" : ""}`}
+            onClick={() => onView(v.key)}
           >
-            {v}
+            {v.label}
           </button>
         ))}
       </div>
@@ -461,6 +622,12 @@ const ICON_CLOSE = (
 const DESKTOP_CAL_HEIGHT = 640;
 
 export default function OwnerBookingCalendar() {
+  const { copy, lang } = useAppLang();
+  const tc = copy.analyticsCommon.calendar;
+  const dateLocale = lang === "fr" ? "fr-FR" : "en-US";
+  const STATUS_STYLE = useMemo(() => buildStatusStyles(tc), [tc]);
+  const statusStyle = (status) => STATUS_STYLE[status] || STATUS_STYLE.default;
+
   const [events, setEvents] = useState([]);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [date, setDate] = useState(new Date());
@@ -542,22 +709,22 @@ export default function OwnerBookingCalendar() {
           <div className="obc-meta-left">
             <span className="obc-pill">
               {ICON_GRIP}
-              Drag to reschedule
+              {tc.dragHint}
             </span>
-            <span className="obc-count">{events.length} booking{events.length !== 1 ? "s" : ""}</span>
+            <span className="obc-count">{events.length} {events.length !== 1 ? tc.bookingMany : tc.bookingOne}</span>
           </div>
           <div className="obc-legend">
             <span className="obc-leg">
               <span className="obc-leg-dot" style={{ color: "#2af5c0", background: "#2af5c0" }} />
-              Confirmed
+              {tc.statusConfirmed}
             </span>
             <span className="obc-leg">
               <span className="obc-leg-dot" style={{ color: "#f5a623", background: "#f5a623" }} />
-              Pending
+              {tc.statusPending}
             </span>
             <span className="obc-leg">
               <span className="obc-leg-dot" style={{ color: "#fc6c6c", background: "#fc6c6c" }} />
-              Rejected
+              {tc.statusRejected}
             </span>
           </div>
         </div>
@@ -582,7 +749,8 @@ export default function OwnerBookingCalendar() {
                   onEventDrop={moveEvent}
                   onEventResize={resizeEvent}
                   resizable
-                  components={{ toolbar: (props) => <CustomToolbar {...props} view={view} /> }}
+                  culture={lang === "fr" ? "fr" : "en-US"}
+                  components={{ toolbar: (props) => <CustomToolbar {...props} view={view} tc={tc} /> }}
                 />
               </div>
             </div>
@@ -610,7 +778,7 @@ export default function OwnerBookingCalendar() {
                     className={`obc-day-pill${isSelected ? " sel" : ""}`}
                     onClick={() => setDate(d)}
                   >
-                    <span className="w">{d.toLocaleDateString("en", { weekday: "short" })}</span>
+                    <span className="w">{d.toLocaleDateString(dateLocale, { weekday: "short" })}</span>
                     <span className="n">{d.getDate()}</span>
                     {hasEvents ? <span className="obc-day-dot" /> : <span style={{ height: 10 }} />}
                   </button>
@@ -656,20 +824,20 @@ export default function OwnerBookingCalendar() {
                       </span>
                     </div>
                     <p
+                      className="obc-m-date"
                       style={{
                         fontFamily: "'DM Mono',monospace",
                         fontSize: 11,
-                        color: "#5a5a72",
                         margin: "8px 0 0",
                       }}
                     >
-                      {new Date(event.start).toLocaleDateString()} → {new Date(event.end).toLocaleDateString()}
+                      {new Date(event.start).toLocaleDateString(dateLocale)} → {new Date(event.end).toLocaleDateString(dateLocale)}
                     </p>
                   </div>
                 );
               })}
 
-              {dayEvents.length === 0 && <div className="obc-m-empty">No bookings this day</div>}
+              {dayEvents.length === 0 && <div className="obc-m-empty">{tc.none}</div>}
             </div>
           </div>
         )}
@@ -682,23 +850,23 @@ export default function OwnerBookingCalendar() {
           role="presentation"
         >
           <div className="obc-modal" role="dialog" aria-modal="true" aria-labelledby="obc-modal-title">
-            <button type="button" className="obc-modal-x" onClick={() => setSelectedBooking(null)} aria-label="Close">
+            <button type="button" className="obc-modal-x" onClick={() => setSelectedBooking(null)} aria-label={tc.close}>
               {ICON_CLOSE}
             </button>
 
-            <p className="obc-modal-k">Booking details</p>
+            <p className="obc-modal-k">{tc.modalTitle}</p>
             <h2 id="obc-modal-title" className="obc-modal-h">
               {selectedBooking.rentalId?.title}
             </h2>
 
             {[
-              { label: "Vehicle", value: selectedBooking.rentalId?.title },
+              { label: tc.vehicle, value: selectedBooking.rentalId?.title },
               {
-                label: "Dates",
-                value: `${new Date(selectedBooking.startDate).toDateString()} → ${new Date(selectedBooking.endDate).toDateString()}`,
+                label: tc.dates,
+                value: `${new Date(selectedBooking.startDate).toLocaleDateString(dateLocale)} → ${new Date(selectedBooking.endDate).toLocaleDateString(dateLocale)}`,
               },
-              { label: "Customer", value: selectedBooking.customerId?.name },
-              { label: "Phone", value: selectedBooking.customerId?.phone },
+              { label: tc.customer, value: selectedBooking.customerId?.name },
+              { label: tc.phone, value: selectedBooking.customerId?.phone },
             ].map(({ label, value }) => (
               <div key={label} className="obc-modal-row">
                 <span className="l">{label}</span>
@@ -708,7 +876,7 @@ export default function OwnerBookingCalendar() {
 
             <div className="obc-modal-st">
               <span className="obc-modal-k" style={{ margin: 0 }}>
-                Status
+                {tc.status}
               </span>
               {(() => {
                 const ss = statusStyle(selectedBooking.status);
@@ -735,10 +903,10 @@ export default function OwnerBookingCalendar() {
             {selectedBooking.status === "pending" && (
               <div className="obc-modal-actions">
                 <button type="button" className="obc-btn obc-btn-ok" onClick={() => updateStatus(selectedBooking._id, "confirmed")}>
-                  Accept
+                  {tc.accept}
                 </button>
                 <button type="button" className="obc-btn obc-btn-no" onClick={() => updateStatus(selectedBooking._id, "rejected")}>
-                  Reject
+                  {tc.reject}
                 </button>
               </div>
             )}

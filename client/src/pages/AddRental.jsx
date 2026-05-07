@@ -2,8 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/axios";
 import OwnerLayout from "../components/owner/OwnerLayout";
+import { useAppLang } from "../context/AppLangContext";
 
-const FEATURES = ["Air conditioning", "GPS", "Bluetooth", "Backup camera", "Sunroof", "Leather seats", "Heated seats", "USB port", "Cruise control", "Parking sensors"];
+const FEATURE_KEYS = ["Air conditioning", "GPS", "Bluetooth", "Backup camera", "Sunroof", "Leather seats", "Heated seats", "USB port", "Cruise control", "Parking sensors"];
+const FUEL_KEYS = ["Diesel", "Petrol", "Hybrid", "Electric"];
+const GEARBOX_KEYS = ["Manual", "Automatic"];
 
 const S = `
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Mono:wght@400;500&display=swap');
@@ -57,13 +60,13 @@ function Field({ label, name, type = "text", value, onChange, placeholder, requi
     </div>
   );
 }
-function SelectField({ label, name, value, onChange, options }) {
+function SelectField({ label, name, value, onChange, options, optionLabels, selectPrefix }) {
   return (
     <div className="ar-field">
       <label className="ar-label">{label}</label>
       <select className="ar-select" name={name} value={value} onChange={onChange}>
-        <option value="">Select {label}</option>
-        {options.map((o) => <option key={o} value={o}>{o}</option>)}
+        <option value="">{selectPrefix} {label}</option>
+        {options.map((o) => <option key={o} value={o}>{optionLabels?.[o] || o}</option>)}
       </select>
     </div>
   );
@@ -71,6 +74,8 @@ function SelectField({ label, name, value, onChange, options }) {
 
 export default function AddRental() {
   const navigate = useNavigate();
+  const { copy } = useAppLang();
+  const t = copy.addRental;
 
   const [form, setForm] = useState({
     title: "", description: "", pricePerDay: "", city: "",
@@ -104,7 +109,7 @@ export default function AddRental() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    if (images.length === 0) { setError("Please upload at least one photo"); return; }
+    if (images.length === 0) { setError(t.needPhoto); return; }
     setLoading(true);
     try {
       await api.post("/rental", {
@@ -119,7 +124,7 @@ export default function AddRental() {
       });
       navigate("/my-rentals");
     } catch (err) {
-      setError(err?.response?.data?.message || "Failed to create rental");
+      setError(err?.response?.data?.message || t.failed);
     } finally { setLoading(false); }
   };
 
@@ -128,9 +133,9 @@ export default function AddRental() {
       <style>{S}</style>
       <div className="ar">
         <div className="ar-header ar-fade">
-          <p className="ar-eyebrow">Owner Panel</p>
-          <h1 className="ar-title">Add Rental Car</h1>
-          <p className="ar-sub">Fill in the details — your listing will be reviewed before going live</p>
+          <p className="ar-eyebrow">{t.eyebrow}</p>
+          <h1 className="ar-title">{t.title}</h1>
+          <p className="ar-sub">{t.sub}</p>
         </div>
 
         {error && (
@@ -143,49 +148,49 @@ export default function AddRental() {
 
           {/* Listing Info */}
           <div className="ar-section">
-            <div className="ar-section-label">Listing Info</div>
+            <div className="ar-section-label">{t.sections.listingInfo}</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <Field label="Title" name="title" value={form.title} onChange={handleChange} placeholder="e.g. BMW 3 Series 2021" />
+              <Field label={t.fields.titleLabel} name="title" value={form.title} onChange={handleChange} placeholder={t.fields.titlePh} />
               <div className="ar-field">
-                <label className="ar-label">Description</label>
-                <textarea className="ar-textarea" name="description" value={form.description} onChange={handleChange} placeholder="Describe the car, condition, extras…" rows={4} />
+                <label className="ar-label">{t.fields.descriptionLabel}</label>
+                <textarea className="ar-textarea" name="description" value={form.description} onChange={handleChange} placeholder={t.fields.descriptionPh} rows={4} />
               </div>
               <div className="ar-grid-2">
-                <Field label="Price per Day (MAD)" name="pricePerDay" type="number" value={form.pricePerDay} onChange={handleChange} placeholder="e.g. 350" />
-                <Field label="City" name="city" value={form.city} onChange={handleChange} placeholder="e.g. Casablanca" />
+                <Field label={t.fields.pricePerDay} name="pricePerDay" type="number" value={form.pricePerDay} onChange={handleChange} placeholder={t.fields.pricePerDayPh} />
+                <Field label={t.fields.city} name="city" value={form.city} onChange={handleChange} placeholder={t.fields.cityPh} />
               </div>
             </div>
           </div>
 
           {/* Vehicle Specs */}
           <div className="ar-section">
-            <div className="ar-section-label">Vehicle Specs</div>
+            <div className="ar-section-label">{t.sections.vehicleSpecs}</div>
             <div className="ar-grid-2" style={{ gap: 14 }}>
-              <Field label="Brand" name="brand" value={form.brand} onChange={handleChange} placeholder="e.g. BMW" />
-              <Field label="Model" name="model" value={form.model} onChange={handleChange} placeholder="e.g. 320i" />
-              <Field label="Year" name="year" type="number" value={form.year} onChange={handleChange} placeholder="e.g. 2021" />
-              <Field label="Color" name="color" value={form.color} onChange={handleChange} placeholder="e.g. Black" required={false} />
-              <Field label="Doors" name="doors" type="number" value={form.doors} onChange={handleChange} placeholder="e.g. 4" required={false} />
-              <Field label="Seats" name="seats" type="number" value={form.seats} onChange={handleChange} placeholder="e.g. 5" required={false} />
-              <SelectField label="Fuel" name="fuel" value={form.fuel} onChange={handleChange} options={["Diesel", "Petrol", "Hybrid", "Electric"]} />
-              <SelectField label="Gearbox" name="gearbox" value={form.gearbox} onChange={handleChange} options={["Manual", "Automatic"]} />
+              <Field label={t.fields.brand} name="brand" value={form.brand} onChange={handleChange} placeholder={t.fields.brandPh} />
+              <Field label={t.fields.model} name="model" value={form.model} onChange={handleChange} placeholder={t.fields.modelPh} />
+              <Field label={t.fields.year} name="year" type="number" value={form.year} onChange={handleChange} placeholder={t.fields.yearPh} />
+              <Field label={t.fields.color} name="color" value={form.color} onChange={handleChange} placeholder={t.fields.colorPh} required={false} />
+              <Field label={t.fields.doors} name="doors" type="number" value={form.doors} onChange={handleChange} placeholder={t.fields.doorsPh} required={false} />
+              <Field label={t.fields.seats} name="seats" type="number" value={form.seats} onChange={handleChange} placeholder={t.fields.seatsPh} required={false} />
+              <SelectField label={t.fields.fuel} name="fuel" value={form.fuel} onChange={handleChange} options={FUEL_KEYS} optionLabels={t.fuelOptions} selectPrefix={t.selectPrefix} />
+              <SelectField label={t.fields.gearbox} name="gearbox" value={form.gearbox} onChange={handleChange} options={GEARBOX_KEYS} optionLabels={t.gearboxOptions} selectPrefix={t.selectPrefix} />
             </div>
           </div>
 
           {/* Rental Terms */}
           <div className="ar-section">
-            <div className="ar-section-label">Rental Terms</div>
+            <div className="ar-section-label">{t.sections.rentalTerms}</div>
             <div className="ar-grid-2" style={{ gap: 14 }}>
-              <Field label="Min Rental Days" name="minRentalDays" type="number" value={form.minRentalDays} onChange={handleChange} placeholder="e.g. 1" required={false} />
-              <Field label="Fuel Policy" name="fuelPolicy" value={form.fuelPolicy} onChange={handleChange} placeholder="e.g. Full-to-Full" required={false} />
+              <Field label={t.fields.minRentalDays} name="minRentalDays" type="number" value={form.minRentalDays} onChange={handleChange} placeholder={t.fields.minRentalDaysPh} required={false} />
+              <Field label={t.fields.fuelPolicy} name="fuelPolicy" value={form.fuelPolicy} onChange={handleChange} placeholder={t.fields.fuelPolicyPh} required={false} />
             </div>
             <div style={{ marginTop: 14 }}>
               <div className="ar-field">
-                <label className="ar-label">Cancellation Policy</label>
+                <label className="ar-label">{t.fields.cancelPolicy}</label>
                 <select className="ar-select" name="cancelPolicy" value={form.cancelPolicy} onChange={handleChange}>
-                  <option value="flexible">Flexible — free cancellation up to 24h before pickup</option>
-                  <option value="moderate">Moderate — 50% penalty if cancelled within 48h of pickup</option>
-                  <option value="strict">Strict — no refund if cancelled within 72h of pickup</option>
+                  <option value="flexible">{t.cancelOptions.flexible}</option>
+                  <option value="moderate">{t.cancelOptions.moderate}</option>
+                  <option value="strict">{t.cancelOptions.strict}</option>
                 </select>
               </div>
             </div>
@@ -193,12 +198,12 @@ export default function AddRental() {
 
           {/* Features */}
           <div className="ar-section">
-            <div className="ar-section-label">Features & Extras</div>
+            <div className="ar-section-label">{t.sections.featuresExtras}</div>
             <div className="ar-features-grid">
-              {FEATURES.map((f) => (
+              {FEATURE_KEYS.map((f) => (
                 <label key={f} className="ar-feature-check">
                   <input type="checkbox" checked={features.includes(f)} onChange={() => toggleFeature(f)} />
-                  {f}
+                  {t.features[f] || f}
                 </label>
               ))}
             </div>
@@ -206,10 +211,10 @@ export default function AddRental() {
 
           {/* Photos */}
           <div className="ar-section" style={{ marginBottom: 24 }}>
-            <div className="ar-section-label">Photos</div>
+            <div className="ar-section-label">{t.sections.photos}</div>
             <div className="ar-upload-zone" onClick={openCloudinaryWidget} style={{ cursor: "pointer" }}>
               <div style={{ fontSize: 28, marginBottom: 8 }}>📷</div>
-              <p className="ar-upload-text"><strong>Click to upload</strong> — multiple images allowed</p>
+              <p className="ar-upload-text"><strong>{t.upload.click}</strong> {t.upload.multiple}</p>
             </div>
             {images.length > 0 && (
               <div className="ar-previews">
@@ -226,10 +231,10 @@ export default function AddRental() {
           <div className="ar-footer">
             <button type="submit" className="ar-submit" disabled={loading || uploading}>
               {loading
-                ? <><div className="ar-spinner" style={{ borderTopColor: "#fff" }} /> Submitting…</>
-                : "Submit for Review →"}
+                ? <><div className="ar-spinner" style={{ borderTopColor: "#fff" }} /> {t.submitting}</>
+                : t.submit}
             </button>
-            <span className="ar-submit-note">Your listing will be reviewed before going live</span>
+            <span className="ar-submit-note">{t.reviewNote}</span>
           </div>
         </form>
       </div>

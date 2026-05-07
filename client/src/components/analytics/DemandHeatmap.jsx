@@ -1,3 +1,5 @@
+import { useAppLang } from "../../context/AppLangContext";
+
 const STYLES = `
   .dh-wrap {
     width: 100%;
@@ -123,6 +125,26 @@ const STYLES = `
   .dh-cell:hover .dh-tip {
     display: block;
   }
+
+  .dh-bar {
+    width: 100%;
+    height: 3px;
+    background: rgba(255,255,255,.05);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  /* ─── LIGHT THEME OVERRIDES ─── */
+  html.light .dh-legend { color: #64748b; }
+  html.light .dh-peak { color: #94a3b8; }
+  html.light .dh-day { color: #64748b; }
+  html.light .dh-cell .dh-tip {
+    background: #ffffff;
+    border-color: rgba(15,23,42,.12);
+    color: #0f172a;
+    box-shadow: 0 8px 22px rgba(15,23,42,.15);
+  }
+  html.light .dh-bar { background: rgba(15,23,42,.08); }
 `;
 
 /* ─── Color scale — maps demand → dark theme accent shades ───────────── */
@@ -169,14 +191,16 @@ const LEGEND = [
 ];
 
 export default function DemandHeatmap({ data }) {
+  const { copy } = useAppLang();
+  const th = copy.analyticsCommon.heatmap;
 
   if (!data?.length) {
     return (
       <div style={{
         padding: "40px 0", textAlign: "center",
-        fontFamily: "'DM Mono',monospace", fontSize: 12, color: "#5a5a72",
+        fontFamily: "'DM Mono',monospace", fontSize: 12, color: "var(--muted, #5a5a72)",
       }}>
-        No demand data available
+        {th.empty}
       </div>
     );
   }
@@ -191,7 +215,7 @@ export default function DemandHeatmap({ data }) {
 
         {/* ── Legend ── */}
         <div className="dh-legend">
-          <span>Less</span>
+          <span>{th.less}</span>
           <div className="dh-legend-track">
             {LEGEND.map((l, i) => (
               <div
@@ -206,11 +230,11 @@ export default function DemandHeatmap({ data }) {
               />
             ))}
           </div>
-          <span>More</span>
+          <span>{th.more}</span>
 
           {/* Max indicator */}
           <span className="dh-peak">
-            peak: <span style={{ color: "#2af5c0" }}>{max}</span> bookings
+            {th.peak} <span style={{ color: "#2af5c0" }}>{max}</span> {max !== 1 ? th.bookingMany : th.bookingOne}
           </span>
         </div>
 
@@ -236,18 +260,12 @@ export default function DemandHeatmap({ data }) {
 
                   {/* Hover tooltip */}
                   <div className="dh-tip">
-                    {d.day} · <strong style={{ color: cs.color }}>{d.demand}</strong> booking{d.demand !== 1 ? "s" : ""}
+                    {d.day} · <strong style={{ color: cs.color }}>{d.demand}</strong> {d.demand !== 1 ? th.bookingMany : th.bookingOne}
                   </div>
                 </div>
 
                 {/* Bar indicator at bottom of cell */}
-                <div style={{
-                  width: "100%",
-                  height: 3,
-                  background: "rgba(255,255,255,.05)",
-                  borderRadius: 99,
-                  overflow: "hidden",
-                }}>
+                <div className="dh-bar">
                   <div style={{
                     width: `${pct}%`,
                     height: "100%",

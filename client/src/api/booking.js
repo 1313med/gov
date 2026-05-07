@@ -18,3 +18,6 @@ export const markBookingPaid = (id) =>
 
 export const updateBookingMedia = (id, data) =>
   api.put(`/bookings/${id}/media`, data);
+
+export const confirmReturn = (id) =>
+  api.put(`/bookings/${id}/confirm-return`);

@@ -41,6 +41,10 @@ const bookingSchema = new mongoose.Schema(
       },
     ],
 
+    // Return flow
+    customerConfirmedReturn:  { type: Boolean, default: false },
+    returnNotificationSent:   { type: Boolean, default: false },
+
     // Soft delete
     deletedAt: { type: Date, default: null },
   },

@@ -1,25 +1,30 @@
 import { useEffect, useState } from "react";
 import jsPDF from "jspdf";
 import { getOwnerBookings, updateBookingStatus, markBookingPaid, updateBookingMedia } from "../api/booking";
+import { submitCustomerFeedback, getFeedbackForBooking } from "../api/customerFeedback";
 import OwnerLayout from "../components/owner/OwnerLayout";
+import { useAppLang } from "../context/AppLangContext";
 import {
   ChevronDown, ChevronUp, ImagePlus, Upload, X,
   FileDown, FileSpreadsheet, FileText, Search,
   CheckCircle2, XCircle, Clock, AlertCircle, Star,
 } from "lucide-react";
 
-/* ─── helpers ─────────────────────────────────────────────────────────── */
-function fmt(d) {
-  return new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+/* ─── helpers (locale-aware via lang param) ──────────────────────────── */
+function fmt(d, lang = "en") {
+  const loc = lang === "fr" ? "fr-FR" : "en-GB";
+  return new Date(d).toLocaleDateString(loc, { day: "2-digit", month: "short", year: "numeric" });
 }
-function fmtFull(d) {
-  return new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
+function fmtFull(d, lang = "en") {
+  const loc = lang === "fr" ? "fr-FR" : "en-GB";
+  return new Date(d).toLocaleDateString(loc, { day: "2-digit", month: "long", year: "numeric" });
 }
 function daysDiff(a, b) {
   return Math.max(1, Math.ceil((new Date(b) - new Date(a)) / 86400000));
 }
-function mad(n) {
-  return n != null ? `${Number(n).toLocaleString()} MAD` : "—";
+function mad(n, lang = "en") {
+  const loc = lang === "fr" ? "fr-FR" : "en-US";
+  return n != null ? `${Number(n).toLocaleString(loc)} MAD` : "—";
 }
 
 /* ─── CSV export ──────────────────────────────────────────────────────── */
@@ -474,6 +479,108 @@ const STYLES = `
   .obl-media-save-btn:disabled { opacity:.45; cursor:not-allowed; }
   .obl-media-saved { font-size:11px; color:#4ade80; margin-top:8px; grid-column:1/-1; text-align:center; }
 
+  /* ── Customer feedback modal ── */
+  .fbk-overlay {
+    position:fixed;inset:0;z-index:900;
+    background:rgba(0,0,0,.72);
+    backdrop-filter:blur(6px);
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;
+  }
+  .fbk-modal {
+    background:#111118;
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:20px;
+    width:100%;max-width:480px;
+    max-height:90vh;overflow-y:auto;
+    box-shadow:0 24px 64px rgba(0,0,0,.6);
+    animation:fbk-in .2s ease;
+  }
+  @keyframes fbk-in{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+  .fbk-head {
+    padding:22px 24px 16px;
+    border-bottom:1px solid rgba(255,255,255,.06);
+    display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  }
+  .fbk-title { font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#e8e8f0;margin:0 0 3px; }
+  .fbk-sub   { font-size:11px;color:#3a3a52;margin:0; }
+  .fbk-close {
+    background:none;border:none;cursor:pointer;color:#3a3a52;
+    padding:4px;border-radius:6px;transition:color .15s;flex-shrink:0;
+  }
+  .fbk-close:hover{color:#e8e8f0;}
+  .fbk-body { padding:20px 24px; display:flex;flex-direction:column;gap:16px; }
+
+  /* Overall big toggle */
+  .fbk-overall { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
+  .fbk-big-btn {
+    padding:14px 10px;border-radius:14px;border:1.5px solid rgba(255,255,255,.08);
+    background:rgba(255,255,255,.03);cursor:pointer;
+    font-family:'Syne',sans-serif;font-size:15px;font-weight:800;
+    color:#5a5a72;transition:all .2s;text-align:center;
+  }
+  .fbk-big-btn.good.active { background:rgba(74,222,128,.12);border-color:rgba(74,222,128,.4);color:#4ade80; }
+  .fbk-big-btn.bad.active  { background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.4);color:#f87171; }
+  .fbk-big-btn:not(.active):hover { border-color:rgba(255,255,255,.18);color:#c8c8d8; }
+  .fbk-big-icon { font-size:22px;display:block;margin-bottom:4px; }
+
+  /* Yes/No question row */
+  .fbk-q { display:flex;align-items:center;justify-content:space-between;gap:12px; }
+  .fbk-q-label { font-size:13px;color:#c8c8d8;flex:1; }
+  .fbk-q-label small { display:block;font-size:10px;color:#3a3a52;margin-top:2px; }
+  .fbk-toggle-row { display:flex;gap:6px;flex-shrink:0; }
+  .fbk-tog {
+    padding:6px 16px;border-radius:8px;border:1px solid rgba(255,255,255,.08);
+    background:rgba(255,255,255,.03);cursor:pointer;
+    font-family:'DM Mono',monospace;font-size:11px;font-weight:500;
+    color:#5a5a72;transition:all .18s;white-space:nowrap;
+  }
+  .fbk-tog:hover:not(.active){ border-color:rgba(255,255,255,.18);color:#c8c8d8; }
+  .fbk-tog.yes.active { background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.35);color:#4ade80; }
+  .fbk-tog.no.active  { background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.35);color:#f87171; }
+
+  .fbk-divider { height:1px;background:rgba(255,255,255,.05); }
+
+  .fbk-note-label { font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#3a3a52;margin:0 0 8px;display:block; }
+  .fbk-note {
+    width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+    border-radius:10px;color:#e8e8f0;font-family:'DM Mono',monospace;
+    font-size:12px;padding:10px 13px;box-sizing:border-box;
+    outline:none;resize:vertical;min-height:72px;transition:border-color .2s;
+  }
+  .fbk-note:focus{ border-color:#7c6cfc; }
+  .fbk-note::placeholder{ color:#3a3a52; }
+
+  .fbk-footer { padding:16px 24px 22px;display:flex;gap:10px;border-top:1px solid rgba(255,255,255,.06); }
+  .fbk-submit {
+    flex:1;padding:12px;border:none;border-radius:12px;
+    background:linear-gradient(135deg,#7c6cfc,#9b8cff);
+    color:#fff;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;
+    cursor:pointer;transition:opacity .2s;
+  }
+  .fbk-submit:disabled{ opacity:.4;cursor:not-allowed; }
+  .fbk-cancel {
+    padding:12px 20px;border-radius:12px;border:1px solid rgba(255,255,255,.1);
+    background:none;color:#5a5a72;font-family:'DM Mono',monospace;font-size:12px;
+    cursor:pointer;transition:all .2s;
+  }
+  .fbk-cancel:hover{ border-color:rgba(255,255,255,.2);color:#c8c8d8; }
+  .fbk-saved-msg{ font-size:12px;color:#4ade80;margin-top:4px;text-align:center; }
+
+  /* Rate button & badge in table */
+  .obl-rate-btn {
+    padding:5px 11px;border-radius:8px;font-size:10px;cursor:pointer;
+    border:1px solid rgba(124,108,252,.25);background:rgba(124,108,252,.08);
+    color:#a78bfa;font-family:'DM Mono',monospace;transition:all .2s;white-space:nowrap;
+  }
+  .obl-rate-btn:hover{ background:rgba(124,108,252,.18); }
+  .obl-rated-badge {
+    display:inline-flex;align-items:center;gap:4px;
+    padding:4px 9px;border-radius:8px;font-size:10px;
+    border:1px solid rgba(74,222,128,.25);background:rgba(74,222,128,.08);
+    color:#4ade80;font-family:'DM Mono',monospace;white-space:nowrap;
+  }
+
   .obl-empty { text-align:center; padding:64px 20px; color:#3a3a52; font-size:13px; }
   .obl-loading-spin { width:36px; height:36px; border-radius:50%; border:2px solid rgba(124,108,252,.2); border-top-color:#7c6cfc; animation:obl-spin .85s linear infinite; margin:0 auto 14px; }
   @keyframes obl-spin { to { transform:rotate(360deg); } }
@@ -497,6 +604,8 @@ const PAGE_SIZE = 20;
 
 /* ─── media panel ─────────────────────────────────────────────────────── */
 function BookingMediaPanel({ booking, onSaved }) {
+  const { copy } = useAppLang();
+  const tm = copy.ownerBookingsList.media;
   const [photoTab, setPhotoTab] = useState("before");
   const [before, setBefore]   = useState(booking.conditionPhotos?.before || []);
   const [after, setAfter]     = useState(booking.conditionPhotos?.after  || []);
@@ -521,7 +630,7 @@ function BookingMediaPanel({ booking, onSaved }) {
 
   function openDocUpload() {
     if (!window.cloudinary) return;
-    if (!docName.trim()) { alert("Enter a document name first"); return; }
+    if (!docName.trim()) { alert(tm.docNameRequired); return; }
     window.cloudinary.openUploadWidget(
       { cloudName: "daqihsmib", uploadPreset: "goovoiture", sources: ["local"], multiple: false, resourceType: "auto", clientAllowedFormats: ["pdf", "jpg", "jpeg", "png", "webp"] },
       (error, result) => {
@@ -548,7 +657,7 @@ function BookingMediaPanel({ booking, onSaved }) {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
       onSaved(data);
-    } catch { alert("Failed to save"); }
+    } catch { alert(tm.saveFail); }
     finally { setSaving(false); }
   }
 
@@ -557,13 +666,13 @@ function BookingMediaPanel({ booking, onSaved }) {
   return (
     <div className="obl-detail-panel">
       <div>
-        <p className="obl-panel-title">Condition Photos</p>
+        <p className="obl-panel-title">{tm.conditionPhotos}</p>
         <div className="obl-photo-tabs">
           <button className={`obl-ptab${photoTab === "before" ? " before" : ""}`} onClick={() => setPhotoTab("before")}>
-            Before ({before.length})
+            {tm.before} ({before.length})
           </button>
           <button className={`obl-ptab${photoTab === "after" ? " after" : ""}`} onClick={() => setPhotoTab("after")}>
-            After ({after.length})
+            {tm.after} ({after.length})
           </button>
         </div>
         <div className="obl-photo-grid">
@@ -577,7 +686,7 @@ function BookingMediaPanel({ booking, onSaved }) {
         </div>
       </div>
       <div>
-        <p className="obl-panel-title">Legal Documents</p>
+        <p className="obl-panel-title">{tm.legalDocs}</p>
         {docs.length > 0 && (
           <div className="obl-docs-list">
             {docs.map((doc, i) => (
@@ -587,7 +696,7 @@ function BookingMediaPanel({ booking, onSaved }) {
                   <p className="obl-doc-name">{doc.name}</p>
                   <span className="obl-doc-type">{doc.fileType}</span>
                 </div>
-                <a href={doc.url} target="_blank" rel="noopener noreferrer" className="obl-doc-view">View</a>
+                <a href={doc.url} target="_blank" rel="noopener noreferrer" className="obl-doc-view">{tm.view}</a>
                 <button className="obl-doc-rm" onClick={() => removeDoc(i)}><X size={12} /></button>
               </div>
             ))}
@@ -595,10 +704,10 @@ function BookingMediaPanel({ booking, onSaved }) {
         )}
         <div className="obl-doc-upload-row">
           <div>
-            <label className="obl-panel-label">Document name</label>
+            <label className="obl-panel-label">{tm.docName}</label>
             <input
               className="obl-panel-input"
-              placeholder="e.g. Rental Contract"
+              placeholder={tm.docNamePh}
               value={docName}
               onChange={(e) => setDocName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && openDocUpload()}
@@ -610,20 +719,180 @@ function BookingMediaPanel({ booking, onSaved }) {
             onClick={openDocUpload}
             disabled={!docName.trim()}
           >
-            <Upload size={11} style={{ display: "inline", marginRight: 4 }} />Upload
+            <Upload size={11} style={{ display: "inline", marginRight: 4 }} />{tm.upload}
           </button>
         </div>
       </div>
       <button className="obl-media-save-btn" onClick={handleSave} disabled={saving}>
-        {saving ? "Saving…" : "Save photos & documents"}
+        {saving ? tm.saving : tm.save}
       </button>
-      {saved && <p className="obl-media-saved">✓ Saved successfully</p>}
+      {saved && <p className="obl-media-saved">{tm.saved}</p>}
+    </div>
+  );
+}
+
+/* ─── customer feedback modal ────────────────────────────────────────── */
+function buildQuestions(tq) {
+  return [
+    { key: "hadDamage",        label: tq.hadDamage,        hint: tq.hadDamageHint,        yesLabel: tq.yes,    noLabel: tq.no,    yesValue: true,  noValue: false, yesClass: "no",  noClass: "yes" },
+    { key: "returnedOnTime",   label: tq.returnedOnTime,   hint: null,                    yesLabel: tq.onTime, noLabel: tq.late,  yesValue: true,  noValue: false, yesClass: "yes", noClass: "no"  },
+    { key: "carReturnedClean", label: tq.carReturnedClean, hint: tq.carReturnedCleanHint, yesLabel: tq.clean,  noLabel: tq.dirty, yesValue: true,  noValue: false, yesClass: "yes", noClass: "no"  },
+    { key: "wasRespectful",    label: tq.wasRespectful,    hint: tq.wasRespectfulHint,    yesLabel: tq.yes,    noLabel: tq.no,    yesValue: true,  noValue: false, yesClass: "yes", noClass: "no"  },
+    { key: "wouldRentAgain",   label: tq.wouldRentAgain,   hint: null,                    yesLabel: tq.yes,    noLabel: tq.no,    yesValue: true,  noValue: false, yesClass: "yes", noClass: "no"  },
+  ];
+}
+
+function CustomerFeedbackModal({ booking, onSaved, onClose }) {
+  const { copy, lang } = useAppLang();
+  const tf = copy.ownerBookingsList.feedback;
+  const QUESTIONS = buildQuestions(tf.questions);
+  const [overall, setOverall] = useState(null);
+  const [answers, setAnswers] = useState({ hadDamage: null, returnedOnTime: null, carReturnedClean: null, wasRespectful: null, wouldRentAgain: null });
+  const [note,    setNote]    = useState("");
+  const [saving,  setSaving]  = useState(false);
+  const [saved,   setSaved]   = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getFeedbackForBooking(booking._id)
+      .then(({ data }) => {
+        if (data) {
+          setOverall(data.overall);
+          setAnswers({
+            hadDamage:        data.hadDamage,
+            returnedOnTime:   data.returnedOnTime,
+            carReturnedClean: data.carReturnedClean,
+            wasRespectful:    data.wasRespectful,
+            wouldRentAgain:   data.wouldRentAgain,
+          });
+          setNote(data.note || "");
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [booking._id]);
+
+  const allFilled = overall !== null && Object.values(answers).every((v) => v !== null);
+
+  async function handleSubmit() {
+    if (!allFilled) return;
+    setSaving(true);
+    try {
+      await submitCustomerFeedback({ bookingId: booking._id, overall, ...answers, note });
+      setSaved(true);
+      setTimeout(() => { onSaved(booking._id); }, 900);
+    } catch (e) {
+      alert(e?.response?.data?.message || tf.saveFail);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fbk-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="fbk-modal">
+        {/* header */}
+        <div className="fbk-head">
+          <div>
+            <p className="fbk-title">{tf.title}</p>
+            <p className="fbk-sub">
+              {booking.customerId?.name || tf.fallbackName} · {fmt(booking.startDate, lang)} → {fmt(booking.endDate, lang)}
+            </p>
+          </div>
+          <button className="fbk-close" onClick={onClose}>
+            <X size={18} />
+          </button>
+        </div>
+
+        {loading ? (
+          <div style={{ padding: "40px", textAlign: "center" }}>
+            <div className="obl-loading-spin" style={{ margin: "0 auto" }} />
+          </div>
+        ) : (
+          <>
+            <div className="fbk-body">
+              {/* Overall rating */}
+              <div>
+                <span className="fbk-note-label" style={{ marginBottom: 10 }}>{tf.overall}</span>
+                <div className="fbk-overall">
+                  <button
+                    className={`fbk-big-btn good${overall === "good" ? " active" : ""}`}
+                    onClick={() => setOverall("good")}
+                  >
+                    <span className="fbk-big-icon">👍</span>
+                    {tf.good}
+                  </button>
+                  <button
+                    className={`fbk-big-btn bad${overall === "bad" ? " active" : ""}`}
+                    onClick={() => setOverall("bad")}
+                  >
+                    <span className="fbk-big-icon">👎</span>
+                    {tf.bad}
+                  </button>
+                </div>
+              </div>
+
+              <div className="fbk-divider" />
+
+              {/* Yes / No questions */}
+              {QUESTIONS.map(({ key, label, hint, yesLabel, noLabel, yesValue, noValue, yesClass, noClass }) => (
+                <div key={key} className="fbk-q">
+                  <div className="fbk-q-label">
+                    {label}
+                    {hint && <small>{hint}</small>}
+                  </div>
+                  <div className="fbk-toggle-row">
+                    <button
+                      className={`fbk-tog ${yesClass}${answers[key] === yesValue ? " active" : ""}`}
+                      onClick={() => setAnswers((p) => ({ ...p, [key]: yesValue }))}
+                    >
+                      {yesLabel}
+                    </button>
+                    <button
+                      className={`fbk-tog ${noClass}${answers[key] === noValue ? " active" : ""}`}
+                      onClick={() => setAnswers((p) => ({ ...p, [key]: noValue }))}
+                    >
+                      {noLabel}
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              <div className="fbk-divider" />
+
+              {/* Optional note */}
+              <div>
+                <span className="fbk-note-label">{tf.notesLabel} <span style={{ color: "#3a3a52", fontWeight: 400 }}>{tf.optional}</span></span>
+                <textarea
+                  className="fbk-note"
+                  placeholder={tf.notesPh}
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  maxLength={500}
+                />
+              </div>
+
+              {saved && <p className="fbk-saved-msg">{tf.saved}</p>}
+            </div>
+
+            <div className="fbk-footer">
+              <button className="fbk-cancel" onClick={onClose}>{tf.cancel}</button>
+              <button className="fbk-submit" onClick={handleSubmit} disabled={saving || !allFilled || saved}>
+                {saved ? tf.savedShort : saving ? tf.saving : tf.submit}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
 
 /* ─── main page ───────────────────────────────────────────────────────── */
 export default function OwnerBookingsList() {
+  const { copy, lang } = useAppLang();
+  const t = copy.ownerBookingsList;
+  const numLocale = lang === "fr" ? "fr-FR" : "en-US";
   // Server-provided paginated bookings for the current page
   const [bookings,  setBookings]  = useState([]);
   // Server-provided aggregate stats (always over ALL bookings, not just current page)
@@ -635,6 +904,10 @@ export default function OwnerBookingsList() {
   const [acting,    setActing]    = useState(null);
   const [expanded,  setExpanded]  = useState(null);
   const [page,      setPage]      = useState(1);
+
+  // Feedback modal
+  const [feedbackBooking, setFeedbackBooking] = useState(null);
+  const [ratedBookings,   setRatedBookings]   = useState(new Set());
 
   useEffect(() => { load(page, filter); }, [page, filter]);
 
@@ -658,7 +931,7 @@ export default function OwnerBookingsList() {
       await updateBookingStatus(id, status);
       // Reload current page so stats refresh too
       load(page, filter);
-    } catch (e) { alert(e?.response?.data?.message || "Failed"); }
+    } catch (e) { alert(e?.response?.data?.message || t.actFail); }
     finally { setActing(null); }
   }
 
@@ -667,7 +940,7 @@ export default function OwnerBookingsList() {
     try {
       const { data } = await markBookingPaid(id);
       setBookings((p) => p.map((b) => b._id === id ? { ...b, isPaid: data.isPaid, paidAt: data.paidAt } : b));
-    } catch { alert("Failed to update payment"); }
+    } catch { alert(t.paymentFail); }
     finally { setActing(null); }
   }
 
@@ -702,13 +975,13 @@ export default function OwnerBookingsList() {
         {/* ── header ── */}
         <div className="obl-header">
           <div>
-            <h1 className="obl-heading">Bookings</h1>
-            <p className="obl-sub">Manage status · payments · condition photos · documents</p>
+            <h1 className="obl-heading">{t.title}</h1>
+            <p className="obl-sub">{t.sub}</p>
           </div>
           <div className="obl-export-row">
-            <button className="obl-exp-btn obl-exp-csv" onClick={() => exportCSV(visible)} title="Export current view to CSV">
+            <button className="obl-exp-btn obl-exp-csv" onClick={() => exportCSV(visible)} title={t.exportCSVTitle}>
               <FileSpreadsheet size={14} />
-              Export CSV
+              {t.exportCSV}
             </button>
           </div>
         </div>
@@ -720,35 +993,35 @@ export default function OwnerBookingsList() {
               <FileText size={16} color="#8a8a9e" />
             </div>
             <div className="obl-stat-val">{total}</div>
-            <div className="obl-stat-lbl">Total Bookings</div>
+            <div className="obl-stat-lbl">{t.stats.total}</div>
           </div>
           <div className="obl-stat pending">
             <div className="obl-stat-icon" style={{ background: "rgba(251,191,36,.1)" }}>
               <Clock size={16} color="#fbbf24" />
             </div>
             <div className="obl-stat-val" style={{ color: "#fbbf24" }}>{pending}</div>
-            <div className="obl-stat-lbl">Pending</div>
+            <div className="obl-stat-lbl">{t.stats.pending}</div>
           </div>
           <div className="obl-stat confirmed">
             <div className="obl-stat-icon" style={{ background: "rgba(74,222,128,.1)" }}>
               <CheckCircle2 size={16} color="#4ade80" />
             </div>
             <div className="obl-stat-val" style={{ color: "#4ade80" }}>{confirmed}</div>
-            <div className="obl-stat-lbl">Confirmed</div>
+            <div className="obl-stat-lbl">{t.stats.confirmed}</div>
           </div>
           <div className="obl-stat completed">
             <div className="obl-stat-icon" style={{ background: "rgba(124,108,252,.12)" }}>
               <Star size={16} color="#a78bfa" />
             </div>
             <div className="obl-stat-val" style={{ color: "#a78bfa" }}>{completed}</div>
-            <div className="obl-stat-lbl">Completed</div>
+            <div className="obl-stat-lbl">{t.stats.completed}</div>
           </div>
           <div className="obl-stat revenue">
             <div className="obl-stat-icon" style={{ background: "rgba(42,245,192,.08)" }}>
               <AlertCircle size={16} color="#2af5c0" />
             </div>
-            <div className="obl-stat-val" style={{ color: "#2af5c0", fontSize: 18 }}>{revenue.toLocaleString()} MAD</div>
-            <div className="obl-stat-lbl">Revenue Collected</div>
+            <div className="obl-stat-val" style={{ color: "#2af5c0", fontSize: 18 }}>{revenue.toLocaleString(numLocale)} MAD</div>
+            <div className="obl-stat-lbl">{t.stats.revenue}</div>
           </div>
         </div>
 
@@ -758,7 +1031,7 @@ export default function OwnerBookingsList() {
             <Search size={14} className="obl-search-ico" />
             <input
               className="obl-search"
-              placeholder="Search by car, customer, phone, email or ID…"
+              placeholder={t.searchPh}
               value={search}
               onChange={handleSearch}
             />
@@ -775,7 +1048,7 @@ export default function OwnerBookingsList() {
                 className={`obl-pill${filter === s ? " active" : ""}`}
                 onClick={() => handleFilterChange(s)}
               >
-                {`${s === "all" ? "All" : s.charAt(0).toUpperCase() + s.slice(1)} (${count})`}
+                {`${t.filters[s] || s} (${count})`}
               </button>
             );
           })}
@@ -785,11 +1058,11 @@ export default function OwnerBookingsList() {
         {loading ? (
           <div className="obl-empty">
             <div className="obl-loading-spin" />
-            Loading bookings…
+            {t.loading}
           </div>
         ) : visible.length === 0 ? (
           <div className="obl-empty">
-            {search || filter !== "all" ? "No bookings match your filters." : "No bookings yet."}
+            {search || filter !== "all" ? t.emptyFiltered : t.empty}
           </div>
         ) : (
           <>
@@ -797,16 +1070,16 @@ export default function OwnerBookingsList() {
               <table className="obl-table">
                 <thead>
                   <tr>
-                    <th className="obl-th">Car</th>
-                    <th className="obl-th">Customer</th>
-                    <th className="obl-th">Booked on</th>
-                    <th className="obl-th">Period</th>
-                    <th className="obl-th">Total</th>
-                    <th className="obl-th">Status</th>
-                    <th className="obl-th">Payment</th>
-                    <th className="obl-th">Actions</th>
-                    <th className="obl-th">PDF</th>
-                    <th className="obl-th">Files</th>
+                    <th className="obl-th">{t.th.car}</th>
+                    <th className="obl-th">{t.th.customer}</th>
+                    <th className="obl-th">{t.th.bookedOn}</th>
+                    <th className="obl-th">{t.th.period}</th>
+                    <th className="obl-th">{t.th.total}</th>
+                    <th className="obl-th">{t.th.status}</th>
+                    <th className="obl-th">{t.th.payment}</th>
+                    <th className="obl-th">{t.th.actions}</th>
+                    <th className="obl-th">{t.th.pdf}</th>
+                    <th className="obl-th">{t.th.files}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -828,31 +1101,31 @@ export default function OwnerBookingsList() {
                                 ? <img src={carImg} alt="" className="obl-car-img" />
                                 : <div className="obl-car-placeholder"><FileText size={16} color="#7c6cfc" /></div>}
                               <div>
-                                <p className="obl-car-name">{b.rentalId?.title || "—"}</p>
+                                <p className="obl-car-name">{b.rentalId?.title || t.none}</p>
                                 <p className="obl-car-city">{b.rentalId?.city}</p>
                               </div>
                             </div>
                           </td>
                           {/* customer */}
                           <td className="obl-td">
-                            <p className="obl-customer-name">{b.customerId?.name || "—"}</p>
-                            <p className="obl-customer-contact">{b.customerId?.phone || b.customerId?.email || "—"}</p>
+                            <p className="obl-customer-name">{b.customerId?.name || t.none}</p>
+                            <p className="obl-customer-contact">{b.customerId?.phone || b.customerId?.email || t.none}</p>
                           </td>
                           {/* booked on */}
-                          <td className="obl-td" style={{ color: "#4a4a62", fontSize: 11 }}>{fmt(b.createdAt)}</td>
+                          <td className="obl-td" style={{ color: "#4a4a62", fontSize: 11 }}>{fmt(b.createdAt, lang)}</td>
                           {/* period */}
                           <td className="obl-td">
-                            <p className="obl-dates-main">{fmt(b.startDate)} → {fmt(b.endDate)}</p>
-                            <p className="obl-dates-days">{days} day{days > 1 ? "s" : ""}</p>
+                            <p className="obl-dates-main">{fmt(b.startDate, lang)} → {fmt(b.endDate, lang)}</p>
+                            <p className="obl-dates-days">{days} {days > 1 ? t.dayMany : t.dayOne}</p>
                           </td>
                           {/* total */}
                           <td className="obl-td">
-                            <p className="obl-total">{b.totalAmount != null ? mad(b.totalAmount) : "—"}</p>
+                            <p className="obl-total">{b.totalAmount != null ? mad(b.totalAmount, lang) : t.none}</p>
                             {b.appliedOfferTitle && <p className="obl-offer">🏷 {b.appliedOfferTitle}</p>}
                           </td>
                           {/* status */}
                           <td className="obl-td">
-                            <span className={`obl-badge ${b.status}`}>{b.status}</span>
+                            <span className={`obl-badge ${b.status}`}>{t.status[b.status] || b.status}</span>
                           </td>
                           {/* payment */}
                           <td className="obl-td">
@@ -861,10 +1134,10 @@ export default function OwnerBookingsList() {
                               onClick={() => togglePaid(b._id)}
                               disabled={busy}
                             >
-                              {b.isPaid ? "✓ Paid" : "Unpaid"}
+                              {b.isPaid ? t.payPaid : t.payUnpaid}
                             </button>
                             {b.isPaid && b.paidAt && (
-                              <p style={{ fontSize: 9, color: "#3a3a52", marginTop: 3 }}>{fmt(b.paidAt)}</p>
+                              <p style={{ fontSize: 9, color: "#3a3a52", marginTop: 3 }}>{fmt(b.paidAt, lang)}</p>
                             )}
                           </td>
                           {/* actions */}
@@ -872,23 +1145,28 @@ export default function OwnerBookingsList() {
                             <div className="obl-actions">
                               {b.status === "pending" && (
                                 <>
-                                  <button className="obl-act-btn confirm" disabled={busy} onClick={() => changeStatus(b._id, "confirmed")}>Confirm</button>
-                                  <button className="obl-act-btn reject"  disabled={busy} onClick={() => changeStatus(b._id, "rejected")}>Reject</button>
+                                  <button className="obl-act-btn confirm" disabled={busy} onClick={() => changeStatus(b._id, "confirmed")}>{t.confirm}</button>
+                                  <button className="obl-act-btn reject"  disabled={busy} onClick={() => changeStatus(b._id, "rejected")}>{t.reject}</button>
                                 </>
                               )}
                               {b.status === "confirmed" && (
-                                <button className="obl-act-btn complete" disabled={busy} onClick={() => changeStatus(b._id, "completed")}>Complete</button>
+                                <button className="obl-act-btn complete" disabled={busy} onClick={() => changeStatus(b._id, "completed")}>{t.complete}</button>
                               )}
-                              {["rejected", "cancelled", "completed"].includes(b.status) && (
-                                <span style={{ fontSize: 10, color: "#3a3a52" }}>—</span>
+                              {b.status === "completed" && (
+                                ratedBookings.has(b._id)
+                                  ? <span className="obl-rated-badge">{t.reviewed}</span>
+                                  : <button className="obl-rate-btn" onClick={() => setFeedbackBooking(b)}>{t.rateCustomer}</button>
+                              )}
+                              {["rejected", "cancelled"].includes(b.status) && (
+                                <span style={{ fontSize: 10, color: "#3a3a52" }}>{t.none}</span>
                               )}
                             </div>
                           </td>
                           {/* PDF */}
                           <td className="obl-td">
-                            <button className="obl-pdf-btn" onClick={() => exportBookingPDF(b)} title="Download booking PDF">
+                            <button className="obl-pdf-btn" onClick={() => exportBookingPDF(b)} title={t.pdfTitle}>
                               <FileDown size={12} />
-                              PDF
+                              {t.pdfBtn}
                             </button>
                           </td>
                           {/* files expand */}
@@ -936,6 +1214,17 @@ export default function OwnerBookingsList() {
           </>
         )}
       </div>
+      {/* ── Customer feedback modal ── */}
+      {feedbackBooking && (
+        <CustomerFeedbackModal
+          booking={feedbackBooking}
+          onSaved={(bookingId) => {
+            setRatedBookings((prev) => new Set([...prev, bookingId]));
+            setFeedbackBooking(null);
+          }}
+          onClose={() => setFeedbackBooking(null)}
+        />
+      )}
     </OwnerLayout>
   );
 }

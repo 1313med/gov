@@ -6,6 +6,7 @@ import {
 } from "../api/booking";
 import { getOwnerBookingsCalendar } from "../api/rental";
 import SellerLayout from "../components/seller/SellerLayout";
+import { useAppLang } from "../context/AppLangContext";
 import "../styles/ownerCalendar.css";
 
 import {
@@ -20,6 +21,7 @@ import parse from "date-fns/parse";
 import startOfWeek from "date-fns/startOfWeek";
 import getDay from "date-fns/getDay";
 import enUS from "date-fns/locale/en-US";
+import fr from "date-fns/locale/fr";
 
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
@@ -28,6 +30,7 @@ const DragCalendar = withDragAndDrop(Calendar);
 
 const locales = {
   "en-US": enUS,
+  fr,
 };
 
 const localizer = dateFnsLocalizer({
@@ -39,6 +42,10 @@ const localizer = dateFnsLocalizer({
 });
 
 export default function OwnerBookings() {
+  const { copy, lang } = useAppLang();
+  const t = copy.ownerBookings;
+  const dateLocale = lang === "fr" ? "fr-FR" : "en-US";
+  const numLocale = lang === "fr" ? "fr-FR" : "en-US";
 
   const [bookings, setBookings] = useState([]);
   const [events, setEvents] = useState([]);
@@ -69,7 +76,7 @@ export default function OwnerBookings() {
 
       setEvents(calendarEvents);
     } catch {
-      alert("Failed to load bookings");
+      alert(t.loadFail);
     } finally {
       setLoading(false);
     }
@@ -81,7 +88,7 @@ export default function OwnerBookings() {
       setSelectedBooking(null);
       loadBookings();
     } catch {
-      alert("Failed to update booking");
+      alert(t.updateFail);
     }
   };
 
@@ -91,7 +98,7 @@ export default function OwnerBookings() {
       setSelectedBooking(res.data);
       loadBookings();
     } catch {
-      alert("Failed to update payment status");
+      alert(t.paymentFail);
     }
   };
 
@@ -153,7 +160,7 @@ export default function OwnerBookings() {
 
       alert(
         err?.response?.data?.message ||
-        "Failed to update booking dates"
+        t.datesUpdateFail
       );
 
       loadBookings();
@@ -180,7 +187,7 @@ export default function OwnerBookings() {
 
       alert(
         err?.response?.data?.message ||
-        "Failed to update booking duration"
+        t.durationUpdateFail
       );
 
       loadBookings();
@@ -190,7 +197,7 @@ export default function OwnerBookings() {
   if (loading)
     return (
       <SellerLayout>
-        <p>Loading bookings...</p>
+        <p className="text-slate-600 dark:text-slate-400">{t.loading}</p>
       </SellerLayout>
     );
 
@@ -198,16 +205,16 @@ export default function OwnerBookings() {
     <SellerLayout>
 
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">
-          Booking Calendar
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+          {t.pageTitle}
         </h1>
 
-        <p className="text-sm text-gray-500">
-          Drag or resize bookings to adjust dates
+        <p className="text-sm text-gray-500 dark:text-slate-400">
+          {t.pageSub}
         </p>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-lg p-8 mb-10 h-[680px] border border-gray-100">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-lg p-8 mb-10 h-[680px] border border-gray-100 dark:border-slate-700">
 
         <DragCalendar
           localizer={localizer}
@@ -216,6 +223,7 @@ export default function OwnerBookings() {
           endAccessor="end"
           date={date}
           view={view}
+          culture={lang === "fr" ? "fr" : "en-US"}
           onNavigate={(newDate) => setDate(newDate)}
           onView={(newView) => setView(newView)}
           views={["month", "week", "day", "agenda"]}
@@ -233,57 +241,57 @@ export default function OwnerBookings() {
       {selectedBooking && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
 
-          <div className="bg-white rounded-2xl shadow-xl p-8 w-[400px]">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-8 w-[400px] border border-gray-100 dark:border-slate-700">
 
-            <h2 className="text-xl font-bold mb-4">
-              Booking Details
+            <h2 className="text-xl font-bold mb-4 text-slate-900 dark:text-white">
+              {t.modalTitle}
             </h2>
 
-            <div className="space-y-2 text-sm">
+            <div className="space-y-2 text-sm text-slate-700 dark:text-slate-300">
 
               <p>
-                <strong>Car:</strong>{" "}
+                <strong>{t.car}:</strong>{" "}
                 {selectedBooking.rentalId?.title}
               </p>
 
               <p>
-                <strong>Dates:</strong>{" "}
-                {new Date(selectedBooking.startDate).toDateString()}
+                <strong>{t.dates}:</strong>{" "}
+                {new Date(selectedBooking.startDate).toLocaleDateString(dateLocale)}
                 {" → "}
-                {new Date(selectedBooking.endDate).toDateString()}
+                {new Date(selectedBooking.endDate).toLocaleDateString(dateLocale)}
               </p>
 
               <p>
-                <strong>Customer:</strong>{" "}
+                <strong>{t.customer}:</strong>{" "}
                 {selectedBooking.customerId?.name}
               </p>
 
               <p>
-                <strong>Phone:</strong>{" "}
+                <strong>{t.phone}:</strong>{" "}
                 {selectedBooking.customerId?.phone}
               </p>
 
               <p>
-                <strong>Email:</strong>{" "}
-                {selectedBooking.customerId?.email || "—"}
+                <strong>{t.email}:</strong>{" "}
+                {selectedBooking.customerId?.email || t.none}
               </p>
 
               <p>
-                <strong>Status:</strong>{" "}
-                {selectedBooking.status}
+                <strong>{t.status}:</strong>{" "}
+                {copy.myBookings.status[selectedBooking.status] || selectedBooking.status}
               </p>
 
               <p>
-                <strong>Amount:</strong>{" "}
+                <strong>{t.amount}:</strong>{" "}
                 {selectedBooking.totalAmount != null
-                  ? `${Number(selectedBooking.totalAmount).toLocaleString()} MAD`
-                  : "—"}
+                  ? `${Number(selectedBooking.totalAmount).toLocaleString(numLocale)} MAD`
+                  : t.none}
               </p>
 
               <p>
-                <strong>Payment:</strong>{" "}
+                <strong>{t.payment}:</strong>{" "}
                 <span style={{ color: selectedBooking.isPaid ? "#34d399" : "#f5a623" }}>
-                  {selectedBooking.isPaid ? `Paid${selectedBooking.paidAt ? ` on ${new Date(selectedBooking.paidAt).toLocaleDateString()}` : ""}` : "Unpaid"}
+                  {selectedBooking.isPaid ? `${t.paid}${selectedBooking.paidAt ? ` ${t.paidOn} ${new Date(selectedBooking.paidAt).toLocaleDateString(dateLocale)}` : ""}` : t.unpaid}
                 </span>
               </p>
 
@@ -295,13 +303,13 @@ export default function OwnerBookings() {
                   onClick={() => updateStatus(selectedBooking._id, "confirmed")}
                   className="flex-1 bg-green-600 text-white py-2 rounded-xl hover:bg-green-700"
                 >
-                  Accept
+                  {t.accept}
                 </button>
                 <button
                   onClick={() => updateStatus(selectedBooking._id, "rejected")}
                   className="flex-1 bg-red-600 text-white py-2 rounded-xl hover:bg-red-700"
                 >
-                  Reject
+                  {t.reject}
                 </button>
               </div>
             )}
@@ -312,26 +320,26 @@ export default function OwnerBookings() {
                   onClick={() => updateStatus(selectedBooking._id, "completed")}
                   className="w-full bg-purple-600 text-white py-2 rounded-xl hover:bg-purple-700"
                 >
-                  ✓ Mark as Completed
+                  {t.markCompleted}
                 </button>
                 <button
                   onClick={() => togglePaid(selectedBooking)}
                   className={`w-full py-2 rounded-xl text-sm font-medium transition-colors ${
                     selectedBooking.isPaid
-                      ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      ? "bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-700"
                       : "bg-emerald-600 text-white hover:bg-emerald-700"
                   }`}
                 >
-                  {selectedBooking.isPaid ? "Mark as Unpaid" : "$ Mark as Paid"}
+                  {selectedBooking.isPaid ? t.markUnpaid : t.markPaid}
                 </button>
               </div>
             )}
 
             <button
               onClick={() => setSelectedBooking(null)}
-              className="mt-4 text-sm text-gray-500 hover:text-black"
+              className="mt-4 text-sm text-gray-500 dark:text-slate-400 hover:text-black dark:hover:text-white"
             >
-              Close
+              {t.close}
             </button>
 
           </div>

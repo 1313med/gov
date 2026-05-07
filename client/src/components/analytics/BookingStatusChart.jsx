@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import { useAppLang } from "../../context/AppLangContext";
 
 const COLORS = ["#2af5c0", "#f5a623", "#fc6c6c", "#7c6cfc"];
-const LABELS = ["Confirmed", "Pending", "Cancelled", "Other"];
 
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;600&display=swap');
@@ -110,26 +110,39 @@ const STYLES = `
     border: 1px dashed rgba(255,255,255,.1);
     border-radius: 14px;
   }
+
+  /* ─── LIGHT THEME OVERRIDES ─── */
+  html.light .bsc-name { color: #475569; }
+  html.light .bsc-pct {
+    color: #64748b;
+    background: rgba(15,23,42,.04);
+    border-color: rgba(15,23,42,.10);
+  }
+  html.light .bsc-bar-track { background: rgba(15,23,42,.08); }
+  html.light .bsc-empty {
+    color: #64748b;
+    border-color: rgba(15,23,42,.14);
+  }
 `;
 
-const CustomTooltip = ({ active, payload }) => {
+const CustomTooltip = ({ active, payload, countLabel }) => {
   if (!active || !payload?.length) return null;
   const d = payload[0];
   return (
     <div
       style={{
-        background: "#16161f",
-        border: "1px solid rgba(255,255,255,.13)",
+        background: "var(--tip-bg, #16161f)",
+        border: "1px solid var(--tip-bd, rgba(255,255,255,.13))",
         borderRadius: 10,
         padding: "10px 14px",
         fontFamily: "'DM Mono', monospace",
         fontSize: 12,
-        color: "#e8e8f0",
+        color: "var(--txt, #e8e8f0)",
       }}
     >
-      <div style={{ color: "#5a5a72", marginBottom: 4 }}>{d.name}</div>
+      <div style={{ color: "var(--tip-lbl, #5a5a72)", marginBottom: 4 }}>{d.name}</div>
       <div style={{ color: d.payload.color }}>
-        Count: <strong>{d.value}</strong>
+        {countLabel}: <strong>{d.value}</strong>
       </div>
     </div>
   );
@@ -137,6 +150,9 @@ const CustomTooltip = ({ active, payload }) => {
 
 export default function BookingStatusChart({ data }) {
   const [pieSize, setPieSize] = useState(220);
+  const { copy } = useAppLang();
+  const ts = copy.analyticsCommon.status;
+  const labels = [ts.confirmed, ts.pending, ts.cancelled, ts.other];
 
   useEffect(() => {
     const q = () => setPieSize(window.innerWidth < 400 ? 200 : 240);
@@ -149,7 +165,7 @@ export default function BookingStatusChart({ data }) {
     return (
       <>
         <style>{STYLES}</style>
-        <div className="bsc-empty">No status data available</div>
+        <div className="bsc-empty">{ts.empty}</div>
       </>
     );
   }
@@ -158,7 +174,7 @@ export default function BookingStatusChart({ data }) {
 
   const enriched = data.map((d, i) => ({
     ...d,
-    name: d.name || LABELS[i] || `Status ${i + 1}`,
+    name: d.name || labels[i] || `Status ${i + 1}`,
     color: COLORS[i % COLORS.length],
   }));
 
@@ -205,7 +221,7 @@ export default function BookingStatusChart({ data }) {
                 ))}
               </Pie>
 
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomTooltip countLabel={ts.count} />} />
 
               <text
                 x="50%"
@@ -216,7 +232,7 @@ export default function BookingStatusChart({ data }) {
                   fontFamily: "'DM Mono',monospace",
                   fontSize: Math.min(28, pieSize * 0.12),
                   fontWeight: 700,
-                  fill: "#e8e8f0",
+                  fill: "var(--txt, #e8e8f0)",
                 }}
               >
                 {total}
@@ -229,11 +245,11 @@ export default function BookingStatusChart({ data }) {
                 style={{
                   fontFamily: "'DM Mono',monospace",
                   fontSize: 10,
-                  fill: "#5a5a72",
+                  fill: "var(--muted, #5a5a72)",
                   letterSpacing: ".1em",
                 }}
               >
-                TOTAL
+                {ts.total}
               </text>
             </PieChart>
           </ResponsiveContainer>

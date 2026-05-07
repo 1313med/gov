@@ -5,9 +5,45 @@ const User = require("../models/User");
 const emailService = require("../utils/emailService");
 const { emitNotification } = require("../utils/socketManager");
 
-const notify = async (userId, message, type) => {
-  const n = await Notification.create({ user: userId, message, type });
+const notify = async (userId, message, type, bookingId = null) => {
+  const n = await Notification.create({ user: userId, message, type, bookingId });
   emitNotification(userId.toString(), n);
+};
+
+// ── CUSTOMER – Confirm car return ─────────────────────────────────────────────
+exports.confirmReturn = async (req, res, next) => {
+  try {
+    const booking = await Booking.findOne({
+      _id: req.params.id,
+      customerId: req.user._id,
+      deletedAt: null,
+    }).populate("rentalId", "title rentalOwnerId");
+
+    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    if (booking.status !== "confirmed") {
+      return res.status(400).json({ message: "Only confirmed bookings can be marked as returned" });
+    }
+    if (booking.customerConfirmedReturn) {
+      return res.status(400).json({ message: "You already confirmed the return" });
+    }
+
+    booking.customerConfirmedReturn = true;
+    await booking.save();
+
+    // Notify the owner
+    const carTitle  = booking.rentalId?.title || "the car";
+    const ownerId   = booking.rentalId?.rentalOwnerId;
+    if (ownerId) {
+      await notify(
+        ownerId,
+        `${req.user.name} confirmed they returned "${carTitle}". Don't forget to rate this customer!`,
+        "feedback_request",
+        booking._id,
+      );
+    }
+
+    res.json({ message: "Return confirmed", booking });
+  } catch (err) { next(err); }
 };
 
 // ── State machine ─────────────────────────────────────────────────────────────

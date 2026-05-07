@@ -1,17 +1,11 @@
 import { useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { api } from "../api/axios";
+import { useAppLang } from "../context/AppLangContext";
 
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap');
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg0:#05060f; --glass:rgba(255,255,255,0.04);
-  --border:rgba(255,255,255,0.08); --border2:rgba(255,255,255,0.14);
-  --p1:#7c6bff; --p2:#a78bfa; --p3:#38bdf8;
-  --ink4:rgba(255,255,255,0.2); --ink3:rgba(255,255,255,0.4); --danger:#ff6b6b;
-  --sans:'Inter',sans-serif; --display:'Syne',sans-serif; --mono:'Space Mono',monospace;
-}
 .rp-root { min-height:100vh; background:var(--bg0); display:flex; align-items:center; justify-content:center; font-family:var(--sans); position:relative; overflow:hidden; padding:24px; }
 .rp-bg { position:fixed; inset:0; z-index:0; pointer-events:none; background:radial-gradient(ellipse 80% 70% at 10% 20%,rgba(124,107,255,0.18) 0%,transparent 60%),radial-gradient(ellipse 60% 60% at 90% 80%,rgba(56,189,248,0.12) 0%,transparent 60%),var(--bg0); }
 .rp-orb { position:fixed; z-index:0; pointer-events:none; border-radius:50%; filter:blur(80px); mix-blend-mode:screen; }
@@ -45,7 +39,7 @@ const CSS = `
 @keyframes spin { to{transform:rotate(360deg)} }
 `;
 
-function getStrength(pw) {
+function getStrength(pw, labels) {
   if (!pw) return { pct: 0, label: "", color: "transparent" };
   let score = 0;
   if (pw.length >= 8)           score++;
@@ -53,16 +47,18 @@ function getStrength(pw) {
   if (/[0-9]/.test(pw))         score++;
   if (/[^A-Za-z0-9]/.test(pw)) score++;
   const map = [
-    { pct: "0%",   label: "",        color: "transparent" },
-    { pct: "25%",  label: "Weak",    color: "#f87171" },
-    { pct: "50%",  label: "Fair",    color: "#fbbf24" },
-    { pct: "75%",  label: "Good",    color: "#4ade80" },
-    { pct: "100%", label: "Strong",  color: "#a78bfa" },
+    { pct: "0%",   label: "",            color: "transparent" },
+    { pct: "25%",  label: labels.weak,   color: "#f87171" },
+    { pct: "50%",  label: labels.fair,   color: "#fbbf24" },
+    { pct: "75%",  label: labels.good,   color: "#4ade80" },
+    { pct: "100%", label: labels.strong, color: "#a78bfa" },
   ];
   return map[score];
 }
 
 export default function ResetPassword() {
+  const { copy } = useAppLang();
+  const t = copy.resetPassword;
   const { token } = useParams();
   const navigate  = useNavigate();
 
@@ -72,26 +68,26 @@ export default function ResetPassword() {
   const [error,    setError]    = useState("");
   const [done,     setDone]     = useState(false);
 
-  const strength = getStrength(password);
+  const strength = getStrength(password, t.strength);
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (password !== confirm) { setError("Passwords do not match"); return; }
-    if (password.length < 6)  { setError("Password must be at least 6 characters"); return; }
+    if (password !== confirm) { setError(t.mismatch); return; }
+    if (password.length < 6)  { setError(t.tooShort); return; }
     setError(""); setLoading(true);
     try {
       await api.post(`/auth/reset-password/${token}`, { password });
       setDone(true);
       setTimeout(() => navigate("/login"), 3000);
     } catch (err) {
-      setError(err?.response?.data?.message || "Invalid or expired link. Please request a new one.");
+      setError(err?.response?.data?.message || t.failed);
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="rp-root">
+    <div className="rp-root gv-auth">
       <style>{CSS}</style>
       <div className="rp-bg" />
       <div className="rp-orb rp-orb1" />
@@ -103,23 +99,23 @@ export default function ResetPassword() {
           <span className="rp-logo-text">Goo<span>voiture</span></span>
         </Link>
 
-        <h1 className="rp-title">Set new password</h1>
-        <p className="rp-sub">Choose a strong password for your account.</p>
+        <h1 className="rp-title">{t.title}</h1>
+        <p className="rp-sub">{t.sub}</p>
 
         {error && <div className="rp-error">⚠ {error}</div>}
 
         {done ? (
           <div className="rp-success">
-            Password updated! Redirecting you to login…
+            {t.success}
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
             <div className="rp-field">
-              <label className="rp-label">New password</label>
+              <label className="rp-label">{t.newPassword}</label>
               <input
                 type="password"
                 className="rp-input"
-                placeholder="At least 6 characters"
+                placeholder={t.newPasswordPh}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -136,11 +132,11 @@ export default function ResetPassword() {
             </div>
 
             <div className="rp-field">
-              <label className="rp-label">Confirm password</label>
+              <label className="rp-label">{t.confirmPassword}</label>
               <input
                 type="password"
                 className="rp-input"
-                placeholder="Repeat your password"
+                placeholder={t.confirmPasswordPh}
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
                 required
@@ -149,13 +145,13 @@ export default function ResetPassword() {
 
             <button type="submit" className="rp-submit" disabled={loading}>
               {loading && <span className="rp-spinner" />}
-              {loading ? "Saving…" : "Reset password"}
+              {loading ? t.submitting : t.submit}
             </button>
           </form>
         )}
 
         <Link to="/login" className="rp-back">
-          Back to <span>Sign in</span>
+          {t.backText}<span>{t.backLink}</span>
         </Link>
       </div>
     </div>

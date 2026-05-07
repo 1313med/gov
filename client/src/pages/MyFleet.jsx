@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../api/axios";
 import { getOwnerPricing } from "../api/analytics";
 import OwnerLayout from "../components/owner/OwnerLayout";
+import { useAppLang } from "../context/AppLangContext";
 import { Plus, X, Pencil, Check, Trash2, ImagePlus, CalendarOff, Tag, ToggleLeft, ToggleRight, TrendingUp, TrendingDown } from "lucide-react";
 
 
@@ -99,18 +100,19 @@ const STYLES = `
   }
 `;
 
-const OFFER_TYPE_LABELS = { free_days: "Free Days", percent_discount: "% Discount", custom: "Custom Text" };
-
-function offerSummary(o) {
-  if (o.type === "free_days") return `Rent ${o.minDays}+ days → get ${o.freeExtraDays} extra day${o.freeExtraDays > 1 ? "s" : ""} free`;
-  if (o.type === "percent_discount") return `Rent ${o.minDays}+ days → ${o.discountPercent}% off`;
-  return o.description || "Custom offer";
+function offerSummary(o, ts) {
+  if (o.type === "free_days") return ts.freeDays(o.minDays, o.freeExtraDays);
+  if (o.type === "percent_discount") return ts.percent(o.minDays, o.discountPercent);
+  return o.description || ts.customFallback;
 }
 
 const BLANK_OFFER = { type: "free_days", title: "", description: "", minDays: 3, freeExtraDays: 1, discountPercent: 10 };
 
 export default function MyFleet() {
   const navigate = useNavigate();
+  const { copy, lang } = useAppLang();
+  const t = copy.myFleet;
+  const dateLocale = lang === "fr" ? "fr-FR" : "en-US";
 
   const [cars, setCars] = useState([]);
   const [pricing, setPricing] = useState({});  // rentalId → suggestion
@@ -153,7 +155,7 @@ export default function MyFleet() {
       const { data } = await api.put(`/rental/${carId}`, { pricePerDay: suggestedPrice });
       setCars((p) => p.map((c) => c._id === carId ? { ...c, pricePerDay: data.pricePerDay } : c));
       setPricing((p) => ({ ...p, [carId]: { ...p[carId], currentPrice: suggestedPrice, difference: 0 } }));
-    } catch { alert("Failed to apply price"); }
+    } catch { alert(t.applyFail); }
     finally { setApplyingPrice(null); }
   }
 
@@ -202,16 +204,16 @@ export default function MyFleet() {
       const { data } = await api.put(`/rental/${editing._id}`, { pricePerDay: Number(price), images, availability, offers });
       setCars((p) => p.map((c) => (c._id === data._id ? data : c)));
       closeEdit();
-    } catch (err) { alert(err.response?.data?.message || "Failed to save"); }
+    } catch (err) { alert(err.response?.data?.message || t.saveFail); }
     finally { setSaving(false); }
   }
 
   async function handleDelete(id) {
-    if (!confirm("Delete this rental listing? This cannot be undone.")) return;
+    if (!confirm(t.confirmDelete)) return;
     try {
       await api.delete(`/rental/${id}`);
       setCars((p) => p.filter((c) => c._id !== id));
-    } catch { alert("Failed to delete"); }
+    } catch { alert(t.deleteFail); }
   }
 
   const today = new Date().toISOString().slice(0, 10);
@@ -220,17 +222,17 @@ export default function MyFleet() {
     <OwnerLayout>
       <style>{STYLES}</style>
       <div className="mf-wrap">
-        <h1 className="mf-heading">My Fleet</h1>
-        <p className="mf-sub">Manage price, images, availability &amp; special offers</p>
+        <h1 className="mf-heading">{t.title}</h1>
+        <p className="mf-sub">{t.sub}</p>
 
         {loading ? (
-          <div className="mf-empty"><div className="mf-empty-icon">⏳</div>Loading fleet…</div>
+          <div className="mf-empty"><div className="mf-empty-icon">⏳</div>{t.loading}</div>
         ) : cars.length === 0 ? (
           <div className="mf-empty">
             <div className="mf-empty-icon">🚗</div>
-            <p>No rental cars yet.</p>
+            <p>{t.empty}</p>
             <button className="mf-btn mf-btn-primary" style={{ width: "auto", margin: "12px auto 0", display: "inline-flex" }} onClick={() => navigate("/add-rental")}>
-              <Plus size={14} /> Add your first car
+              <Plus size={14} /> {t.addFirst}
             </button>
           </div>
         ) : (
@@ -239,11 +241,11 @@ export default function MyFleet() {
               const activeOffers = (car.offers || []).filter((o) => o.isActive);
               return (
                 <div key={car._id} className="mf-card">
-                  {car.images?.[0] ? <img src={car.images[0]} alt={car.title} className="mf-card-img" /> : <div className="mf-card-img-placeholder">No image</div>}
+                  {car.images?.[0] ? <img src={car.images[0]} alt={car.title} className="mf-card-img" /> : <div className="mf-card-img-placeholder">{t.noImage}</div>}
                   <div className="mf-card-body">
                     <p className="mf-card-title">{car.title}</p>
                     <p className="mf-card-meta">{car.brand} {car.model} · {car.year} · {car.city}</p>
-                    <p className="mf-card-price">{car.pricePerDay} MAD / day</p>
+                    <p className="mf-card-price">{car.pricePerDay} {t.pricePerDay}</p>
 
                     {/* Pricing suggestion badge */}
                     {pricing[car._id] && pricing[car._id].difference !== 0 && (
@@ -258,7 +260,7 @@ export default function MyFleet() {
                             ? <TrendingUp size={12} color="#2af5c0" />
                             : <TrendingDown size={12} color="#f87171" />}
                           <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: pricing[car._id].difference > 0 ? "#2af5c0" : "#f87171" }}>
-                            Suggested: {pricing[car._id].suggestedPrice} MAD ({pricing[car._id].difference > 0 ? "+" : ""}{pricing[car._id].difference} MAD)
+                            {t.suggested}: {pricing[car._id].suggestedPrice} MAD ({pricing[car._id].difference > 0 ? "+" : ""}{pricing[car._id].difference} MAD)
                           </span>
                         </div>
                         <button
@@ -269,24 +271,24 @@ export default function MyFleet() {
                             fontFamily: "'DM Mono',monospace", fontSize: 9, color: "#7c6cfc", cursor: "pointer", whiteSpace: "nowrap",
                           }}
                         >
-                          {applyingPrice === car._id ? "…" : "Apply"}
+                          {applyingPrice === car._id ? "…" : t.apply}
                         </button>
                       </div>
                     )}
 
                     <div className="mf-card-badges" style={{ marginTop: 8 }}>
-                      <span className={`mf-status ${car.status}`}>{car.status}</span>
-                      {activeOffers.length > 0 && <span className="mf-offer-badge"><Tag size={9} /> {activeOffers.length} offer{activeOffers.length > 1 ? "s" : ""}</span>}
+                      <span className={`mf-status ${car.status}`}>{t.status[car.status] || car.status}</span>
+                      {activeOffers.length > 0 && <span className="mf-offer-badge"><Tag size={9} /> {activeOffers.length} {activeOffers.length > 1 ? t.offerMany : t.offerOne}</span>}
                     </div>
                     {car.availability?.length > 0 && (
                       <p className="mf-card-meta" style={{ color: "#f87171", fontSize: 10, marginTop: 2 }}>
                         <CalendarOff size={10} style={{ display: "inline", marginRight: 4 }} />
-                        {car.availability.length} blocked period{car.availability.length > 1 ? "s" : ""}
+                        {car.availability.length} {car.availability.length > 1 ? t.blockedMany : t.blockedOne}
                       </p>
                     )}
                     <div className="mf-card-actions">
-                      <button className="mf-btn mf-btn-primary" onClick={() => openEdit(car)}><Pencil size={12} /> Edit</button>
-                      <button className="mf-btn mf-btn-danger" onClick={() => handleDelete(car._id)}><Trash2 size={12} /> Delete</button>
+                      <button className="mf-btn mf-btn-primary" onClick={() => openEdit(car)}><Pencil size={12} /> {t.edit}</button>
+                      <button className="mf-btn mf-btn-danger" onClick={() => handleDelete(car._id)}><Trash2 size={12} /> {t.delete}</button>
                     </div>
                   </div>
                 </div>
@@ -304,13 +306,13 @@ export default function MyFleet() {
               <button className="mf-modal-close" onClick={closeEdit}><X size={14} /></button>
             </div>
 
-            <p className="mf-section-title">Price</p>
-            <label className="mf-label">Price per day (MAD)</label>
+            <p className="mf-section-title">{t.modal.priceSection}</p>
+            <label className="mf-label">{t.modal.pricePerDayLabel}</label>
             <input type="number" className="mf-input" value={price} min={1} onChange={(e) => setPrice(e.target.value)} style={{ marginBottom: 20 }} />
 
             <div className="mf-divider" />
 
-            <p className="mf-section-title">Images</p>
+            <p className="mf-section-title">{t.modal.imagesSection}</p>
             <div className="mf-images">
               {images.map((url, i) => (
                 <div key={i} className="mf-img-thumb">
@@ -323,14 +325,14 @@ export default function MyFleet() {
 
             <div className="mf-divider" />
 
-            <p className="mf-section-title">Blocked / Unavailable Periods</p>
-            <p className="mf-label" style={{ marginBottom: 12 }}>Add date ranges when the car is not available.</p>
+            <p className="mf-section-title">{t.modal.blockedSection}</p>
+            <p className="mf-label" style={{ marginBottom: 12 }}>{t.modal.blockedSub}</p>
             {availability.length > 0 && (
               <div className="mf-blocked-list">
                 {availability.map((r, i) => (
                   <div key={i} className="mf-blocked-item">
                     <CalendarOff size={13} style={{ color: "#f87171", flexShrink: 0 }} />
-                    <span>{new Date(r.startDate).toLocaleDateString()} → {new Date(r.endDate).toLocaleDateString()}</span>
+                    <span>{new Date(r.startDate).toLocaleDateString(dateLocale)} → {new Date(r.endDate).toLocaleDateString(dateLocale)}</span>
                     <button className="mf-blocked-remove" onClick={() => removeBlockedRange(i)}><X size={13} /></button>
                   </div>
                 ))}
@@ -338,22 +340,22 @@ export default function MyFleet() {
             )}
             <div className="mf-date-row">
               <div>
-                <label className="mf-label">From</label>
+                <label className="mf-label">{t.modal.from}</label>
                 <input type="date" className="mf-input" value={newStart} min={today} onChange={(e) => setNewStart(e.target.value)} />
               </div>
               <div>
-                <label className="mf-label">To</label>
+                <label className="mf-label">{t.modal.to}</label>
                 <input type="date" className="mf-input" value={newEnd} min={newStart || today} onChange={(e) => setNewEnd(e.target.value)} />
               </div>
             </div>
             <button className="mf-btn mf-btn-primary" style={{ width: "auto" }} onClick={addBlockedRange} disabled={!newStart || !newEnd || newEnd <= newStart}>
-              <Plus size={13} /> Add blocked period
+              <Plus size={13} /> {t.modal.addBlocked}
             </button>
 
             <div className="mf-divider" />
 
-            <p className="mf-section-title">Special Offers</p>
-            <p className="mf-label" style={{ marginBottom: 12 }}>Create promotions visible to customers on the listing page.</p>
+            <p className="mf-section-title">{t.modal.offersSection}</p>
+            <p className="mf-label" style={{ marginBottom: 12 }}>{t.modal.offersSub}</p>
             {offers.length > 0 && (
               <div className="mf-offers-list">
                 {offers.map((o, i) => (
@@ -366,8 +368,8 @@ export default function MyFleet() {
                       </button>
                       <button className="mf-blocked-remove" onClick={() => removeOffer(i)}><X size={13} /></button>
                     </div>
-                    <p className="mf-offer-item-meta">{offerSummary(o)}</p>
-                    {o.expiresAt && <p className="mf-offer-item-desc" style={{ color: "#f87171" }}>Expires: {new Date(o.expiresAt).toLocaleDateString()}</p>}
+                    <p className="mf-offer-item-meta">{offerSummary(o, t.modal.summary)}</p>
+                    {o.expiresAt && <p className="mf-offer-item-desc" style={{ color: "#f87171" }}>{t.modal.expiresPrefix} {new Date(o.expiresAt).toLocaleDateString(dateLocale)}</p>}
                     {o.description && <p className="mf-offer-item-desc">{o.description}</p>}
                   </div>
                 ))}
@@ -376,58 +378,58 @@ export default function MyFleet() {
             {showOfferForm ? (
               <div className="mf-offer-form">
                 <div>
-                  <label className="mf-label">Offer type</label>
+                  <label className="mf-label">{t.modal.typeLabel}</label>
                   <div className="mf-offer-type-pills">
-                    {["free_days", "percent_discount", "custom"].map((t) => (
-                      <button key={t} className={`mf-pill${newOffer.type === t ? " selected" : ""}`} onClick={() => setNewOffer((p) => ({ ...p, type: t }))}>
-                        {OFFER_TYPE_LABELS[t]}
+                    {["free_days", "percent_discount", "custom"].map((typ) => (
+                      <button key={typ} className={`mf-pill${newOffer.type === typ ? " selected" : ""}`} onClick={() => setNewOffer((p) => ({ ...p, type: typ }))}>
+                        {t.modal.types[typ]}
                       </button>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <label className="mf-label">Offer title (shown to customers)</label>
-                  <input className="mf-input" placeholder={newOffer.type === "free_days" ? "e.g. 5+1 Deal" : newOffer.type === "percent_discount" ? "e.g. Weekend -20%" : "e.g. Special Promo"} value={newOffer.title} onChange={(e) => setNewOffer((p) => ({ ...p, title: e.target.value }))} />
+                  <label className="mf-label">{t.modal.titleLabel}</label>
+                  <input className="mf-input" placeholder={t.modal.titlePh[newOffer.type] || ""} value={newOffer.title} onChange={(e) => setNewOffer((p) => ({ ...p, title: e.target.value }))} />
                 </div>
                 <div>
-                  <label className="mf-label">Description (optional)</label>
-                  <input className="mf-input" placeholder="e.g. Valid for bookings made in advance" value={newOffer.description} onChange={(e) => setNewOffer((p) => ({ ...p, description: e.target.value }))} />
+                  <label className="mf-label">{t.modal.descLabel}</label>
+                  <input className="mf-input" placeholder={t.modal.descPh} value={newOffer.description} onChange={(e) => setNewOffer((p) => ({ ...p, description: e.target.value }))} />
                 </div>
                 {newOffer.type !== "custom" && (
                   <div className="mf-offer-form-row">
                     <div>
-                      <label className="mf-label">Minimum days</label>
+                      <label className="mf-label">{t.modal.minDays}</label>
                       <input type="number" min={1} className="mf-input" value={newOffer.minDays} onChange={(e) => setNewOffer((p) => ({ ...p, minDays: Number(e.target.value) }))} />
                     </div>
                     {newOffer.type === "free_days" && (
                       <div>
-                        <label className="mf-label">Free extra days</label>
+                        <label className="mf-label">{t.modal.freeExtraDays}</label>
                         <input type="number" min={1} className="mf-input" value={newOffer.freeExtraDays} onChange={(e) => setNewOffer((p) => ({ ...p, freeExtraDays: Number(e.target.value) }))} />
                       </div>
                     )}
                     {newOffer.type === "percent_discount" && (
                       <div>
-                        <label className="mf-label">Discount (%)</label>
+                        <label className="mf-label">{t.modal.discountPercent}</label>
                         <input type="number" min={1} max={100} className="mf-input" value={newOffer.discountPercent} onChange={(e) => setNewOffer((p) => ({ ...p, discountPercent: Number(e.target.value) }))} />
                       </div>
                     )}
                   </div>
                 )}
                 <div>
-                  <label className="mf-label">Expires on (optional)</label>
+                  <label className="mf-label">{t.modal.expiresLabel}</label>
                   <input type="date" className="mf-input" min={today} value={newOffer.expiresAt || ""} onChange={(e) => setNewOffer((p) => ({ ...p, expiresAt: e.target.value || null }))} />
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button className="mf-btn mf-btn-primary" style={{ flex: 1 }} onClick={addOffer} disabled={!newOffer.title.trim()}><Check size={13} /> Add offer</button>
+                  <button className="mf-btn mf-btn-primary" style={{ flex: 1 }} onClick={addOffer} disabled={!newOffer.title.trim()}><Check size={13} /> {t.modal.addOfferBtn}</button>
                   <button className="mf-btn mf-btn-danger" style={{ flex: "0 0 auto", width: 40 }} onClick={() => setShowOfferForm(false)}><X size={13} /></button>
                 </div>
               </div>
             ) : (
-              <button className="mf-btn mf-btn-primary" style={{ width: "auto" }} onClick={() => setShowOfferForm(true)}><Plus size={13} /> Add new offer</button>
+              <button className="mf-btn mf-btn-primary" style={{ width: "auto" }} onClick={() => setShowOfferForm(true)}><Plus size={13} /> {t.modal.addOffer}</button>
             )}
 
             <button className="mf-save-btn" onClick={handleSave} disabled={saving}>
-              {saving ? "Saving…" : <><Check size={15} /> Save changes</>}
+              {saving ? t.modal.saving : <><Check size={15} /> {t.modal.saveChanges}</>}
             </button>
           </div>
         </div>

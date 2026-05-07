@@ -66,7 +66,8 @@ app.use("/api/analytics",     require("./routes/analyticsRoutes"));
 app.use("/api/reviews",       require("./routes/reviewRoutes"));
 app.use("/api/messages",      require("./routes/messageRoutes"));
 app.use("/api/maintenance",   require("./routes/maintenanceRoutes"));
-app.use("/api/admin",         require("./routes/adminRoutes"));
+app.use("/api/admin",            require("./routes/adminRoutes"));
+app.use("/api/customer-feedback", require("./routes/customerFeedbackRoutes"));
 
 // ERROR HANDLING
 app.use(notFound);

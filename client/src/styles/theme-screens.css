@@ -1,0 +1,512 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   GooVoiture — screen themes (pairs with ThemeContext: html.light / html.dark)
+   Import after index.css in main.jsx
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Shared auth / glass token pack (.gv-auth on lx-root, fp-root, rp-root, ve-root) ── */
+.gv-auth {
+  --bg0: #eef2ff;
+  --bg1: #e0e7ff;
+  --bg2: #dbeafe;
+  --glass: rgba(255, 255, 255, 0.72);
+  --glass2: rgba(255, 255, 255, 0.9);
+  --border: rgba(11, 22, 61, 0.1);
+  --border2: rgba(11, 22, 61, 0.14);
+  --p1: #7c6bff;
+  --p2: #6d5ce8;
+  --p3: #0ea5e9;
+  --p-glow: rgba(124, 107, 255, 0.28);
+  --ink: #0b163d;
+  --ink2: rgba(11, 22, 61, 0.72);
+  --ink3: rgba(11, 22, 61, 0.52);
+  --ink4: rgba(11, 22, 61, 0.32);
+  --danger: #dc2626;
+  --sans: "Inter", sans-serif;
+  --display: "Syne", sans-serif;
+  --mono: "Space Mono", monospace;
+}
+
+html.dark .gv-auth {
+  --bg0: #05060f;
+  --bg1: #080c1a;
+  --bg2: #0e1228;
+  --glass: rgba(255, 255, 255, 0.04);
+  --glass2: rgba(255, 255, 255, 0.07);
+  --border: rgba(255, 255, 255, 0.08);
+  --border2: rgba(255, 255, 255, 0.14);
+  --p2: #a78bfa;
+  --p3: #38bdf8;
+  --p-glow: rgba(124, 107, 255, 0.35);
+  --ink: #ffffff;
+  --ink2: rgba(255, 255, 255, 0.7);
+  --ink3: rgba(255, 255, 255, 0.4);
+  --ink4: rgba(255, 255, 255, 0.2);
+  --danger: #ff6b6b;
+}
+
+/* Login — left veil & grid, form card (hardcoded colors in Login.jsx) */
+html.light .lx-root.gv-auth .lx-left-veil {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0.45) 42%, rgba(255, 255, 255, 0.94) 100%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.95) 0%, transparent 100%);
+}
+html.light .lx-root.gv-auth .lx-grid {
+  background-image:
+    linear-gradient(rgba(11, 22, 61, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(11, 22, 61, 0.05) 1px, transparent 1px);
+}
+html.light .lx-root.gv-auth .lx-card {
+  background: rgba(255, 255, 255, 0.82);
+  border-color: rgba(11, 22, 61, 0.12);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.6) inset,
+    0 24px 48px rgba(12, 26, 86, 0.1),
+    0 0 60px rgba(124, 107, 255, 0.08);
+}
+html.light .lx-root.gv-auth .lx-input {
+  background: rgba(11, 22, 61, 0.04);
+  color: var(--ink);
+}
+html.light .lx-root.gv-auth .lx-input:focus {
+  background: rgba(124, 107, 255, 0.06);
+}
+
+/* Forgot / Reset / Verify — glass cards */
+html.light .fp-root.gv-auth .fp-card,
+html.light .rp-root.gv-auth .rp-card,
+html.light .ve-root.gv-auth .ve-card {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(11, 22, 61, 0.12);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.5) inset,
+    0 24px 48px rgba(12, 26, 86, 0.1);
+}
+html.light .fp-root.gv-auth .fp-logo-text,
+html.light .fp-root.gv-auth .fp-title,
+html.light .rp-root.gv-auth .rp-logo-text,
+html.light .rp-root.gv-auth .rp-title,
+html.light .ve-root.gv-auth .ve-logo-text,
+html.light .ve-root.gv-auth .ve-title {
+  color: var(--ink);
+}
+html.light .fp-root.gv-auth .fp-input,
+html.light .rp-root.gv-auth .rp-input {
+  background: rgba(11, 22, 61, 0.04);
+  color: var(--ink);
+}
+html.light .fp-root.gv-auth .fp-spinner,
+html.light .rp-root.gv-auth .rp-spinner {
+  border-color: rgba(11, 22, 61, 0.2);
+  border-top-color: var(--ink);
+}
+
+/* Owner sidebar */
+html.light .osb {
+  background: #ffffff;
+  border-right-color: rgba(15, 23, 42, 0.08);
+}
+html.light .osb-brand-eyebrow,
+html.light .osb-nav-label,
+html.light .osb-footer-role {
+  color: #64748b;
+}
+html.light .osb-brand-title {
+  color: #0b163d;
+}
+html.light .osb-item {
+  color: #64748b;
+  border-color: transparent;
+}
+html.light .osb-item:hover {
+  color: #334155;
+  background: rgba(124, 108, 252, 0.08);
+  border-color: rgba(124, 108, 252, 0.12);
+}
+html.light .osb-item.active {
+  color: #1e1b4b;
+  background: rgba(124, 108, 252, 0.12);
+  border-color: rgba(124, 108, 252, 0.28);
+}
+html.light .osb-item:not(.active) .osb-icon {
+  background: rgba(15, 23, 42, 0.05);
+  color: #64748b;
+}
+html.light .osb-item.active .osb-icon {
+  background: rgba(124, 108, 252, 0.2);
+  color: #5b21b6;
+}
+html.light .osb-footer {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.08);
+}
+html.light .osb-footer-name {
+  color: #334155;
+}
+@media (max-width: 767px) {
+  html.light .osb {
+    border-top-color: rgba(15, 23, 42, 0.1);
+    box-shadow: 0 -8px 32px rgba(15, 23, 42, 0.08);
+  }
+}
+
+/* Owner pages using CSS variables on root: .ar, .mr, .mx, .oa */
+html.light .ar {
+  --bg: #f1f5f9;
+  --s1: #ffffff;
+  --s2: #f8fafc;
+  --border: rgba(15, 23, 42, 0.09);
+  --txt: #0f172a;
+  --muted: #64748b;
+  --dim: #94a3b8;
+  --violet: #6d28d9;
+}
+html.light .mr,
+html.light .mx {
+  --bg: #f1f5f9;
+  --s1: #ffffff;
+  --s2: #f8fafc;
+  --border: rgba(15, 23, 42, 0.09);
+  --bhi: rgba(15, 23, 42, 0.14);
+  --txt: #0f172a;
+  --txt2: #334155;
+  --muted: #64748b;
+  --dim: #94a3b8;
+  --violet: #6d28d9;
+  --teal: #0d9488;
+  --amber: #d97706;
+  --danger: #dc2626;
+  --green: #059669;
+}
+html.light .oa {
+  --bg: #f1f5f9;
+  --s1: #ffffff;
+  --s2: #f8fafc;
+  --border: rgba(15, 23, 42, 0.09);
+  --bhi: rgba(15, 23, 42, 0.14);
+  --txt: #0f172a;
+  --muted: #64748b;
+  --violet: #6d28d9;
+  --teal: #0d9488;
+  --amber: #d97706;
+  --blue: #2563eb;
+  --danger: #dc2626;
+  --green: #059669;
+}
+html.light .mx-record-row {
+  border-bottom-color: rgba(15, 23, 42, 0.06);
+}
+html.light .mx-modal {
+  border-color: rgba(15, 23, 42, 0.1);
+}
+html.light .mx-input,
+html.light .mx-select,
+html.light .mx-textarea {
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+/* My Fleet */
+html.light .mf-wrap {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+html.light .mf-heading {
+  color: #0b163d;
+}
+html.light .mf-sub {
+  color: #64748b;
+}
+html.light .mf-card {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.1);
+}
+html.light .mf-card-img,
+html.light .mf-card-img-placeholder {
+  background: #e2e8f0;
+}
+html.light .mf-card-title {
+  color: #0f172a;
+}
+html.light .mf-card-meta {
+  color: #64748b;
+}
+html.light .mf-modal {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.1);
+}
+html.light .mf-modal-title {
+  color: #0f172a;
+}
+html.light .mf-input {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #0f172a;
+}
+html.light .mf-section-title {
+  color: #64748b;
+}
+html.light .mf-label {
+  color: #64748b;
+}
+html.light .mf-modal-close {
+  background: #f1f5f9;
+  border-color: rgba(15, 23, 42, 0.1);
+  color: #64748b;
+}
+html.light .mf-empty {
+  color: #64748b;
+}
+
+/* Owner bookings list — light shell */
+html.light .obl {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+html.light .obl-heading {
+  color: #0b163d;
+}
+html.light .obl-sub {
+  color: #64748b;
+}
+html.light .obl-stat {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.1);
+}
+html.light .obl-stat-lbl {
+  color: #64748b;
+}
+html.light .obl-stat-val {
+  color: #0f172a;
+}
+html.light .obl-search {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #0f172a;
+}
+html.light .obl-search::placeholder {
+  color: #94a3b8;
+}
+html.light .obl-search-ico {
+  color: #94a3b8;
+}
+html.light .obl-pill {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.1);
+  color: #64748b;
+}
+html.light .obl-pill:hover {
+  color: #334155;
+  border-color: rgba(15, 23, 42, 0.18);
+}
+html.light .obl-pill.active {
+  background: rgba(124, 108, 252, 0.12);
+  border-color: rgba(124, 108, 252, 0.35);
+  color: #5b21b6;
+}
+html.light .obl-table-wrap {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.1);
+}
+html.light .obl-th {
+  background: #f8fafc;
+  color: #64748b;
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+html.light .obl-td {
+  border-bottom-color: rgba(15, 23, 42, 0.06);
+  color: #334155;
+}
+html.light .obl-tr:hover > .obl-td {
+  background: rgba(124, 108, 252, 0.04);
+}
+html.light .obl-car-name {
+  color: #0f172a;
+}
+html.light .obl-car-city {
+  color: #64748b;
+}
+html.light .obl-customer-name {
+  color: #334155;
+}
+html.light .obl-customer-contact {
+  color: #64748b;
+}
+html.light .obl-dates-main {
+  color: #334155;
+}
+html.light .obl-dates-days {
+  color: #64748b;
+}
+html.light .obl-detail-panel {
+  background: #f8fafc;
+}
+html.light .obl-panel-title {
+  color: #64748b;
+}
+html.light .obl-detail-row > .obl-detail-td {
+  border-bottom-color: rgba(15, 23, 42, 0.06);
+}
+html.light .fbk-modal {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+/* Admin shell */
+html.light .adm-shell {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+html.light .adm-side {
+  background: #ffffff;
+  border-right-color: rgba(15, 23, 42, 0.08);
+}
+html.light .adm-brand-title {
+  color: #0b163d;
+}
+html.light .adm-nav-item {
+  color: #64748b;
+  border-color: transparent;
+}
+html.light .adm-nav-item:hover {
+  color: #334155;
+  background: rgba(124, 108, 252, 0.08);
+  border-color: rgba(124, 108, 252, 0.12);
+}
+html.light .adm-nav-item.active {
+  color: #1e1b4b;
+  background: rgba(124, 108, 252, 0.12);
+  border-color: rgba(124, 108, 252, 0.28);
+}
+html.light .adm-nav-item:not(.active) .adm-nav-ico {
+  background: rgba(15, 23, 42, 0.06);
+  color: #64748b;
+}
+html.light .adm-card {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.1);
+}
+html.light .adm-card:hover {
+  border-color: rgba(124, 108, 252, 0.25);
+  box-shadow: 0 0 32px rgba(124, 108, 252, 0.1);
+}
+html.light .adm-kpi-lbl,
+html.light .adm-label,
+html.light .adm-sub {
+  color: #64748b;
+}
+html.light .adm-kpi-val,
+html.light .adm-title {
+  color: #0f172a;
+}
+html.light .adm-table thead th {
+  color: #64748b;
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+html.light .adm-table tbody td {
+  border-bottom-color: rgba(15, 23, 42, 0.06);
+  color: #334155;
+}
+html.light .adm-table tbody tr:hover td {
+  background: rgba(124, 108, 252, 0.05);
+}
+html.light .adm-btn-ghost {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #475569;
+}
+html.light .adm-empty,
+html.light .adm-loading {
+  color: #64748b;
+}
+html.light .adm-meta {
+  background: #f1f5f9;
+  border-color: rgba(15, 23, 42, 0.1);
+  color: #64748b;
+}
+@media (max-width: 767px) {
+  html.light .adm-side {
+    border-top-color: rgba(15, 23, 42, 0.1);
+    box-shadow: 0 -8px 32px rgba(15, 23, 42, 0.1);
+  }
+}
+
+/* Messages — dark mode (default string is light) */
+html.dark .msg {
+  background: #09090f;
+}
+html.dark .msg-list {
+  background: #111118;
+  border-right-color: rgba(255, 255, 255, 0.08);
+}
+html.dark .msg-list-head {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+html.dark .msg-list-title {
+  color: #e8e8f0;
+}
+html.dark .msg-conv {
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+html.dark .msg-conv:hover,
+html.dark .msg-conv.active {
+  background: rgba(255, 255, 255, 0.04);
+}
+html.dark .msg-conv-name {
+  color: #e8e8f0;
+}
+html.dark .msg-conv-preview {
+  color: #8a8a9e;
+}
+html.dark .msg-chat-head {
+  background: #111118;
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+  color: #e8e8f0;
+}
+html.dark .msg-chat-body {
+  background: #09090f;
+}
+html.dark .msg-bubble.them {
+  background: #16161f;
+  color: #e8e8f0;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+html.dark .msg-input-row {
+  background: #111118;
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+html.dark .msg-input {
+  background: #16161f;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #e8e8f0;
+}
+html.dark .msg-empty {
+  color: #6b7280;
+}
+
+/* Car details (.cd) — dark tokens */
+html.dark .cd {
+  --bg: #09090f;
+  --bg2: #12121a;
+  --card: #16161f;
+  --card2: #1c1c26;
+  --line: rgba(255, 255, 255, 0.1);
+  --line2: rgba(255, 255, 255, 0.06);
+  --ink: #e8e8f0;
+  --ink2: #c4c4ce;
+  --ghost: #8a8a9e;
+  --dim: #5a5a72;
+  --acc: #8b7cff;
+  --acc-bg: rgba(139, 124, 255, 0.12);
+  --acc-bd: rgba(139, 124, 255, 0.35);
+  --green: #34d399;
+  --green-bg: rgba(52, 211, 153, 0.12);
+  --green-bd: rgba(52, 211, 153, 0.28);
+}
+html.dark .cd-nav {
+  background: rgba(9, 9, 15, 0.92);
+  border-bottom-color: var(--line);
+}
+html.dark .cd-carousel::after {
+  background: linear-gradient(to top, rgba(9, 9, 15, 0.65) 0%, transparent 100%);
+}

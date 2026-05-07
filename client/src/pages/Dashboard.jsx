@@ -1,5 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import SellerLayout from "../components/seller/SellerLayout";
+import { useTheme } from "../context/ThemeContext";
+import { useAppLang } from "../context/AppLangContext";
 import { getMySales } from "../api/sale";
 import {
   LineChart,
@@ -16,6 +18,9 @@ import {
 const COLORS = ["#6366F1", "#F59E0B", "#10B981"];
 
 export default function Dashboard() {
+  const { dark } = useTheme();
+  const { copy, lang } = useAppLang();
+  const t = copy.dashboard;
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -47,37 +52,43 @@ export default function Dashboard() {
     return sales
       .filter((s) => s.status === "sold")
       .map((s, i) => ({
-        name: `Sale ${i + 1}`,
+        name: `${t.charts.saleLabel} ${i + 1}`,
         revenue: Number(s.price || 0),
       }));
-  }, [sales]);
+  }, [sales, t.charts.saleLabel]);
 
   const statusData = [
-    { name: "Active", value: active },
-    { name: "Pending", value: pending },
-    { name: "Sold", value: sold },
+    { name: t.status.active,  value: active },
+    { name: t.status.pending, value: pending },
+    { name: t.status.sold,    value: sold },
   ];
+
+  const axisStroke = dark ? "#94a3b8" : "#9CA3AF";
+  const numLocale = lang === "fr" ? "fr-FR" : "en-US";
 
   if (loading) {
     return (
       <SellerLayout>
-        <div className="p-10">Loading dashboard...</div>
+        <div className="p-10 text-slate-600 dark:text-slate-400">{t.loading}</div>
       </SellerLayout>
     );
   }
 
   return (
     <SellerLayout>
-      <div className="min-h-screen p-8 space-y-12
-      bg-[radial-gradient(circle_at_top_left,_#eef2ff,_#f8fafc)]">
+      <div className={`min-h-screen p-8 space-y-12 transition-colors ${
+        dark
+          ? "bg-[radial-gradient(circle_at_top_left,_#1e1b4b,_#0f172a)]"
+          : "bg-[radial-gradient(circle_at_top_left,_#eef2ff,_#f8fafc)]"
+      }`}>
 
         {/* ================= HEADER ================= */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Sales Analytics
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            {t.title}
           </h1>
-          <p className="text-gray-500 mt-1">
-            Track performance, revenue and listing activity
+          <p className="text-gray-500 dark:text-slate-400 mt-1">
+            {t.sub}
           </p>
         </div>
 
@@ -93,24 +104,24 @@ export default function Dashboard() {
             bg-white/10 rounded-full blur-3xl" />
 
             <p className="text-sm text-white/70">
-              Total Revenue
+              {t.totalRevenue}
             </p>
 
             <p className="text-5xl font-bold mt-4 tracking-tight">
-              {revenue.toLocaleString()} MAD
+              {revenue.toLocaleString(numLocale)} MAD
             </p>
 
             <p className="text-sm text-white/60 mt-2">
-              Generated from sold vehicles
+              {t.revenueSub}
             </p>
           </div>
 
           {/* Metrics Side Card */}
-          <div className="bg-white rounded-3xl p-8 border border-gray-200 shadow-lg space-y-8">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-gray-200 dark:border-slate-700 shadow-lg space-y-8">
 
-            <Metric label="Sold Vehicles" value={sold} />
-            <Metric label="Conversion Rate" value={`${conversionRate}%`} />
-            <Metric label="Active Listings" value={active} />
+            <Metric label={t.metrics.soldVehicles}   value={sold} />
+            <Metric label={t.metrics.conversionRate} value={`${conversionRate}%`} />
+            <Metric label={t.metrics.activeListings} value={active} />
 
           </div>
         </div>
@@ -118,9 +129,9 @@ export default function Dashboard() {
         {/* ================= MINI STATS ================= */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
 
-          <MiniStat label="Total Listings" value={total} />
-          <MiniStat label="Pending Approval" value={pending} />
-          <MiniStat label="Approved Listings" value={active} />
+          <MiniStat label={t.metrics.totalListings}    value={total} />
+          <MiniStat label={t.metrics.pendingApproval}  value={pending} />
+          <MiniStat label={t.metrics.approvedListings} value={active} />
 
         </div>
 
@@ -128,10 +139,10 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
 
           {/* Revenue Trend Chart */}
-          <div className="bg-white rounded-3xl p-8 border border-gray-200 shadow-lg">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-gray-200 dark:border-slate-700 shadow-lg">
 
-            <h2 className="font-semibold text-gray-800 mb-6">
-              Revenue Trend
+            <h2 className="font-semibold text-gray-800 dark:text-slate-200 mb-6">
+              {t.charts.revenueTrend}
             </h2>
 
             <ResponsiveContainer width="100%" height={300}>
@@ -143,9 +154,13 @@ export default function Dashboard() {
                   </linearGradient>
                 </defs>
 
-                <XAxis dataKey="name" stroke="#9CA3AF" />
-                <YAxis stroke="#9CA3AF" />
-                <Tooltip />
+                <XAxis dataKey="name" stroke={axisStroke} />
+                <YAxis stroke={axisStroke} />
+                <Tooltip
+                  contentStyle={dark
+                    ? { background: "#1e293b", border: "1px solid #334155", borderRadius: 12, color: "#f1f5f9" }
+                    : { background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12 }}
+                />
 
                 <Line
                   type="monotone"
@@ -159,10 +174,10 @@ export default function Dashboard() {
           </div>
 
           {/* Status Donut */}
-          <div className="bg-white rounded-3xl p-8 border border-gray-200 shadow-lg">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-gray-200 dark:border-slate-700 shadow-lg">
 
-            <h2 className="font-semibold text-gray-800 mb-6">
-              Listing Status Distribution
+            <h2 className="font-semibold text-gray-800 dark:text-slate-200 mb-6">
+              {t.charts.statusDistribution}
             </h2>
 
             <ResponsiveContainer width="100%" height={300}>
@@ -181,7 +196,11 @@ export default function Dashboard() {
                     />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip
+                  contentStyle={dark
+                    ? { background: "#1e293b", border: "1px solid #334155", borderRadius: 12, color: "#f1f5f9" }
+                    : { background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12 }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -196,8 +215,8 @@ export default function Dashboard() {
 function Metric({ label, value }) {
   return (
     <div>
-      <p className="text-sm text-gray-500">{label}</p>
-      <p className="text-2xl font-bold text-gray-900 mt-2">
+      <p className="text-sm text-gray-500 dark:text-slate-400">{label}</p>
+      <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
         {value}
       </p>
     </div>
@@ -206,14 +225,14 @@ function Metric({ label, value }) {
 
 function MiniStat({ label, value }) {
   return (
-    <div className="relative bg-white rounded-3xl p-6 shadow-lg
-    border border-gray-200 hover:shadow-xl transition-all duration-300">
+    <div className="relative bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-lg
+    border border-gray-200 dark:border-slate-700 hover:shadow-xl transition-all duration-300">
 
       <div className="absolute top-0 left-0 w-full h-1 
       bg-gradient-to-r from-indigo-500 to-blue-500 rounded-t-3xl" />
 
-      <p className="text-sm text-gray-500">{label}</p>
-      <p className="text-xl font-bold text-gray-900 mt-3">
+      <p className="text-sm text-gray-500 dark:text-slate-400">{label}</p>
+      <p className="text-xl font-bold text-gray-900 dark:text-white mt-3">
         {value}
       </p>
     </div>

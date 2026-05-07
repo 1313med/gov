@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/axios";
 import OwnerLayout from "../components/owner/OwnerLayout";
+import { useAppLang } from "../context/AppLangContext";
 import { Wrench, Plus, Trash2, X, Car, MapPin, Calendar, AlertTriangle } from "lucide-react";
 
 const S = `
@@ -96,7 +97,6 @@ const S = `
 `;
 
 const TYPE_OPTIONS = ["oil_change", "tire_rotation", "inspection", "repair", "cleaning", "other"];
-const TYPE_LABELS  = { oil_change: "Oil Change", tire_rotation: "Tire Rotation", inspection: "Inspection", repair: "Repair", cleaning: "Cleaning", other: "Other" };
 
 const BLANK = { rentalId: "", type: "oil_change", cost: "", date: "", mileageAtService: "", provider: "", notes: "", nextServiceDate: "", nextServiceMileage: "" };
 
@@ -106,9 +106,16 @@ function isDueSoon(dateStr) {
   return diff >= 0 && diff <= 7;
 }
 
-function fmt(d) { return d ? new Date(d).toLocaleDateString("en-GB", { day:"2-digit", month:"short", year:"numeric" }) : "—"; }
+function fmt(d, lang) {
+  if (!d) return "—";
+  const locale = lang === "fr" ? "fr-FR" : "en-GB";
+  return new Date(d).toLocaleDateString(locale, { day: "2-digit", month: "short", year: "numeric" });
+}
 
 export default function MaintenancePage() {
+  const { copy, lang } = useAppLang();
+  const t = copy.maintenance;
+  const numLocale = lang === "fr" ? "fr-FR" : "en-US";
   const [records,  setRecords]  = useState([]);
   const [totalCost,setTotalCost]= useState(0);
   const [cars,     setCars]     = useState([]);
@@ -154,16 +161,16 @@ export default function MaintenancePage() {
       setForm(BLANK);
       setModalCar(null);
       await loadAll();
-    } catch (err) { alert(err?.response?.data?.message || "Failed to save"); }
+    } catch (err) { alert(err?.response?.data?.message || t.saveFail); }
     finally { setSaving(false); }
   }
 
   async function handleDelete(id) {
-    if (!confirm("Delete this maintenance record?")) return;
+    if (!confirm(t.confirmDelete)) return;
     try {
       await api.delete(`/maintenance/${id}`);
       await loadAll();
-    } catch { alert("Failed to delete"); }
+    } catch { alert(t.deleteFail); }
   }
 
   function openModal(car) {
@@ -190,9 +197,9 @@ export default function MaintenancePage() {
 
         {/* Header */}
         <div className="mx-header mx-fade">
-          <p className="mx-eyebrow">Owner Panel</p>
-          <h1 className="mx-title">Maintenance Log</h1>
-          <p className="mx-sub">Track service history and schedule upcoming maintenance for your fleet</p>
+          <p className="mx-eyebrow">{t.eyebrow}</p>
+          <h1 className="mx-title">{t.title}</h1>
+          <p className="mx-sub">{t.sub}</p>
         </div>
 
         {!loading && (
@@ -201,25 +208,25 @@ export default function MaintenancePage() {
             <div className="mx-summary mx-fade" style={{ animationDelay: "60ms" }}>
               <div className="mx-sum-cell">
                 <div className="mx-sum-n">{cars.length}</div>
-                <div className="mx-sum-l">Cars in Fleet</div>
+                <div className="mx-sum-l">{t.summary.cars}</div>
               </div>
               <div className="mx-sum-cell">
                 <div className="mx-sum-n">{records.length}</div>
-                <div className="mx-sum-l">Total Records</div>
+                <div className="mx-sum-l">{t.summary.records}</div>
               </div>
               <div className="mx-sum-cell">
-                <div className="mx-sum-n" style={{ color: "#7c6cfc" }}>{Number(totalCost).toLocaleString()}</div>
-                <div className="mx-sum-l">Total Cost (MAD)</div>
+                <div className="mx-sum-n" style={{ color: "#7c6cfc" }}>{Number(totalCost).toLocaleString(numLocale)}</div>
+                <div className="mx-sum-l">{t.summary.total}</div>
               </div>
               <div className="mx-sum-cell">
                 <div className="mx-sum-n" style={{ color: dueSoonCount > 0 ? "#f5a623" : "inherit" }}>{dueSoonCount}</div>
-                <div className="mx-sum-l">Due Within 7 Days</div>
+                <div className="mx-sum-l">{t.summary.dueSoon}</div>
               </div>
             </div>
 
             {/* Car cards grid */}
             {cars.length === 0 ? (
-              <div className="mx-no-cars">No cars in your fleet yet. Add a rental to get started.</div>
+              <div className="mx-no-cars">{t.emptyFleet}</div>
             ) : (
               <div className="mx-grid">
                 {cars.map((car, i) => {
@@ -254,26 +261,26 @@ export default function MaintenancePage() {
                           </span>
                         </div>
                         {carRecords.length > 0 && (
-                          <p className="mx-car-cost">{Number(carCost).toLocaleString()} MAD total maintenance cost</p>
+                          <p className="mx-car-cost">{Number(carCost).toLocaleString(numLocale)} {t.totalCost}</p>
                         )}
                       </div>
 
                       {/* Maintenance records list */}
                       <div className="mx-records">
                         {carRecords.length === 0 ? (
-                          <div className="mx-card-empty">No maintenance records yet</div>
+                          <div className="mx-card-empty">{t.emptyRecords}</div>
                         ) : (
                           carRecords.map((r) => (
                             <div key={r._id} className="mx-record-row">
-                              <span className="mx-record-type">{TYPE_LABELS[r.type] || r.type}</span>
-                              <span className="mx-record-date">{fmt(r.date)}</span>
+                              <span className="mx-record-type">{t.types[r.type] || r.type}</span>
+                              <span className="mx-record-date">{fmt(r.date, lang)}</span>
                               {r.nextServiceDate && isDueSoon(r.nextServiceDate) && (
                                 <span className="mx-record-due">
-                                  <AlertTriangle size={10} /> {fmt(r.nextServiceDate)}
+                                  <AlertTriangle size={10} /> {fmt(r.nextServiceDate, lang)}
                                 </span>
                               )}
-                              <span className="mx-record-cost">{Number(r.cost).toLocaleString()} MAD</span>
-                              <button className="mx-record-del" onClick={() => handleDelete(r._id)} title="Delete">
+                              <span className="mx-record-cost">{Number(r.cost).toLocaleString(numLocale)} MAD</span>
+                              <button className="mx-record-del" onClick={() => handleDelete(r._id)} title={t.delete}>
                                 <Trash2 size={12} />
                               </button>
                             </div>
@@ -284,7 +291,7 @@ export default function MaintenancePage() {
                       {/* Add button per car */}
                       <div className="mx-card-foot">
                         <button className="mx-add-btn" onClick={() => openModal(car)}>
-                          <Plus size={13} /> Add maintenance record
+                          <Plus size={13} /> {t.addBtn}
                         </button>
                       </div>
                     </div>
@@ -297,7 +304,7 @@ export default function MaintenancePage() {
 
         {loading && (
           <div style={{ textAlign: "center", padding: "60px 20px", fontFamily: "var(--mono)", fontSize: 12, color: "var(--muted)" }}>
-            Loading maintenance data…
+            {t.loading}
           </div>
         )}
       </div>
@@ -308,7 +315,7 @@ export default function MaintenancePage() {
           <div className="mx-modal">
             <div className="mx-modal-header">
               <div>
-                <h2 className="mx-modal-title">Add Maintenance Record</h2>
+                <h2 className="mx-modal-title">{t.modal.title}</h2>
                 {modalCar && <p className="mx-modal-subtitle">{modalCar.title}</p>}
               </div>
               <button className="mx-modal-close" onClick={() => setModal(false)}><X size={14} /></button>
@@ -317,51 +324,51 @@ export default function MaintenancePage() {
             <form onSubmit={handleSubmit}>
               <div className="mx-grid-2">
                 <div className="mx-field">
-                  <label className="mx-label">Service type</label>
+                  <label className="mx-label">{t.modal.serviceType}</label>
                   <select className="mx-select" name="type" value={form.type} onChange={chg}>
-                    {TYPE_OPTIONS.map((t) => <option key={t} value={t}>{TYPE_LABELS[t]}</option>)}
+                    {TYPE_OPTIONS.map((typ) => <option key={typ} value={typ}>{t.types[typ]}</option>)}
                   </select>
                 </div>
                 <div className="mx-field">
-                  <label className="mx-label">Date</label>
+                  <label className="mx-label">{t.modal.date}</label>
                   <input type="date" className="mx-input" name="date" value={form.date} onChange={chg} required />
                 </div>
               </div>
 
               <div className="mx-grid-2">
                 <div className="mx-field">
-                  <label className="mx-label">Cost (MAD)</label>
-                  <input type="number" className="mx-input" name="cost" value={form.cost} onChange={chg} placeholder="e.g. 1200" min={0} required />
+                  <label className="mx-label">{t.modal.cost}</label>
+                  <input type="number" className="mx-input" name="cost" value={form.cost} onChange={chg} placeholder={t.modal.costPh} min={0} required />
                 </div>
                 <div className="mx-field">
-                  <label className="mx-label">Mileage at service (km)</label>
-                  <input type="number" className="mx-input" name="mileageAtService" value={form.mileageAtService} onChange={chg} placeholder="e.g. 45000" min={0} />
+                  <label className="mx-label">{t.modal.mileage}</label>
+                  <input type="number" className="mx-input" name="mileageAtService" value={form.mileageAtService} onChange={chg} placeholder={t.modal.mileagePh} min={0} />
                 </div>
               </div>
 
               <div className="mx-field">
-                <label className="mx-label">Provider / Garage</label>
-                <input className="mx-input" name="provider" value={form.provider} onChange={chg} placeholder="e.g. Auto Garage Casablanca" />
+                <label className="mx-label">{t.modal.provider}</label>
+                <input className="mx-input" name="provider" value={form.provider} onChange={chg} placeholder={t.modal.providerPh} />
               </div>
 
               <div className="mx-grid-2">
                 <div className="mx-field">
-                  <label className="mx-label">Next service date</label>
+                  <label className="mx-label">{t.modal.nextDate}</label>
                   <input type="date" className="mx-input" name="nextServiceDate" value={form.nextServiceDate} onChange={chg} />
                 </div>
                 <div className="mx-field">
-                  <label className="mx-label">Next service mileage</label>
-                  <input type="number" className="mx-input" name="nextServiceMileage" value={form.nextServiceMileage} onChange={chg} placeholder="e.g. 50000" min={0} />
+                  <label className="mx-label">{t.modal.nextMileage}</label>
+                  <input type="number" className="mx-input" name="nextServiceMileage" value={form.nextServiceMileage} onChange={chg} placeholder={t.modal.nextMileagePh} min={0} />
                 </div>
               </div>
 
               <div className="mx-field">
-                <label className="mx-label">Notes</label>
-                <textarea className="mx-textarea" name="notes" value={form.notes} onChange={chg} placeholder="Any additional notes…" />
+                <label className="mx-label">{t.modal.notes}</label>
+                <textarea className="mx-textarea" name="notes" value={form.notes} onChange={chg} placeholder={t.modal.notesPh} />
               </div>
 
               <button type="submit" className="mx-submit-btn" disabled={saving || !form.cost || !form.date}>
-                {saving ? "Saving…" : "Save Record"}
+                {saving ? t.modal.saving : t.modal.save}
               </button>
             </form>
           </div>
