@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -12,7 +12,6 @@ import {
   TextInput,
   Modal,
   ScrollView,
-  Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
@@ -23,20 +22,16 @@ import {
   updateBookingMedia,
 } from "../src/api/booking";
 import { uploadListingImages } from "../src/api/upload";
-import { submitCustomerFeedback, getFeedbackForBooking } from "../src/api/customerFeedback";
+import { submitCustomerFeedback, getFeedbackForBooking, getFeedbackForCustomer } from "../src/api/customerFeedback";
 import { useAppLang } from "../src/context/AppLangContext";
+import { useAuth } from "../src/context/AuthContext";
 import { C } from "../src/theme";
-import { SERVER_URL } from "../src/config";
+import { resolveMediaUrl } from "../src/utils/mediaUrl";
+import { openExternalUrl } from "../src/utils/openExternalUrl";
 
 const PAGE_SIZE = 15;
 
 const DEFAULT_STATS = { total: 0, pending: 0, confirmed: 0, completed: 0, rejected: 0, cancelled: 0, revenue: 0 };
-
-function resolveImageUrl(u) {
-  if (!u || typeof u !== "string") return null;
-  if (u.startsWith("http://") || u.startsWith("https://")) return u;
-  return `${SERVER_URL}/uploads/${u}`;
-}
 
 const STATUS = {
   pending: { bg: "rgba(245,158,11,0.1)", border: "rgba(245,158,11,0.3)", text: "#f59e0b", icon: "time-outline" },
@@ -93,7 +88,7 @@ function BookingMediaPanel({ booking, fr, onUpdated }) {
       return;
     }
     const r = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: "images",
       allowsMultipleSelection: true,
       quality: 0.85,
     });
@@ -120,7 +115,7 @@ function BookingMediaPanel({ booking, fr, onUpdated }) {
     }
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) return;
-    const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.85 });
+    const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: "images", quality: 0.85 });
     if (r.canceled || !r.assets?.[0]) return;
     try {
       const urls = await uploadListingImages([{ uri: r.assets[0].uri, name: "doc.jpg", type: r.assets[0].mimeType || "image/jpeg" }]);
@@ -193,7 +188,7 @@ function BookingMediaPanel({ booking, fr, onUpdated }) {
       {docs.map((doc, i) => (
         <View key={i} style={m.docItem}>
           <Text style={m.docName} numberOfLines={1}>{doc.name}</Text>
-          <TouchableOpacity onPress={() => Linking.openURL(doc.url)}>
+          <TouchableOpacity onPress={() => openExternalUrl(doc.url, { fr })}>
             <Text style={m.docLink}>{fr ? "Ouvrir" : "Open"}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => removeDoc(i)}>
@@ -381,8 +376,289 @@ const f = StyleSheet.create({
   okT: { color: "#fff", fontWeight: "700" },
 });
 
+function CustomerProfileModal({ visible, booking, fr, ownerId, onClose }) {
+  const customer = booking?.customerId;
+  const cid =
+    customer && typeof customer === "object" && customer._id != null
+      ? String(customer._id)
+      : null;
+
+  const [loadingFb, setLoadingFb] = useState(false);
+  const [fbPayload, setFbPayload] = useState(null);
+  const [fbErr, setFbErr] = useState(null);
+
+  useEffect(() => {
+    if (!visible || !cid) {
+      setFbPayload(null);
+      setFbErr(null);
+      return;
+    }
+    setLoadingFb(true);
+    setFbErr(null);
+    getFeedbackForCustomer(cid)
+      .then(({ data }) => setFbPayload(data))
+      .catch((e) => {
+        setFbPayload(null);
+        setFbErr(e?.response?.data?.message || (fr ? "Impossible de charger les avis" : "Could not load reviews"));
+      })
+      .finally(() => setLoadingFb(false));
+  }, [visible, cid, fr]);
+
+  const otherFeedbacks = useMemo(() => {
+    const list = fbPayload?.feedbacks || [];
+    if (!ownerId) return list;
+    return list.filter((f) => String(f.ownerId?._id || f.ownerId) !== String(ownerId));
+  }, [fbPayload, ownerId]);
+
+  const otherSummary = useMemo(() => {
+    const total = otherFeedbacks.length;
+    if (!total) {
+      return {
+        total: 0,
+        goodCount: 0,
+        badCount: 0,
+        damageCount: 0,
+        lateCount: 0,
+        wouldRentAgainCount: 0,
+      };
+    }
+    return {
+      total,
+      goodCount: otherFeedbacks.filter((f) => f.overall === "good").length,
+      badCount: otherFeedbacks.filter((f) => f.overall === "bad").length,
+      damageCount: otherFeedbacks.filter((f) => f.hadDamage).length,
+      lateCount: otherFeedbacks.filter((f) => !f.returnedOnTime).length,
+      wouldRentAgainCount: otherFeedbacks.filter((f) => f.wouldRentAgain).length,
+    };
+  }, [otherFeedbacks]);
+
+  if (!booking) return null;
+
+  const dl = typeof customer === "object" ? customer?.driverLicense : null;
+  const nid = typeof customer === "object" ? customer?.nationalId : null;
+  const licExpiry =
+    dl?.expiryDate != null
+      ? new Date(dl.expiryDate).toLocaleDateString(fr ? "fr-FR" : "en-US")
+      : "";
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent>
+      <View style={cp.overlay}>
+        <View style={cp.box}>
+          <View style={cp.headRow}>
+            <Text style={cp.title}>{fr ? "Profil client" : "Customer profile"}</Text>
+            <TouchableOpacity onPress={onClose} hitSlop={12}>
+              <Ionicons name="close" size={26} color={C.muted} />
+            </TouchableOpacity>
+          </View>
+
+          {booking.status === "pending" && (
+            <View style={cp.hint}>
+              <Ionicons name="information-circle-outline" size={20} color="#fbbf24" />
+              <Text style={cp.hintText}>
+                {fr
+                  ? "Vérifiez permis et CIN avant d'approuver ou de refuser."
+                  : "Check license and national ID before you confirm or reject."}
+              </Text>
+            </View>
+          )}
+
+          {!cid && (
+            <Text style={cp.warn}>
+              {fr ? "Données client incomplètes. Tirez pour actualiser." : "Customer data missing. Pull to refresh."}
+            </Text>
+          )}
+
+          <ScrollView style={{ maxHeight: 480 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+            {typeof customer === "object" && customer && (
+              <>
+                <Text style={cp.name}>{customer.name || "—"}</Text>
+                <Text style={cp.meta}>
+                  {[customer.phone, customer.email, customer.city].filter(Boolean).join(" · ")}
+                </Text>
+
+                <Text style={cp.section}>{fr ? "Permis de conduire" : "Driving license"}</Text>
+                {dl?.number || dl?.imageUrl ? (
+                  <>
+                    <Text style={cp.line}>
+                      {fr ? "N°" : "No."} {dl?.number || "—"}
+                      {licExpiry ? ` · ${fr ? "Exp." : "Exp."} ${licExpiry}` : ""}
+                      {dl?.verified ? ` · ${fr ? "Vérifié" : "Verified"}` : ""}
+                    </Text>
+                    {resolveMediaUrl(dl?.imageUrl) ? (
+                      <TouchableOpacity
+                        onPress={() => openExternalUrl(resolveMediaUrl(dl.imageUrl), { fr })}
+                        activeOpacity={0.85}
+                      >
+                        <Image source={{ uri: resolveMediaUrl(dl.imageUrl) }} style={cp.docImg} resizeMode="cover" />
+                        <Text style={cp.tapHint}>{fr ? "Ouvrir la photo" : "Open photo"}</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <Text style={cp.missing}>{fr ? "Photo manquante" : "No photo"}</Text>
+                    )}
+                  </>
+                ) : (
+                  <Text style={cp.missing}>{fr ? "Non renseigné" : "Not provided"}</Text>
+                )}
+
+                <Text style={cp.section}>{fr ? "CIN (carte d'identité)" : "National ID (CIN)"}</Text>
+                {nid?.number || nid?.imageUrl ? (
+                  <>
+                    <Text style={cp.line}>
+                      {fr ? "N°" : "No."} {nid?.number || "—"}
+                      {nid?.verified ? ` · ${fr ? "Vérifié" : "Verified"}` : ""}
+                    </Text>
+                    {resolveMediaUrl(nid?.imageUrl) ? (
+                      <TouchableOpacity
+                        onPress={() => openExternalUrl(resolveMediaUrl(nid.imageUrl), { fr })}
+                        activeOpacity={0.85}
+                      >
+                        <Image source={{ uri: resolveMediaUrl(nid.imageUrl) }} style={cp.docImg} resizeMode="cover" />
+                        <Text style={cp.tapHint}>{fr ? "Ouvrir la photo" : "Open photo"}</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <Text style={cp.missing}>{fr ? "Photo manquante" : "No photo"}</Text>
+                    )}
+                  </>
+                ) : (
+                  <Text style={cp.missing}>{fr ? "Non renseigné" : "Not provided"}</Text>
+                )}
+              </>
+            )}
+
+            <Text style={cp.section}>
+              {fr ? "Avis d'autres propriétaires" : "Feedback from other owners"}
+            </Text>
+            {loadingFb ? (
+              <ActivityIndicator color={C.primary} style={{ marginVertical: 16 }} />
+            ) : fbErr ? (
+              <Text style={cp.err}>{fbErr}</Text>
+            ) : otherSummary.total === 0 ? (
+              <Text style={cp.emptyFb}>
+                {fr
+                  ? "Pas encore d'avis d'autres loueurs pour ce client."
+                  : "No reviews from other rental owners yet."}
+              </Text>
+            ) : (
+              <>
+                <Text style={cp.sum}>
+                  {fr ? "Résumé" : "Summary"}: {otherSummary.goodCount} {fr ? "positifs" : "good"} ·{" "}
+                  {otherSummary.badCount} {fr ? "négatifs" : "bad"}
+                  {otherSummary.damageCount ? ` · ${fr ? "Dégâts signalés" : "Damage reported"}: ${otherSummary.damageCount}` : ""}
+                  {otherSummary.lateCount ? ` · ${fr ? "Retards" : "Late returns"}: ${otherSummary.lateCount}` : ""}
+                  {otherSummary.wouldRentAgainCount
+                    ? ` · ${fr ? "Reloueraient" : "Would rent again"}: ${otherSummary.wouldRentAgainCount}`
+                    : ""}
+                </Text>
+                {otherFeedbacks.map((f) => (
+                  <View key={f._id} style={cp.fbCard}>
+                    <Text style={cp.fbWho} numberOfLines={2}>
+                      {(f.ownerId?.name || "—") + " · " + (f.rentalId?.title || "—")}
+                    </Text>
+                    <Text style={[cp.fbOverall, f.overall === "good" ? cp.fbGood : cp.fbBad]}>
+                      {f.overall === "good" ? (fr ? "Bon locataire" : "Good renter") : fr ? "Mauvais retour" : "Poor experience"}
+                    </Text>
+                    <Text style={cp.fbFlags}>
+                      {[
+                        f.hadDamage ? (fr ? "Dégâts" : "Damage") : null,
+                        !f.returnedOnTime ? (fr ? "Retard" : "Late") : null,
+                        f.wasRespectful === false ? (fr ? "Peu respectueux" : "Not respectful") : null,
+                        f.wouldRentAgain ? (fr ? "Relouerait" : "Would rent again") : fr ? "Ne relouerait pas" : "Would not rent again",
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </Text>
+                    {f.note ? <Text style={cp.fbNote}>{f.note}</Text> : null}
+                  </View>
+                ))}
+              </>
+            )}
+          </ScrollView>
+
+          <TouchableOpacity onPress={onClose} style={cp.closeBtn}>
+            <Text style={cp.closeBtnT}>{fr ? "Fermer" : "Close"}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const cp = StyleSheet.create({
+  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.8)", justifyContent: "center", padding: 16 },
+  box: {
+    backgroundColor: C.card,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: C.border,
+    maxHeight: "90%",
+  },
+  headRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
+  title: { color: C.white, fontWeight: "800", fontSize: 18, flex: 1 },
+  hint: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    backgroundColor: "rgba(245,158,11,0.12)",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "rgba(245,158,11,0.35)",
+  },
+  hintText: { color: "#fde68a", fontSize: 13, flex: 1, lineHeight: 19 },
+  warn: { color: C.amber, fontSize: 13, marginBottom: 8 },
+  name: { color: C.white, fontWeight: "700", fontSize: 17 },
+  meta: { color: C.muted, fontSize: 12, marginBottom: 14, lineHeight: 18 },
+  section: {
+    color: C.muted,
+    fontSize: 11,
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+    marginTop: 12,
+    marginBottom: 6,
+  },
+  line: { color: C.slate, fontSize: 13, marginBottom: 8 },
+  docImg: {
+    width: "100%",
+    height: 140,
+    borderRadius: 12,
+    backgroundColor: C.surface,
+    marginBottom: 4,
+  },
+  tapHint: { color: C.primary, fontSize: 12, fontWeight: "600", marginBottom: 10 },
+  missing: { color: C.muted, fontStyle: "italic", fontSize: 13, marginBottom: 8 },
+  sum: { color: C.slate, fontSize: 12, marginBottom: 10, lineHeight: 18 },
+  emptyFb: { color: C.muted, fontSize: 13, marginBottom: 8, lineHeight: 19 },
+  err: { color: C.red, fontSize: 13, marginBottom: 8 },
+  fbCard: {
+    backgroundColor: C.surface,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: C.border,
+  },
+  fbWho: { color: C.white, fontSize: 13, fontWeight: "600", marginBottom: 4 },
+  fbOverall: { fontSize: 13, fontWeight: "700", marginBottom: 6 },
+  fbGood: { color: "#4ade80" },
+  fbBad: { color: "#f87171" },
+  fbFlags: { color: C.muted, fontSize: 11, lineHeight: 16 },
+  fbNote: { color: C.slate, fontSize: 12, marginTop: 8, fontStyle: "italic" },
+  closeBtn: {
+    marginTop: 14,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: C.primary,
+    alignItems: "center",
+  },
+  closeBtnT: { color: "#fff", fontWeight: "700", fontSize: 15 },
+});
+
 export default function OwnerBookingsScreen() {
   const { lang } = useAppLang();
+  const { auth } = useAuth();
   const fr = lang === "fr";
   const [bookings, setBookings] = useState([]);
   const [stats, setStats] = useState(DEFAULT_STATS);
@@ -394,6 +670,7 @@ export default function OwnerBookingsScreen() {
   const [expanded, setExpanded] = useState(null);
   const [feedbackBooking, setFeedbackBooking] = useState(null);
   const [rated, setRated] = useState({});
+  const [profileBooking, setProfileBooking] = useState(null);
 
   const applyBookingsPayload = (data, p) => {
     setBookings(Array.isArray(data?.bookings) ? data.bookings : []);
@@ -560,7 +837,7 @@ export default function OwnerBookingsScreen() {
           const start = new Date(item.startDate).toLocaleDateString();
           const end = new Date(item.endDate).toLocaleDateString();
           const open = expanded === item._id;
-          const carImg = resolveImageUrl(item.rentalId?.images?.[0]);
+          const carImg = resolveMediaUrl(item.rentalId?.images?.[0]);
           return (
             <View style={s.card}>
               <TouchableOpacity onPress={() => setExpanded(open ? null : item._id)} activeOpacity={0.9}>
@@ -576,7 +853,11 @@ export default function OwnerBookingsScreen() {
                 </View>
               </TouchableOpacity>
 
-              <View style={s.customerRow}>
+              <TouchableOpacity
+                style={s.customerRow}
+                onPress={() => setProfileBooking(item)}
+                activeOpacity={0.85}
+              >
                 <View style={s.customerAvatar}>
                   <Text style={s.customerAvatarText}>{item.customerId?.name?.[0]?.toUpperCase() || "?"}</Text>
                 </View>
@@ -587,8 +868,12 @@ export default function OwnerBookingsScreen() {
                       {[item.customerId?.phone, item.customerId?.email].filter(Boolean).join(" · ")}
                     </Text>
                   )}
+                  <Text style={s.profileLink}>
+                    {fr ? "Profil, permis, CIN & avis →" : "Profile, ID & owner reviews →"}
+                  </Text>
                 </View>
-              </View>
+                <Ionicons name="chevron-forward" size={20} color={C.primary} />
+              </TouchableOpacity>
 
               <View style={[s.badge, { backgroundColor: st.bg, borderColor: st.border }]}>
                 <Ionicons name={st.icon} size={12} color={st.text} />
@@ -651,6 +936,14 @@ export default function OwnerBookingsScreen() {
         }}
       />
 
+      <CustomerProfileModal
+        visible={!!profileBooking}
+        booking={profileBooking}
+        fr={fr}
+        ownerId={auth?._id}
+        onClose={() => setProfileBooking(null)}
+      />
+
       <FeedbackModal
         visible={!!feedbackBooking}
         booking={feedbackBooking}
@@ -689,6 +982,7 @@ const s = StyleSheet.create({
   customerAvatarText: { color: C.primary, fontSize: 11, fontWeight: "700" },
   customerName: { color: C.white, fontWeight: "600", fontSize: 14 },
   customerContact: { color: C.muted, fontSize: 11, marginTop: 2 },
+  profileLink: { color: C.primary, fontSize: 11, marginTop: 4, fontWeight: "600" },
   badge: { alignSelf: "flex-start", flexDirection: "row", alignItems: "center", borderWidth: 1, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4, marginBottom: 12, gap: 4 },
   badgeText: { fontSize: 12, fontWeight: "700", textTransform: "capitalize" },
   datesRow: { flexDirection: "row", gap: 8, marginBottom: 12 },

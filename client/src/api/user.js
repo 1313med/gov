@@ -14,3 +14,4 @@ export const removeRentalFavorite = (id) => api.delete(`/user/rental-favorites/$
 export const getMyProfile = () => api.get("/user/me");
 export const updateMyProfile = (data) => api.put("/user/me", data);
 export const updateDriverLicense = (data) => api.put("/user/me/license", data);
+export const updateNationalId = (data) => api.put("/user/me/national-id", data);

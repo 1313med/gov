@@ -129,7 +129,10 @@ exports.getBookingsForOwner = async (req, res, next) => {
 
     const bookings = await Booking.find(filter)
       .populate("rentalId", "title pricePerDay city images")
-      .populate("customerId", "name phone email")
+      .populate(
+        "customerId",
+        "name phone email city avatar driverLicense nationalId"
+      )
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit);

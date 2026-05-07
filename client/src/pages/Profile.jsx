@@ -4,6 +4,7 @@ import {
   getMyProfile,
   updateMyProfile,
   updateDriverLicense,
+  updateNationalId,
   getFavorites,
 } from "../api/user";
 import { getMyBookings } from "../api/booking";
@@ -309,10 +310,15 @@ export default function Profile() {
   const [license, setLicense]               = useState({ number: "", expiryDate: "", imageUrl: "" });
   const [existingLicense, setExistingLicense] = useState(null);
 
+  const [nationalIdForm, setNationalIdForm] = useState({ number: "", imageUrl: "" });
+  const [existingNationalId, setExistingNationalId] = useState(null);
+
   const [saving,   setSaving]   = useState(false);
   const [saveMsg,  setSaveMsg]  = useState(null);
   const [licSaving, setLicSaving] = useState(false);
   const [licMsg,   setLicMsg]   = useState(null);
+  const [cinSaving, setCinSaving] = useState(false);
+  const [cinMsg,   setCinMsg]   = useState(null);
 
   useEffect(() => {
     if (!auth?._id) { navigate("/login"); return; }
@@ -341,6 +347,13 @@ export default function Profile() {
               ? u.driverLicense.expiryDate.slice(0, 10)
               : "",
             imageUrl: u.driverLicense.imageUrl || "",
+          });
+        }
+        if (u.nationalId?.number) {
+          setExistingNationalId(u.nationalId);
+          setNationalIdForm({
+            number:   u.nationalId.number || "",
+            imageUrl: u.nationalId.imageUrl || "",
           });
         }
         if (auth.role === "customer") {
@@ -380,6 +393,19 @@ export default function Profile() {
     );
   };
 
+  const openCinWidget = () => {
+    window.cloudinary.openUploadWidget(
+      {
+        cloudName: "daqihsmib", uploadPreset: "goovoiture",
+        sources: ["local", "camera"], multiple: false,
+      },
+      (err, result) => {
+        if (!err && result?.event === "success")
+          setNationalIdForm(p => ({ ...p, imageUrl: result.info.secure_url }));
+      }
+    );
+  };
+
   const handleProfileSave = async (e) => {
     e.preventDefault();
     setSaving(true); setSaveMsg(null);
@@ -415,6 +441,24 @@ export default function Profile() {
     } finally {
       setLicSaving(false);
       setTimeout(() => setLicMsg(null), 4000);
+    }
+  };
+
+  const handleNationalIdSave = async (e) => {
+    e.preventDefault();
+    setCinSaving(true); setCinMsg(null);
+    try {
+      const r = await updateNationalId({
+        number: nationalIdForm.number,
+        imageUrl: nationalIdForm.imageUrl,
+      });
+      setExistingNationalId(r.data.nationalId);
+      setCinMsg({ type: "success", text: t.nationalId.saved });
+    } catch (err) {
+      setCinMsg({ type: "error", text: err?.response?.data?.message || t.nationalId.saveFail });
+    } finally {
+      setCinSaving(false);
+      setTimeout(() => setCinMsg(null), 4000);
     }
   };
 
@@ -561,8 +605,9 @@ export default function Profile() {
           </form>
         </div>
 
-        {/* ── Driver License (customers only) ── */}
-        {(auth?.role === "customer" || !auth?.role) && (
+        {/* ── Driving license & national ID (for booking rentals) ── */}
+        {auth?._id && (
+          <>
           <div className="gp-card">
             <div className="gp-card-header">
               <h2 className="gp-card-title">{t.license.title}</h2>
@@ -635,6 +680,69 @@ export default function Profile() {
               </button>
             </form>
           </div>
+
+          <div className="gp-card" style={{ marginTop: 16 }}>
+            <div className="gp-card-header">
+              <h2 className="gp-card-title">{t.nationalId.title}</h2>
+              <span className="gp-card-sub">{t.nationalId.sub}</span>
+            </div>
+
+            {existingNationalId && (
+              <div
+                className="gp-lic-badge"
+                style={
+                  existingNationalId.verified
+                    ? { background: "rgba(5,150,105,.08)", color: "#059669", borderColor: "rgba(5,150,105,.25)" }
+                    : { background: "rgba(245,158,11,.08)", color: "#b45309", borderColor: "rgba(245,158,11,.25)" }
+                }
+              >
+                {existingNationalId.verified ? "✓ " : "⏳ "}
+                {existingNationalId.verified ? t.nationalId.verified : t.nationalId.pending}
+              </div>
+            )}
+
+            <form onSubmit={handleNationalIdSave} className="gp-fields">
+              <div className="gp-field">
+                <label className="gp-label">{t.nationalId.number}</label>
+                <input
+                  className="gp-input"
+                  value={nationalIdForm.number}
+                  onChange={e => setNationalIdForm(p => ({ ...p, number: e.target.value }))}
+                  placeholder={t.nationalId.numberPh}
+                  required
+                />
+              </div>
+
+              <div className="gp-field">
+                <label className="gp-label">{t.nationalId.photo}</label>
+                {nationalIdForm.imageUrl ? (
+                  <div className="gp-lic-photo-row">
+                    <img src={nationalIdForm.imageUrl} alt="CIN" className="gp-lic-photo" />
+                    <button type="button" onClick={openCinWidget} className="gp-replace-btn">
+                      {t.nationalId.replace}
+                    </button>
+                  </div>
+                ) : (
+                  <button type="button" onClick={openCinWidget} className="gp-upload-zone">
+                    {ICO_UPLOAD} {t.nationalId.upload}
+                  </button>
+                )}
+              </div>
+
+              {cinMsg && (
+                <div className={`gp-msg ${cinMsg.type}`}>{cinMsg.text}</div>
+              )}
+
+              <button
+                type="submit"
+                className="gp-btn"
+                disabled={cinSaving || !nationalIdForm.number || !nationalIdForm.imageUrl}
+              >
+                {cinSaving ? t.nationalId.saving : t.nationalId.save}
+              </button>
+            </form>
+          </div>
+          </>
         )}
       </div>
     </div>

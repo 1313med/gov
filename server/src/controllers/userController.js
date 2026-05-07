@@ -89,6 +89,25 @@ exports.updateDriverLicense = asyncHandler(async (req, res) => {
   res.json(updated);
 });
 
+exports.updateNationalId = asyncHandler(async (req, res) => {
+  const { number, imageUrl } = req.body;
+  const user = await User.findById(req.user._id);
+
+  if (!number || !imageUrl) {
+    res.status(400);
+    throw new Error("National ID number and image are required");
+  }
+
+  user.nationalId = {
+    number:   number.trim(),
+    imageUrl,
+    verified: false,
+  };
+  await user.save();
+  const updated = await User.findById(user._id).select("-password");
+  res.json(updated);
+});
+
 // ── SELLER PROFILE (PUBLIC) ────────────────────────────────────────────────
 
 exports.getSellerProfile = asyncHandler(async (req, res) => {

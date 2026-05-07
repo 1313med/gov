@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { createSale } from "../src/api/sale";
+import { uploadListingImages } from "../src/api/upload";
 import { useAppLang } from "../src/context/AppLangContext";
 import { C } from "../src/theme";
 
@@ -34,7 +35,7 @@ export default function NewSaleScreen() {
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   const pickImages = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsMultipleSelection:true, quality:0.75, selectionLimit:6 });
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: "images", allowsMultipleSelection:true, quality:0.75, selectionLimit:6 });
     if (!result.canceled) setImages(prev => [...prev, ...result.assets].slice(0, 6));
   };
 
@@ -58,15 +59,45 @@ export default function NewSaleScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!form.title || !form.price || !form.brand) {
-      return Alert.alert(fr ? "Champs requis" : "Required fields", fr ? "Remplissez titre, marque et prix." : "Fill in title, brand and price.");
+    if (!form.title?.trim() || !form.price || !form.brand?.trim() || !form.model?.trim()) {
+      return Alert.alert(fr ? "Champs requis" : "Required fields", fr ? "Remplissez titre, marque, modèle et prix." : "Fill in title, brand, model and price.");
+    }
+    if (!form.city?.trim()) {
+      return Alert.alert(fr ? "Ville" : "City", fr ? "La ville est requise." : "City is required.");
+    }
+    const yearNum = parseInt(String(form.year), 10);
+    const priceNum = parseFloat(String(form.price));
+    if (!Number.isFinite(yearNum) || yearNum < 1900) {
+      return Alert.alert(fr ? "Année" : "Year", fr ? "Année invalide" : "Invalid year");
+    }
+    if (!Number.isFinite(priceNum) || priceNum <= 0) {
+      return Alert.alert(fr ? "Prix" : "Price", fr ? "Prix invalide" : "Invalid price");
     }
     setLoading(true);
     try {
-      const fd = new FormData();
-      Object.entries(form).forEach(([k, v]) => { if (v) fd.append(k, v); });
-      images.forEach((img, i) => fd.append("images", { uri:img.uri, name:`photo_${i}.jpg`, type:"image/jpeg" }));
-      await createSale(fd);
+      let imageUrls = [];
+      if (images.length) {
+        const files = images.map((img, i) => ({
+          uri: img.uri,
+          name: `photo_${i}.jpg`,
+          type: img.mimeType || "image/jpeg",
+        }));
+        imageUrls = await uploadListingImages(files);
+      }
+      const payload = {
+        title: form.title.trim(),
+        brand: form.brand.trim(),
+        model: form.model.trim(),
+        year: yearNum,
+        price: priceNum,
+        city: form.city.trim(),
+        description: form.description?.trim() || undefined,
+        mileage: form.mileage ? parseInt(String(form.mileage), 10) : undefined,
+        fuel: form.fuel?.trim() || undefined,
+        gearbox: form.gearbox?.trim() || undefined,
+        images: imageUrls,
+      };
+      await createSale(payload);
       Alert.alert(fr ? "Succès" : "Success", fr ? "Annonce soumise pour approbation." : "Listing submitted for approval.", [{ text:"OK", onPress:() => router.back() }]);
     } catch (e) {
       Alert.alert("Error", e?.response?.data?.message || "Failed to create listing");

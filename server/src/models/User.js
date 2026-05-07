@@ -42,6 +42,13 @@ const userSchema = new mongoose.Schema(
       verified:   { type: Boolean, default: false }, // admin can mark verified
     },
 
+    // National ID / CIN (required before renting)
+    nationalId: {
+      number:   { type: String, default: null },
+      imageUrl: { type: String, default: null },
+      verified: { type: Boolean, default: false },
+    },
+
     // Favorites
     favorites:       [{ type: mongoose.Schema.Types.ObjectId, ref: "SaleListing" }],
     rentalFavorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "RentalListing" }],

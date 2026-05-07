@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { getMySales, deleteSale, markAsSold } from "../src/api/sale";
 import { useAppLang } from "../src/context/AppLangContext";
-import { SERVER_URL } from "../src/config";
+import { resolveMediaUrl } from "../src/utils/mediaUrl";
 import { C } from "../src/theme";
 
 const STATUS = {
@@ -77,11 +77,11 @@ export default function MySalesScreen() {
         }
         renderItem={({ item }) => {
           const st = STATUS[item.status] || STATUS.pending;
-          const img = item.images?.[0];
+          const uri = resolveMediaUrl(item.images?.[0]);
           return (
             <View style={s.card}>
-              {img
-                ? <Image source={{ uri: `${SERVER_URL}/uploads/${img}` }} style={s.cardImg} resizeMode="cover" />
+              {uri
+                ? <Image source={{ uri }} style={s.cardImg} resizeMode="cover" />
                 : <View style={s.cardImgPlaceholder}><Ionicons name="car-outline" size={48} color="#4b5563" /></View>
               }
               <View style={s.cardBody}>

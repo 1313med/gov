@@ -8,10 +8,31 @@ import { addRentalFavorite, removeRentalFavorite, getRentalFavorites } from "../
 import ReviewSection from "../../src/components/ReviewSection";
 import { useAuth } from "../../src/context/AuthContext";
 import { useAppLang } from "../../src/context/AppLangContext";
-import { SERVER_URL } from "../../src/config";
+import { resolveMediaUrl } from "../../src/utils/mediaUrl";
 import { C } from "../../src/theme";
 
 const { width } = Dimensions.get("window");
+
+/** Parse YYYY-MM-DD as UTC midnight; match server billing days. */
+function utcMillisFromDateOnly(str) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(str);
+  if (!m) return NaN;
+  return Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+}
+
+/** Inclusive calendar days (start and end both count). */
+function rentalBillableDays(startStr, endStr) {
+  if (!startStr || !endStr) return 0;
+  const a = utcMillisFromDateOnly(startStr);
+  const b = utcMillisFromDateOnly(endStr);
+  if (!Number.isFinite(a) || !Number.isFinite(b) || b <= a) return 0;
+  return Math.floor((b - a) / 86400000) + 1;
+}
+
+function formatMad(amount, locale) {
+  const n = Math.round(Number(amount) || 0);
+  return `${n.toLocaleString(locale === "fr" ? "fr-FR" : "en-US", { maximumFractionDigits: 0 })} MAD`;
+}
 
 function DatePicker({ label, value, onChange }) {
   const today = new Date();
@@ -100,24 +121,29 @@ export default function RentalDetailsScreen() {
     } catch {}
   };
 
-  const days = (() => {
-    if (!startDate || !endDate) return 0;
-    const diff = (new Date(endDate) - new Date(startDate)) / 86400000;
-    return diff > 0 ? diff : 0;
-  })();
+  const days = rentalBillableDays(startDate, endDate);
   const total = days * (rental?.pricePerDay || 0);
 
   const handleBook = async () => {
     if (!auth) return Alert.alert(t.needAuth);
     if (!startDate || !endDate) return Alert.alert(t.selectDatesError);
-    if (days <= 0) return Alert.alert("End date must be after start date");
+    if (days <= 0) return Alert.alert("End date must be on or after start date");
     setBooking(true);
     try {
       await bookRental(id, { startDate, endDate });
       Alert.alert("Success", t.bookSuccess);
       setStartDate(""); setEndDate("");
     } catch (e) {
-      Alert.alert("Error", e?.response?.data?.message || t.datesFail);
+      const code = e?.response?.data?.code;
+      const msg = e?.response?.data?.message || t.datesFail;
+      if (code === "BOOKING_DOCUMENTS_REQUIRED" || code === "DRIVER_LICENSE_REQUIRED") {
+        Alert.alert(t.documentsTitle, msg, [
+          { text: t.documentsLater, style: "cancel" },
+          { text: t.documentsProfile, onPress: () => router.push("/(tabs)/profile") },
+        ]);
+      } else {
+        Alert.alert(t.errorTitle || "Error", msg);
+      }
     }
     setBooking(false);
   };
@@ -148,9 +174,12 @@ export default function RentalDetailsScreen() {
           <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}
             onScroll={e => setImgIndex(Math.round(e.nativeEvent.contentOffset.x / width))}
             scrollEventThrottle={16}>
-            {images.map((img, i) => (
-              <Image key={i} source={{ uri: `${SERVER_URL}/uploads/${img}` }} style={{ width, height: 280 }} resizeMode="cover" />
-            ))}
+            {images.map((img, i) => {
+              const uri = resolveMediaUrl(img);
+              return uri ? (
+                <Image key={i} source={{ uri }} style={{ width, height: 280 }} resizeMode="cover" />
+              ) : null;
+            })}
           </ScrollView>
         ) : (
           <View style={[{ width, height: 280 }, s.center]}>
@@ -225,7 +254,7 @@ export default function RentalDetailsScreen() {
               <View style={s.divider} />
               <View style={s.summaryRow}>
                 <Text style={s.totalLabel}>{t.total}</Text>
-                <Text style={s.totalVal}>{total.toLocaleString()} MAD</Text>
+                <Text style={s.totalVal}>{formatMad(total, lang)}</Text>
               </View>
             </View>
           )}
@@ -263,6 +292,10 @@ const en = {
   logIn:"Log in to book", needAuth:"Please login to continue.",
   bookSuccess:"Booking request sent! Waiting for owner confirmation.",
   datesFail:"Car unavailable for selected dates.", selectDatesError:"Please select both dates.",
+  documentsTitle:"Documents required",
+  documentsLater:"Not now",
+  documentsProfile:"My profile",
+  errorTitle:"Error",
 };
 const fr = {
   notFound:"Location introuvable.", specifications:"Caractéristiques",
@@ -273,6 +306,10 @@ const fr = {
   logIn:"Connexion pour réserver", needAuth:"Connectez-vous pour continuer.",
   bookSuccess:"Demande envoyée ! En attente de confirmation.",
   datesFail:"Véhicule indisponible sur ces dates.", selectDatesError:"Veuillez sélectionner les deux dates.",
+  documentsTitle:"Documents requis",
+  documentsLater:"Plus tard",
+  documentsProfile:"Mon profil",
+  errorTitle:"Erreur",
 };
 
 const ds = StyleSheet.create({

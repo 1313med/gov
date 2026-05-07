@@ -61,10 +61,32 @@ exports.getFeedbackForBooking = async (req, res) => {
 };
 
 // GET /api/customer-feedback/customer/:customerId
-// Returns all feedback + summary stats for a customer
+// Returns all feedback + summary stats for a customer (only if they booked one of your cars)
 exports.getFeedbackForCustomer = async (req, res) => {
   try {
-    const feedbacks = await CustomerFeedback.find({ customerId: req.params.customerId })
+    const customerId = req.params.customerId;
+
+    const rentals = await RentalListing.find({
+      rentalOwnerId: req.user._id,
+      deletedAt: null,
+    }).select("_id");
+    const rentalIds = rentals.map((r) => r._id);
+    if (!rentalIds.length) {
+      return res.status(403).json({ message: "No rentals found for your account." });
+    }
+
+    const linked = await Booking.exists({
+      customerId,
+      rentalId: { $in: rentalIds },
+      deletedAt: null,
+    });
+    if (!linked) {
+      return res.status(403).json({
+        message: "You can only view this history for customers who have booked your vehicles.",
+      });
+    }
+
+    const feedbacks = await CustomerFeedback.find({ customerId })
       .populate("ownerId",  "name")
       .populate("rentalId", "title")
       .sort({ createdAt: -1 })

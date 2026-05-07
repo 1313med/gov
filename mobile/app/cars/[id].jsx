@@ -8,7 +8,7 @@ import { addFavorite, removeFavorite, getFavorites } from "../../src/api/user";
 import ReviewSection from "../../src/components/ReviewSection";
 import { useAuth } from "../../src/context/AuthContext";
 import { useAppLang } from "../../src/context/AppLangContext";
-import { SERVER_URL } from "../../src/config";
+import { resolveMediaUrl } from "../../src/utils/mediaUrl";
 import { C } from "../../src/theme";
 
 const { width } = Dimensions.get("window");
@@ -76,9 +76,12 @@ export default function CarDetailsScreen() {
           <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}
             onScroll={e => setImgIndex(Math.round(e.nativeEvent.contentOffset.x / width))}
             scrollEventThrottle={16}>
-            {images.map((img, i) => (
-              <Image key={i} source={{ uri: `${SERVER_URL}/uploads/${img}` }} style={{ width, height: 280 }} resizeMode="cover" />
-            ))}
+            {images.map((img, i) => {
+              const uri = resolveMediaUrl(img);
+              return uri ? (
+                <Image key={i} source={{ uri }} style={{ width, height: 280 }} resizeMode="cover" />
+              ) : null;
+            })}
           </ScrollView>
         ) : (
           <View style={[{ width, height: 280 }, s.center]}>

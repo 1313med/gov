@@ -298,6 +298,18 @@ export default function RentalDetails() {
         return;
       }
 
+      const code = err?.response?.data?.code;
+      if (code === "BOOKING_DOCUMENTS_REQUIRED" || code === "DRIVER_LICENSE_REQUIRED") {
+        setBookingMessage({
+          type: "error",
+          code: "documents",
+          text:
+            err?.response?.data?.message ||
+            copy.rentalDetails.datesFail,
+        });
+        return;
+      }
+
       setBookingMessage({
         type: "error",
         text:
@@ -510,6 +522,11 @@ export default function RentalDetails() {
                   {bookingMessage.code === "auth" && (
                     <p style={{ margin: "10px 0 0" }}>
                       <Link to="/login">{copy.rentalDetails.logIn}</Link>
+                    </p>
+                  )}
+                  {bookingMessage.code === "documents" && (
+                    <p style={{ margin: "10px 0 0" }}>
+                      <Link to="/profile">{copy.rentalDetails.documentsGoProfile}</Link>
                     </p>
                   )}
                 </div>

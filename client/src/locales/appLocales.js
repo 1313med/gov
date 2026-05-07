@@ -419,6 +419,7 @@ const rentalDetailsEn = {
   needAuth: "Please create an account or login to book this car.",
   datesFail: "Car unavailable for selected dates",
   selectDatesError: "Please select booking dates",
+  documentsGoProfile: "Upload license & ID in profile →",
 };
 
 const rentalDetailsFr = {
@@ -448,6 +449,7 @@ const rentalDetailsFr = {
   needAuth: "Créez un compte ou connectez-vous pour réserver.",
   datesFail: "Véhicule indisponible sur ces dates",
   selectDatesError: "Veuillez sélectionner les dates de réservation",
+  documentsGoProfile: "Ajouter permis et CIN au profil →",
 };
 
 /* ─────────────────────────────────────────────────────────
@@ -1091,7 +1093,7 @@ const profileEn = {
   },
   license: {
     title: "Driving License",
-    sub: "Required to book a rental car",
+    sub: "Required with national ID (CIN) to book a rental car",
     verified: "Verified",
     pending: "Pending Verification",
     number: "License Number",
@@ -1104,6 +1106,21 @@ const profileEn = {
     saving: "Saving…",
     saved: "License saved! It will be reviewed shortly.",
     saveFail: "Failed to save license",
+  },
+  nationalId: {
+    title: "National ID (CIN)",
+    sub: "Required with driving license to book a rental car",
+    verified: "Verified",
+    pending: "Pending Verification",
+    number: "ID number",
+    numberPh: "e.g. AB123456",
+    photo: "ID photo",
+    upload: "Upload ID photo",
+    replace: "Replace photo",
+    save: "Save national ID",
+    saving: "Saving…",
+    saved: "National ID saved! It will be reviewed shortly.",
+    saveFail: "Failed to save national ID",
   },
 };
 const profileFr = {
@@ -1140,7 +1157,7 @@ const profileFr = {
   },
   license: {
     title: "Permis de conduire",
-    sub: "Requis pour louer une voiture",
+    sub: "Requis avec la CIN pour réserver une voiture",
     verified: "Vérifié",
     pending: "En attente de vérification",
     number: "Numéro du permis",
@@ -1153,6 +1170,21 @@ const profileFr = {
     saving: "Enregistrement…",
     saved: "Permis enregistré ! Il sera vérifié prochainement.",
     saveFail: "Échec de l'enregistrement du permis",
+  },
+  nationalId: {
+    title: "CIN (carte nationale d'identité)",
+    sub: "Requise avec le permis pour réserver une voiture",
+    verified: "Vérifiée",
+    pending: "En attente de vérification",
+    number: "Numéro CIN",
+    numberPh: "ex. AB123456",
+    photo: "Photo de la CIN",
+    upload: "Téléverser la photo",
+    replace: "Remplacer la photo",
+    save: "Enregistrer la CIN",
+    saving: "Enregistrement…",
+    saved: "CIN enregistrée ! Elle sera vérifiée prochainement.",
+    saveFail: "Échec de l'enregistrement de la CIN",
   },
 };
 

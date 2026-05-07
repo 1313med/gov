@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, StyleSheet } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, StyleSheet, Image } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { getSellerProfile } from "../../src/api/user";
@@ -8,6 +8,7 @@ import CarCard from "../../src/components/CarCard";
 import ReviewSection from "../../src/components/ReviewSection";
 import { useAuth } from "../../src/context/AuthContext";
 import { useAppLang } from "../../src/context/AppLangContext";
+import { resolveMediaUrl } from "../../src/utils/mediaUrl";
 import { C } from "../../src/theme";
 
 export default function SellerProfileScreen() {
@@ -17,13 +18,13 @@ export default function SellerProfileScreen() {
   const router = useRouter();
   const fr = lang === "fr";
 
-  const [seller, setSeller] = useState(null);
+  const [payload, setPayload] = useState(null);
   const [loading, setLoading] = useState(true);
   const [contacting, setContacting] = useState(false);
 
   useEffect(() => {
     getSellerProfile(id)
-      .then(({ data }) => setSeller(data))
+      .then(({ data }) => setPayload(data))
       .catch(() => Alert.alert("Error", "Failed to load seller"))
       .finally(() => setLoading(false));
   }, [id]);
@@ -39,34 +40,41 @@ export default function SellerProfileScreen() {
   };
 
   if (loading) return <View style={s.center}><ActivityIndicator color={C.primary} size="large" /></View>;
-  if (!seller) return <View style={s.center}><Text style={s.white}>Seller not found</Text></View>;
+  const profile = payload?.seller;
+  if (!payload || !profile) return <View style={s.center}><Text style={s.white}>Seller not found</Text></View>;
+
+  const listings = payload.listings || [];
+  const soldCount = listings.filter((l) => l.status === "sold").length;
+  const avatarUri = resolveMediaUrl(profile.avatar);
 
   return (
     <ScrollView style={{ flex:1, backgroundColor: C.bg }} showsVerticalScrollIndicator={false}>
-      {/* Profile header */}
       <View style={s.hero}>
-        <View style={s.avatar}>
-          <Text style={s.avatarText}>{seller.name?.[0]?.toUpperCase() || "?"}</Text>
-        </View>
-        <Text style={s.name}>{seller.name}</Text>
+        {avatarUri ? (
+          <Image source={{ uri: avatarUri }} style={s.avatarImg} />
+        ) : (
+          <View style={s.avatar}>
+            <Text style={s.avatarText}>{profile.name?.[0]?.toUpperCase() || "?"}</Text>
+          </View>
+        )}
+        <Text style={s.name}>{profile.name}</Text>
         <View style={s.verifiedRow}>
           <Ionicons name="shield-checkmark" size={14} color={C.green} />
           <Text style={s.verifiedText}>{fr ? "Vendeur vérifié" : "Verified Seller"}</Text>
         </View>
-        {seller.city && (
+        {profile.city && (
           <View style={s.cityRow}>
             <Ionicons name="location-outline" size={14} color={C.muted} />
-            <Text style={s.cityText}>{seller.city}</Text>
+            <Text style={s.cityText}>{profile.city}</Text>
           </View>
         )}
-        {seller.bio && <Text style={s.bio}>{seller.bio}</Text>}
+        {profile.bio ? <Text style={s.bio}>{profile.bio}</Text> : null}
 
-        {/* Stats */}
         <View style={s.statsRow}>
           {[
-            { value: seller.listings?.length || 0, label: fr ? "Annonces" : "Listings" },
-            { value: seller.soldCount || 0, label: fr ? "Vendues" : "Sold" },
-          ].map(stat => (
+            { value: listings.length, label: fr ? "Annonces" : "Listings" },
+            { value: soldCount, label: fr ? "Vendues" : "Sold" },
+          ].map((stat) => (
             <View key={stat.label} style={s.statBox}>
               <Text style={s.statVal}>{stat.value}</Text>
               <Text style={s.statLabel}>{stat.label}</Text>
@@ -80,22 +88,20 @@ export default function SellerProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Listings */}
       <View style={s.section}>
         <Text style={s.sectionTitle}>{fr ? "Annonces actives" : "Active Listings"}</Text>
-        {seller.listings?.length === 0 ? (
+        {listings.length === 0 ? (
           <View style={s.empty}>
             <Ionicons name="car-outline" size={48} color="#4b5563" />
             <Text style={s.emptyText}>{fr ? "Aucune annonce" : "No listings yet"}</Text>
           </View>
         ) : (
-          seller.listings?.map(car => (
+          listings.map((car) => (
             <CarCard key={car._id} car={car} onPress={() => router.push(`/cars/${car._id}`)} />
           ))
         )}
       </View>
 
-      {/* Reviews */}
       <View style={s.section}>
         <ReviewSection targetModel="User" targetId={id} />
       </View>
@@ -108,6 +114,7 @@ const s = StyleSheet.create({
   white: { color: C.white },
   hero: { backgroundColor: C.surface, borderBottomWidth:1, borderBottomColor: C.border, paddingHorizontal:16, paddingTop:24, paddingBottom:32, alignItems:"center" },
   avatar: { width:96, height:96, borderRadius:48, backgroundColor:"rgba(124,107,255,0.2)", borderWidth:2, borderColor: C.primary, alignItems:"center", justifyContent:"center", marginBottom:12 },
+  avatarImg: { width:96, height:96, borderRadius:48, marginBottom:12, borderWidth:2, borderColor: C.primary },
   avatarText: { color: C.primary, fontWeight:"700", fontSize:32 },
   name: { color: C.white, fontWeight:"700", fontSize:20, marginBottom:6 },
   verifiedRow: { flexDirection:"row", alignItems:"center", marginBottom:6 },

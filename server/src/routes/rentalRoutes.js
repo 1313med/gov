@@ -20,8 +20,13 @@ router.get("/owner/mine", protect, role("rental_owner"), getMyRentals);
 router.get("/admin", protect, role("admin"), getAdminRentals);
 router.put("/admin/:id/status", protect, role("admin"), updateRentalStatus);
 
-// BOOKING
-router.post("/:id/book", protect, role("customer"), createBooking);
+// BOOKING (any logged-in role can book another owner’s car; self-book blocked in controller)
+router.post(
+  "/:id/book",
+  protect,
+  role("customer", "seller", "rental_owner", "admin"),
+  createBooking
+);
 
 // RENTAL DETAILS
 router.get("/:id/bookings", getBookingsForRental);

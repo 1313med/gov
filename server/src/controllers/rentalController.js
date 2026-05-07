@@ -158,12 +158,20 @@ exports.createBooking = async (req, res, next) => {
       return res.status(400).json({ message: "You cannot book your own rental" });
     }
 
-    // Require driver license on file before booking
-    const customer = await User.findById(req.user._id).select("driverLicense");
-    if (!customer?.driverLicense?.number || !customer?.driverLicense?.imageUrl) {
+    // Require driving license + national ID (CIN) on file before booking
+    const customer = await User.findById(req.user._id).select("driverLicense nationalId");
+    const dl = customer?.driverLicense;
+    const nid = customer?.nationalId;
+    const missingLicense = !dl?.number?.trim() || !dl?.imageUrl;
+    const missingCin = !nid?.number?.trim() || !nid?.imageUrl;
+    if (missingLicense || missingCin) {
       return res.status(400).json({
-        message: "Please upload your driving license in your profile before booking a car.",
-        code: "DRIVER_LICENSE_REQUIRED",
+        message: missingLicense && missingCin
+          ? "Please upload your driving license and national ID (CIN) in your profile before booking a car."
+          : missingLicense
+            ? "Please upload your driving license in your profile before booking a car."
+            : "Please upload your national ID (CIN) in your profile before booking a car.",
+        code: "BOOKING_DOCUMENTS_REQUIRED",
       });
     }
 
@@ -189,11 +197,11 @@ exports.createBooking = async (req, res, next) => {
       });
     }
 
-    // Use UTC midnight-to-midnight diff to avoid DST/timezone edge cases
+    // UTC calendar days, inclusive of start and end (e.g. May 7–May 11 = 5 days)
     const MS_PER_DAY = 24 * 60 * 60 * 1000;
     const startUTC = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate());
     const endUTC   = Date.UTC(end.getUTCFullYear(),   end.getUTCMonth(),   end.getUTCDate());
-    const days = Math.max(1, Math.ceil((endUTC - startUTC) / MS_PER_DAY));
+    const days = Math.max(1, Math.floor((endUTC - startUTC) / MS_PER_DAY) + 1);
 
     // Apply best active offer
     let totalAmount = days * rental.pricePerDay;

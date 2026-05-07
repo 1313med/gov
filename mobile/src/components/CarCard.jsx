@@ -1,10 +1,11 @@
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { C } from "../theme";
-import { SERVER_URL } from "../config";
+import { resolveMediaUrl } from "../utils/mediaUrl";
 
 export default function CarCard({ car, onPress, onFavorite, isFavorite }) {
-  const imageUrl = car.images?.[0] ? { uri: `${SERVER_URL}/uploads/${car.images[0]}` } : null;
+  const uri = resolveMediaUrl(car.images?.[0]);
+  const imageUrl = uri ? { uri } : null;
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.85} style={s.card}>
       <View>

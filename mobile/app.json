@@ -34,17 +34,24 @@
       "expo-secure-store",
       [
         "expo-camera",
-        { "cameraPermission": "Allow Goovoiture to access your camera." }
+        {
+          "cameraPermission": "Allow Goovoiture to access your camera."
+        }
       ],
       [
         "expo-image-picker",
-        { "photosPermission": "Allow Goovoiture to access your photos." }
+        {
+          "photosPermission": "Allow Goovoiture to access your photos."
+        }
       ],
       [
         "expo-location",
-        { "locationWhenInUsePermission": "Allow Goovoiture to use your location." }
+        {
+          "locationWhenInUsePermission": "Allow Goovoiture to use your location."
+        }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

@@ -1,5 +1,5 @@
 const asyncHandler = require("express-async-handler");
-const { uploadBuffer } = require("../utils/cloudinary");
+const { uploadBuffer, getCloudinaryConfigError } = require("../utils/cloudinary");
 
 /**
  * POST /api/upload/images
@@ -7,6 +7,11 @@ const { uploadBuffer } = require("../utils/cloudinary");
  * Returns: { urls: ["https://res.cloudinary.com/..."] }
  */
 exports.uploadImages = asyncHandler(async (req, res) => {
+  const cfgErr = getCloudinaryConfigError();
+  if (cfgErr) {
+    return res.status(503).json({ message: cfgErr });
+  }
+
   if (!req.files || req.files.length === 0) {
     res.status(400);
     throw new Error("No images provided");
@@ -30,6 +35,11 @@ exports.uploadImages = asyncHandler(async (req, res) => {
  * Returns: { url: "https://res.cloudinary.com/..." }
  */
 exports.uploadAvatar = asyncHandler(async (req, res) => {
+  const cfgErr = getCloudinaryConfigError();
+  if (cfgErr) {
+    return res.status(503).json({ message: cfgErr });
+  }
+
   if (!req.file) {
     res.status(400);
     throw new Error("No avatar file provided");

@@ -51,7 +51,17 @@ export default function CarsScreen() {
         setCars(list);
         setPage(2);
       } else {
-        setCars((prev) => [...prev, ...list]);
+        setCars((prev) => {
+          const seen = new Set(prev.map((c) => (c?._id != null ? String(c._id) : "")));
+          const out = [...prev];
+          for (const c of list) {
+            const id = c?._id != null ? String(c._id) : "";
+            if (!id || seen.has(id)) continue;
+            seen.add(id);
+            out.push(c);
+          }
+          return out;
+        });
         setPage(p + 1);
       }
       setHasMore(curPage < pages && list.length > 0);
@@ -104,7 +114,8 @@ export default function CarsScreen() {
       {loading
         ? <View style={s.center}><ActivityIndicator color={C.primary} size="large" /></View>
         : <FlatList
-            data={cars} keyExtractor={i => i._id}
+            data={cars}
+            keyExtractor={(item, index) => (item?._id != null ? String(item._id) : `car-${index}`)}
             renderItem={({ item }) => <CarCard car={item} onPress={() => router.push(`/cars/${item._id}`)} onFavorite={() => toggleFav(item._id)} isFavorite={favorites.includes(item._id)} />}
             contentContainerStyle={{ padding:16 }}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(true); }} tintColor={C.primary} />}

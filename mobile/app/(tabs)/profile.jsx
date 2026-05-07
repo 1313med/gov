@@ -3,11 +3,12 @@ import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, ActivityInd
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
-import { getMyProfile, updateMyProfile } from "../../src/api/user";
+import { getMyProfile, updateMyProfile, updateDriverLicense, updateNationalId } from "../../src/api/user";
+import { uploadAvatarFile, uploadListingImages } from "../../src/api/upload";
 import { useAuth } from "../../src/context/AuthContext";
 import { useAppLang } from "../../src/context/AppLangContext";
 import { C } from "../../src/theme";
-import { SERVER_URL } from "../../src/config";
+import { resolveMediaUrl } from "../../src/utils/mediaUrl";
 
 const ROLES = { customer:{en:"Customer",fr:"Client"}, seller:{en:"Seller",fr:"Vendeur"}, rental_owner:{en:"Rental Owner",fr:"Propriétaire"}, admin:{en:"Admin",fr:"Admin"} };
 
@@ -21,20 +22,40 @@ export default function ProfileScreen() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ name:"", city:"", bio:"" });
+  const [licForm, setLicForm] = useState({ number:"", expiryDate:"", imageUrl:"" });
+  const [cinForm, setCinForm] = useState({ number:"", imageUrl:"" });
+  const [licSaving, setLicSaving] = useState(false);
+  const [cinSaving, setCinSaving] = useState(false);
 
   useEffect(() => {
     if (!auth) { setLoading(false); return; }
     getMyProfile().then(({ data }) => { setProfile(data); setForm({ name:data.name||"", city:data.city||"", bio:data.bio||"" }); }).catch(() => {}).finally(() => setLoading(false));
   }, [auth]);
 
+  useEffect(() => {
+    if (!profile) return;
+    const dl = profile.driverLicense;
+    setLicForm({
+      number: dl?.number || "",
+      expiryDate: dl?.expiryDate ? String(dl.expiryDate).slice(0, 10) : "",
+      imageUrl: dl?.imageUrl || "",
+    });
+    const ni = profile.nationalId;
+    setCinForm({
+      number: ni?.number || "",
+      imageUrl: ni?.imageUrl || "",
+    });
+  }, [profile]);
+
   const pickAvatar = async () => {
-    const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing:true, aspect:[1,1], quality:0.7 });
-    if (!r.canceled) {
-      const fd = new FormData();
-      fd.append("avatar", { uri: r.assets[0].uri, name:"avatar.jpg", type:"image/jpeg" });
-      try { const { data } = await updateMyProfile(fd); setProfile(data); }
-      catch { Alert.alert("Failed to update avatar"); }
-    }
+    const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: "images", allowsEditing:true, aspect:[1,1], quality:0.7 });
+    if (r.canceled) return;
+    try {
+      const asset = r.assets[0];
+      const url = await uploadAvatarFile({ uri: asset.uri, name: "avatar.jpg", type: asset.mimeType || "image/jpeg" });
+      const { data } = await updateMyProfile({ avatar: url });
+      setProfile(data);
+    } catch { Alert.alert(fr ? "Échec" : "Failed to update avatar"); }
   };
 
   const save = async () => {
@@ -46,6 +67,67 @@ export default function ProfileScreen() {
 
   const handleLogout = () => Alert.alert(fr?"Déconnexion":"Logout", fr?"Êtes-vous sûr ?":"Are you sure?",
     [{ text: fr?"Annuler":"Cancel" }, { text: fr?"Déconnexion":"Logout", style:"destructive", onPress: logout }]);
+
+  const pickDoc = async (applyUrl) => {
+    const r = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: "images",
+      allowsEditing: true,
+      quality: 0.85,
+    });
+    if (r.canceled) return;
+    try {
+      const asset = r.assets[0];
+      const [url] = await uploadListingImages([
+        { uri: asset.uri, name: "doc.jpg", type: asset.mimeType || "image/jpeg" },
+      ]);
+      applyUrl(url);
+    } catch (e) {
+      const serverMsg = e?.response?.data?.message;
+      Alert.alert(
+        fr ? "Échec" : "Failed",
+        serverMsg || (fr ? "Envoi de l'image impossible" : "Could not upload image")
+      );
+    }
+  };
+
+  const saveLicenseDoc = async () => {
+    if (!licForm.number?.trim() || !licForm.imageUrl) {
+      Alert.alert(fr ? "Permis incomplet" : "License incomplete", fr ? "Numéro et photo requis." : "Number and photo required.");
+      return;
+    }
+    setLicSaving(true);
+    try {
+      const { data } = await updateDriverLicense({
+        number: licForm.number.trim(),
+        expiryDate: licForm.expiryDate || null,
+        imageUrl: licForm.imageUrl,
+      });
+      setProfile(data);
+      Alert.alert(fr ? "Enregistré" : "Saved", fr ? "Permis mis à jour." : "License updated.");
+    } catch (e) {
+      Alert.alert("Error", e?.response?.data?.message || (fr ? "Échec" : "Failed"));
+    }
+    setLicSaving(false);
+  };
+
+  const saveCinDoc = async () => {
+    if (!cinForm.number?.trim() || !cinForm.imageUrl) {
+      Alert.alert(fr ? "CIN incomplet" : "ID incomplete", fr ? "Numéro et photo requis." : "Number and photo required.");
+      return;
+    }
+    setCinSaving(true);
+    try {
+      const { data } = await updateNationalId({
+        number: cinForm.number.trim(),
+        imageUrl: cinForm.imageUrl,
+      });
+      setProfile(data);
+      Alert.alert(fr ? "Enregistré" : "Saved", fr ? "CIN mis à jour." : "National ID updated.");
+    } catch (e) {
+      Alert.alert("Error", e?.response?.data?.message || (fr ? "Échec" : "Failed"));
+    }
+    setCinSaving(false);
+  };
 
   if (!auth) return (
     <View style={s.center}>
@@ -59,7 +141,8 @@ export default function ProfileScreen() {
 
   if (loading) return <View style={s.center}><ActivityIndicator color={C.primary} size="large" /></View>;
 
-  const avatarUrl = profile?.avatar ? { uri: `${SERVER_URL}/uploads/${profile.avatar}` } : null;
+  const avatarUri = resolveMediaUrl(profile?.avatar);
+  const avatarUrl = avatarUri ? { uri: avatarUri } : null;
 
   return (
     <ScrollView style={{ flex:1, backgroundColor: C.bg }} showsVerticalScrollIndicator={false}>
@@ -102,6 +185,88 @@ export default function ProfileScreen() {
               <Ionicons name="chevron-forward" size={16} color={C.muted} />
             </TouchableOpacity>
         }
+
+        <Text style={s.sectionLabel}>{fr ? "Location — documents" : "Rentals — documents"}</Text>
+        <Text style={s.docHint}>
+          {fr
+            ? "Téléversez votre permis et votre CIN pour réserver un véhicule."
+            : "Upload your license and national ID (CIN) to book a rental car."}
+        </Text>
+
+        <View style={s.card}>
+          <Text style={s.cardTitle}>{fr ? "Permis de conduire" : "Driving license"}</Text>
+          {!!profile?.driverLicense?.verified && (
+            <Text style={s.docVerified}>{fr ? "✓ Vérifié" : "✓ Verified"}</Text>
+          )}
+          {!profile?.driverLicense?.verified && profile?.driverLicense?.number ? (
+            <Text style={s.docPending}>{fr ? "Vérification en attente" : "Pending verification"}</Text>
+          ) : null}
+          <Text style={s.fieldLabel}>{fr ? "Numéro" : "Number"}</Text>
+          <View style={s.inputRow}>
+            <Ionicons name="card-outline" size={16} color={C.muted} />
+            <TextInput
+              value={licForm.number}
+              onChangeText={(v) => setLicForm((p) => ({ ...p, number: v }))}
+              style={s.input}
+              placeholderTextColor={C.muted}
+              placeholder={fr ? "ex. B-123456" : "e.g. B-123456"}
+            />
+          </View>
+          <Text style={[s.fieldLabel, { marginTop: 12 }]}>{fr ? "Expiration (optionnel)" : "Expiry (optional)"}</Text>
+          <View style={s.inputRow}>
+            <Ionicons name="calendar-outline" size={16} color={C.muted} />
+            <TextInput
+              value={licForm.expiryDate}
+              onChangeText={(v) => setLicForm((p) => ({ ...p, expiryDate: v }))}
+              style={s.input}
+              placeholderTextColor={C.muted}
+              placeholder="YYYY-MM-DD"
+            />
+          </View>
+          <Text style={[s.fieldLabel, { marginTop: 12 }]}>{fr ? "Photo du permis" : "License photo"}</Text>
+          <TouchableOpacity onPress={() => pickDoc((url) => setLicForm((p) => ({ ...p, imageUrl: url })))} style={s.docPick}>
+            {licForm.imageUrl ? (
+              <Image source={{ uri: resolveMediaUrl(licForm.imageUrl) }} style={s.docThumb} />
+            ) : (
+              <Text style={s.docPickText}>{fr ? "Choisir une photo" : "Choose photo"}</Text>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity onPress={saveLicenseDoc} disabled={licSaving} style={[s.saveBtn, { marginTop: 12 }]}>
+            <Text style={s.saveBtnText}>{licSaving ? "…" : fr ? "Enregistrer le permis" : "Save license"}</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={s.card}>
+          <Text style={s.cardTitle}>{fr ? "CIN (carte d'identité)" : "National ID (CIN)"}</Text>
+          {!!profile?.nationalId?.verified && (
+            <Text style={s.docVerified}>{fr ? "✓ Vérifié" : "✓ Verified"}</Text>
+          )}
+          {!profile?.nationalId?.verified && profile?.nationalId?.number ? (
+            <Text style={s.docPending}>{fr ? "Vérification en attente" : "Pending verification"}</Text>
+          ) : null}
+          <Text style={s.fieldLabel}>{fr ? "Numéro CIN" : "ID number"}</Text>
+          <View style={s.inputRow}>
+            <Ionicons name="id-card-outline" size={16} color={C.muted} />
+            <TextInput
+              value={cinForm.number}
+              onChangeText={(v) => setCinForm((p) => ({ ...p, number: v }))}
+              style={s.input}
+              placeholderTextColor={C.muted}
+              placeholder={fr ? "ex. AB123456" : "e.g. AB123456"}
+            />
+          </View>
+          <Text style={[s.fieldLabel, { marginTop: 12 }]}>{fr ? "Photo recto / CIN" : "ID photo"}</Text>
+          <TouchableOpacity onPress={() => pickDoc((url) => setCinForm((p) => ({ ...p, imageUrl: url })))} style={s.docPick}>
+            {cinForm.imageUrl ? (
+              <Image source={{ uri: resolveMediaUrl(cinForm.imageUrl) }} style={s.docThumb} />
+            ) : (
+              <Text style={s.docPickText}>{fr ? "Choisir une photo" : "Choose photo"}</Text>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity onPress={saveCinDoc} disabled={cinSaving} style={[s.saveBtn, { marginTop: 12 }]}>
+            <Text style={s.saveBtnText}>{cinSaving ? "…" : fr ? "Enregistrer le CIN" : "Save national ID"}</Text>
+          </TouchableOpacity>
+        </View>
 
         <Text style={s.sectionLabel}>{fr?"Mon compte":"My Account"}</Text>
         <NavItem icon="notifications-outline" label={fr?"Notifications":"Notifications"} onPress={() => router.push("/notifications")} />
@@ -172,6 +337,12 @@ const s = StyleSheet.create({
   saveBtn: { flex:1, backgroundColor: C.primary, borderRadius:12, paddingVertical:12, alignItems:"center" },
   saveBtnText: { color:"#fff", fontWeight:"700" },
   sectionLabel: { color: C.muted, fontSize:11, textTransform:"uppercase", letterSpacing:0.5, marginTop:16, marginBottom:8 },
+  docHint: { color:"#94a3b8", fontSize:13, lineHeight:20, marginBottom:12 },
+  docVerified: { color:"#4ade80", fontSize:12, fontWeight:"600", marginBottom:8 },
+  docPending: { color:"#fbbf24", fontSize:12, marginBottom:8 },
+  docPick: { backgroundColor: C.surface, borderWidth:1, borderColor: C.border, borderRadius:12, minHeight:120, alignItems:"center", justifyContent:"center", overflow:"hidden" },
+  docPickText: { color: C.muted, fontSize:14 },
+  docThumb: { width:"100%", height:160, resizeMode:"cover" },
   navItem: { backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:12, flexDirection:"row", alignItems:"center", paddingHorizontal:16, paddingVertical:14, marginBottom:8, gap:12 },
   navLabel: { color: C.white, fontWeight:"500", flex:1 },
   langRow: { flexDirection:"row", gap:12, marginBottom:8 },

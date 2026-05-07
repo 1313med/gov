@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { createRental } from "../src/api/rental";
+import { uploadListingImages } from "../src/api/upload";
 import { useAppLang } from "../src/context/AppLangContext";
 import { C } from "../src/theme";
 
@@ -33,7 +34,7 @@ export default function AddRentalScreen() {
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   const pickImages = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsMultipleSelection:true, quality:0.75, selectionLimit:8 });
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: "images", allowsMultipleSelection:true, quality:0.75, selectionLimit:8 });
     if (!result.canceled) setImages(prev => [...prev, ...result.assets].slice(0, 8));
   };
 
@@ -57,15 +58,44 @@ export default function AddRentalScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!form.title || !form.pricePerDay || !form.brand) {
-      return Alert.alert(fr ? "Champs requis" : "Required fields", fr ? "Remplissez titre, marque et prix." : "Fill in title, brand and price/day.");
+    if (!form.title?.trim() || !form.pricePerDay || !form.brand?.trim() || !form.model?.trim()) {
+      return Alert.alert(fr ? "Champs requis" : "Required fields", fr ? "Remplissez titre, marque, modèle et prix/jour." : "Fill in title, brand, model and price per day.");
+    }
+    if (!form.city?.trim()) {
+      return Alert.alert(fr ? "Ville" : "City", fr ? "La ville est requise." : "City is required.");
+    }
+    const yearNum = parseInt(String(form.year), 10);
+    const ppd = parseFloat(String(form.pricePerDay));
+    if (!Number.isFinite(yearNum) || yearNum < 1900) {
+      return Alert.alert(fr ? "Année" : "Year", fr ? "Année invalide" : "Invalid year");
+    }
+    if (!Number.isFinite(ppd) || ppd <= 0) {
+      return Alert.alert(fr ? "Prix" : "Price", fr ? "Prix / jour invalide" : "Invalid price per day");
     }
     setLoading(true);
     try {
-      const fd = new FormData();
-      Object.entries(form).forEach(([k, v]) => { if (v) fd.append(k, v); });
-      images.forEach((img, i) => fd.append("images", { uri:img.uri, name:`photo_${i}.jpg`, type:"image/jpeg" }));
-      await createRental(fd);
+      let imageUrls = [];
+      if (images.length) {
+        const files = images.map((img, i) => ({
+          uri: img.uri,
+          name: `photo_${i}.jpg`,
+          type: img.mimeType || "image/jpeg",
+        }));
+        imageUrls = await uploadListingImages(files);
+      }
+      const payload = {
+        title: form.title.trim(),
+        brand: form.brand.trim(),
+        model: form.model.trim(),
+        year: yearNum,
+        pricePerDay: ppd,
+        city: form.city.trim(),
+        description: form.description?.trim() || undefined,
+        fuel: form.fuel?.trim() || undefined,
+        gearbox: form.gearbox?.trim() || undefined,
+        images: imageUrls,
+      };
+      await createRental(payload);
       Alert.alert(fr ? "Succès" : "Success", fr ? "Location soumise pour approbation." : "Rental submitted for approval.", [{ text:"OK", onPress:() => router.back() }]);
     } catch (e) {
       Alert.alert("Error", e?.response?.data?.message || "Failed to create rental");
