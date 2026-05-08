@@ -44,12 +44,12 @@ export function SocketProvider({ children }) {
       return;
     }
 
-    const socket = io(SERVER_URL, { transports: ["websocket"] });
-    socketRef.current = socket;
-
-    socket.on("connect", () => {
-      socket.emit("join", auth._id);
+    const socket = io(SERVER_URL, {
+      transports: ["websocket"],
+      auth: { token: auth.token },
+      extraHeaders: { Authorization: `Bearer ${auth.token}` },
     });
+    socketRef.current = socket;
 
     socket.on("notification", (n) => {
       setUnreadNotifications((prev) => prev + 1);

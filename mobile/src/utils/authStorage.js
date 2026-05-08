@@ -22,7 +22,12 @@ export async function saveLoginForm(data) {
 
 export async function loadLoginForm() {
   const raw = await SecureStore.getItemAsync(LOGIN_FORM_KEY);
-  return raw ? JSON.parse(raw) : null;
+  if (!raw) return null;
+  const parsed = JSON.parse(raw);
+  return {
+    phone: parsed?.phone || "",
+    remember: parsed?.remember !== false,
+  };
 }
 
 export async function clearLoginForm() {

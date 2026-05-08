@@ -49,8 +49,35 @@ exports.updateRental = async (req, res, next) => {
     if (rental.rentalOwnerId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Forbidden" });
     }
-    delete req.body.status;
-    Object.assign(rental, req.body);
+    const ALLOWED_UPDATE_FIELDS = [
+      "title",
+      "description",
+      "pricePerDay",
+      "city",
+      "brand",
+      "model",
+      "year",
+      "mileage",
+      "fuel",
+      "gearbox",
+      "color",
+      "doors",
+      "seats",
+      "features",
+      "fuelPolicy",
+      "cancelPolicy",
+      "minRentalDays",
+      "images",
+      "availability",
+      "conditionPhotos",
+      "documents",
+      "offers",
+    ];
+    for (const field of ALLOWED_UPDATE_FIELDS) {
+      if (Object.prototype.hasOwnProperty.call(req.body, field)) {
+        rental[field] = req.body[field];
+      }
+    }
     await rental.save();
     res.json(rental);
   } catch (error) { next(error); }

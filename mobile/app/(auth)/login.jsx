@@ -16,7 +16,7 @@ export default function LoginScreen() {
   const { copy, lang, setLang } = useAppLang();
   const c = copy.login;
   const router = useRouter();
-  const [phone, setPhone] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
@@ -28,20 +28,19 @@ export default function LoginScreen() {
     loadLoginForm()
       .then((saved) => {
         if (!saved) return;
-        if (saved.phone) setPhone(saved.phone);
-        if (saved.password) setPassword(saved.password);
+        if (saved.phone) setIdentifier(saved.phone);
         setRememberMe(saved.remember !== false);
       })
       .catch(() => {});
   }, []);
 
   const handleLogin = async () => {
-    if (!phone || !password) return Alert.alert("Please fill all fields");
+    if (!identifier || !password) return Alert.alert("Please fill all fields");
     setLoading(true);
     try {
-      const { data } = await loginApi(phone, password);
+      const { data } = await loginApi(identifier, password);
       if (rememberMe) {
-        await saveLoginForm({ phone, password, remember: true });
+        await saveLoginForm({ phone: identifier, remember: true });
       } else {
         await clearLoginForm();
       }
@@ -99,13 +98,13 @@ export default function LoginScreen() {
 
           <Text style={s.fieldLabel}>{c.phone}</Text>
           <View style={s.inputRow}>
-            <Ionicons name="call-outline" size={18} color={C.muted} />
+            <Ionicons name="person-circle-outline" size={18} color={C.muted} />
             <TextInput
-              value={phone}
-              onChangeText={setPhone}
-              placeholder="06XXXXXXXX"
+              value={identifier}
+              onChangeText={setIdentifier}
+              placeholder="06XXXXXXXX / you@example.com"
               placeholderTextColor={C.label}
-              keyboardType="phone-pad"
+              keyboardType="default"
               style={s.input}
               autoCapitalize="none"
             />
@@ -136,7 +135,7 @@ export default function LoginScreen() {
               />
               <Text style={s.rememberText}>{lang === "fr" ? "Se souvenir de moi" : "Remember me"}</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => Alert.alert(lang === "fr" ? "Bientôt disponible" : "Coming soon")}>
+            <TouchableOpacity onPress={() => router.push("/(auth)/forgot-password")}>
               <Text style={s.forgotText}>{lang === "fr" ? "Mot de passe oublié ?" : "Forgot password?"}</Text>
             </TouchableOpacity>
           </View>

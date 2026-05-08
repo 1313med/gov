@@ -115,8 +115,28 @@ exports.updateSaleListing = asyncHandler(async (req, res) => {
   if (sale.sellerId.toString() !== req.user._id.toString()) {
     return res.status(403).json({ message: "Not authorized" });
   }
-  delete req.body.status;
-  Object.assign(sale, req.body);
+  const ALLOWED_UPDATE_FIELDS = [
+    "title",
+    "description",
+    "price",
+    "city",
+    "brand",
+    "model",
+    "year",
+    "mileage",
+    "fuel",
+    "gearbox",
+    "color",
+    "doors",
+    "seats",
+    "features",
+    "images",
+  ];
+  for (const field of ALLOWED_UPDATE_FIELDS) {
+    if (Object.prototype.hasOwnProperty.call(req.body, field)) {
+      sale[field] = req.body[field];
+    }
+  }
   const updated = await sale.save();
   res.json(updated);
 });

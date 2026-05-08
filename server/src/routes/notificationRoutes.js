@@ -13,7 +13,13 @@ router.get("/", protect, async (req, res) => {
 
 // MARK AS READ
 router.put("/:id/read", protect, async (req, res) => {
-  await Notification.findByIdAndUpdate(req.params.id, { read: true });
+  const result = await Notification.updateOne(
+    { _id: req.params.id, user: req.user._id },
+    { $set: { read: true } }
+  );
+  if (result.matchedCount === 0) {
+    return res.status(404).json({ message: "Notification not found" });
+  }
   res.json({ success: true });
 });
 

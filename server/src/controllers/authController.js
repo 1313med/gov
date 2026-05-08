@@ -25,15 +25,17 @@ async function scheduleVerification(user) {
   user.emailVerificationToken   = hashed;
   user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 h
   await user.save({ validateBeforeSave: false });
-  const url = `${process.env.CLIENT_URL}/verify-email/${raw}`;
+  const appBase = (process.env.APP_URL || "goovoiture://").replace(/\/+$/, "");
+  const url = `${appBase}/verify-email/${raw}`;
   emailService.sendEmailVerification(user, url).catch(() => {});
 }
 
 // ── POST /api/auth/register ──────────────────────────────────────────────────
 exports.register = asyncHandler(async (req, res) => {
   const { name, phone, password, role, city, email } = req.body;
+  const normalizedEmail = String(email || "").trim().toLowerCase();
 
-  if (!name || !phone || !password || !email) {
+  if (!name || !phone || !password || !normalizedEmail) {
     res.status(400);
     throw new Error("name, phone, email and password are required");
   }
@@ -44,8 +46,14 @@ exports.register = asyncHandler(async (req, res) => {
     throw new Error("User already exists with this phone");
   }
 
+  const emailExists = await User.findOne({ email: normalizedEmail, deletedAt: null });
+  if (emailExists) {
+    res.status(400);
+    throw new Error("User already exists with this email");
+  }
+
   const user = await User.create({
-    name, phone, password, email,
+    name, phone, password, email: normalizedEmail,
     role: role || "customer",
     city,
   });
@@ -64,14 +72,21 @@ exports.register = asyncHandler(async (req, res) => {
 
 // ── POST /api/auth/login ─────────────────────────────────────────────────────
 exports.login = asyncHandler(async (req, res) => {
-  const { phone, password } = req.body;
+  const identifier = String(req.body.identifier || req.body.phone || "").trim();
+  const password = req.body.password;
 
-  if (!phone || !password) {
+  if (!identifier || !password) {
     res.status(400);
-    throw new Error("phone and password are required");
+    throw new Error("identifier and password are required");
   }
 
-  const user = await User.findOne({ phone, deletedAt: null });
+  const user = await User.findOne({
+    deletedAt: null,
+    $or: [
+      { phone: identifier },
+      { email: identifier.toLowerCase() },
+    ],
+  });
   if (!user) {
     res.status(401);
     throw new Error("Invalid credentials");
@@ -111,7 +126,7 @@ exports.logout = asyncHandler(async (req, res) => {
 
 // ── POST /api/auth/forgot-password ──────────────────────────────────────────
 exports.forgotPassword = asyncHandler(async (req, res) => {
-  const { email } = req.body;
+  const email = String(req.body.email || "").trim().toLowerCase();
   if (!email) {
     res.status(400);
     throw new Error("Email is required");
@@ -125,7 +140,8 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
     user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 h
     await user.save({ validateBeforeSave: false });
 
-    const resetUrl = `${process.env.CLIENT_URL}/reset-password/${raw}`;
+    const appBase = (process.env.APP_URL || "goovoiture://").replace(/\/+$/, "");
+    const resetUrl = `${appBase}/reset-password/${raw}`;
     emailService.sendPasswordReset(user, resetUrl).catch(() => {});
   }
 

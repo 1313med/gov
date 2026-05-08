@@ -14,6 +14,7 @@ if (missing.length) {
 
 const http = require("http");
 const { Server } = require("socket.io");
+const jwt = require("jsonwebtoken");
 const app = require("./app");
 const connectDB = require("./config/db");
 const { setIo } = require("./utils/socketManager");
@@ -39,13 +40,31 @@ const io = new Server(server, {
   },
 });
 
+io.use((socket, next) => {
+  try {
+    const authHeader = socket.handshake.headers?.authorization;
+    const bearerToken = authHeader && authHeader.startsWith("Bearer ")
+      ? authHeader.split(" ")[1]
+      : null;
+    const token = socket.handshake.auth?.token || bearerToken;
+
+    if (!token) return next(new Error("Unauthorized"));
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded?.id) return next(new Error("Unauthorized"));
+
+    socket.userId = decoded.id.toString();
+    return next();
+  } catch {
+    return next(new Error("Unauthorized"));
+  }
+});
+
 // Attach io to socketManager so controllers can emit events
 setIo(io);
 
 io.on("connection", (socket) => {
-  socket.on("join", (userId) => {
-    if (userId) socket.join(userId.toString());
-  });
+  socket.join(socket.userId);
   socket.on("disconnect", () => {});
 });
 

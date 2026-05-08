@@ -5,9 +5,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../src/context/AuthContext";
 import { useAppLang } from "../../src/context/AppLangContext";
 import { useTheme } from "../../src/context/ThemeContext";
+import { useSocket } from "../../src/context/SocketContext";
 
 export default function HomeScreen() {
   const { auth } = useAuth();
+  const { unreadNotifications } = useSocket();
   const { lang } = useAppLang();
   const { colors: C } = useTheme();
   const router = useRouter();
@@ -31,7 +33,17 @@ export default function HomeScreen() {
             <View style={s.logoBox}><Ionicons name="car-sport" size={20} color="#fff" /></View>
             <Text style={s.logoText}>Goovoiture</Text>
           </View>
-          {auth && <View style={s.roleBadge}><Text style={s.roleText}>{auth.role?.replace("_"," ")}</Text></View>}
+          <View style={s.topActions}>
+            <TouchableOpacity onPress={() => router.push("/notifications")} style={s.notificationBtn}>
+              <Ionicons name="notifications-outline" size={20} color={C.white} />
+              {unreadNotifications > 0 && (
+                <View style={s.notificationBadge}>
+                  <Text style={s.notificationBadgeText}>{unreadNotifications > 99 ? "99+" : unreadNotifications}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            {auth && <View style={s.roleBadge}><Text style={s.roleText}>{auth.role?.replace("_"," ")}</Text></View>}
+          </View>
         </View>
         <Text style={s.heroTitle}>
           {fr ? "Votre\n" : "Your\n"}
@@ -126,9 +138,36 @@ function createHomeStyles(C) {
   return StyleSheet.create({
     hero: { paddingTop: 56, paddingBottom: 40, paddingHorizontal: 24, backgroundColor: C.surface, borderBottomWidth:1, borderBottomColor: C.border },
     heroTop: { flexDirection:"row", alignItems:"center", justifyContent:"space-between", marginBottom: 24 },
+    topActions: { flexDirection: "row", alignItems: "center", gap: 8 },
     logoRow: { flexDirection:"row", alignItems:"center" },
     logoBox: { width:36, height:36, backgroundColor: C.primary, borderRadius:10, alignItems:"center", justifyContent:"center", marginRight:8 },
     logoText: { color: C.white, fontWeight:"700", fontSize:20 },
+    notificationBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      borderWidth: 1,
+      borderColor: C.border,
+      backgroundColor: C.card,
+      alignItems: "center",
+      justifyContent: "center",
+      position: "relative",
+    },
+    notificationBadge: {
+      position: "absolute",
+      top: -4,
+      right: -6,
+      minWidth: 18,
+      height: 18,
+      borderRadius: 9,
+      backgroundColor: "#ef4444",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 4,
+      borderWidth: 1,
+      borderColor: C.surface,
+    },
+    notificationBadgeText: { color: "#fff", fontSize: 10, fontWeight: "700" },
     roleBadge: { backgroundColor: C.pillBg, borderWidth:1, borderColor: C.pillBorder, borderRadius:20, paddingHorizontal:10, paddingVertical:4 },
     roleText: { color: C.primary, fontSize:11, textTransform:"capitalize" },
     heroTitle: { color: C.white, fontSize:34, fontWeight:"700", lineHeight:42 },
