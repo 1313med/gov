@@ -13,7 +13,6 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { register as registerApi } from "../../src/api/auth";
-import { useAuth } from "../../src/context/AuthContext";
 import { useAppLang } from "../../src/context/AppLangContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import ThemeToggle from "../../src/components/ThemeToggle";
@@ -26,12 +25,11 @@ const ROLES = [
 ];
 
 export default function RegisterScreen() {
-  const { login } = useAuth();
   const { colors: C } = useTheme();
   const { copy } = useAppLang();
   const c = copy.register;
   const router = useRouter();
-  const [form, setForm] = useState({ name: "", phone: "", city: "", password: "", role: "customer" });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", city: "", password: "", role: "customer" });
   const [loading, setLoading] = useState(false);
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   const roleLabels = { customer: c.roleCustomer, seller: c.roleSeller, rental_owner: c.roleRental };
@@ -39,11 +37,12 @@ export default function RegisterScreen() {
   const s = useMemo(() => createRegisterStyles(C), [C]);
 
   const handleRegister = async () => {
-    if (!form.name || !form.phone || !form.city || !form.password) return Alert.alert("Please fill all fields");
+    if (!form.name || !form.phone || !form.email || !form.city || !form.password) return Alert.alert("Please fill all fields");
     setLoading(true);
     try {
-      const { data } = await registerApi(form);
-      await login(data);
+      await registerApi(form);
+      Alert.alert("Verify your email", c.verifyAfterRegister || "Account created. Check your email to verify your account before logging in.");
+      router.back();
     } catch (e) {
       Alert.alert("Error", getApiErrorMessage(e, c.regFail));
     } finally {
@@ -73,6 +72,7 @@ export default function RegisterScreen() {
           {[
             { key: "name", label: c.fullName, icon: "person-outline", ph: "John Doe", kb: "default" },
             { key: "phone", label: c.phone, icon: "call-outline", ph: "06XXXXXXXX", kb: "phone-pad" },
+            { key: "email", label: c.email || "Email", icon: "mail-outline", ph: "you@example.com", kb: "email-address" },
             { key: "city", label: c.city, icon: "location-outline", ph: "Casablanca", kb: "default" },
             {
               key: "password",

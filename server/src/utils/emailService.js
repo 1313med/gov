@@ -77,6 +77,21 @@ exports.sendBookingRequest = (booking, rental, owner) =>
       </div>`,
   });
 
+exports.sendBookingSubmitted = (booking, rental, customer) =>
+  send({
+    to: customer.email,
+    subject: `Booking Request Sent – ${rental.title}`,
+    html: `
+      <div style="font-family:sans-serif;max-width:560px;margin:auto">
+        <h2 style="color:#3d3af5">Booking Request Sent</h2>
+        <p>Hi ${customer.name}, your booking request for <strong>${rental.title}</strong> was submitted successfully.</p>
+        <p><strong>Status:</strong> Pending owner approval</p>
+        <p><strong>Dates:</strong> ${new Date(booking.startDate).toDateString()} → ${new Date(booking.endDate).toDateString()}</p>
+        <p><strong>Total:</strong> ${booking.totalAmount ? booking.totalAmount.toLocaleString() + " MAD" : "—"}</p>
+        <p>You will receive another email once the owner confirms or rejects the request.</p>
+      </div>`,
+  });
+
 exports.sendListingApproved = (listing, user) =>
   send({
     to: user.email,

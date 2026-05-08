@@ -277,6 +277,7 @@ const registerEn = {
   createBtn: "Create Account",
   footerQ: "Already have an account?",
   footerLogin: "Login",
+  verifyAfterRegister: "Account created. Check your email to verify your account before logging in.",
   regFail: "Registration failed",
 };
 
@@ -297,6 +298,7 @@ const registerFr = {
   createBtn: "Créer le compte",
   footerQ: "Déjà un compte ?",
   footerLogin: "Connexion",
+  verifyAfterRegister: "Compte créé. Vérifiez votre email avant de vous connecter.",
   regFail: "Inscription échouée",
 };
 

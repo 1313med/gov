@@ -239,6 +239,12 @@ exports.createBooking = async (req, res, next) => {
     const owner = await User.findById(rental.rentalOwnerId);
     if (owner?.email) emailService.sendBookingRequest(booking, rental, owner).catch(() => {});
 
+    // Notify customer by email that request was submitted
+    const customerUser = await User.findById(req.user._id).select("name email");
+    if (customerUser?.email) {
+      emailService.sendBookingSubmitted(booking, rental, customerUser).catch(() => {});
+    }
+
     res.status(201).json(booking);
   } catch (error) { next(error); }
 };

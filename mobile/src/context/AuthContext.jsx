@@ -14,8 +14,10 @@ export function AuthProvider({ children }) {
     });
   }, []);
 
-  const login = useCallback(async (data) => {
-    await saveAuth(data);
+  const login = useCallback(async (data, options = {}) => {
+    const remember = options?.remember !== false;
+    if (remember) await saveAuth(data);
+    else await clearAuth();
     setAuth(data);
   }, []);
 

@@ -33,9 +33,9 @@ async function scheduleVerification(user) {
 exports.register = asyncHandler(async (req, res) => {
   const { name, phone, password, role, city, email } = req.body;
 
-  if (!name || !phone || !password) {
+  if (!name || !phone || !password || !email) {
     res.status(400);
-    throw new Error("name, phone and password are required");
+    throw new Error("name, phone, email and password are required");
   }
 
   const userExists = await User.findOne({ phone, deletedAt: null });
@@ -50,16 +50,16 @@ exports.register = asyncHandler(async (req, res) => {
     city,
   });
 
-  const token = generateToken(user);
-  res.cookie("token", token, COOKIE_OPTIONS);
-
   // Non-blocking side effects
   if (user.email) {
     emailService.sendWelcome(user).catch(() => {});
     scheduleVerification(user).catch(() => {});
   }
 
-  res.status(201).json({ _id: user._id, name: user.name, role: user.role, token });
+  res.status(201).json({
+    message: "Account created. Please verify your email before logging in.",
+    requiresEmailVerification: true,
+  });
 });
 
 // ── POST /api/auth/login ─────────────────────────────────────────────────────
@@ -86,6 +86,11 @@ exports.login = asyncHandler(async (req, res) => {
   if (!ok) {
     res.status(401);
     throw new Error("Invalid credentials");
+  }
+
+  if (user.email && !user.isEmailVerified) {
+    res.status(403);
+    throw new Error("Please verify your email before logging in.");
   }
 
   const token = generateToken(user);
