@@ -89,6 +89,9 @@ export default function HomeScreen() {
             <NavItem s={s} C={C} icon="clipboard-outline"   label={fr?"Réservations":"Bookings"}    onPress={() => router.push("/owner-bookings")} />
             <NavItem s={s} C={C} icon="add-circle-outline"  label={fr?"Ajouter location":"Add Rental"} onPress={() => router.push("/add-rental")} color={C.accent} />
           </>}
+          {auth.role === "admin" && (
+            <NavItem s={s} C={C} icon="shield-checkmark-outline" label={fr?"Modération":"Moderation"} onPress={() => router.push("/admin-moderation")} color={C.accent} />
+          )}
         </View>
       )}
 

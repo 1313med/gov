@@ -284,6 +284,9 @@ export default function ProfileScreen() {
           <NavItem s={s} C={C} icon="clipboard-outline"  label={fr?"Réservations":"Bookings"}     onPress={() => router.push("/owner-bookings")} />
           <NavItem s={s} C={C} icon="add-circle-outline" label={fr?"Ajouter location":"Add Rental"} onPress={() => router.push("/add-rental")} />
         </>}
+        {auth.role==="admin" && (
+          <NavItem s={s} C={C} icon="shield-checkmark-outline" label={fr?"Modération admin":"Admin Moderation"} onPress={() => router.push("/admin-moderation")} />
+        )}
 
         <Text style={s.sectionLabel}>{fr ? "Langue & apparence" : "Language & appearance"}</Text>
         <View style={s.themeLangRow}>

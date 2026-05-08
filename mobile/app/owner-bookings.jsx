@@ -145,6 +145,10 @@ function createOwnerBookingsStyles(C) {
       tapHint: { color: C.primary, fontSize: 12, fontWeight: "600", marginBottom: 10 },
       missing: { color: C.muted, fontStyle: "italic", fontSize: 13, marginBottom: 8 },
       sum: { color: C.slate, fontSize: 12, marginBottom: 10, lineHeight: 18 },
+      sumGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 10 },
+      sumCard: { width: "48%", backgroundColor: C.surface, borderRadius: 10, borderWidth: 1, borderColor: C.border, paddingVertical: 10, paddingHorizontal: 10 },
+      sumNum: { color: C.white, fontWeight: "800", fontSize: 18 },
+      sumLbl: { color: C.muted, fontSize: 11, marginTop: 2 },
       emptyFb: { color: C.muted, fontSize: 13, marginBottom: 8, lineHeight: 19 },
       err: { color: C.red, fontSize: 13, marginBottom: 8 },
       fbCard: {
@@ -155,12 +159,20 @@ function createOwnerBookingsStyles(C) {
         borderWidth: 1,
         borderColor: C.border,
       },
-      fbWho: { color: C.white, fontSize: 13, fontWeight: "600", marginBottom: 4 },
-      fbOverall: { fontSize: 13, fontWeight: "700", marginBottom: 6 },
+      fbHead: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 8 },
+      fbWho: { color: C.white, fontSize: 13, fontWeight: "700", flex: 1 },
+      fbDate: { color: C.muted, fontSize: 11, marginTop: 2 },
+      fbRental: { color: C.slate, fontSize: 12, marginTop: 4, marginBottom: 8 },
+      fbOverallPill: { alignSelf: "flex-start", borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, marginBottom: 8 },
+      fbOverallGood: { backgroundColor: "rgba(74,222,128,0.15)", borderWidth: 1, borderColor: "rgba(74,222,128,0.35)" },
+      fbOverallBad: { backgroundColor: "rgba(248,113,113,0.15)", borderWidth: 1, borderColor: "rgba(248,113,113,0.35)" },
+      fbOverallT: { color: C.white, fontSize: 12, fontWeight: "700" },
       fbGood: { color: "#4ade80" },
       fbBad: { color: "#f87171" },
-      fbFlags: { color: C.muted, fontSize: 11, lineHeight: 16 },
-      fbNote: { color: C.slate, fontSize: 12, marginTop: 8, fontStyle: "italic" },
+      flagWrap: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+      flagChip: { backgroundColor: C.card, borderRadius: 999, borderWidth: 1, borderColor: C.border, paddingHorizontal: 8, paddingVertical: 4 },
+      flagChipT: { color: C.muted, fontSize: 11, fontWeight: "600" },
+      fbNote: { color: C.slate, fontSize: 12, marginTop: 10, fontStyle: "italic", lineHeight: 18 },
       closeBtn: {
         marginTop: 14,
         paddingVertical: 14,
@@ -666,36 +678,65 @@ function CustomerProfileModal({ visible, booking, fr, ownerId, onClose }) {
               </Text>
             ) : (
               <>
-                <Text style={cp.sum}>
-                  {fr ? "Résumé" : "Summary"}: {otherSummary.goodCount} {fr ? "positifs" : "good"} ·{" "}
-                  {otherSummary.badCount} {fr ? "négatifs" : "bad"}
-                  {otherSummary.damageCount ? ` · ${fr ? "Dégâts signalés" : "Damage reported"}: ${otherSummary.damageCount}` : ""}
-                  {otherSummary.lateCount ? ` · ${fr ? "Retards" : "Late returns"}: ${otherSummary.lateCount}` : ""}
-                  {otherSummary.wouldRentAgainCount
-                    ? ` · ${fr ? "Reloueraient" : "Would rent again"}: ${otherSummary.wouldRentAgainCount}`
-                    : ""}
-                </Text>
-                {otherFeedbacks.map((f) => (
-                  <View key={f._id} style={cp.fbCard}>
-                    <Text style={cp.fbWho} numberOfLines={2}>
-                      {(f.ownerId?.name || "—") + " · " + (f.rentalId?.title || "—")}
-                    </Text>
-                    <Text style={[cp.fbOverall, f.overall === "good" ? cp.fbGood : cp.fbBad]}>
-                      {f.overall === "good" ? (fr ? "Bon locataire" : "Good renter") : fr ? "Mauvais retour" : "Poor experience"}
-                    </Text>
-                    <Text style={cp.fbFlags}>
-                      {[
-                        f.hadDamage ? (fr ? "Dégâts" : "Damage") : null,
-                        !f.returnedOnTime ? (fr ? "Retard" : "Late") : null,
-                        f.wasRespectful === false ? (fr ? "Peu respectueux" : "Not respectful") : null,
-                        f.wouldRentAgain ? (fr ? "Relouerait" : "Would rent again") : fr ? "Ne relouerait pas" : "Would not rent again",
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </Text>
-                    {f.note ? <Text style={cp.fbNote}>{f.note}</Text> : null}
+                <View style={cp.sumGrid}>
+                  <View style={cp.sumCard}>
+                    <Text style={cp.sumNum}>{otherSummary.total}</Text>
+                    <Text style={cp.sumLbl}>{fr ? "Avis" : "Reviews"}</Text>
                   </View>
-                ))}
+                  <View style={cp.sumCard}>
+                    <Text style={[cp.sumNum, cp.fbGood]}>{otherSummary.goodCount}</Text>
+                    <Text style={cp.sumLbl}>{fr ? "Positifs" : "Good"}</Text>
+                  </View>
+                  <View style={cp.sumCard}>
+                    <Text style={[cp.sumNum, cp.fbBad]}>{otherSummary.badCount}</Text>
+                    <Text style={cp.sumLbl}>{fr ? "Négatifs" : "Bad"}</Text>
+                  </View>
+                  <View style={cp.sumCard}>
+                    <Text style={cp.sumNum}>{otherSummary.wouldRentAgainCount}</Text>
+                    <Text style={cp.sumLbl}>{fr ? "Reloueraient" : "Would rent again"}</Text>
+                  </View>
+                </View>
+                {(otherSummary.damageCount > 0 || otherSummary.lateCount > 0) && (
+                  <Text style={cp.sum}>
+                    {[
+                      otherSummary.damageCount ? `${fr ? "Dégâts signalés" : "Damage reports"}: ${otherSummary.damageCount}` : null,
+                      otherSummary.lateCount ? `${fr ? "Retards" : "Late returns"}: ${otherSummary.lateCount}` : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </Text>
+                )}
+                {otherFeedbacks.map((f) => {
+                  const when = f?.createdAt ? new Date(f.createdAt).toLocaleDateString(fr ? "fr-FR" : "en-US") : null;
+                  const flags = [
+                    f.hadDamage ? (fr ? "Dégâts" : "Damage") : null,
+                    !f.returnedOnTime ? (fr ? "Retard" : "Late return") : null,
+                    f.wasRespectful === false ? (fr ? "Peu respectueux" : "Not respectful") : null,
+                    f.wouldRentAgain ? (fr ? "Relouerait" : "Would rent again") : (fr ? "Ne relouerait pas" : "Would not rent again"),
+                  ].filter(Boolean);
+                  return (
+                    <View key={f._id} style={cp.fbCard}>
+                      <View style={cp.fbHead}>
+                        <Text style={cp.fbWho} numberOfLines={2}>{f.ownerId?.name || "—"}</Text>
+                        {when ? <Text style={cp.fbDate}>{when}</Text> : null}
+                      </View>
+                      <Text style={cp.fbRental} numberOfLines={2}>{f.rentalId?.title || "—"}</Text>
+                      <View style={[cp.fbOverallPill, f.overall === "good" ? cp.fbOverallGood : cp.fbOverallBad]}>
+                        <Text style={cp.fbOverallT}>
+                          {f.overall === "good" ? (fr ? "Bon locataire" : "Good renter") : (fr ? "Retour négatif" : "Poor experience")}
+                        </Text>
+                      </View>
+                      <View style={cp.flagWrap}>
+                        {flags.map((flag) => (
+                          <View key={`${f._id}-${flag}`} style={cp.flagChip}>
+                            <Text style={cp.flagChipT}>{flag}</Text>
+                          </View>
+                        ))}
+                      </View>
+                      {f.note ? <Text style={cp.fbNote}>{f.note}</Text> : null}
+                    </View>
+                  );
+                })}
               </>
             )}
           </ScrollView>
