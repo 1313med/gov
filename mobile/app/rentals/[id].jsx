@@ -6,6 +6,7 @@ import { getRentalById, bookRental } from "../../src/api/rental";
 import { startConversation } from "../../src/api/message";
 import { addRentalFavorite, removeRentalFavorite, getRentalFavorites } from "../../src/api/user";
 import ReviewSection from "../../src/components/ReviewSection";
+import FavoriteHeartButton from "../../src/components/FavoriteHeartButton";
 import { useAuth } from "../../src/context/AuthContext";
 import { useAppLang } from "../../src/context/AppLangContext";
 import { resolveMediaUrl } from "../../src/utils/mediaUrl";
@@ -102,7 +103,7 @@ function createRentalDetailScreenStyles(C) {
     dot: { borderRadius: 4 },
     dotActive: { width: 16, height: 8, backgroundColor: C.primary },
     dotInactive: { width: 8, height: 8, backgroundColor: "rgba(255,255,255,0.4)" },
-    favBtn: { position: "absolute", top: 16, right: 16, backgroundColor: C.favScrim, borderRadius: 20, padding: 10 },
+    favBtn: { position: "absolute", top: 14, right: 14, zIndex: 12 },
     priceBadge: { position: "absolute", bottom: 12, right: 16, backgroundColor: "rgba(124,107,255,0.9)", borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4 },
     priceBadgeText: { color: "#fff", fontSize: 12, fontWeight: "700" },
     body: { paddingHorizontal: 16, paddingVertical: 24 },
@@ -323,9 +324,7 @@ export default function RentalDetailsScreen() {
             ))}
           </View>
         )}
-        <TouchableOpacity onPress={toggleFav} style={s.favBtn}>
-          <Ionicons name={isFav ? "heart" : "heart-outline"} size={22} color={isFav ? C.red : C.white} />
-        </TouchableOpacity>
+        <FavoriteHeartButton active={isFav} onPress={toggleFav} size="lg" variant="overlay" style={s.favBtn} />
         <View style={s.priceBadge}>
           <Text style={s.priceBadgeText}>{rental.pricePerDay} MAD/day</Text>
         </View>

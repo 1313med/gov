@@ -6,6 +6,7 @@ import { getSaleById } from "../../src/api/sale";
 import { startConversation } from "../../src/api/message";
 import { addFavorite, removeFavorite, getFavorites } from "../../src/api/user";
 import ReviewSection from "../../src/components/ReviewSection";
+import FavoriteHeartButton from "../../src/components/FavoriteHeartButton";
 import { useAuth } from "../../src/context/AuthContext";
 import { useAppLang } from "../../src/context/AppLangContext";
 import { resolveMediaUrl } from "../../src/utils/mediaUrl";
@@ -100,9 +101,7 @@ export default function CarDetailsScreen() {
           </View>
         )}
 
-        <TouchableOpacity onPress={toggleFav} style={s.favBtn}>
-          <Ionicons name={isFav ? "heart" : "heart-outline"} size={22} color={isFav ? C.red : C.white} />
-        </TouchableOpacity>
+        <FavoriteHeartButton active={isFav} onPress={toggleFav} size="lg" variant="overlay" style={s.favBtn} />
 
         {car.status === "sold" && (
           <View style={s.soldBadge}><Text style={s.badgeText}>SOLD</Text></View>
@@ -245,7 +244,7 @@ function createCarDetailStyles(C) {
     dot: { borderRadius:4 },
     dotActive: { width:16, height:8, backgroundColor: C.primary },
     dotInactive: { width:8, height:8, backgroundColor:"rgba(255,255,255,0.4)" },
-    favBtn: { position:"absolute", top:16, right:16, backgroundColor: C.favScrim, borderRadius:20, padding:10 },
+    favBtn: { position: "absolute", top: 14, right: 14, zIndex: 12 },
     soldBadge: { position:"absolute", top:16, left:16, backgroundColor:"#dc2626", borderRadius:20, paddingHorizontal:12, paddingVertical:4 },
     approvedBadge: { position:"absolute", top:16, left:16, backgroundColor:"rgba(22,163,74,0.9)", borderRadius:20, paddingHorizontal:12, paddingVertical:4, flexDirection:"row", alignItems:"center" },
     badgeText: { color:"#fff", fontSize:12, fontWeight:"700" },
