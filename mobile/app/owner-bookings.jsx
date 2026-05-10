@@ -29,6 +29,7 @@ import { useAuth } from "../src/context/AuthContext";
 import { useTheme } from "../src/context/ThemeContext";
 import { resolveMediaUrl } from "../src/utils/mediaUrl";
 import { openExternalUrl } from "../src/utils/openExternalUrl";
+import { shareBookingPdf } from "../src/utils/bookingPdf";
 
 const PAGE_SIZE = 15;
 
@@ -286,6 +287,19 @@ function createOwnerBookingsStyles(C, isDark) {
       pageBtnT: { color: C.muted, fontWeight: "600" },
       pageBtnTOn: { color: C.primary },
       rated: { color: C.green, fontSize: 12, fontWeight: "600", paddingVertical: 10 },
+      pdfRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingVertical: 12,
+        paddingHorizontal: 14,
+        marginBottom: 12,
+        backgroundColor: C.inputBg,
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: "rgba(124,107,255,0.35)",
+        gap: 10,
+      },
+      pdfRowText: { flex: 1, color: C.white, fontSize: 13, fontWeight: "600" },
     }),
   };
 }
@@ -829,6 +843,7 @@ export default function OwnerBookingsScreen() {
   const [feedbackBooking, setFeedbackBooking] = useState(null);
   const [rated, setRated] = useState({});
   const [profileBooking, setProfileBooking] = useState(null);
+  const [pdfForId, setPdfForId] = useState(null);
 
   const applyBookingsPayload = (data, p) => {
     setBookings(Array.isArray(data?.bookings) ? data.bookings : []);
@@ -913,6 +928,20 @@ export default function OwnerBookingsScreen() {
 
   const mergeBooking = (updated) => {
     setBookings((prev) => prev.map((b) => (b._id === updated._id ? { ...b, ...updated } : b)));
+  };
+
+  const exportPdf = async (b) => {
+    setPdfForId(b._id);
+    try {
+      await shareBookingPdf(b, { fr });
+    } catch (e) {
+      Alert.alert(
+        fr ? "PDF" : "PDF",
+        e?.message || (fr ? "Impossible de créer le PDF." : "Could not create the PDF."),
+      );
+    } finally {
+      setPdfForId(null);
+    }
   };
 
   const filterCount = (key) => {
@@ -1100,6 +1129,23 @@ export default function OwnerBookingsScreen() {
                   <Text style={s.paidText}>{fr ? "Payé" : "Paid"}</Text>
                 </View>
               )}
+
+              <TouchableOpacity
+                onPress={() => exportPdf(item)}
+                disabled={pdfForId === item._id}
+                style={[s.pdfRow, pdfForId === item._id && { opacity: 0.7 }]}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="document-text-outline" size={20} color={C.primary} />
+                <Text style={s.pdfRowText}>
+                  {fr ? "Télécharger ou partager le PDF" : "Download or share PDF receipt"}
+                </Text>
+                {pdfForId === item._id ? (
+                  <ActivityIndicator size="small" color={C.primary} />
+                ) : (
+                  <Ionicons name="share-outline" size={18} color={C.muted} />
+                )}
+              </TouchableOpacity>
 
               <View style={s.actionsRow}>
                 {item.status === "pending" && (

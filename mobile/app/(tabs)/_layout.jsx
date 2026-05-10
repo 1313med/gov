@@ -41,6 +41,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="index"    options={{ title:"Home",     tabBarIcon: ({color,size,focused}) => <Icon name={focused?"home":"home-outline"} color={color} size={size} /> }} />
       <Tabs.Screen name="cars"     options={{ title:"Cars",     tabBarIcon: ({color,size,focused}) => <Icon name={focused?"car":"car-outline"} color={color} size={size} /> }} />
       <Tabs.Screen name="rentals"  options={{ title:"Rentals",  tabBarIcon: ({color,size,focused}) => <Icon name={focused?"car-sport":"car-sport-outline"} color={color} size={size} /> }} />
+      <Tabs.Screen name="favorites" options={{ title:"Saved",    tabBarIcon: ({color,size,focused}) => <Icon name={focused?"heart":"heart-outline"} color={color} size={size} /> }} />
       <Tabs.Screen name="messages" options={{ title:"Messages", tabBarIcon: ({color,size,focused}) => <Icon name={focused?"chatbubbles":"chatbubbles-outline"} color={color} size={size} badge={unreadMsg} /> }} />
       <Tabs.Screen name="profile"  options={{ title:"Profile",  tabBarIcon: ({color,size,focused}) => <Icon name={focused?"person":"person-outline"} color={color} size={size} badge={unreadNotif} /> }} />
     </Tabs>
