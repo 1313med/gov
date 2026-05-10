@@ -1,163 +1,694 @@
-import { useMemo } from "react";
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+import { useMemo, useRef, useEffect, useCallback } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  Animated,
+  Easing,
+  Dimensions,
+  Pressable,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../src/context/AuthContext";
 import { useAppLang } from "../../src/context/AppLangContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import { useSocket } from "../../src/context/SocketContext";
 
+const { width: SCREEN_W } = Dimensions.get("window");
+
+function useStaggeredEntrance(count, startDelay = 120) {
+  const anims = useRef(
+    Array.from({ length: count }, () => ({
+      opacity: new Animated.Value(0),
+      translate: new Animated.Value(28),
+    })),
+  ).current;
+
+  const run = useCallback(() => {
+    anims.forEach((a) => {
+      a.opacity.setValue(0);
+      a.translate.setValue(28);
+    });
+    Animated.stagger(
+      72,
+      anims.map((a) =>
+        Animated.parallel([
+          Animated.timing(a.opacity, {
+            toValue: 1,
+            duration: 520,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }),
+          Animated.spring(a.translate, {
+            toValue: 0,
+            friction: 7,
+            tension: 42,
+            useNativeDriver: true,
+          }),
+        ]),
+      ),
+    ).start();
+  }, [anims]);
+
+  useEffect(() => {
+    const t = setTimeout(run, startDelay);
+    return () => clearTimeout(t);
+  }, [run, startDelay]);
+
+  return anims;
+}
+
+function GlowOrb({ style, colors, scaleAnim }) {
+  return (
+    <Animated.View
+      style={[
+        {
+          position: "absolute",
+          borderRadius: 999,
+          opacity: 0.55,
+        },
+        style,
+        { transform: [{ scale: scaleAnim }] },
+      ]}
+    >
+      <LinearGradient colors={colors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+    </Animated.View>
+  );
+}
+
+function ShimmerLine({ color }) {
+  const x = useRef(new Animated.Value(-1)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(x, {
+          toValue: 1,
+          duration: 2800,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(x, { toValue: -1, duration: 0, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [x]);
+  const translateX = x.interpolate({
+    inputRange: [-1, 1],
+    outputRange: [-SCREEN_W * 0.6, SCREEN_W * 0.6],
+  });
+  return (
+    <View style={{ height: 2, borderRadius: 1, overflow: "hidden", marginTop: 14, marginBottom: 4, backgroundColor: "rgba(255,255,255,0.08)" }}>
+      <Animated.View
+        style={{
+          width: "40%",
+          height: "100%",
+          backgroundColor: color,
+          opacity: 0.9,
+          borderRadius: 1,
+          transform: [{ translateX }],
+        }}
+      />
+    </View>
+  );
+}
+
+function PrimaryCta({ onPress, children, colors, style }) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const pressIn = () =>
+    Animated.spring(scale, { toValue: 0.96, friction: 6, useNativeDriver: true }).start();
+  const pressOut = () =>
+    Animated.spring(scale, { toValue: 1, friction: 5, useNativeDriver: true }).start();
+  return (
+    <Pressable onPress={onPress} onPressIn={pressIn} onPressOut={pressOut}>
+      <Animated.View style={[{ transform: [{ scale }] }, style]}>
+        <LinearGradient colors={colors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={ctaStyles.primaryInner}>
+          {children}
+        </LinearGradient>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+const ctaStyles = StyleSheet.create({
+  primaryInner: {
+    borderRadius: 16,
+    paddingVertical: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    width: "100%",
+    minHeight: 52,
+    shadowColor: "#7c6bff",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.45,
+    shadowRadius: 20,
+    elevation: 12,
+  },
+});
+
+function StatCard({ value, label, delayAnim, accent, isDark }) {
+  return (
+    <Animated.View
+      style={[
+        {
+          flex: 1,
+          opacity: delayAnim.opacity,
+          transform: [{ translateY: delayAnim.translate }],
+        },
+      ]}
+    >
+      <LinearGradient
+        colors={
+          isDark
+            ? ["rgba(255,255,255,0.07)", "rgba(255,255,255,0.02)"]
+            : ["rgba(255,255,255,0.95)", "rgba(248,250,252,0.88)"]
+        }
+        style={[
+          statCardStyles.card,
+          {
+            borderColor: isDark ? "rgba(124,107,255,0.28)" : "rgba(98,72,232,0.18)",
+          },
+        ]}
+      >
+        <View style={[statCardStyles.accentDot, { backgroundColor: accent }]} />
+        <Text style={[statCardStyles.value, { color: accent }]}>{value}</Text>
+        <Text style={[statCardStyles.label, { color: isDark ? "#94a3b8" : "#64748b" }]}>{label}</Text>
+      </LinearGradient>
+    </Animated.View>
+  );
+}
+
+const statCardStyles = StyleSheet.create({
+  card: {
+    borderRadius: 18,
+    paddingVertical: 18,
+    paddingHorizontal: 10,
+    alignItems: "center",
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  accentDot: { width: 6, height: 6, borderRadius: 3, marginBottom: 10, opacity: 0.9 },
+  value: { fontWeight: "800", fontSize: 19, letterSpacing: -0.5 },
+  label: { fontSize: 10, fontWeight: "700", marginTop: 4, letterSpacing: 0.6, textTransform: "uppercase" },
+});
+
+function FeatureTile({ icon, color, title, desc, anim, isDark, large }) {
+  return (
+    <Animated.View
+      style={[
+        {
+          opacity: anim.opacity,
+          transform: [{ translateY: anim.translate }],
+          width: large ? "100%" : "48.2%",
+        },
+      ]}
+    >
+      <LinearGradient
+        colors={
+          isDark
+            ? ["rgba(20,21,40,0.95)", "rgba(12,14,28,0.98)"]
+            : ["#ffffff", "#f8fafc"]
+        }
+        style={[
+          featureStyles.tile,
+          {
+            borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.06)",
+            minHeight: large ? 132 : 148,
+          },
+        ]}
+      >
+        <LinearGradient
+          colors={[`${color}35`, `${color}08`]}
+          style={featureStyles.iconWrap}
+        >
+          <Ionicons name={icon} size={large ? 26 : 22} color={color} />
+        </LinearGradient>
+        <Text style={[featureStyles.title, { color: isDark ? "#f1f5f9" : "#0f172a" }]}>{title}</Text>
+        <Text style={[featureStyles.desc, { color: isDark ? "#94a3b8" : "#64748b" }]}>{desc}</Text>
+      </LinearGradient>
+    </Animated.View>
+  );
+}
+
+const featureStyles = StyleSheet.create({
+  tile: {
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 18,
+    flex: 1,
+  },
+  iconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 14,
+  },
+  title: { fontWeight: "800", fontSize: 14, marginBottom: 6, letterSpacing: -0.2 },
+  desc: { fontSize: 12, lineHeight: 18 },
+});
+
+function NavItem({ icon, label, onPress, color, s, C, isDark }) {
+  const c = color ?? C.primary;
+  const scale = useRef(new Animated.Value(1)).current;
+  return (
+    <Pressable
+      onPress={onPress}
+      onPressIn={() => Animated.spring(scale, { toValue: 0.98, useNativeDriver: true }).start()}
+      onPressOut={() => Animated.spring(scale, { toValue: 1, friction: 4, useNativeDriver: true }).start()}
+    >
+      <Animated.View style={[s.navItem, { transform: [{ scale }] }]}>
+        <LinearGradient
+          colors={isDark ? ["rgba(124,107,255,0.12)", "transparent"] : ["rgba(98,72,232,0.08)", "transparent"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={[s.navIcon, { backgroundColor: c + "22" }]}>
+          <Ionicons name={icon} size={18} color={c} />
+        </View>
+        <Text style={s.navLabel}>{label}</Text>
+        <Ionicons name="chevron-forward" size={16} color={C.muted} />
+      </Animated.View>
+    </Pressable>
+  );
+}
+
 export default function HomeScreen() {
   const { auth } = useAuth();
   const { unreadNotifications } = useSocket();
   const { lang } = useAppLang();
-  const { colors: C } = useTheme();
+  const { colors: C, isDark } = useTheme();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const fr = lang === "fr";
-  const s = useMemo(() => createHomeStyles(C), [C]);
+
+  const heroOpacity = useRef(new Animated.Value(0)).current;
+  const heroSlide = useRef(new Animated.Value(36)).current;
+  const orbPulse = useRef(new Animated.Value(1)).current;
+
+  const statAnims = useStaggeredEntrance(3, 280);
+  const featureAnims = useStaggeredEntrance(4, 420);
+  const quickFade = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(heroOpacity, {
+        toValue: 1,
+        duration: 900,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.spring(heroSlide, {
+        toValue: 0,
+        friction: 8,
+        tension: 38,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [heroOpacity, heroSlide]);
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(orbPulse, {
+          toValue: 1.12,
+          duration: 5200,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(orbPulse, {
+          toValue: 1,
+          duration: 5200,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [orbPulse]);
+
+  useEffect(() => {
+    if (!auth) {
+      quickFade.setValue(0);
+      return;
+    }
+    quickFade.setValue(0);
+    Animated.timing(quickFade, {
+      toValue: 1,
+      delay: 320,
+      duration: 560,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [auth, quickFade]);
+
+  const scrollY = useRef(new Animated.Value(0)).current;
+
   const features = useMemo(
     () => [
-      { icon: "shield-checkmark-outline", color: C.primary, en: ["Verified Listings", "Every listing is reviewed before going live."], fr: ["Annonces vérifiées", "Chaque annonce est vérifiée avant publication."] },
-      { icon: "flash-outline", color: C.accent, en: ["Instant Booking", "Book a rental in seconds."], fr: ["Réservation instantanée", "Réservez en quelques secondes."] },
-      { icon: "people-outline", color: "#a78bfa", en: ["Trusted Sellers", "Verified profiles with ratings."], fr: ["Vendeurs de confiance", "Profils vérifiés avec notes."] },
-      { icon: "lock-closed-outline", color: C.green, en: ["Secure Platform", "Your data is fully protected."], fr: ["Plateforme sécurisée", "Vos données sont protégées."] },
+      { icon: "shield-checkmark-outline", color: C.primary, en: ["Verified Listings", "Every listing is reviewed before going live."], fr: ["Annonces vérifiées", "Chaque annonce est vérifiée avant publication."], large: true },
+      { icon: "flash-outline", color: C.accent, en: ["Instant Booking", "Book a rental in seconds."], fr: ["Réservation instantanée", "Réservez en quelques secondes."], large: false },
+      { icon: "people-outline", color: "#a78bfa", en: ["Trusted Sellers", "Verified profiles with ratings."], fr: ["Vendeurs de confiance", "Profils vérifiés avec notes."], large: false },
+      { icon: "lock-closed-outline", color: C.green, en: ["Secure Platform", "Your data is fully protected."], fr: ["Plateforme sécurisée", "Vos données sont protégées."], large: false },
     ],
     [C],
   );
 
+  const heroGradient = isDark
+    ? ["#03040a", "#120a24", "#0a1628", "#05060f"]
+    : ["#faf5ff", "#e0f2fe", "#f0f9ff", "#f8fafc"];
+
+  const orbA = isDark
+    ? ["rgba(124,107,255,0.55)", "rgba(124,107,255,0)"]
+    : ["rgba(98,72,232,0.35)", "rgba(98,72,232,0)"];
+  const orbB = isDark
+    ? ["rgba(56,189,248,0.35)", "rgba(56,189,248,0)"]
+    : ["rgba(14,165,233,0.28)", "rgba(14,165,233,0)"];
+
+  const titleColor = isDark ? "#f8fafc" : "#0f172a";
+  const subColor = isDark ? "#94a3b8" : "#475569";
+  const glassBorder = isDark ? "rgba(255,255,255,0.12)" : "rgba(15,23,42,0.08)";
+
+  const ctaPrimaryGrad = isDark ? ["#7c6bff", "#5b4ddb", "#4338ca"] : ["#6248e8", "#4f46e5", "#4338ca"];
+  const ctaRentGrad = isDark
+    ? ["rgba(56,189,248,0.25)", "rgba(56,189,248,0.08)"]
+    : ["rgba(14,165,233,0.2)", "rgba(14,165,233,0.06)"];
+
+  const s = useMemo(() => createHomeStyles(C, isDark), [C, isDark]);
+
+  const heroParallax = scrollY.interpolate({
+    inputRange: [0, 180],
+    outputRange: [0, -32],
+    extrapolate: "clamp",
+  });
+
   return (
-    <ScrollView style={{ flex:1, backgroundColor: C.bg }} showsVerticalScrollIndicator={false}>
-      <View style={s.hero}>
-        <View style={s.heroTop}>
-          <View style={s.logoRow}>
-            <View style={s.logoBox}><Ionicons name="car-sport" size={20} color="#fff" /></View>
-            <Text style={s.logoText}>Goovoiture</Text>
-          </View>
-          <View style={s.topActions}>
-            <TouchableOpacity onPress={() => router.push("/notifications")} style={s.notificationBtn}>
-              <Ionicons name="notifications-outline" size={20} color={C.white} />
-              {unreadNotifications > 0 && (
-                <View style={s.notificationBadge}>
-                  <Text style={s.notificationBadgeText}>{unreadNotifications > 99 ? "99+" : unreadNotifications}</Text>
+    <View style={{ flex: 1, backgroundColor: C.bg }}>
+      <Animated.ScrollView
+        showsVerticalScrollIndicator={false}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
+        scrollEventThrottle={16}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
+      >
+        <Animated.View style={{ transform: [{ translateY: heroParallax }] }}>
+          <LinearGradient colors={heroGradient} locations={[0, 0.35, 0.7, 1]} style={[s.hero, { paddingTop: insets.top + 12 }]}>
+            <GlowOrb
+              scaleAnim={orbPulse}
+              colors={orbA}
+              style={{ width: 280, height: 280, top: -80, right: -90 }}
+            />
+            <GlowOrb
+              scaleAnim={orbPulse}
+              colors={orbB}
+              style={{ width: 220, height: 220, bottom: 40, left: -100 }}
+            />
+
+            <Animated.View style={{ opacity: heroOpacity, transform: [{ translateY: heroSlide }] }}>
+              <View style={s.heroTop}>
+                <View style={s.logoRow}>
+                  <LinearGradient colors={ctaPrimaryGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.logoBox}>
+                    <Ionicons name="car-sport" size={20} color="#fff" />
+                  </LinearGradient>
+                  <View>
+                    <Text style={[s.logoText, { color: titleColor }]}>
+                      Goo<Text style={s.logoItalic}>voiture</Text>
+                    </Text>
+                    <Text style={[s.logoTagline, { color: subColor }]}>
+                      {fr ? "Mobilité premium au Maroc" : "Premium mobility in Morocco"}
+                    </Text>
+                  </View>
                 </View>
-              )}
-            </TouchableOpacity>
-            {auth && <View style={s.roleBadge}><Text style={s.roleText}>{auth.role?.replace("_"," ")}</Text></View>}
-          </View>
-        </View>
-        <Text style={s.heroTitle}>
-          {fr ? "Votre\n" : "Your\n"}
-          <Text style={{ color: C.primary }}>{fr ? "marketplace auto" : "car marketplace"}</Text>
-          {fr ? "\nau Maroc." : "\nin Morocco."}
-        </Text>
-        <Text style={s.heroSub}>{fr ? "Achetez, vendez et louez des voitures en toute confiance." : "Buy, sell and rent cars with confidence. Thousands of verified listings."}</Text>
-        <View style={s.ctaRow}>
-          <TouchableOpacity onPress={() => router.push("/(tabs)/cars")} style={s.ctaPrimary}>
-            <Ionicons name="car" size={16} color="#fff" />
-            <Text style={s.ctaPrimaryText}>{fr ? "Acheter" : "Buy a Car"}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push("/(tabs)/rentals")} style={s.ctaSecondary}>
-            <Ionicons name="car-sport" size={16} color={C.accent} />
-            <Text style={s.ctaSecondaryText}>{fr ? "Louer" : "Rent a Car"}</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <View style={s.statsRow}>
-        {[["2,400+", fr?"Annonces":"Listings"], ["4.9★", fr?"Note":"Rating"], ["98%", fr?"Satisfaction":"Satisfaction"]].map(([v,l]) => (
-          <View key={l} style={s.statCard}>
-            <Text style={s.statValue}>{v}</Text>
-            <Text style={s.statLabel}>{l}</Text>
-          </View>
-        ))}
-      </View>
-
-      <View style={s.section}>
-        <Text style={s.sectionTitle}>{fr ? "Pourquoi Goovoiture ?" : "Why Goovoiture?"}</Text>
-        <View style={s.featuresGrid}>
-          {features.map((f) => (
-            <View key={f.en[0]} style={s.featureCard}>
-              <View style={[s.featureIcon, { backgroundColor: f.color + "20" }]}>
-                <Ionicons name={f.icon} size={20} color={f.color} />
+                <View style={s.topActions}>
+                  <TouchableOpacity
+                    onPress={() => router.push("/notifications")}
+                    activeOpacity={0.85}
+                    style={[s.notificationBtn, { borderColor: glassBorder, backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.7)" }]}
+                  >
+                    <Ionicons name="notifications-outline" size={20} color={titleColor} />
+                    {unreadNotifications > 0 && (
+                      <View style={s.notificationBadge}>
+                        <Text style={s.notificationBadgeText}>{unreadNotifications > 99 ? "99+" : unreadNotifications}</Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                  {auth && (
+                    <LinearGradient
+                      colors={isDark ? ["rgba(124,107,255,0.2)", "rgba(124,107,255,0.08)"] : ["rgba(98,72,232,0.15)", "rgba(98,72,232,0.05)"]}
+                      style={s.roleBadge}
+                    >
+                      <Text style={[s.roleText, { color: C.primary }]}>{auth.role?.replace("_", " ")}</Text>
+                    </LinearGradient>
+                  )}
+                </View>
               </View>
-              <Text style={s.featureTitle}>{fr ? f.fr[0] : f.en[0]}</Text>
-              <Text style={s.featureDesc}>{fr ? f.fr[1] : f.en[1]}</Text>
-            </View>
+
+              <Text style={[s.heroKicker, { color: C.primary }]}>{fr ? "L'excellence routière" : "The road, elevated"}</Text>
+              <Text style={[s.heroTitle, { color: titleColor }]}>
+                {fr ? "Votre marketplace" : "Your marketplace"}
+                {"\n"}
+                <Text style={{ color: C.primary, fontStyle: "italic", fontWeight: "800" }}>{fr ? "automobile" : "automotive"}</Text>
+                {fr ? " de confiance." : " you trust."}
+              </Text>
+              <ShimmerLine color={C.primary} />
+              <Text style={[s.heroSub, { color: subColor }]}>
+                {fr
+                  ? "Achetez, vendez et louez des voitures vérifiées — une expérience fluide, sécurisée, inoubliable."
+                  : "Buy, sell and rent verified cars — a fluid, secure experience that feels unforgettable."}
+              </Text>
+
+              <View style={s.ctaRow}>
+                <PrimaryCta
+                  onPress={() => router.push("/(tabs)/cars")}
+                  colors={ctaPrimaryGrad}
+                  style={{ flex: 1 }}
+                >
+                  <Ionicons name="car" size={18} color="#fff" />
+                  <Text style={s.ctaPrimaryText}>{fr ? "Acheter" : "Buy a Car"}</Text>
+                </PrimaryCta>
+                <Pressable
+                  onPress={() => router.push("/(tabs)/rentals")}
+                  style={{ flex: 1 }}
+                >
+                  <LinearGradient
+                    colors={ctaRentGrad}
+                    style={[s.ctaSecondary, { borderColor: isDark ? "rgba(56,189,248,0.45)" : "rgba(14,165,233,0.4)" }]}
+                  >
+                    <Ionicons name="car-sport" size={18} color={C.accent} />
+                    <Text style={[s.ctaSecondaryText, { color: C.accent }]}>{fr ? "Louer" : "Rent a Car"}</Text>
+                  </LinearGradient>
+                </Pressable>
+              </View>
+
+              <View style={s.quickPills}>
+                <TouchableOpacity
+                  onPress={() => router.push("/(tabs)/favorites")}
+                  activeOpacity={0.85}
+                  style={[s.pill, { borderColor: glassBorder, backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.65)" }]}
+                >
+                  <Ionicons name="heart" size={14} color="#f472b6" />
+                  <Text style={[s.pillText, { color: titleColor }]}>{fr ? "Favoris" : "Saved"}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => router.push("/(tabs)/messages")}
+                  activeOpacity={0.85}
+                  style={[s.pill, { borderColor: glassBorder, backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.65)" }]}
+                >
+                  <Ionicons name="chatbubbles-outline" size={14} color={C.accent} />
+                  <Text style={[s.pillText, { color: titleColor }]}>{fr ? "Messages" : "Messages"}</Text>
+                </TouchableOpacity>
+              </View>
+            </Animated.View>
+          </LinearGradient>
+        </Animated.View>
+
+        <View style={s.statsRow}>
+          {[
+            ["2,400+", fr ? "Annonces" : "Listings", C.primary],
+            ["4.9★", fr ? "Note" : "Rating", "#fbbf24"],
+            ["98%", fr ? "Satisfaction" : "Happy", C.green],
+          ].map(([v, l, accent], i) => (
+            <StatCard key={l} value={v} label={l} delayAnim={statAnims[i]} accent={accent} isDark={isDark} />
           ))}
         </View>
-      </View>
 
-      {auth && (
         <View style={s.section}>
-          <Text style={s.sectionTitle}>{fr ? "Accès rapide" : "Quick Actions"}</Text>
-          {auth.role === "customer" && <NavItem s={s} C={C} icon="calendar-outline" label={fr?"Mes réservations":"My Bookings"} onPress={() => router.push("/my-bookings")} />}
-          {auth.role === "seller" && <>
-            <NavItem s={s} C={C} icon="list-outline"        label={fr?"Mes annonces":"My Sales"}    onPress={() => router.push("/my-sales")} />
-            <NavItem s={s} C={C} icon="add-circle-outline"  label={fr?"Nouvelle annonce":"New Listing"} onPress={() => router.push("/new-sale")} color={C.accent} />
-          </>}
-          {auth.role === "rental_owner" && <>
-            <NavItem s={s} C={C} icon="analytics-outline"  label={fr?"Statistiques":"Analytics"}   onPress={() => router.push("/owner-analytics")} color={C.accent} />
-            <NavItem s={s} C={C} icon="car-outline"         label={fr?"Mon parc":"My Fleet"}        onPress={() => router.push("/my-fleet")} />
-            <NavItem s={s} C={C} icon="construct-outline"  label={fr?"Maintenance":"Maintenance"} onPress={() => router.push("/maintenance")} />
-            <NavItem s={s} C={C} icon="clipboard-outline"   label={fr?"Réservations":"Bookings"}    onPress={() => router.push("/owner-bookings")} />
-            <NavItem s={s} C={C} icon="add-circle-outline"  label={fr?"Ajouter location":"Add Rental"} onPress={() => router.push("/add-rental")} color={C.accent} />
-          </>}
-          {auth.role === "admin" && (
-            <NavItem s={s} C={C} icon="shield-checkmark-outline" label={fr?"Modération":"Moderation"} onPress={() => router.push("/admin-moderation")} color={C.accent} />
-          )}
-        </View>
-      )}
+          <Text style={[s.sectionEyebrow, { color: C.primary }]}>{fr ? "Pourquoi nous choisir" : "Why us"}</Text>
+          <Text style={[s.sectionTitle, { color: titleColor }]}>{fr ? "L'art du mouvement" : "The art of motion"}</Text>
+          <Text style={[s.sectionSub, { color: subColor }]}>
+            {fr
+              ? "Chaque détail compte — de la vérification à la signature."
+              : "Every detail matters — from verification to the handoff."}
+          </Text>
 
-      {!auth && (
-        <View style={{ padding: 24, paddingBottom: 40 }}>
-          <View style={s.joinCard}>
-            <Ionicons name="person-add-outline" size={36} color={C.primary} />
-            <Text style={s.joinTitle}>{fr ? "Rejoindre Goovoiture" : "Join Goovoiture"}</Text>
-            <Text style={s.joinSub}>{fr ? "Créez un compte gratuit pour accéder à toutes les fonctionnalités." : "Create a free account to access all features."}</Text>
-            <TouchableOpacity onPress={() => router.push("/(auth)/register")} style={s.joinBtn}>
-              <Text style={s.joinBtnText}>{fr ? "S'inscrire" : "Get Started"}</Text>
-            </TouchableOpacity>
+          <View style={s.bento}>
+            <FeatureTile
+              {...features[0]}
+              title={fr ? features[0].fr[0] : features[0].en[0]}
+              desc={fr ? features[0].fr[1] : features[0].en[1]}
+              anim={featureAnims[0]}
+              isDark={isDark}
+              large
+            />
+            <View style={s.bentoRow}>
+              {features.slice(1, 3).map((f, j) => (
+                <FeatureTile
+                  key={f.en[0]}
+                  {...f}
+                  title={fr ? f.fr[0] : f.en[0]}
+                  desc={fr ? f.fr[1] : f.en[1]}
+                  anim={featureAnims[j + 1]}
+                  isDark={isDark}
+                  large={false}
+                />
+              ))}
+            </View>
+            <FeatureTile
+              {...features[3]}
+              title={fr ? features[3].fr[0] : features[3].en[0]}
+              desc={fr ? features[3].fr[1] : features[3].en[1]}
+              anim={featureAnims[3]}
+              isDark={isDark}
+              large
+            />
           </View>
         </View>
-      )}
-    </ScrollView>
+
+        {auth && (
+          <View style={s.section}>
+            <Text style={[s.sectionEyebrow, { color: C.accent }]}>{fr ? "Espace pro" : "Your workspace"}</Text>
+            <Text style={[s.sectionTitle, { color: titleColor }]}>{fr ? "Accès rapide" : "Quick actions"}</Text>
+            <Animated.View style={{ opacity: quickFade }}>
+              {auth.role === "customer" && (
+                <NavItem
+                  s={s}
+                  C={C}
+                  isDark={isDark}
+                  icon="calendar-outline"
+                  label={fr ? "Mes réservations" : "My Bookings"}
+                  onPress={() => router.push("/my-bookings")}
+                />
+              )}
+              {auth.role === "seller" && (
+                <>
+                  <NavItem s={s} C={C} isDark={isDark} icon="list-outline" label={fr ? "Mes annonces" : "My Sales"} onPress={() => router.push("/my-sales")} />
+                  <NavItem
+                    s={s}
+                    C={C}
+                    isDark={isDark}
+                    icon="add-circle-outline"
+                    label={fr ? "Nouvelle annonce" : "New Listing"}
+                    onPress={() => router.push("/new-sale")}
+                    color={C.accent}
+                  />
+                </>
+              )}
+              {auth.role === "rental_owner" && (
+                <>
+                  <NavItem s={s} C={C} isDark={isDark} icon="analytics-outline" label={fr ? "Statistiques" : "Analytics"} onPress={() => router.push("/owner-analytics")} color={C.accent} />
+                  <NavItem s={s} C={C} isDark={isDark} icon="car-outline" label={fr ? "Mon parc" : "My Fleet"} onPress={() => router.push("/my-fleet")} />
+                  <NavItem s={s} C={C} isDark={isDark} icon="construct-outline" label={fr ? "Maintenance" : "Maintenance"} onPress={() => router.push("/maintenance")} />
+                  <NavItem s={s} C={C} isDark={isDark} icon="clipboard-outline" label={fr ? "Réservations" : "Bookings"} onPress={() => router.push("/owner-bookings")} />
+                  <NavItem
+                    s={s}
+                    C={C}
+                    isDark={isDark}
+                    icon="add-circle-outline"
+                    label={fr ? "Ajouter location" : "Add Rental"}
+                    onPress={() => router.push("/add-rental")}
+                    color={C.accent}
+                  />
+                </>
+              )}
+              {auth.role === "admin" && (
+                <NavItem
+                  s={s}
+                  C={C}
+                  isDark={isDark}
+                  icon="shield-checkmark-outline"
+                  label={fr ? "Modération" : "Moderation"}
+                  onPress={() => router.push("/admin-moderation")}
+                  color={C.accent}
+                />
+              )}
+            </Animated.View>
+          </View>
+        )}
+
+        {!auth && (
+          <View style={{ paddingHorizontal: 24, paddingBottom: 8 }}>
+            <LinearGradient
+              colors={isDark ? ["rgba(124,107,255,0.18)", "rgba(56,189,248,0.08)"] : ["rgba(98,72,232,0.12)", "rgba(14,165,233,0.06)"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[s.joinCard, { borderColor: isDark ? "rgba(124,107,255,0.35)" : "rgba(98,72,232,0.25)" }]}
+            >
+              <View style={s.joinIconRing}>
+                <Ionicons name="person-add-outline" size={32} color={C.primary} />
+              </View>
+              <Text style={[s.joinTitle, { color: titleColor }]}>{fr ? "Rejoindre Goovoiture" : "Join Goovoiture"}</Text>
+              <Text style={[s.joinSub, { color: subColor }]}>
+                {fr ? "Créez un compte gratuit — débloquez l'intégralité de l'expérience." : "Create a free account — unlock the full experience."}
+              </Text>
+              <PrimaryCta onPress={() => router.push("/(auth)/register")} colors={ctaPrimaryGrad} style={{ alignSelf: "stretch", width: "100%" }}>
+                <Text style={s.joinBtnText}>{fr ? "Commencer" : "Get Started"}</Text>
+                <Ionicons name="arrow-forward" size={18} color="#fff" />
+              </PrimaryCta>
+            </LinearGradient>
+          </View>
+        )}
+      </Animated.ScrollView>
+    </View>
   );
 }
 
-function NavItem({ icon, label, onPress, color, s, C }) {
-  const c = color ?? C.primary;
-  return (
-    <TouchableOpacity onPress={onPress} style={s.navItem}>
-      <View style={[s.navIcon, { backgroundColor: c + "20" }]}><Ionicons name={icon} size={18} color={c} /></View>
-      <Text style={s.navLabel}>{label}</Text>
-      <Ionicons name="chevron-forward" size={16} color={C.muted} />
-    </TouchableOpacity>
-  );
-}
-
-function createHomeStyles(C) {
+function createHomeStyles(C, isDark) {
   return StyleSheet.create({
-    hero: { paddingTop: 56, paddingBottom: 40, paddingHorizontal: 24, backgroundColor: C.surface, borderBottomWidth:1, borderBottomColor: C.border },
-    heroTop: { flexDirection:"row", alignItems:"center", justifyContent:"space-between", marginBottom: 24 },
-    topActions: { flexDirection: "row", alignItems: "center", gap: 8 },
-    logoRow: { flexDirection:"row", alignItems:"center" },
-    logoBox: { width:36, height:36, backgroundColor: C.primary, borderRadius:10, alignItems:"center", justifyContent:"center", marginRight:8 },
-    logoText: { color: C.white, fontWeight:"700", fontSize:20 },
+    hero: {
+      paddingBottom: 36,
+      paddingHorizontal: 22,
+      overflow: "hidden",
+    },
+    heroTop: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28 },
+    topActions: { flexDirection: "row", alignItems: "center", gap: 10 },
+    logoRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+    logoBox: {
+      width: 44,
+      height: 44,
+      borderRadius: 14,
+      alignItems: "center",
+      justifyContent: "center",
+      shadowColor: "#7c6bff",
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.4,
+      shadowRadius: 12,
+      elevation: 10,
+    },
+    logoText: { fontWeight: "800", fontSize: 22, letterSpacing: -0.8 },
+    logoItalic: { fontStyle: "italic", color: C.primary, fontWeight: "800" },
+    logoTagline: { fontSize: 11, fontWeight: "600", marginTop: 2, letterSpacing: 0.2 },
     notificationBtn: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       borderWidth: 1,
-      borderColor: C.border,
-      backgroundColor: C.card,
       alignItems: "center",
       justifyContent: "center",
       position: "relative",
     },
     notificationBadge: {
       position: "absolute",
-      top: -4,
-      right: -6,
+      top: 2,
+      right: 2,
       minWidth: 18,
       height: 18,
       borderRadius: 9,
@@ -165,37 +696,97 @@ function createHomeStyles(C) {
       alignItems: "center",
       justifyContent: "center",
       paddingHorizontal: 4,
-      borderWidth: 1,
-      borderColor: C.surface,
+      borderWidth: 2,
+      borderColor: isDark ? "#0f1123" : "#fff",
     },
-    notificationBadgeText: { color: "#fff", fontSize: 10, fontWeight: "700" },
-    roleBadge: { backgroundColor: C.pillBg, borderWidth:1, borderColor: C.pillBorder, borderRadius:20, paddingHorizontal:10, paddingVertical:4 },
-    roleText: { color: C.primary, fontSize:11, textTransform:"capitalize" },
-    heroTitle: { color: C.white, fontSize:34, fontWeight:"700", lineHeight:42 },
-    heroSub: { color: C.muted, fontSize:13, marginTop:12, lineHeight:20 },
-    ctaRow: { flexDirection:"row", gap:12, marginTop:24 },
-    ctaPrimary: { flex:1, backgroundColor: C.primary, borderRadius:12, paddingVertical:12, flexDirection:"row", alignItems:"center", justifyContent:"center", gap:8 },
-    ctaPrimaryText: { color:"#fff", fontWeight:"700" },
-    ctaSecondary: { flex:1, backgroundColor:"rgba(56,189,248,0.1)", borderWidth:1, borderColor:"rgba(56,189,248,0.4)", borderRadius:12, paddingVertical:12, flexDirection:"row", alignItems:"center", justifyContent:"center", gap:8 },
-    ctaSecondaryText: { color: C.accent, fontWeight:"700" },
-    statsRow: { flexDirection:"row", padding:24, gap:12 },
-    statCard: { flex:1, backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:16, paddingVertical:16, alignItems:"center" },
-    statValue: { color: C.primary, fontWeight:"700", fontSize:20 },
-    statLabel: { color: C.muted, fontSize:11, marginTop:4 },
-    section: { paddingHorizontal:24, paddingBottom:24 },
-    sectionTitle: { color: C.white, fontWeight:"700", fontSize:20, marginBottom:16 },
-    featuresGrid: { flexDirection:"row", flexWrap:"wrap", gap:12 },
-    featureCard: { backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:16, padding:16, width:"47%" },
-    featureIcon: { width:40, height:40, borderRadius:12, alignItems:"center", justifyContent:"center", marginBottom:12 },
-    featureTitle: { color: C.white, fontWeight:"700", fontSize:13, marginBottom:4 },
-    featureDesc: { color: C.muted, fontSize:11, lineHeight:16 },
-    navItem: { backgroundColor: C.card, borderWidth:1, borderColor: C.border, borderRadius:12, flexDirection:"row", alignItems:"center", paddingHorizontal:16, paddingVertical:14, marginBottom:8 },
-    navIcon: { width:32, height:32, borderRadius:8, alignItems:"center", justifyContent:"center", marginRight:12 },
-    navLabel: { color: C.white, fontWeight:"500", flex:1 },
-    joinCard: { backgroundColor: C.pillBg, borderWidth:1, borderColor: C.pillBorder, borderRadius:20, padding:24, alignItems:"center" },
-    joinTitle: { color: C.white, fontWeight:"700", fontSize:18, marginTop:12, marginBottom:6 },
-    joinSub: { color: C.muted, fontSize:13, textAlign:"center", marginBottom:16 },
-    joinBtn: { backgroundColor: C.primary, borderRadius:12, paddingHorizontal:24, paddingVertical:12 },
-    joinBtnText: { color:"#fff", fontWeight:"700" },
+    notificationBadgeText: { color: "#fff", fontSize: 9, fontWeight: "800" },
+    roleBadge: {
+      borderRadius: 20,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderWidth: 1,
+      borderColor: isDark ? "rgba(124,107,255,0.35)" : "rgba(98,72,232,0.25)",
+    },
+    roleText: { fontSize: 11, textTransform: "capitalize", fontWeight: "700" },
+    heroKicker: {
+      fontSize: 11,
+      fontWeight: "800",
+      letterSpacing: 2.2,
+      textTransform: "uppercase",
+      marginBottom: 10,
+    },
+    heroTitle: { fontSize: 32, fontWeight: "800", lineHeight: 40, letterSpacing: -1 },
+    heroSub: { fontSize: 15, marginTop: 14, lineHeight: 24, fontWeight: "500" },
+    ctaRow: { flexDirection: "row", gap: 12, marginTop: 26 },
+    ctaPrimaryText: { color: "#fff", fontWeight: "800", fontSize: 15, letterSpacing: 0.2 },
+    ctaSecondary: {
+      borderRadius: 16,
+      paddingVertical: 15,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 10,
+      borderWidth: 1.5,
+    },
+    ctaSecondaryText: { fontWeight: "800", fontSize: 15 },
+    quickPills: { flexDirection: "row", gap: 10, marginTop: 16 },
+    pill: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderRadius: 999,
+      borderWidth: 1,
+    },
+    pillText: { fontSize: 13, fontWeight: "700" },
+    statsRow: { flexDirection: "row", paddingHorizontal: 22, gap: 10, marginTop: 4 },
+    section: { paddingHorizontal: 22, paddingTop: 32, paddingBottom: 8 },
+    sectionEyebrow: {
+      fontSize: 11,
+      fontWeight: "800",
+      letterSpacing: 1.8,
+      textTransform: "uppercase",
+      marginBottom: 8,
+    },
+    sectionTitle: { fontWeight: "800", fontSize: 26, letterSpacing: -0.6, marginBottom: 8 },
+    sectionSub: { fontSize: 14, lineHeight: 22, marginBottom: 22, fontWeight: "500" },
+    bento: { gap: 12 },
+    bentoRow: { flexDirection: "row", flexWrap: "wrap", gap: 12, justifyContent: "space-between" },
+    navItem: {
+      borderRadius: 16,
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+      marginBottom: 10,
+      borderWidth: 1,
+      borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.08)",
+      overflow: "hidden",
+      backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.85)",
+    },
+    navIcon: { width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center", marginRight: 14 },
+    navLabel: { color: C.white, fontWeight: "600", flex: 1, fontSize: 15 },
+    joinCard: {
+      borderRadius: 24,
+      padding: 28,
+      alignItems: "center",
+      borderWidth: 1,
+      marginTop: 8,
+    },
+    joinIconRing: {
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 2,
+      borderColor: isDark ? "rgba(124,107,255,0.4)" : "rgba(98,72,232,0.35)",
+      marginBottom: 16,
+      backgroundColor: isDark ? "rgba(124,107,255,0.08)" : "rgba(98,72,232,0.06)",
+    },
+    joinTitle: { fontWeight: "800", fontSize: 22, marginBottom: 8, letterSpacing: -0.3 },
+    joinSub: { fontSize: 14, textAlign: "center", marginBottom: 22, lineHeight: 22, paddingHorizontal: 8 },
+    joinBtnText: { color: "#fff", fontWeight: "800", fontSize: 16 },
   });
 }
