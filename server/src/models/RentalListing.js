@@ -1,5 +1,26 @@
 const mongoose = require("mongoose");
 
+const ALLOWED_CANCEL_POLICIES = ["flexible", "moderate", "strict"];
+
+/** Map legacy / free-text values to the enum (e.g. old "24h before" from earlier app versions). */
+function coerceCancelPolicy(val) {
+  if (val == null || val === "") return "flexible";
+  const v = String(val).trim();
+  if (ALLOWED_CANCEL_POLICIES.includes(v)) return v;
+  const lower = v.toLowerCase();
+  if (lower.includes("strict") || lower.includes("72h") || lower.includes("no refund")) return "strict";
+  if (
+    lower.includes("moderate") ||
+    lower.includes("48h") ||
+    lower.includes("50%") ||
+    lower.includes("50 %")
+  ) {
+    return "moderate";
+  }
+  // "24h before", "flexible", human-readable labels, unknown → flexible
+  return "flexible";
+}
+
 const rentalListingSchema = new mongoose.Schema(
   {
     rentalOwnerId: {
@@ -93,5 +114,10 @@ rentalListingSchema.index({ rentalOwnerId: 1, deletedAt: 1 });
 rentalListingSchema.index({ city: 1 });
 rentalListingSchema.index({ brand: 1 });
 rentalListingSchema.index({ pricePerDay: 1 });
+
+// Mongoose 9+: pre hooks do not receive `next`; use sync or async without calling next().
+rentalListingSchema.pre("validate", function () {
+  this.cancelPolicy = coerceCancelPolicy(this.cancelPolicy);
+});
 
 module.exports = mongoose.model("RentalListing", rentalListingSchema);

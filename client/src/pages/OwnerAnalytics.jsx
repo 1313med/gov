@@ -292,11 +292,11 @@ export default function OwnerAnalytics() {
       .catch(console.error)
       .finally(() => setLoading(false));
 
-    getOwnerInsights(period)
+    getOwnerInsights(period, lang)
       .then((d) => setInsights(d.insights || []))
       .catch(console.error)
       .finally(() => setInsightsLoading(false));
-  }, [period]);
+  }, [period, lang]);
 
   if (loading) {
     return (

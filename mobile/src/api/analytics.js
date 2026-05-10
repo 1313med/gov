@@ -5,8 +5,10 @@ export const getOwnerAnalytics = async (period = "30d") => {
   return data;
 };
 
-export const getOwnerInsights = async (period = "30d") => {
-  const { data } = await api.get("/analytics/owner/insights", { params: { period } });
+export const getOwnerInsights = async (period = "30d", lang = "en") => {
+  const { data } = await api.get("/analytics/owner/insights", {
+    params: { period, lang: String(lang).toLowerCase().startsWith("fr") ? "fr" : "en" },
+  });
   return data;
 };
 

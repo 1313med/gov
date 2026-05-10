@@ -54,7 +54,7 @@ exports.getOwnerAnalytics = async (req, res, next) => {
         rentalId: { $in: rentalIds },
         startDate: { $gte: startDate },
         deletedAt: null,
-      }).populate("rentalId", "title pricePerDay"),
+      }).populate("rentalId", "title pricePerDay images"),
       Booking.aggregate([
         {
           $match: {
@@ -150,7 +150,14 @@ exports.getOwnerAnalytics = async (req, res, next) => {
     bookings.forEach((b) => {
       if (!b.rentalId) return;
       const id = b.rentalId._id.toString();
-      if (!carCounts[id]) carCounts[id] = { title: b.rentalId.title, count: 0 };
+      if (!carCounts[id]) {
+        const imgs = b.rentalId.images;
+        carCounts[id] = {
+          title: b.rentalId.title,
+          count: 0,
+          image: Array.isArray(imgs) && imgs.length ? imgs[0] : null,
+        };
+      }
       carCounts[id].count++;
     });
     const mostRentedCar = Object.values(carCounts).sort((a, b) => b.count - a.count)[0] || null;
@@ -232,6 +239,7 @@ exports.getOwnerInsights = async (req, res, next) => {
   try {
     const ownerId = req.user._id;
     const period  = req.query.period || "30d";
+    const isFr = String(req.query.lang || "en").toLowerCase().startsWith("fr");
     const startDate = getPeriodStart(period);
     const now = new Date();
     const periodDays = Math.max(1, daysBetween(startDate, now));
@@ -280,8 +288,12 @@ exports.getOwnerInsights = async (req, res, next) => {
           type:    "alert",
           carId:   rental._id,
           carTitle: rental.title,
-          title:   `"${rental.title}" has 0 bookings this period`,
-          action:  `Consider lowering the price (currently ${rental.pricePerDay} MAD/day) or adding a promotional offer.`,
+          title:   isFr
+            ? `« ${rental.title} » n'a aucune réservation sur cette période`
+            : `"${rental.title}" has 0 bookings this period`,
+          action:  isFr
+            ? `Envisagez de baisser le prix (actuellement ${rental.pricePerDay} MAD/jour) ou d'ajouter une offre promotionnelle.`
+            : `Consider lowering the price (currently ${rental.pricePerDay} MAD/day) or adding a promotional offer.`,
           potentialRevenueGain: null,
         });
         continue;
@@ -291,13 +303,18 @@ exports.getOwnerInsights = async (req, res, next) => {
       if (occupancy < 25) {
         const { suggestedPrice } = suggestPrice(rental.pricePerDay, { occupancyRate: occupancy });
         const priceDiff = rental.pricePerDay - suggestedPrice;
+        const gainLow = Math.round(priceDiff * periodDays * 0.3);
         insights.push({
           type:    "warning",
           carId:   rental._id,
           carTitle: rental.title,
-          title:   `"${rental.title}" has only ${occupancy}% occupancy`,
-          action:  `Lower price from ${rental.pricePerDay} to ${suggestedPrice} MAD/day (−${priceDiff} MAD). Estimated revenue increase: +${Math.round(priceDiff * periodDays * 0.3)} MAD if occupancy reaches 40%.`,
-          potentialRevenueGain: Math.round(priceDiff * periodDays * 0.3),
+          title:   isFr
+            ? `« ${rental.title} » n'a que ${occupancy} % d'occupation`
+            : `"${rental.title}" has only ${occupancy}% occupancy`,
+          action:  isFr
+            ? `Baissez le prix de ${rental.pricePerDay} à ${suggestedPrice} MAD/jour (−${priceDiff} MAD). Gain estimé : +${gainLow} MAD si l'occupation atteint 40 %.`
+            : `Lower price from ${rental.pricePerDay} to ${suggestedPrice} MAD/day (−${priceDiff} MAD). Estimated revenue increase: +${gainLow} MAD if occupancy reaches 40%.`,
+          potentialRevenueGain: gainLow,
         });
       }
 
@@ -305,13 +322,19 @@ exports.getOwnerInsights = async (req, res, next) => {
       if (weekendRatio > 1.5 && occupancy >= 30) {
         const { suggestedPrice: weekendPrice } = suggestPrice(rental.pricePerDay, { weekendDemandRatio: weekendRatio });
         if (weekendPrice > rental.pricePerDay) {
+          const wkPct = Math.round(weekendRatio * 100 - 100);
+          const wkGain = Math.round((weekendPrice - rental.pricePerDay) * 8);
           insights.push({
             type:    "opportunity",
             carId:   rental._id,
             carTitle: rental.title,
-            title:   `High weekend demand for "${rental.title}"`,
-            action:  `Weekend bookings are ${Math.round(weekendRatio * 100 - 100)}% above weekday average. Add a weekend surcharge: suggest ${weekendPrice} MAD/day on weekends.`,
-            potentialRevenueGain: Math.round((weekendPrice - rental.pricePerDay) * 8), // ~8 weekend days/month
+            title:   isFr
+              ? `Forte demande le week-end pour « ${rental.title} »`
+              : `High weekend demand for "${rental.title}"`,
+            action:  isFr
+              ? `Les réservations week-end sont ${wkPct} % au-dessus de la moyenne en semaine. Ajoutez un supplément week-end : ${weekendPrice} MAD/jour suggéré.`
+              : `Weekend bookings are ${wkPct}% above weekday average. Add a weekend surcharge: suggest ${weekendPrice} MAD/day on weekends.`,
+            potentialRevenueGain: wkGain,
           });
         }
       }
@@ -320,13 +343,19 @@ exports.getOwnerInsights = async (req, res, next) => {
       if (occupancy >= 70) {
         const { suggestedPrice: premiumPrice } = suggestPrice(rental.pricePerDay, { occupancyRate: occupancy });
         if (premiumPrice > rental.pricePerDay) {
+          const premDiff = premiumPrice - rental.pricePerDay;
+          const premGain = Math.round(premDiff * bookedDays);
           insights.push({
             type:    "opportunity",
             carId:   rental._id,
             carTitle: rental.title,
-            title:   `"${rental.title}" is in high demand (${occupancy}% occupancy)`,
-            action:  `You can raise the price to ${premiumPrice} MAD/day (+${premiumPrice - rental.pricePerDay} MAD). High demand supports a premium.`,
-            potentialRevenueGain: Math.round((premiumPrice - rental.pricePerDay) * bookedDays),
+            title:   isFr
+              ? `« ${rental.title} » est très demandé (${occupancy} % d'occupation)`
+              : `"${rental.title}" is in high demand (${occupancy}% occupancy)`,
+            action:  isFr
+              ? `Vous pouvez augmenter le prix à ${premiumPrice} MAD/jour (+${premDiff} MAD). La forte demande permet une marge premium.`
+              : `You can raise the price to ${premiumPrice} MAD/day (+${premDiff} MAD). High demand supports a premium.`,
+            potentialRevenueGain: premGain,
           });
         }
       }
@@ -340,12 +369,17 @@ exports.getOwnerInsights = async (req, res, next) => {
 
       if (nextMaintenance) {
         const daysUntil = Math.ceil(daysBetween(now, nextMaintenance.nextServiceDate));
+        const dueStr = new Date(nextMaintenance.nextServiceDate).toLocaleDateString(isFr ? "fr-FR" : "en-GB");
         insights.push({
           type:     "maintenance",
           carId:    rental._id,
           carTitle: rental.title,
-          title:    `Maintenance due for "${rental.title}" in ${daysUntil} day(s)`,
-          action:   `Service type: ${nextMaintenance.type}. Due: ${new Date(nextMaintenance.nextServiceDate).toLocaleDateString()}. Block the calendar to avoid booking conflicts.`,
+          title:    isFr
+            ? `Entretien à prévoir pour « ${rental.title} » dans ${daysUntil} jour(s)`
+            : `Maintenance due for "${rental.title}" in ${daysUntil} day(s)`,
+          action:   isFr
+            ? `Type : ${nextMaintenance.type}. Échéance : ${dueStr}. Bloquez le calendrier pour éviter les conflits de réservation.`
+            : `Service type: ${nextMaintenance.type}. Due: ${dueStr}. Block the calendar to avoid booking conflicts.`,
           potentialRevenueGain: null,
         });
       }

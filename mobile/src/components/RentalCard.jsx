@@ -2,13 +2,20 @@ import { useMemo } from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
+import { useAppLang } from "../context/AppLangContext";
 import { resolveMediaUrl } from "../utils/mediaUrl";
 
 export default function RentalCard({ rental, onPress, onFavorite, isFavorite }) {
+  const { lang } = useAppLang();
+  const fr = lang === "fr";
   const { colors: C } = useTheme();
   const s = useMemo(() => createRentalCardStyles(C), [C]);
   const uri = resolveMediaUrl(rental.images?.[0]);
   const imageUrl = uri ? { uri } : null;
+  const now = Date.now();
+  const activeDealCount = (rental.offers || []).filter(
+    (o) => o.isActive && (!o.expiresAt || new Date(o.expiresAt).getTime() > now)
+  ).length;
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.85} style={s.card}>
       <View>
@@ -16,6 +23,20 @@ export default function RentalCard({ rental, onPress, onFavorite, isFavorite }) 
           ? <Image source={imageUrl} style={s.img} resizeMode="cover" />
           : <View style={[s.img, s.noImg]}><Ionicons name="car-sport-outline" size={48} color={C.muted} /></View>
         }
+        {activeDealCount > 0 && (
+          <View style={s.dealBadge}>
+            <Ionicons name="pricetag" size={11} color="#fbbf24" />
+            <Text style={s.dealBadgeText}>
+              {activeDealCount > 1
+                ? fr
+                  ? `${activeDealCount} offres`
+                  : `${activeDealCount} deals`
+                : fr
+                  ? "Promo"
+                  : "Deal"}
+            </Text>
+          </View>
+        )}
         {onFavorite && (
           <TouchableOpacity onPress={onFavorite} style={s.fav}>
             <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={20} color={isFavorite ? C.red : C.white} />
@@ -47,6 +68,21 @@ function createRentalCardStyles(C) {
     img: { width: "100%", height: 176 },
     noImg: { backgroundColor: C.surface, alignItems: "center", justifyContent: "center" },
     fav: { position: "absolute", top: 12, right: 12, backgroundColor: C.favScrim, borderRadius: 20, padding: 6 },
+    dealBadge: {
+      position: "absolute",
+      top: 12,
+      left: 12,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: "rgba(251,191,36,0.2)",
+      borderWidth: 1,
+      borderColor: "rgba(251,191,36,0.45)",
+      borderRadius: 999,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+    },
+    dealBadgeText: { color: "#fbbf24", fontSize: 10, fontWeight: "800", letterSpacing: 0.3 },
     priceBadge: { position: "absolute", bottom: 12, left: 12, backgroundColor: "rgba(124,107,255,0.9)", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
     priceText: { color: "#fff", fontSize: 11, fontWeight: "700" },
     body: { padding: 16 },

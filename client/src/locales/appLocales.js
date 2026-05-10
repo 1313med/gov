@@ -531,8 +531,8 @@ const ownerAnalyticsEn = {
     upcoming: "Upcoming",
   },
   insights: {
-    eyebrow: "AI Advisor",
-    title: "Smart Insights",
+    eyebrow: "Goovoiture",
+    title: "Recommendation",
     actionsOne: "action",
     actionsMany: "actions",
     potentialGainSuffix: "MAD potential gain",
@@ -596,8 +596,8 @@ const ownerAnalyticsFr = {
     upcoming: "À venir",
   },
   insights: {
-    eyebrow: "Conseiller IA",
-    title: "Recommandations",
+    eyebrow: "Goovoiture",
+    title: "Recommandation",
     actionsOne: "action",
     actionsMany: "actions",
     potentialGainSuffix: "MAD de gain potentiel",

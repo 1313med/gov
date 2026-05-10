@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import {
   ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import {
   getOwnerBookings,
@@ -43,11 +44,32 @@ const STATUS = {
 
 const FILTERS = ["all", "pending", "confirmed", "completed", "rejected", "cancelled"];
 
-function createOwnerBookingsStyles(C) {
+function filterChipLabel(key, fr) {
+  const m = fr
+    ? {
+        all: "Tout",
+        pending: "Attente",
+        confirmed: "Confirmées",
+        completed: "Terminées",
+        rejected: "Refusées",
+        cancelled: "Annulées",
+      }
+    : {
+        all: "All",
+        pending: "Pending",
+        confirmed: "Confirmed",
+        completed: "Done",
+        rejected: "Rejected",
+        cancelled: "Cancelled",
+      };
+  return m[key] || key;
+}
+
+function createOwnerBookingsStyles(C, isDark) {
   return {
     a: StyleSheet.create({
-      btn: { flex: 1, minWidth: "30%", borderWidth: 1, borderRadius: 12, paddingVertical: 10, alignItems: "center" },
-      btnText: { fontSize: 12, fontWeight: "600" },
+      btn: { flex: 1, minWidth: "30%", borderWidth: 1, borderRadius: 14, paddingVertical: 12, alignItems: "center" },
+      btnText: { fontSize: 12, fontWeight: "800", letterSpacing: 0.2 },
     }),
     m: StyleSheet.create({
       wrap: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: C.border },
@@ -184,26 +206,66 @@ function createOwnerBookingsStyles(C) {
     }),
     s: StyleSheet.create({
       center: { flex: 1, backgroundColor: C.bg, alignItems: "center", justifyContent: "center" },
-      statsRow: { backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border, paddingVertical: 10 },
-      statsContent: { paddingHorizontal: 12, gap: 8 },
-      statCard: { backgroundColor: C.card, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingVertical: 10, paddingHorizontal: 14, marginRight: 8, minWidth: 88, alignItems: "center" },
-      statVal: { color: C.primary, fontWeight: "800", fontSize: 16 },
-      statLbl: { color: C.muted, fontSize: 9, marginTop: 4, textTransform: "uppercase" },
-      filterBar: { paddingHorizontal: 16, paddingVertical: 10, backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border },
-      filterTab: { marginRight: 8, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, backgroundColor: C.card, borderColor: C.border },
-      filterTabActive: { backgroundColor: C.pillBg, borderColor: C.primary },
-      filterTabText: { color: C.muted, fontSize: 12, fontWeight: "500", textTransform: "capitalize" },
-      filterTabTextActive: { color: C.primary },
-      empty: { alignItems: "center", paddingVertical: 64 },
-      emptyTitle: { color: C.white, fontWeight: "700", fontSize: 18, marginTop: 16 },
-      card: { backgroundColor: C.card, borderWidth: 1, borderColor: C.border, borderRadius: 16, padding: 16, marginBottom: 16 },
-      cardTop: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 12 },
-      thumb: { width: 56, height: 44, borderRadius: 8, backgroundColor: C.surface },
+      listHead: {
+        paddingBottom: 4,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: C.border,
+        marginHorizontal: -16,
+        paddingHorizontal: 16,
+        marginBottom: 12,
+      },
+      listHeadAccent: { height: 2, width: 36, borderRadius: 2, backgroundColor: C.primary, marginBottom: 12, opacity: 0.9 },
+      listHeadTitle: { color: C.white, fontSize: 22, fontWeight: "800", letterSpacing: -0.5 },
+      listHeadSub: { color: C.muted, fontSize: 12, marginTop: 6, lineHeight: 17 },
+      statsScroll: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 12, paddingRight: 4 },
+      statPill: {
+        borderRadius: 12,
+        paddingVertical: 9,
+        paddingHorizontal: 12,
+        minWidth: 76,
+        backgroundColor: C.inputBg,
+        borderWidth: 1,
+        borderColor: C.border,
+      },
+      statPillVal: { color: C.white, fontWeight: "800", fontSize: 15, letterSpacing: -0.3 },
+      statPillLbl: { color: C.muted, fontSize: 9, marginTop: 3, fontWeight: "700", letterSpacing: 0.3 },
+      filterBar: { marginTop: 2, marginBottom: 0, marginHorizontal: -16, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: C.border },
+      filterScroll: { paddingHorizontal: 16, gap: 8, alignItems: "center" },
+      filterChip: {
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+        borderRadius: 999,
+        borderWidth: 1,
+        backgroundColor: C.card,
+        borderColor: C.border,
+      },
+      filterChipActive: { backgroundColor: C.primary, borderColor: C.primary },
+      filterChipText: { color: C.muted, fontSize: 12, fontWeight: "700" },
+      filterChipTextActive: { color: "#fff" },
+      empty: { alignItems: "center", paddingVertical: 72, paddingHorizontal: 24 },
+      emptyTitle: { color: C.white, fontWeight: "800", fontSize: 18, marginTop: 16, textAlign: "center" },
+      emptySub: { color: C.muted, fontSize: 13, marginTop: 8, textAlign: "center", lineHeight: 20 },
+      card: {
+        backgroundColor: C.card,
+        borderWidth: 1,
+        borderColor: C.border,
+        borderRadius: 20,
+        marginBottom: 14,
+        overflow: "hidden",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: isDark ? 0.35 : 0.07,
+        shadowRadius: 14,
+        elevation: 4,
+      },
+      cardPad: { padding: 16 },
+      cardTop: { flexDirection: "row", alignItems: "center", gap: 14, marginBottom: 12 },
+      thumb: { width: 80, height: 62, borderRadius: 14, backgroundColor: C.surface },
       thumbPh: { alignItems: "center", justifyContent: "center" },
       rentalTitle: { color: C.white, fontWeight: "700", fontSize: 15 },
       sub: { color: C.muted, fontSize: 12, marginTop: 2 },
       customerRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
-      customerAvatar: { width: 28, height: 28, borderRadius: 14, backgroundColor: C.pillBg, alignItems: "center", justifyContent: "center", marginRight: 8 },
+      customerAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: C.pillBg, alignItems: "center", justifyContent: "center", marginRight: 8 },
       customerAvatarText: { color: C.primary, fontSize: 11, fontWeight: "700" },
       customerName: { color: C.white, fontWeight: "600", fontSize: 14 },
       customerContact: { color: C.muted, fontSize: 11, marginTop: 2 },
@@ -211,7 +273,7 @@ function createOwnerBookingsStyles(C) {
       badge: { alignSelf: "flex-start", flexDirection: "row", alignItems: "center", borderWidth: 1, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4, marginBottom: 12, gap: 4 },
       badgeText: { fontSize: 12, fontWeight: "700", textTransform: "capitalize" },
       datesRow: { flexDirection: "row", gap: 8, marginBottom: 12 },
-      dateBox: { flex: 1, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 10 },
+      dateBox: { flex: 1, backgroundColor: C.inputBg, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 12 },
       dateLabel: { color: C.muted, fontSize: 11, marginBottom: 2 },
       dateVal: { color: C.white, fontWeight: "500", fontSize: 12 },
       offer: { color: "#fbbf24", fontSize: 12, marginBottom: 8 },
@@ -229,21 +291,21 @@ function createOwnerBookingsStyles(C) {
 }
 
 function useOwnerBookingsStyles() {
-  const { colors: C } = useTheme();
-  return useMemo(() => ({ C, ...createOwnerBookingsStyles(C) }), [C]);
+  const { colors: C, isDark } = useTheme();
+  return useMemo(() => ({ C, isDark, ...createOwnerBookingsStyles(C, isDark) }), [C, isDark]);
 }
 
 function ActionBtn({ label, variant, onPress }) {
   const { C, a } = useOwnerBookingsStyles();
   const colors = {
-    green: { bg: "rgba(52,211,153,0.1)", border: "rgba(52,211,153,0.3)", text: "#34d399" },
-    red: { bg: "rgba(239,68,68,0.1)", border: "rgba(239,68,68,0.3)", text: "#ef4444" },
-    blue: { bg: "rgba(96,165,250,0.1)", border: "rgba(96,165,250,0.3)", text: "#60a5fa" },
-    violet: { bg: "rgba(124,107,255,0.12)", border: "rgba(124,107,255,0.35)", text: C.primary },
+    green: { bg: "rgba(52,211,153,0.14)", border: "rgba(52,211,153,0.45)", text: "#34d399" },
+    red: { bg: "rgba(239,68,68,0.12)", border: "rgba(239,68,68,0.45)", text: "#f87171" },
+    blue: { bg: "rgba(96,165,250,0.14)", border: "rgba(96,165,250,0.45)", text: "#60a5fa" },
+    violet: { bg: "rgba(124,107,255,0.16)", border: "rgba(124,107,255,0.5)", text: C.primary },
   };
   const c = colors[variant] || colors.blue;
   return (
-    <TouchableOpacity onPress={onPress} style={[a.btn, { backgroundColor: c.bg, borderColor: c.border }]}>
+    <TouchableOpacity onPress={onPress} activeOpacity={0.85} style={[a.btn, { backgroundColor: c.bg, borderColor: c.border }]}>
       <Text style={[a.btnText, { color: c.text }]}>{label}</Text>
     </TouchableOpacity>
   );
@@ -753,7 +815,8 @@ function CustomerProfileModal({ visible, booking, fr, ownerId, onClose }) {
 export default function OwnerBookingsScreen() {
   const { lang } = useAppLang();
   const { auth } = useAuth();
-  const { C, s } = useOwnerBookingsStyles();
+  const { C, s, isDark } = useOwnerBookingsStyles();
+  const insets = useSafeAreaInsets();
   const fr = lang === "fr";
   const [bookings, setBookings] = useState([]);
   const [stats, setStats] = useState(DEFAULT_STATS);
@@ -809,11 +872,6 @@ export default function OwnerBookingsScreen() {
       .finally(() => setRefreshing(false));
   };
 
-  const onFilter = (f) => {
-    setFilter(f);
-    setExpanded(null);
-  };
-
   const changeStatus = (id, status) => {
     const labels = {
       confirmed: fr ? "Confirmer cette réservation ?" : "Confirm this booking?",
@@ -862,58 +920,91 @@ export default function OwnerBookingsScreen() {
     return stats[key] ?? 0;
   };
 
+  const listHeader = useCallback(
+    () => (
+      <View>
+        <View style={[s.listHead, { paddingTop: insets.top + 10 }]}>
+          <View style={s.listHeadAccent} />
+          <Text style={s.listHeadTitle}>{fr ? "Réservations" : "Bookings"}</Text>
+          <Text style={s.listHeadSub}>
+            {fr ? "Chiffres clés et filtres — même défilement que vos cartes." : "Key stats and filters — one continuous scroll with your cards."}
+          </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.statsScroll} nestedScrollEnabled>
+            {[
+              ["total", fr ? "Total" : "Total", stats.total],
+              ["pending", fr ? "Attente" : "Pending", stats.pending],
+              ["confirmed", fr ? "Confirm." : "Live", stats.confirmed],
+              ["completed", fr ? "Terminé" : "Done", stats.completed],
+              ["revenue", fr ? "MAD" : "MAD", stats.revenue?.toLocaleString?.(fr ? "fr-FR" : "en-US") ?? stats.revenue],
+            ].map(([k, label, val]) => (
+              <View key={k} style={s.statPill}>
+                <Text style={s.statPillVal}>{val}</Text>
+                <Text style={s.statPillLbl}>{label}</Text>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+        <View style={s.filterBar}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.filterScroll} nestedScrollEnabled>
+            {FILTERS.map((item) => (
+              <TouchableOpacity
+                key={item}
+                onPress={() => {
+                  setFilter(item);
+                  setExpanded(null);
+                }}
+                activeOpacity={0.85}
+                style={[s.filterChip, filter === item && s.filterChipActive]}
+              >
+                <Text style={[s.filterChipText, filter === item && s.filterChipTextActive]}>
+                  {filterChipLabel(item, fr)} · {filterCount(item)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      </View>
+    ),
+    [s, insets.top, fr, stats, filter]
+  );
+
   if (loading && bookings.length === 0) {
     return (
       <View style={s.center}>
         <ActivityIndicator color={C.primary} size="large" />
+        <Text style={{ color: C.muted, marginTop: 14, fontSize: 13 }}>
+          {fr ? "Chargement des réservations…" : "Loading bookings…"}
+        </Text>
       </View>
     );
   }
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-      <View style={s.statsRow}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.statsContent}>
-          {[
-            ["total", fr ? "Total" : "Total", stats.total],
-            ["pending", fr ? "Attente" : "Pending", stats.pending],
-            ["confirmed", fr ? "Confirm." : "Confirmed", stats.confirmed],
-            ["completed", fr ? "Terminé" : "Done", stats.completed],
-            ["revenue", fr ? "Encaissé" : "Paid MAD", stats.revenue?.toLocaleString?.() ?? stats.revenue],
-          ].map(([k, label, val]) => (
-            <View key={k} style={s.statCard}>
-              <Text style={s.statVal}>{val}</Text>
-              <Text style={s.statLbl}>{label}</Text>
-            </View>
-          ))}
-        </ScrollView>
-      </View>
-
-      <View style={s.filterBar}>
-        <FlatList
-          horizontal
-          data={FILTERS}
-          keyExtractor={(i) => i}
-          showsHorizontalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => onFilter(item)} style={[s.filterTab, filter === item && s.filterTabActive]}>
-              <Text style={[s.filterTabText, filter === item && s.filterTabTextActive]}>
-                {item === "all" ? (fr ? "Tout" : "All") : item} ({filterCount(item)})
-              </Text>
-            </TouchableOpacity>
-          )}
-        />
-      </View>
-
       <FlatList
         data={bookings}
         keyExtractor={(i) => i._id}
-        contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+        ListHeaderComponent={listHeader}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 32 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.primary} />}
         ListEmptyComponent={
           <View style={s.empty}>
-            <Ionicons name="clipboard-outline" size={56} color={C.muted} />
-            <Text style={s.emptyTitle}>{fr ? "Aucune réservation" : "No bookings"}</Text>
+            <View
+              style={{
+                width: 88,
+                height: 88,
+                borderRadius: 28,
+                backgroundColor: isDark ? "rgba(124,107,255,0.12)" : "rgba(99,102,241,0.1)",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Ionicons name="calendar-outline" size={40} color={C.primary} />
+            </View>
+            <Text style={s.emptyTitle}>{fr ? "Aucune réservation" : "No bookings here"}</Text>
+            <Text style={s.emptySub}>
+              {fr ? "Changez de filtre ou attendez de nouvelles demandes." : "Try another filter or check back for new requests."}
+            </Text>
           </View>
         }
         ListFooterComponent={
@@ -934,29 +1025,38 @@ export default function OwnerBookingsScreen() {
           const open = expanded === item._id;
           const carImg = resolveMediaUrl(item.rentalId?.images?.[0]);
           return (
-            <View style={s.card}>
+            <View style={[s.card, { borderLeftWidth: 4, borderLeftColor: st.text }]}>
+              <View style={s.cardPad}>
               <TouchableOpacity onPress={() => setExpanded(open ? null : item._id)} activeOpacity={0.9}>
                 <View style={s.cardTop}>
-                  {carImg ? <Image source={{ uri: carImg }} style={s.thumb} /> : <View style={[s.thumb, s.thumbPh]}><Ionicons name="car-outline" size={22} color={C.muted} /></View>}
-                  <View style={{ flex: 1 }}>
+                  {carImg ? (
+                    <Image source={{ uri: carImg }} style={s.thumb} />
+                  ) : (
+                    <View style={[s.thumb, s.thumbPh]}>
+                      <Ionicons name="car-sport-outline" size={26} color={C.muted} />
+                    </View>
+                  )}
+                  <View style={{ flex: 1, minWidth: 0 }}>
                     <Text style={s.rentalTitle} numberOfLines={2}>
                       {item.rentalId?.title || `${item.rentalId?.brand || ""} ${item.rentalId?.model || ""}`.trim() || "—"}
                     </Text>
                     <Text style={s.sub}>{item.rentalId?.city || ""}</Text>
                   </View>
-                  <Ionicons name={open ? "chevron-up" : "chevron-down"} size={20} color={C.muted} />
+                  <View style={{ alignItems: "center", justifyContent: "center" }}>
+                    <Ionicons name={open ? "chevron-up" : "chevron-down"} size={22} color={C.muted} />
+                  </View>
                 </View>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={s.customerRow}
+                style={[s.customerRow, { backgroundColor: C.inputBg, borderRadius: 14, padding: 12, marginBottom: 12 }]}
                 onPress={() => setProfileBooking(item)}
                 activeOpacity={0.85}
               >
                 <View style={s.customerAvatar}>
                   <Text style={s.customerAvatarText}>{item.customerId?.name?.[0]?.toUpperCase() || "?"}</Text>
                 </View>
-                <View style={{ flex: 1 }}>
+                <View style={{ flex: 1, minWidth: 0 }}>
                   <Text style={s.customerName}>{item.customerId?.name || "Customer"}</Text>
                   {(item.customerId?.phone || item.customerId?.email) && (
                     <Text style={s.customerContact} numberOfLines={1}>
@@ -971,7 +1071,7 @@ export default function OwnerBookingsScreen() {
               </TouchableOpacity>
 
               <View style={[s.badge, { backgroundColor: st.bg, borderColor: st.border }]}>
-                <Ionicons name={st.icon} size={12} color={st.text} />
+                <Ionicons name={st.icon} size={14} color={st.text} />
                 <Text style={[s.badgeText, { color: st.text }]}>{item.status}</Text>
               </View>
 
@@ -1026,6 +1126,7 @@ export default function OwnerBookingsScreen() {
               {open && (
                 <BookingMediaPanel key={item._id} booking={item} fr={fr} onUpdated={mergeBooking} />
               )}
+              </View>
             </View>
           );
         }}

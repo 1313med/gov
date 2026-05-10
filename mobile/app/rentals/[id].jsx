@@ -34,6 +34,49 @@ function formatMad(amount, locale) {
   return `${n.toLocaleString(locale === "fr" ? "fr-FR" : "en-US", { maximumFractionDigits: 0 })} MAD`;
 }
 
+/** Match server `createBooking` offer math (free_days, percent_discount only). */
+function computeRentalOfferPricing(rental, days) {
+  if (!rental || days <= 0) return { base: 0, saving: 0, total: 0, applied: null };
+  const ppd = Number(rental.pricePerDay) || 0;
+  const base = days * ppd;
+  const now = new Date();
+  const active = (rental.offers || []).filter(
+    (o) => o.isActive && days >= (o.minDays || 1) && (!o.expiresAt || new Date(o.expiresAt) > now)
+  );
+  let bestSaving = 0;
+  let applied = null;
+  for (const o of active) {
+    let saving = 0;
+    if (o.type === "free_days") saving = (o.freeExtraDays || 0) * ppd;
+    else if (o.type === "percent_discount") saving = base * ((o.discountPercent || 0) / 100);
+    if (saving > bestSaving) {
+      bestSaving = saving;
+      applied = o;
+    }
+  }
+  return { base, saving: bestSaving, total: Math.max(0, base - bestSaving), applied };
+}
+
+function listActiveOffers(rental) {
+  if (!rental?.offers?.length) return [];
+  const now = new Date();
+  return rental.offers.filter((o) => o.isActive && (!o.expiresAt || new Date(o.expiresAt) > now));
+}
+
+function offerLineSummary(o, fr) {
+  if (o.type === "free_days") {
+    return fr
+      ? `À partir de ${o.minDays || 1} j. · +${o.freeExtraDays || 0} j. offert(s)`
+      : `From ${o.minDays || 1} days · +${o.freeExtraDays || 0} free day(s)`;
+  }
+  if (o.type === "percent_discount") {
+    return fr
+      ? `À partir de ${o.minDays || 1} j. · −${o.discountPercent || 0} %`
+      : `From ${o.minDays || 1} days · −${o.discountPercent || 0}%`;
+  }
+  return o.description?.trim() || (fr ? "Offre personnalisée (voir détails)" : "Custom offer — see details");
+}
+
 function createRentalPickerStyles(C) {
   return StyleSheet.create({
     label: { color: C.muted, fontSize: 12, marginBottom: 4 },
@@ -89,6 +132,20 @@ function createRentalDetailScreenStyles(C) {
     loginBtnText: { color: C.primary, fontWeight: "700" },
     contactBtn: { backgroundColor: C.card, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingVertical: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", marginBottom: 16 },
     contactBtnText: { color: C.primary, fontWeight: "700", marginLeft: 8 },
+    offerItem: {
+      backgroundColor: C.surface,
+      borderWidth: 1,
+      borderColor: "rgba(251,191,36,0.28)",
+      borderRadius: 14,
+      padding: 14,
+      marginBottom: 10,
+    },
+    offerItemHead: { flexDirection: "row", alignItems: "center", gap: 8 },
+    offerItemTitle: { color: C.white, fontWeight: "700", fontSize: 14, flex: 1 },
+    offerItemMeta: { color: "#fbbf24", fontSize: 12, fontWeight: "600", marginTop: 8, marginLeft: 24, lineHeight: 17 },
+    offerItemDesc: { color: C.muted, fontSize: 12, marginTop: 6, marginLeft: 24, lineHeight: 18 },
+    offerItemExp: { color: "#f87171", fontSize: 11, marginTop: 6, marginLeft: 24 },
+    appliedOfferHint: { color: C.muted, fontSize: 11, marginTop: 4, fontStyle: "italic" },
   });
 }
 
@@ -194,7 +251,8 @@ export default function RentalDetailsScreen() {
   };
 
   const days = rentalBillableDays(startDate, endDate);
-  const total = days * (rental?.pricePerDay || 0);
+  const pricing = useMemo(() => computeRentalOfferPricing(rental, days), [rental, days]);
+  const activeOffersList = useMemo(() => listActiveOffers(rental), [rental]);
 
   const handleBook = async () => {
     if (!auth) return Alert.alert(t.needAuth);
@@ -311,6 +369,27 @@ export default function RentalDetailsScreen() {
           </View>
         )}
 
+        {activeOffersList.length > 0 && (
+          <View style={s.card}>
+            <Text style={s.cardTitle}>{t.promotions}</Text>
+            {activeOffersList.map((o, i) => (
+              <View key={i} style={s.offerItem}>
+                <View style={s.offerItemHead}>
+                  <Ionicons name="pricetag-outline" size={18} color="#fbbf24" />
+                  <Text style={s.offerItemTitle}>{o.title}</Text>
+                </View>
+                <Text style={s.offerItemMeta}>{offerLineSummary(o, lang === "fr")}</Text>
+                {o.description ? <Text style={s.offerItemDesc}>{o.description}</Text> : null}
+                {o.expiresAt ? (
+                  <Text style={s.offerItemExp}>
+                    {lang === "fr" ? "Expire le" : "Expires"} {new Date(o.expiresAt).toLocaleDateString(lang === "fr" ? "fr-FR" : "en-GB")}
+                  </Text>
+                ) : null}
+              </View>
+            ))}
+          </View>
+        )}
+
         {/* Booking card */}
         <View style={s.card}>
           <Text style={s.cardTitle}>{t.selectDates}</Text>
@@ -321,12 +400,35 @@ export default function RentalDetailsScreen() {
 
           {days > 0 && (
             <View style={s.summaryBox}>
-              <View style={s.summaryRow}><Text style={s.summaryLabel}>{t.pricePerDay}</Text><Text style={s.summaryVal}>{rental.pricePerDay} MAD</Text></View>
-              <View style={s.summaryRow}><Text style={s.summaryLabel}>{t.days}</Text><Text style={s.summaryVal}>{days}</Text></View>
+              <View style={s.summaryRow}>
+                <Text style={s.summaryLabel}>{t.pricePerDay}</Text>
+                <Text style={s.summaryVal}>{rental.pricePerDay} MAD</Text>
+              </View>
+              <View style={s.summaryRow}>
+                <Text style={s.summaryLabel}>{t.days}</Text>
+                <Text style={s.summaryVal}>{days}</Text>
+              </View>
+              <View style={s.summaryRow}>
+                <Text style={s.summaryLabel}>{t.subtotal}</Text>
+                <Text style={s.summaryVal}>{formatMad(pricing.base, lang)}</Text>
+              </View>
+              {pricing.saving > 0 && (
+                <>
+                  <View style={s.summaryRow}>
+                    <Text style={s.summaryLabel}>{t.promotion}</Text>
+                    <Text style={[s.summaryVal, { color: "#34d399" }]}>−{formatMad(pricing.saving, lang)}</Text>
+                  </View>
+                  {pricing.applied?.title ? (
+                    <Text style={s.appliedOfferHint} numberOfLines={2}>
+                      {t.appliedLabel}: {pricing.applied.title}
+                    </Text>
+                  ) : null}
+                </>
+              )}
               <View style={s.divider} />
               <View style={s.summaryRow}>
                 <Text style={s.totalLabel}>{t.total}</Text>
-                <Text style={s.totalVal}>{formatMad(total, lang)}</Text>
+                <Text style={s.totalVal}>{formatMad(pricing.total, lang)}</Text>
               </View>
             </View>
           )}
@@ -360,7 +462,8 @@ const en = {
   brand:"Brand", model:"Model", year:"Year", fuel:"Fuel",
   gearbox:"Gearbox", city:"City", selectDates:"Select Dates",
   start:"Start Date", end:"End Date", pricePerDay:"Price / day",
-  days:"Days", total:"Total", booking:"Booking…", bookNow:"Book Now",
+  days:"Days", subtotal:"Subtotal", promotion:"Promotion", appliedLabel:"Applied",
+  promotions:"Promotions & deals", total:"Total", booking:"Booking…", bookNow:"Book Now",
   logIn:"Log in to book", needAuth:"Please login to continue.",
   bookSuccess:"Booking request sent! Waiting for owner confirmation.",
   datesFail:"Car unavailable for selected dates.", selectDatesError:"Please select both dates.",
@@ -374,7 +477,8 @@ const fr = {
   brand:"Marque", model:"Modèle", year:"Année", fuel:"Carburant",
   gearbox:"Boîte", city:"Ville", selectDates:"Choisir les dates",
   start:"Date début", end:"Date fin", pricePerDay:"Prix / jour",
-  days:"Jours", total:"Total", booking:"Réservation…", bookNow:"Réserver",
+  days:"Jours", subtotal:"Sous-total", promotion:"Promotion", appliedLabel:"Offre appliquée",
+  promotions:"Promotions", total:"Total", booking:"Réservation…", bookNow:"Réserver",
   logIn:"Connexion pour réserver", needAuth:"Connectez-vous pour continuer.",
   bookSuccess:"Demande envoyée ! En attente de confirmation.",
   datesFail:"Véhicule indisponible sur ces dates.", selectDatesError:"Veuillez sélectionner les deux dates.",
