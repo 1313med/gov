@@ -28,6 +28,8 @@ import { useTheme } from "../../src/context/ThemeContext";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 
+const FILTER_DEBOUNCE_MS = 720;
+
 const PRICES = [
   { label: "Any", key: "any" },
   { label: "<500/day", key: "u500", max: 500 },
@@ -139,8 +141,9 @@ export default function RentalsScreen() {
 
   const [rentals, setRentals] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [favorites, setFavorites] = useState([]);
+  const [hydrated, setHydrated] = useState(false);
+  const [cityDraft, setCityDraft] = useState("");
   const [city, setCity] = useState("");
   const [priceKey, setPriceKey] = useState("any");
   const [showFilters, setShowFilters] = useState(false);
@@ -157,6 +160,11 @@ export default function RentalsScreen() {
     return () => loop.stop();
   }, [orbPulse]);
 
+  useEffect(() => {
+    const id = setTimeout(() => setCity(cityDraft.trim()), FILTER_DEBOUNCE_MS);
+    return () => clearTimeout(id);
+  }, [cityDraft]);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -167,7 +175,7 @@ export default function RentalsScreen() {
       Alert.alert("Error", fr ? "Échec du chargement" : "Failed to load rentals");
     } finally {
       setLoading(false);
-      setRefreshing(false);
+      setHydrated(true);
     }
   }, [city, priceKey, fr]);
 
@@ -276,8 +284,8 @@ export default function RentalsScreen() {
                 >
                   <Ionicons name="location-outline" size={20} color={C.accent} />
                   <TextInput
-                    value={city}
-                    onChangeText={setCity}
+                    value={cityDraft}
+                    onChangeText={setCityDraft}
                     placeholder={fr ? "Ville ou région" : "City or region"}
                     placeholderTextColor={C.muted}
                     style={{ flex: 1, color: titleColor, paddingVertical: 14, marginLeft: 10, fontSize: 15 }}
@@ -333,7 +341,7 @@ export default function RentalsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-      {loading ? (
+      {!hydrated && loading ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: C.bg }}>
           <LinearGradient colors={ctaGrad} style={{ width: 72, height: 72, borderRadius: 36, alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
             <ActivityIndicator color="#fff" size="large" />
@@ -349,20 +357,22 @@ export default function RentalsScreen() {
           )}
           ListHeaderComponent={listHeader}
           contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 28 }}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={C.accent} />}
+          refreshControl={<RefreshControl refreshing={hydrated && loading} onRefresh={() => load()} tintColor={C.accent} />}
           ListEmptyComponent={
-            <View style={{ alignItems: "center", paddingVertical: 48, paddingHorizontal: 24 }}>
-              <LinearGradient
-                colors={isDark ? ["rgba(56,189,248,0.22)", "rgba(124,107,255,0.14)"] : ["rgba(14,165,233,0.16)", "rgba(98,72,232,0.1)"]}
-                style={{ width: 96, height: 96, borderRadius: 32, alignItems: "center", justifyContent: "center", marginBottom: 20 }}
-              >
-                <Ionicons name="car-sport-outline" size={44} color={C.accent} />
-              </LinearGradient>
-              <Text style={{ color: titleColor, fontWeight: "800", fontSize: 19, textAlign: "center" }}>{fr ? "Aucune location trouvée" : "No rentals found"}</Text>
-              <Text style={{ color: subColor, fontSize: 14, marginTop: 10, textAlign: "center", lineHeight: 21 }}>
-                {fr ? "Essayez une autre ville ou une tranche de prix." : "Try another city or price range."}
-              </Text>
-            </View>
+            !loading ? (
+              <View style={{ alignItems: "center", paddingVertical: 48, paddingHorizontal: 24 }}>
+                <LinearGradient
+                  colors={isDark ? ["rgba(56,189,248,0.22)", "rgba(124,107,255,0.14)"] : ["rgba(14,165,233,0.16)", "rgba(98,72,232,0.1)"]}
+                  style={{ width: 96, height: 96, borderRadius: 32, alignItems: "center", justifyContent: "center", marginBottom: 20 }}
+                >
+                  <Ionicons name="car-sport-outline" size={44} color={C.accent} />
+                </LinearGradient>
+                <Text style={{ color: titleColor, fontWeight: "800", fontSize: 19, textAlign: "center" }}>{fr ? "Aucune location trouvée" : "No rentals found"}</Text>
+                <Text style={{ color: subColor, fontSize: 14, marginTop: 10, textAlign: "center", lineHeight: 21 }}>
+                  {fr ? "Essayez une autre ville ou une tranche de prix." : "Try another city or price range."}
+                </Text>
+              </View>
+            ) : null
           }
         />
       )}

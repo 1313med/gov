@@ -28,6 +28,9 @@ import { useTheme } from "../../src/context/ThemeContext";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 
+/** Text filters: one request after user pauses typing */
+const FILTER_DEBOUNCE_MS = 720;
+
 const PRICES = [
   { label: "Any", key: "any" },
   { label: "<200k", key: "u200", max: 200000 },
@@ -139,8 +142,12 @@ export default function CarsScreen() {
 
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [favorites, setFavorites] = useState([]);
+  /** After first load, keep FlatList mounted so filters don’t remount and retrigger pagination */
+  const [hydrated, setHydrated] = useState(false);
+  const endReachCooldownUntil = useRef(0);
+  const [searchDraft, setSearchDraft] = useState("");
+  const [cityDraft, setCityDraft] = useState("");
   const [search, setSearch] = useState("");
   const [city, setCity] = useState("");
   const [priceKey, setPriceKey] = useState("any");
@@ -161,11 +168,24 @@ export default function CarsScreen() {
     return () => loop.stop();
   }, [orbPulse]);
 
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setSearch(searchDraft.trim());
+      setCity(cityDraft.trim());
+    }, FILTER_DEBOUNCE_MS);
+    return () => clearTimeout(id);
+  }, [searchDraft, cityDraft]);
+
   const load = useCallback(
     async (reset = false) => {
       const p = reset ? 1 : page;
       if (!reset && !hasMore) return;
-      reset ? setLoading(true) : setLoadingMore(true);
+      if (reset) {
+        endReachCooldownUntil.current = Date.now() + 700;
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
       try {
         const pr = PRICES.find((r) => r.key === priceKey);
         const { data } = await getApprovedSales({
@@ -207,8 +227,8 @@ export default function CarsScreen() {
         Alert.alert("Error", fr ? "Échec du chargement" : "Failed to load cars");
       } finally {
         setLoading(false);
-        setRefreshing(false);
         setLoadingMore(false);
+        setHydrated(true);
       }
     },
     [search, city, priceKey, page, hasMore, fr],
@@ -281,14 +301,20 @@ export default function CarsScreen() {
           >
             <Ionicons name="search-outline" size={20} color={C.primary} />
             <TextInput
-              value={search}
-              onChangeText={setSearch}
+              value={searchDraft}
+              onChangeText={setSearchDraft}
               placeholder={fr ? "Marque, modèle, mots-clés…" : "Brand, model, keywords…"}
               placeholderTextColor={C.muted}
               style={{ flex: 1, color: titleColor, paddingVertical: 16, marginLeft: 10, fontSize: 15, fontWeight: "500" }}
             />
-            {!!search && (
-              <TouchableOpacity onPress={() => setSearch("")} hitSlop={12}>
+            {!!searchDraft && (
+              <TouchableOpacity
+                onPress={() => {
+                  setSearchDraft("");
+                  setSearch("");
+                }}
+                hitSlop={12}
+              >
                 <Ionicons name="close-circle" size={22} color={C.muted} />
               </TouchableOpacity>
             )}
@@ -342,8 +368,8 @@ export default function CarsScreen() {
                 >
                   <Ionicons name="location-outline" size={20} color={C.accent} />
                   <TextInput
-                    value={city}
-                    onChangeText={setCity}
+                    value={cityDraft}
+                    onChangeText={setCityDraft}
                     placeholder={fr ? "Ville ou région" : "City or region"}
                     placeholderTextColor={C.muted}
                     style={{ flex: 1, color: titleColor, paddingVertical: 14, marginLeft: 10, fontSize: 15 }}
@@ -397,9 +423,15 @@ export default function CarsScreen() {
     </View>
   );
 
+  const onEndReached = useCallback(() => {
+    if (Date.now() < endReachCooldownUntil.current) return;
+    if (loading || loadingMore || !hasMore || cars.length === 0) return;
+    load();
+  }, [loading, loadingMore, hasMore, cars.length, load]);
+
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-      {loading ? (
+      {!hydrated && loading ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: C.bg }}>
           <LinearGradient colors={ctaGrad} style={{ width: 72, height: 72, borderRadius: 36, alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
             <ActivityIndicator color="#fff" size="large" />
@@ -415,23 +447,27 @@ export default function CarsScreen() {
           )}
           ListHeaderComponent={listHeader}
           contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 28 }}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(true); }} tintColor={C.primary} />}
-          onEndReached={() => load()}
-          onEndReachedThreshold={0.3}
+          refreshControl={
+            <RefreshControl refreshing={hydrated && loading && !loadingMore} onRefresh={() => load(true)} tintColor={C.primary} />
+          }
+          onEndReached={onEndReached}
+          onEndReachedThreshold={0.25}
           ListFooterComponent={loadingMore ? <ActivityIndicator color={C.primary} style={{ paddingVertical: 20 }} /> : null}
           ListEmptyComponent={
-            <View style={{ alignItems: "center", paddingVertical: 48, paddingHorizontal: 24 }}>
-              <LinearGradient
-                colors={isDark ? ["rgba(124,107,255,0.2)", "rgba(56,189,248,0.12)"] : ["rgba(98,72,232,0.15)", "rgba(14,165,233,0.1)"]}
-                style={{ width: 96, height: 96, borderRadius: 32, alignItems: "center", justifyContent: "center", marginBottom: 20 }}
-              >
-                <Ionicons name="car-outline" size={44} color={C.primary} />
-              </LinearGradient>
-              <Text style={{ color: titleColor, fontWeight: "800", fontSize: 19, textAlign: "center" }}>{fr ? "Aucune voiture trouvée" : "No cars found"}</Text>
-              <Text style={{ color: subColor, fontSize: 14, marginTop: 10, textAlign: "center", lineHeight: 21 }}>
-                {fr ? "Élargissez la recherche ou changez le budget." : "Widen your search or adjust your budget."}
-              </Text>
-            </View>
+            !loading ? (
+              <View style={{ alignItems: "center", paddingVertical: 48, paddingHorizontal: 24 }}>
+                <LinearGradient
+                  colors={isDark ? ["rgba(124,107,255,0.2)", "rgba(56,189,248,0.12)"] : ["rgba(98,72,232,0.15)", "rgba(14,165,233,0.1)"]}
+                  style={{ width: 96, height: 96, borderRadius: 32, alignItems: "center", justifyContent: "center", marginBottom: 20 }}
+                >
+                  <Ionicons name="car-outline" size={44} color={C.primary} />
+                </LinearGradient>
+                <Text style={{ color: titleColor, fontWeight: "800", fontSize: 19, textAlign: "center" }}>{fr ? "Aucune voiture trouvée" : "No cars found"}</Text>
+                <Text style={{ color: subColor, fontSize: 14, marginTop: 10, textAlign: "center", lineHeight: 21 }}>
+                  {fr ? "Élargissez la recherche ou changez le budget." : "Widen your search or adjust your budget."}
+                </Text>
+              </View>
+            ) : null
           }
         />
       )}
