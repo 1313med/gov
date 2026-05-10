@@ -9,7 +9,7 @@ export function getApiErrorMessage(error, fallback) {
     m.includes("econnrefused") ||
     m === "network error"
   ) {
-    return "Can't reach the server. Start the API, set mobile/src/config to your PC's Wi‑Fi IP, and use the same network.";
+    return "Can't reach the server. On your PC: start the API, run ipconfig for your new Wi‑Fi IPv4, set EXPO_PUBLIC_DEV_API_URL in mobile/.env (or mobile/src/config), restart Expo. Phone and PC must use the same Wi‑Fi.";
   }
   return fallback;
 }

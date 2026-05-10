@@ -1,4 +1,11 @@
-const DEV_SERVER_URL = "http://192.168.1.27:5000";
+// Dev: set EXPO_PUBLIC_DEV_API_URL in .env (copy from .env.example) so you don’t edit this file after every Wi‑Fi change.
+// Windows: `ipconfig` → IPv4 of the adapter you use for Wi‑Fi. Phone and PC must be on the same network.
+const DEV_FALLBACK = "http://192.168.1.27:5000";
+const fromEnv =
+  typeof process !== "undefined" && process.env?.EXPO_PUBLIC_DEV_API_URL
+    ? String(process.env.EXPO_PUBLIC_DEV_API_URL).trim().replace(/\/+$/, "")
+    : "";
+const DEV_SERVER_URL = fromEnv || DEV_FALLBACK;
 const PROD_SERVER_URL = "https://api.goovoiture.com";
 
 // Use HTTP only in development LAN testing; production must stay HTTPS.
