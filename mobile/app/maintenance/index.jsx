@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import {
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   Image,
   ActivityIndicator,
@@ -15,7 +14,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  Animated,
+  Easing,
+  ScrollView,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { getOwnerRentals } from "../../src/api/rental";
@@ -40,6 +44,8 @@ const BLANK = {
   nextServiceMileage: "",
 };
 
+const FLEET_FILTERS = ["all", "due_soon", "with_history", "no_history"];
+
 function isDueSoon(dateStr) {
   if (!dateStr) return false;
   const d = new Date(dateStr);
@@ -48,15 +54,27 @@ function isDueSoon(dateStr) {
   return diff >= 0 && diff <= 7;
 }
 
+function carHasDueSoon(carRecords) {
+  return carRecords.some((r) => isDueSoon(r.nextServiceDate));
+}
+
 export default function MaintenanceScreen() {
   const { auth } = useAuth();
   const { lang, copy } = useAppLang();
   const t = copy.maintenance;
-  const { colors: C } = useTheme();
+  const { colors: C, isDark } = useTheme();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const fr = lang === "fr";
   const numLocale = fr ? "fr-FR" : "en-US";
-  const s = useMemo(() => createStyles(C), [C]);
+  const s = useMemo(() => createStyles(C, isDark), [C, isDark]);
+
+  const titleColor = isDark ? "#f8fafc" : "#0f172a";
+  const subColor = isDark ? "#94a3b8" : "#64748b";
+  const heroGrad = isDark
+    ? ["#080514", "#120b22", "#0a1520"]
+    : ["#faf5ff", "#ecfeff", "#f8fafc"];
+  const ctaGrad = isDark ? ["#7c6bff", "#5b4ddb"] : ["#6248e8", "#4f46e5"];
 
   const [cars, setCars] = useState([]);
   const [records, setRecords] = useState([]);
@@ -67,13 +85,18 @@ export default function MaintenanceScreen() {
   const [modalCar, setModalCar] = useState(null);
   const [form, setForm] = useState(BLANK);
   const [saving, setSaving] = useState(false);
+  const [fleetFilter, setFleetFilter] = useState("all");
+  const [fleetSearch, setFleetSearch] = useState("");
+
+  const headerFade = useRef(new Animated.Value(0)).current;
+  const headerSlide = useRef(new Animated.Value(20)).current;
 
   async function load() {
     try {
       const [mainRes, carRes] = await Promise.all([getAllMaintenance(), getOwnerRentals()]);
       const data = mainRes.data;
       const allRecords = (data.byRental || []).flatMap((g) =>
-        (g.records || []).map((r) => ({ ...r, _rentalTitle: g.rental?.title }))
+        (g.records || []).map((r) => ({ ...r, _rentalTitle: g.rental?.title })),
       );
       setRecords(allRecords);
       setTotalCost(data.totalCost || 0);
@@ -91,6 +114,26 @@ export default function MaintenanceScreen() {
     load();
   }, []);
 
+  useEffect(() => {
+    if (loading) return;
+    headerFade.setValue(0);
+    headerSlide.setValue(20);
+    Animated.parallel([
+      Animated.timing(headerFade, {
+        toValue: 1,
+        duration: 480,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.spring(headerSlide, {
+        toValue: 0,
+        friction: 8,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [loading, headerFade, headerSlide]);
+
   const byCarId = useMemo(() => {
     return records.reduce((acc, r) => {
       const id = (r.rentalId?._id || r.rentalId)?.toString();
@@ -100,6 +143,31 @@ export default function MaintenanceScreen() {
   }, [records]);
 
   const dueSoonCount = useMemo(() => records.filter((r) => isDueSoon(r.nextServiceDate)).length, [records]);
+
+  const filteredCars = useMemo(() => {
+    const q = fleetSearch.trim().toLowerCase();
+    return cars.filter((car) => {
+      const carRecords = byCarId[car._id] || [];
+      if (q) {
+        const hay = `${car.title || ""} ${car.brand || ""} ${car.model || ""} ${car.city || ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      if (fleetFilter === "due_soon") return carHasDueSoon(carRecords);
+      if (fleetFilter === "with_history") return carRecords.length > 0;
+      if (fleetFilter === "no_history") return carRecords.length === 0;
+      return true;
+    });
+  }, [cars, byCarId, fleetFilter, fleetSearch]);
+
+  const fleetLabels = useMemo(
+    () => ({
+      all: { en: "All", fr: "Tout" },
+      due_soon: { en: "Due soon", fr: "Bientôt dû" },
+      with_history: { en: "With logs", fr: "Avec historique" },
+      no_history: { en: "No logs yet", fr: "Sans historique" },
+    }),
+    [],
+  );
 
   const openModal = (car) => {
     setModalCar(car);
@@ -145,13 +213,23 @@ export default function MaintenanceScreen() {
     }
   };
 
+  const filterActive = fleetFilter !== "all" || fleetSearch.trim().length > 0;
+
   if (auth?.role !== "rental_owner") {
     return (
-      <View style={s.center}>
-        <Ionicons name="construct-outline" size={56} color={C.muted} />
-        <Text style={s.deniedTitle}>{t.accessDenied}</Text>
-        <TouchableOpacity onPress={() => router.replace("/(tabs)/profile")} style={s.backBtn}>
-          <Text style={s.backBtnText}>{t.backProfile}</Text>
+      <View style={[s.center, { backgroundColor: C.bg }]}>
+        <LinearGradient
+          colors={isDark ? ["rgba(124,107,255,0.2)", "transparent"] : ["rgba(98,72,232,0.12)", "transparent"]}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={s.deniedOrb}>
+          <Ionicons name="construct-outline" size={52} color={C.primary} />
+        </View>
+        <Text style={[s.deniedTitle, { color: titleColor }]}>{t.accessDenied}</Text>
+        <TouchableOpacity onPress={() => router.replace("/(tabs)/profile")} activeOpacity={0.9}>
+          <LinearGradient colors={ctaGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.backBtn}>
+            <Text style={s.backBtnText}>{t.backProfile}</Text>
+          </LinearGradient>
         </TouchableOpacity>
       </View>
     );
@@ -159,51 +237,134 @@ export default function MaintenanceScreen() {
 
   if (loading) {
     return (
-      <View style={s.center}>
-        <ActivityIndicator color={C.primary} size="large" />
-        <Text style={s.loadingText}>{t.loading}</Text>
+      <View style={[s.center, { backgroundColor: C.bg }]}>
+        <View style={s.loaderRing}>
+          <ActivityIndicator color={C.primary} size="large" />
+        </View>
+        <Text style={[s.loadingText, { color: subColor }]}>{t.loading}</Text>
       </View>
     );
   }
 
+  const statPills = [
+    [cars.length, t.summary.cars, C.primary],
+    [records.length, t.summary.records, C.accent],
+    [Number(totalCost).toLocaleString(numLocale), t.summary.total, C.primary],
+    [dueSoonCount, t.summary.dueSoon, dueSoonCount > 0 ? "#f59e0b" : subColor],
+  ];
+
   const SummaryHeader = (
-    <View style={s.headerBlock}>
-      <Text style={s.eyebrow}>{t.eyebrow}</Text>
-      <Text style={s.pageTitle}>{t.title}</Text>
-      <Text style={s.pageSub}>{t.sub}</Text>
-      <View style={s.summaryRow}>
-        {[
-          [cars.length, t.summary.cars],
-          [records.length, t.summary.records],
-          [Number(totalCost).toLocaleString(numLocale), t.summary.total],
-          [dueSoonCount, t.summary.dueSoon],
-        ].map(([val, label], i) => (
-          <View key={label} style={[s.sumCell, i === 2 && { borderColor: C.primary + "40" }]}>
-            <Text style={[s.sumNum, i === 3 && dueSoonCount > 0 && { color: "#f59e0b" }]}>{val}</Text>
-            <Text style={s.sumLabel}>{label}</Text>
-          </View>
-        ))}
-      </View>
-    </View>
+    <Animated.View style={{ opacity: headerFade, transform: [{ translateY: headerSlide }] }}>
+      <LinearGradient colors={heroGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.hero}>
+        <View style={s.heroAccentBar} />
+        <Text style={[s.eyebrow, { color: C.primary }]}>{t.eyebrow}</Text>
+        <Text style={[s.pageTitle, { color: titleColor }]}>{t.title}</Text>
+        <Text style={[s.pageSub, { color: subColor }]}>{t.sub}</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.statsScroll}>
+          {statPills.map(([val, label, accent]) => (
+            <LinearGradient
+              key={label}
+              colors={
+                isDark
+                  ? ["rgba(255,255,255,0.08)", "rgba(255,255,255,0.02)"]
+                  : ["rgba(255,255,255,0.98)", "rgba(248,250,252,0.92)"]
+              }
+              style={[s.statPill, { borderColor: isDark ? "rgba(124,107,255,0.28)" : "rgba(98,72,232,0.14)" }]}
+            >
+              <View style={[s.statPillDot, { backgroundColor: accent }]} />
+              <Text style={[s.statPillNum, { color: accent === subColor ? titleColor : accent }]}>{val}</Text>
+              <Text style={[s.statPillLbl, { color: subColor }]}>{label}</Text>
+            </LinearGradient>
+          ))}
+        </ScrollView>
+      </LinearGradient>
+
+      <LinearGradient
+        colors={isDark ? ["rgba(20,18,35,0.95)", "rgba(12,14,28,0.98)"] : ["#ffffff", "#f1f5f9"]}
+        style={s.filterPanel}
+      >
+        <View style={[s.searchRow, { borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(15,23,42,0.08)" }]}>
+          <Ionicons name="search-outline" size={18} color={C.muted} />
+          <TextInput
+            value={fleetSearch}
+            onChangeText={setFleetSearch}
+            placeholder={fr ? "Rechercher véhicule, ville…" : "Search vehicle, city…"}
+            placeholderTextColor={C.label}
+            style={[s.searchInput, { color: titleColor }]}
+          />
+          {fleetSearch.length > 0 && (
+            <TouchableOpacity onPress={() => setFleetSearch("")} hitSlop={10}>
+              <Ionicons name="close-circle" size={20} color={C.muted} />
+            </TouchableOpacity>
+          )}
+        </View>
+        <Text style={[s.filterLabel, { color: subColor }]}>{fr ? "Filtrer le parc" : "Filter fleet"}</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipsRow}>
+          {FLEET_FILTERS.map((key) => {
+            const on = fleetFilter === key;
+            const label = fr ? fleetLabels[key].fr : fleetLabels[key].en;
+            return (
+              <TouchableOpacity key={key} onPress={() => setFleetFilter(key)} activeOpacity={0.85}>
+                {on ? (
+                  <LinearGradient colors={ctaGrad} style={s.chipOn}>
+                    <Text style={s.chipOnText}>{label}</Text>
+                  </LinearGradient>
+                ) : (
+                  <View style={[s.chipOff, { borderColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(15,23,42,0.1)" }]}>
+                    <Text style={[s.chipOffText, { color: subColor }]}>{label}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+        {filterActive && (
+          <TouchableOpacity onPress={() => { setFleetFilter("all"); setFleetSearch(""); }} style={s.clearFilters}>
+            <Text style={[s.clearFiltersText, { color: C.primary }]}>
+              {fr ? "Réinitialiser filtres" : "Clear filters"}
+            </Text>
+          </TouchableOpacity>
+        )}
+      </LinearGradient>
+    </Animated.View>
   );
 
   return (
-    <View style={s.screen}>
+    <View style={[s.screen, { backgroundColor: C.bg }]}>
       <FlatList
-        data={cars}
+        data={filteredCars}
         keyExtractor={(item) => item._id}
-        contentContainerStyle={s.listContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={C.primary} />}
+        contentContainerStyle={[s.listContent, { paddingBottom: insets.bottom + 32 }]}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={C.primary} />
+        }
         ListHeaderComponent={
           <>
             {SummaryHeader}
             {cars.length === 0 && (
               <View style={s.emptyFleet}>
-                <Ionicons name="car-outline" size={48} color={C.muted} />
-                <Text style={s.emptyFleetText}>{t.emptyFleet}</Text>
-                <TouchableOpacity onPress={() => router.push("/add-rental")} style={s.emptyFleetBtn}>
-                  <Text style={s.emptyFleetBtnText}>{fr ? "Ajouter une location" : "Add rental"}</Text>
-                </TouchableOpacity>
+                <LinearGradient
+                  colors={isDark ? ["rgba(124,107,255,0.12)", "rgba(56,189,248,0.06)"] : ["rgba(98,72,232,0.1)", "rgba(14,165,233,0.05)"]}
+                  style={s.emptyFleetInner}
+                >
+                  <Ionicons name="car-outline" size={48} color={C.primary} />
+                  <Text style={[s.emptyFleetText, { color: subColor }]}>{t.emptyFleet}</Text>
+                  <TouchableOpacity onPress={() => router.push("/add-rental")} activeOpacity={0.9}>
+                    <LinearGradient colors={ctaGrad} style={s.emptyFleetBtn}>
+                      <Text style={s.emptyFleetBtnText}>{fr ? "Ajouter une location" : "Add rental"}</Text>
+                      <Ionicons name="arrow-forward" size={18} color="#fff" />
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </LinearGradient>
+              </View>
+            )}
+            {cars.length > 0 && filteredCars.length === 0 && (
+              <View style={s.noMatch}>
+                <Ionicons name="funnel-outline" size={36} color={C.muted} />
+                <Text style={[s.noMatchTitle, { color: titleColor }]}>{fr ? "Aucun résultat" : "No matches"}</Text>
+                <Text style={[s.noMatchSub, { color: subColor }]}>
+                  {fr ? "Ajustez la recherche ou les filtres." : "Try a different search or filter."}
+                </Text>
               </View>
             )}
           </>
@@ -212,38 +373,70 @@ export default function MaintenanceScreen() {
           const carRecords = byCarId[car._id] || [];
           const carCost = carRecords.reduce((sum, r) => sum + (r.cost || 0), 0);
           const uri = resolveMediaUrl(car.images?.[0]);
+          const due = carHasDueSoon(carRecords);
           return (
             <View style={s.card}>
               <Pressable
                 onPress={() => router.push(`/maintenance/${car._id}`)}
-                style={({ pressed }) => [s.cardPressable, pressed && { opacity: 0.92 }]}
-                android_ripple={{ color: "rgba(124,107,255,0.15)" }}
+                style={({ pressed }) => [s.cardMain, pressed && { opacity: 0.96 }]}
               >
-                {uri ? (
-                  <Image source={{ uri }} style={s.cardImg} resizeMode="cover" />
-                ) : (
-                  <View style={s.cardImgPh}>
-                    <Ionicons name="car-sport-outline" size={40} color={C.muted} />
+                <LinearGradient
+                  colors={isDark ? ["rgba(124,107,255,0.12)", "transparent"] : ["rgba(98,72,232,0.06)", "transparent"]}
+                  style={s.cardThumbRing}
+                >
+                  {uri ? (
+                    <Image source={{ uri }} style={s.cardThumb} resizeMode="cover" />
+                  ) : (
+                    <View style={s.cardThumbPh}>
+                      <Ionicons name="car-sport-outline" size={32} color={C.muted} />
+                    </View>
+                  )}
+                </LinearGradient>
+                <View style={s.cardBody}>
+                  <View style={s.cardTitleRow}>
+                    <Text style={[s.cardTitle, { color: titleColor }]} numberOfLines={2}>
+                      {car.title || `${car.brand} ${car.model}`}
+                    </Text>
+                    {due && (
+                      <View style={s.dueBadge}>
+                        <Ionicons name="alert-circle" size={12} color="#f59e0b" />
+                        <Text style={s.dueBadgeText}>{fr ? "7j" : "7d"}</Text>
+                      </View>
+                    )}
                   </View>
-                )}
-                <View style={s.cardHead}>
-                  <Text style={s.cardTitle} numberOfLines={2}>{car.title || `${car.brand} ${car.model}`}</Text>
-                  <Text style={s.cardMeta}>
+                  <Text style={[s.cardMeta, { color: subColor }]} numberOfLines={1}>
                     {car.brand} {car.model} · {car.year} · {car.city}
                   </Text>
-                  <Text style={s.listHint}>{t.listHint}</Text>
-                  <View style={s.cardSummaryRow}>
-                    <Text style={s.cardSummaryText}>
-                      {carRecords.length} {t.listRecordsCount}
-                      {carRecords.length > 0 ? ` · ${Number(carCost).toLocaleString(numLocale)} ${t.mad}` : ""}
-                    </Text>
-                    <Ionicons name="chevron-forward" size={20} color={C.primary} />
+                  <View style={s.pillRow}>
+                    <View style={[s.miniPill, { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(15,23,42,0.05)" }]}>
+                      <Text style={[s.miniPillText, { color: titleColor }]}>
+                        {carRecords.length} {t.listRecordsCount}
+                      </Text>
+                    </View>
+                    {carRecords.length > 0 && (
+                      <View style={[s.miniPill, { backgroundColor: isDark ? "rgba(124,107,255,0.15)" : "rgba(98,72,232,0.1)" }]}>
+                        <Text style={[s.miniPillText, { color: C.primary }]}>
+                          {Number(carCost).toLocaleString(numLocale)} {t.mad}
+                        </Text>
+                      </View>
+                    )}
                   </View>
+                  <Text style={[s.listHint, { color: subColor }]}>{t.listHint}</Text>
+                </View>
+                <View style={[s.chevronBtn, { borderColor: isDark ? "rgba(124,107,255,0.25)" : "rgba(98,72,232,0.2)" }]}>
+                  <Ionicons name="chevron-forward" size={18} color={C.primary} />
                 </View>
               </Pressable>
-              <TouchableOpacity onPress={() => openModal(car)} style={s.addBtn}>
-                <Ionicons name="add-circle-outline" size={18} color={C.primary} />
-                <Text style={s.addBtnText}>{t.addBtn}</Text>
+              <TouchableOpacity onPress={() => openModal(car)} activeOpacity={0.9} style={s.addBtn}>
+                <LinearGradient
+                  colors={isDark ? ["rgba(124,107,255,0.2)", "rgba(124,107,255,0.06)"] : ["rgba(98,72,232,0.14)", "rgba(98,72,232,0.04)"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={s.addBtnInner}
+                >
+                  <Ionicons name="add-circle" size={20} color={C.primary} />
+                  <Text style={[s.addBtnText, { color: C.primary }]}>{t.addBtn}</Text>
+                </LinearGradient>
               </TouchableOpacity>
             </View>
           );
@@ -254,15 +447,19 @@ export default function MaintenanceScreen() {
         <View style={s.modalRoot}>
           <Pressable style={s.modalBackdrop} onPress={closeModal} />
           <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={s.modalKb}>
-            <View style={s.modalSheet}>
-              <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+            <View style={[s.modalSheet, { borderColor: isDark ? "rgba(124,107,255,0.2)" : "rgba(98,72,232,0.15)" }]}>
+              <LinearGradient
+                colors={isDark ? ["#141028", "#0c0e18"] : ["#ffffff", "#f8fafc"]}
+                style={s.modalHero}
+              >
                 <View style={s.modalGrab}>
-                  <View style={s.modalGrabBar} />
+                  <View style={[s.modalGrabBar, { backgroundColor: isDark ? "rgba(255,255,255,0.2)" : "rgba(15,23,42,0.15)" }]} />
                 </View>
-                <Text style={s.modalTitle}>{t.modal.title}</Text>
-                {modalCar && <Text style={s.modalSub}>{modalCar.title}</Text>}
-
-                <Text style={s.fieldLabel}>{t.modal.serviceType}</Text>
+                <Text style={[s.modalTitle, { color: titleColor }]}>{t.modal.title}</Text>
+                {modalCar && <Text style={[s.modalSub, { color: subColor }]}>{modalCar.title}</Text>}
+              </LinearGradient>
+              <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={s.modalScroll}>
+                <Text style={[s.fieldLabel, { color: C.label }]}>{t.modal.serviceType}</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.typeScroll}>
                   {TYPE_OPTIONS.map((typ) => {
                     const active = form.type === typ;
@@ -270,17 +467,25 @@ export default function MaintenanceScreen() {
                       <TouchableOpacity
                         key={typ}
                         onPress={() => setForm((p) => ({ ...p, type: typ }))}
-                        style={[s.typeChip, active && { backgroundColor: C.pillBg, borderColor: C.primary }]}
+                        activeOpacity={0.85}
                       >
-                        <Text style={[s.typeChipText, active && { color: C.primary, fontWeight: "700" }]}>{t.types[typ]}</Text>
+                        {active ? (
+                          <LinearGradient colors={ctaGrad} style={s.typeChipActive}>
+                            <Text style={s.typeChipTextActive}>{t.types[typ]}</Text>
+                          </LinearGradient>
+                        ) : (
+                          <View style={[s.typeChip, { borderColor: C.border, backgroundColor: C.inputBg }]}>
+                            <Text style={[s.typeChipText, { color: subColor }]}>{t.types[typ]}</Text>
+                          </View>
+                        )}
                       </TouchableOpacity>
                     );
                   })}
                 </ScrollView>
 
-                <Text style={s.fieldLabel}>{t.modal.date}</Text>
+                <Text style={[s.fieldLabel, { color: C.label }]}>{t.modal.date}</Text>
                 <TextInput
-                  style={s.input}
+                  style={[s.input, { borderColor: C.border, backgroundColor: C.inputBg, color: titleColor }]}
                   value={form.date}
                   onChangeText={(v) => setForm((p) => ({ ...p, date: v }))}
                   placeholder="2025-06-01"
@@ -289,9 +494,9 @@ export default function MaintenanceScreen() {
 
                 <View style={s.row2}>
                   <View style={s.row2Item}>
-                    <Text style={s.fieldLabel}>{t.modal.cost}</Text>
+                    <Text style={[s.fieldLabel, { color: C.label }]}>{t.modal.cost}</Text>
                     <TextInput
-                      style={s.input}
+                      style={[s.input, { borderColor: C.border, backgroundColor: C.inputBg, color: titleColor }]}
                       value={String(form.cost)}
                       onChangeText={(v) => setForm((p) => ({ ...p, cost: v }))}
                       placeholder={t.modal.costPh}
@@ -300,9 +505,9 @@ export default function MaintenanceScreen() {
                     />
                   </View>
                   <View style={s.row2Item}>
-                    <Text style={s.fieldLabel}>{t.modal.mileage}</Text>
+                    <Text style={[s.fieldLabel, { color: C.label }]}>{t.modal.mileage}</Text>
                     <TextInput
-                      style={s.input}
+                      style={[s.input, { borderColor: C.border, backgroundColor: C.inputBg, color: titleColor }]}
                       value={String(form.mileageAtService)}
                       onChangeText={(v) => setForm((p) => ({ ...p, mileageAtService: v }))}
                       placeholder={t.modal.mileagePh}
@@ -312,9 +517,9 @@ export default function MaintenanceScreen() {
                   </View>
                 </View>
 
-                <Text style={s.fieldLabel}>{t.modal.provider}</Text>
+                <Text style={[s.fieldLabel, { color: C.label }]}>{t.modal.provider}</Text>
                 <TextInput
-                  style={s.input}
+                  style={[s.input, { borderColor: C.border, backgroundColor: C.inputBg, color: titleColor }]}
                   value={form.provider}
                   onChangeText={(v) => setForm((p) => ({ ...p, provider: v }))}
                   placeholder={t.modal.providerPh}
@@ -323,9 +528,9 @@ export default function MaintenanceScreen() {
 
                 <View style={s.row2}>
                   <View style={s.row2Item}>
-                    <Text style={s.fieldLabel}>{t.modal.nextDate}</Text>
+                    <Text style={[s.fieldLabel, { color: C.label }]}>{t.modal.nextDate}</Text>
                     <TextInput
-                      style={s.input}
+                      style={[s.input, { borderColor: C.border, backgroundColor: C.inputBg, color: titleColor }]}
                       value={form.nextServiceDate}
                       onChangeText={(v) => setForm((p) => ({ ...p, nextServiceDate: v }))}
                       placeholder="YYYY-MM-DD"
@@ -333,9 +538,9 @@ export default function MaintenanceScreen() {
                     />
                   </View>
                   <View style={s.row2Item}>
-                    <Text style={s.fieldLabel}>{t.modal.nextMileage}</Text>
+                    <Text style={[s.fieldLabel, { color: C.label }]}>{t.modal.nextMileage}</Text>
                     <TextInput
-                      style={s.input}
+                      style={[s.input, { borderColor: C.border, backgroundColor: C.inputBg, color: titleColor }]}
                       value={String(form.nextServiceMileage)}
                       onChangeText={(v) => setForm((p) => ({ ...p, nextServiceMileage: v }))}
                       placeholder={t.modal.nextMileagePh}
@@ -345,9 +550,9 @@ export default function MaintenanceScreen() {
                   </View>
                 </View>
 
-                <Text style={s.fieldLabel}>{t.modal.notes}</Text>
+                <Text style={[s.fieldLabel, { color: C.label }]}>{t.modal.notes}</Text>
                 <TextInput
-                  style={[s.input, s.textArea]}
+                  style={[s.input, s.textArea, { borderColor: C.border, backgroundColor: C.inputBg, color: titleColor }]}
                   value={form.notes}
                   onChangeText={(v) => setForm((p) => ({ ...p, notes: v }))}
                   placeholder={t.modal.notesPh}
@@ -355,11 +560,13 @@ export default function MaintenanceScreen() {
                   multiline
                 />
 
-                <TouchableOpacity onPress={handleSave} disabled={saving} style={[s.saveBtn, saving && { opacity: 0.7 }]}>
-                  <Text style={s.saveBtnText}>{saving ? t.modal.saving : t.modal.save}</Text>
+                <TouchableOpacity onPress={handleSave} disabled={saving} activeOpacity={0.9}>
+                  <LinearGradient colors={ctaGrad} style={[s.saveBtn, saving && { opacity: 0.65 }]}>
+                    <Text style={s.saveBtnText}>{saving ? t.modal.saving : t.modal.save}</Text>
+                  </LinearGradient>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={closeModal} style={s.cancelBtn}>
-                  <Text style={s.cancelBtnText}>{fr ? "Annuler" : "Cancel"}</Text>
+                  <Text style={[s.cancelBtnText, { color: subColor }]}>{fr ? "Annuler" : "Cancel"}</Text>
                 </TouchableOpacity>
               </ScrollView>
             </View>
@@ -370,124 +577,240 @@ export default function MaintenanceScreen() {
   );
 }
 
-function createStyles(C) {
+function createStyles(C, isDark) {
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: C.bg },
-    center: { flex: 1, backgroundColor: C.bg, alignItems: "center", justifyContent: "center", padding: 24 },
-    loadingText: { color: C.muted, marginTop: 12, fontSize: 13 },
-    deniedTitle: { color: C.white, fontSize: 18, fontWeight: "700", marginTop: 16, textAlign: "center" },
-    backBtn: { marginTop: 20, backgroundColor: C.primary, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12 },
-    backBtnText: { color: "#fff", fontWeight: "700" },
-    listContent: { padding: 16, paddingBottom: 40 },
-    headerBlock: { marginBottom: 20 },
-    eyebrow: { color: C.muted, fontSize: 11, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 },
-    pageTitle: { color: C.white, fontSize: 24, fontWeight: "800" },
-    pageSub: { color: C.muted, fontSize: 13, marginTop: 6, marginBottom: 16, lineHeight: 20 },
-    summaryRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-    sumCell: {
-      flex: 1,
-      minWidth: "45%",
-      backgroundColor: C.card,
-      borderWidth: 1,
-      borderColor: C.border,
-      borderRadius: 12,
-      padding: 14,
-    },
-    sumNum: { color: C.white, fontSize: 20, fontWeight: "700" },
-    sumLabel: { color: C.muted, fontSize: 10, marginTop: 4, textTransform: "uppercase", letterSpacing: 0.5 },
-    emptyFleet: {
+    screen: { flex: 1 },
+    center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24 },
+    deniedOrb: {
+      width: 100,
+      height: 100,
+      borderRadius: 32,
       alignItems: "center",
-      padding: 32,
-      backgroundColor: C.card,
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: C.border,
-      marginBottom: 16,
+      justifyContent: "center",
+      borderWidth: 2,
+      borderColor: isDark ? "rgba(124,107,255,0.35)" : "rgba(98,72,232,0.28)",
+      backgroundColor: isDark ? "rgba(124,107,255,0.08)" : "rgba(98,72,232,0.06)",
     },
-    emptyFleetText: { color: C.muted, fontSize: 14, textAlign: "center", marginTop: 12 },
-    emptyFleetBtn: { marginTop: 16, backgroundColor: C.primary, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12 },
-    emptyFleetBtnText: { color: "#fff", fontWeight: "700" },
-    card: {
-      backgroundColor: C.card,
+    loaderRing: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 2,
+      borderColor: isDark ? "rgba(124,107,255,0.3)" : "rgba(98,72,232,0.25)",
+    },
+    loadingText: { marginTop: 16, fontSize: 14, fontWeight: "600" },
+    deniedTitle: { fontSize: 18, fontWeight: "800", marginTop: 20, textAlign: "center", maxWidth: 280 },
+    backBtn: { marginTop: 24, paddingHorizontal: 28, paddingVertical: 14, borderRadius: 14 },
+    backBtnText: { color: "#fff", fontWeight: "800", fontSize: 15 },
+    listContent: { paddingHorizontal: 16, paddingTop: 0 },
+    hero: {
+      borderRadius: 22,
+      padding: 20,
+      marginBottom: 12,
       borderWidth: 1,
-      borderColor: C.border,
-      borderRadius: 16,
-      marginBottom: 16,
+      borderColor: isDark ? "rgba(124,107,255,0.22)" : "rgba(98,72,232,0.12)",
       overflow: "hidden",
     },
-    cardImg: { width: "100%", height: 140 },
-    cardImgPh: { width: "100%", height: 140, backgroundColor: C.inputBg, alignItems: "center", justifyContent: "center" },
-    cardHead: { padding: 14, borderBottomWidth: 1, borderBottomColor: C.border },
-    cardTitle: { color: C.white, fontSize: 16, fontWeight: "700" },
-    cardMeta: { color: C.muted, fontSize: 12, marginTop: 4 },
-    cardPressable: {},
-    listHint: { color: C.muted, fontSize: 11, marginTop: 10, fontStyle: "italic" },
-    cardSummaryRow: {
+    heroAccentBar: {
+      position: "absolute",
+      left: 0,
+      top: 18,
+      bottom: 18,
+      width: 4,
+      borderRadius: 2,
+      backgroundColor: C.primary,
+    },
+    eyebrow: {
+      fontSize: 10,
+      fontWeight: "800",
+      letterSpacing: 2,
+      textTransform: "uppercase",
+      marginBottom: 8,
+      marginLeft: 8,
+    },
+    pageTitle: { fontSize: 26, fontWeight: "800", letterSpacing: -0.5, marginLeft: 8 },
+    pageSub: { fontSize: 14, marginTop: 10, marginBottom: 14, lineHeight: 21, marginLeft: 8, fontWeight: "500" },
+    statsScroll: { paddingLeft: 8, paddingRight: 4, gap: 10, paddingBottom: 4 },
+    statPill: {
+      width: 118,
+      borderRadius: 16,
+      paddingVertical: 14,
+      paddingHorizontal: 14,
+      borderWidth: 1,
+      marginRight: 10,
+    },
+    statPillDot: { width: 6, height: 6, borderRadius: 3, marginBottom: 10 },
+    statPillNum: { fontSize: 20, fontWeight: "800", letterSpacing: -0.4 },
+    statPillLbl: { fontSize: 9, marginTop: 4, textTransform: "uppercase", letterSpacing: 0.5, fontWeight: "700" },
+    filterPanel: {
+      borderRadius: 20,
+      padding: 16,
+      marginBottom: 16,
+      borderWidth: 1,
+      borderColor: isDark ? "rgba(124,107,255,0.18)" : "rgba(98,72,232,0.12)",
+    },
+    searchRow: {
       flexDirection: "row",
       alignItems: "center",
-      justifyContent: "space-between",
-      marginTop: 12,
-      paddingTop: 12,
-      borderTopWidth: 1,
-      borderTopColor: C.border,
+      gap: 10,
+      borderWidth: 1,
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      backgroundColor: isDark ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.8)",
     },
-    cardSummaryText: { color: C.white, fontSize: 14, fontWeight: "600", flex: 1 },
-    addBtn: {
+    searchInput: { flex: 1, fontSize: 15, fontWeight: "500", padding: 0 },
+    filterLabel: { fontSize: 11, fontWeight: "800", letterSpacing: 1.2, textTransform: "uppercase", marginTop: 14, marginBottom: 10 },
+    chipsRow: { flexDirection: "row", gap: 8, alignItems: "center", flexWrap: "nowrap" },
+    chipOn: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 999 },
+    chipOnText: { color: "#fff", fontWeight: "800", fontSize: 12 },
+    chipOff: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 999, borderWidth: 1, backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.6)" },
+    chipOffText: { fontWeight: "700", fontSize: 12 },
+    clearFilters: { marginTop: 12, alignSelf: "flex-start" },
+    clearFiltersText: { fontSize: 13, fontWeight: "700" },
+    emptyFleet: { marginBottom: 16, borderRadius: 22, overflow: "hidden" },
+    emptyFleetInner: {
+      alignItems: "center",
+      padding: 32,
+      borderRadius: 22,
+      borderWidth: 1,
+      borderColor: isDark ? "rgba(124,107,255,0.25)" : "rgba(98,72,232,0.18)",
+    },
+    emptyFleetText: { fontSize: 14, textAlign: "center", marginTop: 14, lineHeight: 21 },
+    emptyFleetBtn: {
+      marginTop: 20,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      paddingHorizontal: 22,
+      paddingVertical: 14,
+      borderRadius: 14,
+    },
+    emptyFleetBtnText: { color: "#fff", fontWeight: "800", fontSize: 15 },
+    noMatch: { alignItems: "center", paddingVertical: 40, paddingHorizontal: 24 },
+    noMatchTitle: { fontSize: 18, fontWeight: "800", marginTop: 12 },
+    noMatchSub: { fontSize: 14, marginTop: 8, textAlign: "center" },
+    card: {
+      borderRadius: 22,
+      marginBottom: 14,
+      overflow: "hidden",
+      borderWidth: 1,
+      borderColor: isDark ? "rgba(255,255,255,0.09)" : "rgba(15,23,42,0.08)",
+      backgroundColor: isDark ? C.card : "#fff",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: isDark ? 0.3 : 0.07,
+      shadowRadius: 18,
+      elevation: 6,
+    },
+    cardMain: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12 },
+    cardThumbRing: {
+      borderRadius: 18,
+      padding: 3,
+    },
+    cardThumb: { width: 96, height: 96, borderRadius: 15 },
+    cardThumbPh: {
+      width: 96,
+      height: 96,
+      borderRadius: 15,
+      backgroundColor: C.inputBg,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    cardBody: { flex: 1, minWidth: 0 },
+    cardTitleRow: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
+    cardTitle: { flex: 1, fontSize: 16, fontWeight: "800", letterSpacing: -0.2 },
+    dueBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: "rgba(245,158,11,0.15)",
+      borderWidth: 1,
+      borderColor: "rgba(245,158,11,0.4)",
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 8,
+    },
+    dueBadgeText: { fontSize: 10, fontWeight: "800", color: "#f59e0b" },
+    cardMeta: { fontSize: 12, marginTop: 6, fontWeight: "500" },
+    pillRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 10 },
+    miniPill: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
+    miniPillText: { fontSize: 11, fontWeight: "800" },
+    listHint: { fontSize: 10, marginTop: 10, fontStyle: "italic" },
+    chevronBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 1,
+      backgroundColor: isDark ? "rgba(124,107,255,0.08)" : "rgba(98,72,232,0.06)",
+    },
+    addBtn: { overflow: "hidden" },
+    addBtnInner: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      gap: 8,
-      padding: 14,
-      backgroundColor: C.pillBg,
+      gap: 10,
+      paddingVertical: 14,
       borderTopWidth: 1,
-      borderTopColor: C.border,
+      borderTopColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(15,23,42,0.06)",
     },
-    addBtnText: { color: C.primary, fontWeight: "700", fontSize: 14 },
+    addBtnText: { fontWeight: "800", fontSize: 14 },
     modalRoot: { flex: 1, justifyContent: "flex-end" },
-    modalBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.5)" },
+    modalBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.55)" },
     modalKb: { maxHeight: "92%", width: "100%" },
     modalSheet: {
       backgroundColor: C.card,
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
-      paddingHorizontal: 20,
-      paddingBottom: 28,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
       maxHeight: "92%",
       borderWidth: 1,
-      borderColor: C.border,
+      overflow: "hidden",
     },
-    modalGrab: { alignItems: "center", paddingVertical: 10 },
-    modalGrabBar: { width: 40, height: 4, borderRadius: 2, backgroundColor: C.border },
-    modalTitle: { color: C.white, fontSize: 18, fontWeight: "800" },
-    modalSub: { color: C.muted, fontSize: 13, marginBottom: 12, marginTop: 4 },
-    fieldLabel: { color: C.label, fontSize: 11, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 6, marginTop: 10 },
+    modalHero: {
+      paddingHorizontal: 20,
+      paddingBottom: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(15,23,42,0.06)",
+    },
+    modalScroll: { paddingHorizontal: 20, paddingBottom: 32 },
+    modalGrab: { alignItems: "center", paddingVertical: 12 },
+    modalGrabBar: { width: 44, height: 5, borderRadius: 3 },
+    modalTitle: { fontSize: 20, fontWeight: "800", letterSpacing: -0.3 },
+    modalSub: { fontSize: 14, marginBottom: 4, marginTop: 6 },
+    fieldLabel: { fontSize: 11, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8, marginTop: 14, fontWeight: "700" },
     typeScroll: { marginBottom: 4, maxHeight: 44 },
     typeChip: {
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderRadius: 20,
-      borderWidth: 1,
-      borderColor: C.border,
-      marginRight: 8,
-      backgroundColor: C.inputBg,
-    },
-    typeChipText: { color: C.muted, fontSize: 12 },
-    input: {
-      backgroundColor: C.inputBg,
-      borderWidth: 1,
-      borderColor: C.border,
-      borderRadius: 12,
       paddingHorizontal: 14,
-      paddingVertical: 12,
-      color: C.white,
+      paddingVertical: 10,
+      borderRadius: 999,
+      borderWidth: 1,
+      marginRight: 8,
+    },
+    typeChipActive: {
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderRadius: 999,
+      marginRight: 8,
+    },
+    typeChipText: { fontSize: 12, fontWeight: "600" },
+    typeChipTextActive: { color: "#fff", fontSize: 12, fontWeight: "800" },
+    input: {
+      borderWidth: 1,
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      paddingVertical: 14,
       fontSize: 15,
     },
-    textArea: { minHeight: 72, textAlignVertical: "top" },
+    textArea: { minHeight: 88, textAlignVertical: "top" },
     row2: { flexDirection: "row", gap: 12 },
     row2Item: { flex: 1 },
-    saveBtn: { backgroundColor: C.primary, borderRadius: 12, paddingVertical: 14, alignItems: "center", marginTop: 16 },
-    saveBtnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
-    cancelBtn: { paddingVertical: 14, alignItems: "center" },
-    cancelBtnText: { color: C.muted, fontWeight: "600" },
+    saveBtn: { borderRadius: 14, paddingVertical: 16, alignItems: "center", marginTop: 20 },
+    saveBtnText: { color: "#fff", fontWeight: "800", fontSize: 16 },
+    cancelBtn: { paddingVertical: 16, alignItems: "center" },
+    cancelBtnText: { fontWeight: "700", fontSize: 15 },
   });
 }
