@@ -281,6 +281,7 @@ export default function ProfileScreen() {
         {auth.role==="rental_owner" && <>
           <NavItem s={s} C={C} icon="analytics-outline"  label={fr?"Statistiques & analyses":"Analytics & insights"} onPress={() => router.push("/owner-analytics")} />
           <NavItem s={s} C={C} icon="car-outline"        label={fr?"Mon parc":"My Fleet"}         onPress={() => router.push("/my-fleet")} />
+          <NavItem s={s} C={C} icon="construct-outline" label={fr?"Maintenance":"Maintenance"} onPress={() => router.push("/maintenance")} />
           <NavItem s={s} C={C} icon="clipboard-outline"  label={fr?"Réservations":"Bookings"}     onPress={() => router.push("/owner-bookings")} />
           <NavItem s={s} C={C} icon="add-circle-outline" label={fr?"Ajouter location":"Add Rental"} onPress={() => router.push("/add-rental")} />
         </>}
