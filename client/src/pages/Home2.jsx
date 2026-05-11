@@ -3,11 +3,24 @@ import { loadAuth, clearAuth } from "../utils/authStorage";
 import { useState, useEffect, useRef } from "react";
 import { useAppLang } from "../context/AppLangContext";
 import { useTheme } from "../context/ThemeContext";
+import { getApprovedSales } from "../api/sale";
+import { getApprovedRentals } from "../api/rental";
 
 /* ──────────────────────────────────────────────
    Scroll reveal — IntersectionObserver, no lib
    Adds "vis" class once element enters viewport
 ────────────────────────────────────────────── */
+function normalizeSalesPayload(data) {
+  if (!data) return [];
+  const raw = data.items ?? data.cars ?? data;
+  return Array.isArray(raw) ? raw : [];
+}
+
+function normalizeRentalsPayload(data) {
+  if (!data) return [];
+  return Array.isArray(data) ? data : data.rentals ?? [];
+}
+
 function useReveal(threshold = 0.1) {
   const ref = useRef(null);
   useEffect(() => {
@@ -90,25 +103,6 @@ function CounterItem({ to, suffix = "", label, delay = "0s" }) {
       <div className="hx-stat-l">{label}</div>
       <div className="hx-stat-line" />
     </div>
-  );
-}
-
-function FeaturedCard({ item, delay = "0s" }) {
-  const ref = useReveal(0.08);
-  const { copy } = useAppLang();
-  return (
-    <article ref={ref} className="hx-fc rv rv-u" style={{ transitionDelay: delay }}>
-      <img src={item.img} alt={item.name} className="hx-fc-img" loading="lazy" decoding="async" />
-      <div className="hx-fc-top">
-        <span className="hx-fc-badge">{item.badge}</span>
-        <span className="hx-fc-loc">{item.city}</span>
-      </div>
-      <div className="hx-fc-body">
-        <h3>{item.name}</h3>
-        <p>{item.price}</p>
-        <Link to="/cars" className="hx-fc-btn">{copy.home.featured.viewDetails}</Link>
-      </div>
-    </article>
   );
 }
 
@@ -593,14 +587,175 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
 }
 @keyframes sPulse{0%,100%{opacity:1}50%{opacity:.35}}
 
+/* ════ HERO — motion mesh & traffic line ════ */
+.hx-hero{position:relative;}
+.hx-hero-bgmotion{
+  position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 0%, rgba(124,107,255,.28) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 45% at 85% 90%, rgba(56,189,248,.22) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(124,107,255,.08) 0%, transparent 70%);
+  animation:hxMeshDrift 18s ease-in-out infinite alternate;
+}
+@keyframes hxMeshDrift{
+  0%{transform:scale(1) translate(0,0);opacity:1;}
+  100%{transform:scale(1.06) translate(-2%,1%);opacity:.92;}
+}
+.hx-hero-traffic{
+  position:absolute;left:0;right:0;bottom:0;height:120px;z-index:1;
+  pointer-events:none;opacity:.45;
+}
+.hx-hero-traffic-line{
+  display:block;width:100%;height:100%;
+  background:repeating-linear-gradient(
+    90deg,
+    transparent 0,
+    transparent 48px,
+    rgba(56,189,248,.35) 48px,
+    rgba(56,189,248,.35) 52px,
+    transparent 52px,
+    transparent 120px,
+    rgba(124,107,255,.25) 120px,
+    rgba(124,107,255,.25) 124px
+  );
+  mask-image:linear-gradient(to top, rgba(0,0,0,.9), transparent);
+  animation:hxTrafficFlow 22s linear infinite;
+}
+@keyframes hxTrafficFlow{to{transform:translateX(-120px);}}
+.hx-hero-pillrow{margin-top:-8px;margin-bottom:8px;opacity:0;animation:hUp .55s ease .48s forwards;}
+.hx-hero-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:8px 16px;border-radius:999px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--gold2);
+  border:1px solid rgba(56,189,248,.35);
+  background:linear-gradient(135deg,rgba(124,107,255,.12),rgba(56,189,248,.08));
+  box-shadow:0 0 24px rgba(56,189,248,.12);
+}
+
+/* ════ LIVE SHOWCASE (sales + rentals rails) ════ */
+.hx-vault{
+  position:relative;
+  padding:88px 0 72px;
+  background:
+    linear-gradient(180deg, var(--bg) 0%, var(--bg2) 45%, var(--bg) 100%);
+  border-top:1px solid var(--bdr);
+  border-bottom:1px solid var(--bdr);
+  overflow:hidden;
+}
+.hx-vault::before{
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:min(900px,90%);height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold),var(--gold2),transparent);
+  opacity:.5;
+}
+.hx-vault-head{padding:0 64px 36px;max-width:1280px;margin:0 auto;}
+.hx-vault-sub{max-width:640px;}
+.hx-vault-band{padding:0 0 28px;}
+.hx-vault-band-rent{padding-top:8px;}
+.hx-vault-band-h{
+  max-width:1280px;margin:0 auto 16px;padding:0 64px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+}
+.hx-vtag{
+  font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  padding:6px 14px;border-radius:999px;font-weight:600;
+}
+.hx-vtag-sale{
+  color:var(--gold);
+  border:1px solid var(--gbd);
+  background:var(--gbg);
+  box-shadow:0 0 20px rgba(124,107,255,.15);
+}
+.hx-vtag-rent{
+  color:#0ea5e9;
+  border:1px solid rgba(14,165,233,.35);
+  background:rgba(56,189,248,.1);
+  box-shadow:0 0 20px rgba(56,189,248,.12);
+}
+.dark .hx-vtag-rent{color:#38bdf8;}
+.hx-vault-all{
+  font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--mut);transition:color .2s;
+}
+.hx-vault-all:hover{color:var(--gold);}
+.hx-vrail-wrap{
+  position:relative;
+  mask-image:linear-gradient(90deg, transparent 0, #000 48px, #000 calc(100% - 48px), transparent 100%);
+}
+.hx-vrail{
+  display:flex;gap:16px;overflow-x:auto;padding:8px 64px 20px;
+  scroll-snap-type:x mandatory;
+  scrollbar-width:thin;
+  scrollbar-color:var(--gold) transparent;
+}
+.hx-vrail::-webkit-scrollbar{height:6px;}
+.hx-vrail::-webkit-scrollbar-thumb{background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:99px;}
+.hx-vcard{
+  flex:0 0 min(280px,78vw);
+  scroll-snap-align:start;
+  position:relative;display:flex;flex-direction:column;
+  border-radius:20px;overflow:hidden;
+  border:1px solid var(--bdr2);
+  background:var(--sur);
+  transition:transform .35s,box-shadow .35s,border-color .35s;
+}
+.hx-vcard:hover{
+  transform:translateY(-6px);
+  box-shadow:0 28px 56px rgba(7,14,45,.2);
+}
+.hx-vcard-sale:hover{border-color:rgba(124,107,255,.45);}
+.hx-vcard-rent:hover{border-color:rgba(56,189,248,.45);}
+.hx-vcard-img-wrap{position:relative;height:168px;overflow:hidden;}
+.hx-vcard-img{width:100%;height:100%;object-fit:cover;transition:transform .65s cubic-bezier(.22,1,.36,1);}
+.hx-vcard:hover .hx-vcard-img{transform:scale(1.07);}
+.hx-vcard-ph{
+  width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  background:var(--sur2);color:var(--mut);
+}
+.hx-vcard-ph svg{width:48px;height:48px;}
+.hx-vcard-shade{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(6,14,43,.75),transparent 55%);
+  pointer-events:none;
+}
+.hx-vcard-body{padding:16px 18px 18px;}
+.hx-vcard-city{
+  font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);
+}
+.hx-vcard-title{
+  font-family:var(--disp);font-size:18px;font-weight:700;letter-spacing:-.03em;
+  color:var(--ink);margin:6px 0 8px;line-height:1.15;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.hx-vcard-price{font-size:15px;font-weight:700;color:var(--gold);}
+.hx-vcard-price-rent{color:#0284c7;}
+.dark .hx-vcard-price-rent{color:var(--gold2);}
+.hx-vcard-cta{
+  display:inline-block;margin-top:12px;font-size:11px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--mut);transition:color .2s,transform .2s;
+}
+.hx-vcard:hover .hx-vcard-cta{color:var(--gold);transform:translateX(3px);}
+.hx-vault-empty{padding:24px 64px;font-size:14px;color:var(--mut);max-width:1280px;margin:0 auto;}
+.hx-vskel-wrap{display:flex;gap:16px;padding:8px 64px;}
+.hx-vskel{
+  flex:0 0 min(280px,78vw);height:280px;border-radius:20px;
+  background:linear-gradient(110deg,var(--sur2) 25%,var(--sur) 50%,var(--sur2) 75%);
+  background-size:200% 100%;animation:hxShine 1.4s ease infinite;
+}
+.hx-vskel-rent{opacity:.85;}
+@keyframes hxShine{0%{background-position:100% 0}100%{background-position:-100% 0}}
+
 /* ════ MARQUEE ════ */
 .hx-marquee {
   overflow:hidden;
-  background:var(--ink);
+  background:linear-gradient(90deg,var(--ink) 0%,#121a3d 50%,var(--ink) 100%);
   padding:15px 0;
   transition:background .4s;
 }
-.hx.dark .hx-marquee{background:var(--sur);}
+.hx.dark .hx-marquee{
+  background:linear-gradient(90deg,#0a0c18 0%,#121528 45%,#0c1024 100%);
+}
 .hx-mtrack {
   display:flex;width:max-content;
   animation:marquee 32s linear infinite;
@@ -1061,7 +1216,12 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
 .hx-final-btns{display:flex;gap:10px;flex-wrap:wrap;}
 
 /* ════ FOOTER ════ */
-.hx-ft{background:var(--ink);padding:72px 64px 32px;transition:background .4s;}
+/* Light: --ink is dark blue (correct). Dark: --ink is light — use --bg so footer stays dark. */
+.hx-ft{background:var(--ink);padding:72px 64px 32px;transition:background .4s,border-color .4s;}
+.hx.dark .hx-ft{
+  background:var(--bg);
+  border-top:1px solid var(--bdr);
+}
 .hx-ft-inner{max-width:1280px;margin:0 auto;}
 .hx-ft-top{
   display:grid;grid-template-columns:2fr 1fr 1fr 1fr;
@@ -1161,6 +1321,9 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-stat-n{font-size:40px;}
   .hx-dash-sec{padding:64px 24px;}
   .hx-fsec,.hx-ben-sec,.hx-tsec,.hx-trust,.hx-app{padding-left:24px;padding-right:24px;}
+  .hx-vault-head,.hx-vault-band-h{padding-left:24px;padding-right:24px;}
+  .hx-vrail,.hx-vskel-wrap{padding-left:24px;padding-right:24px;}
+  .hx-vault-empty{padding-left:24px;padding-right:24px;}
   .hx-frail,.hx-ben-grid,.hx-tgrid,.hx-tr-grid{grid-template-columns:1fr;}
   .hx-exp{margin:56px 24px;min-height:380px;border-radius:18px;}
   .hx-exp-body{padding:26px;}
@@ -1200,6 +1363,9 @@ function HomeInner() {
   const [menu,        setMenu]        = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef(null);
+  const [liveSales, setLiveSales] = useState([]);
+  const [liveRentals, setLiveRentals] = useState([]);
+  const [liveLoading, setLiveLoading] = useState(true);
 
   const heroImgRef   = useRef(null);
   const svcHdrRef    = useReveal(0.08);
@@ -1214,6 +1380,30 @@ function HomeInner() {
     const img = new Image();
     img.src = "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1800&q=80&auto=format&fit=crop";
     img.onload = () => { if (heroImgRef.current) heroImgRef.current.classList.add("ldd"); };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLiveLoading(true);
+      try {
+        const [sRes, rRes] = await Promise.all([
+          getApprovedSales({ page: 1, limit: 10 }),
+          getApprovedRentals(),
+        ]);
+        if (cancelled) return;
+        setLiveSales(normalizeSalesPayload(sRes?.data).slice(0, 10));
+        setLiveRentals(normalizeRentalsPayload(rRes?.data).slice(0, 10));
+      } catch {
+        if (!cancelled) {
+          setLiveSales([]);
+          setLiveRentals([]);
+        }
+      } finally {
+        if (!cancelled) setLiveLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
   useEffect(() => {
     function handleClickOutside(e) {
@@ -1380,6 +1570,10 @@ function HomeInner() {
 
       {/* ═══ HERO ═══ */}
       <section className="hx-hero">
+        <div className="hx-hero-bgmotion" aria-hidden="true" />
+        <div className="hx-hero-traffic" aria-hidden="true">
+          <span className="hx-hero-traffic-line" />
+        </div>
         <div className="hx-hero-inner">
           <div className="hx-hero-left">
           <div className="hx-hero-kicker">{copy.home.hero.kicker}</div>
@@ -1395,6 +1589,9 @@ function HomeInner() {
           <p className="hx-hero-p">
             {copy.home.hero.body}
           </p>
+          <div className="hx-hero-pillrow">
+            <span className="hx-hero-pill">{copy.home.hero.intent}</span>
+          </div>
 
           <div className="hx-hero-btns">
             <Link to="/rentals" className="hx-hbtn prim">{copy.home.hero.rent}</Link>
@@ -1528,17 +1725,104 @@ function HomeInner() {
         </div>
       </div>
 
-      {/* ═══ FEATURED LUXURY CARS ═══ */}
-      <section className="hx-fsec">
-        <div className="hx-fhead rv rv-u vis">
-          <div className="hx-ey">{copy.home.featured.eyebrow}</div>
-          <h2 className="hx-h2">{copy.home.featured.title1} <em>{copy.home.featured.title2}</em></h2>
-          <p className="hx-h2-sub">{copy.home.featured.sub}</p>
+      {/* ═══ LIVE SHOWCASE — SALES + RENTALS ═══ */}
+      <section className="hx-vault">
+        <div className="hx-vault-head rv rv-u vis">
+          <div className="hx-ey">{copy.home.showcase.eyebrow}</div>
+          <h2 className="hx-h2">
+            {copy.home.showcase.title1} <em>{copy.home.showcase.title2}</em>
+          </h2>
+          <p className="hx-h2-sub hx-vault-sub">{copy.home.showcase.sub}</p>
         </div>
-        <div className="hx-frail">
-          {copy.home.featuredCars.map((item, i) => (
-            <FeaturedCard key={item.name} item={item} delay={`${i * 0.08}s`} />
-          ))}
+
+        <div className="hx-vault-band">
+          <div className="hx-vault-band-h">
+            <span className="hx-vtag hx-vtag-sale">{copy.home.showcase.forSale}</span>
+            <Link to="/cars" className="hx-vault-all">{copy.home.showcase.viewAllSale} →</Link>
+          </div>
+          <div className="hx-vrail-wrap">
+            <div className="hx-vrail">
+              {liveLoading && (
+                <div className="hx-vskel-wrap">
+                  {[1, 2, 3, 4].map((k) => (
+                    <div key={k} className="hx-vskel" />
+                  ))}
+                </div>
+              )}
+              {!liveLoading &&
+                liveSales.map((c) => {
+                  const img = c.images?.[0];
+                  const title = c.title || `${c.brand || ""} ${c.model || ""}`.trim() || "—";
+                  const price = c.price != null ? `${Number(c.price).toLocaleString()} ${copy.home.showcase.mad}` : "—";
+                  return (
+                    <Link key={c._id} to={`/cars/${c._id}`} className="hx-vcard hx-vcard-sale">
+                      <div className="hx-vcard-img-wrap">
+                        {img ? (
+                          <img src={img} alt="" className="hx-vcard-img" loading="lazy" decoding="async" />
+                        ) : (
+                          <div className="hx-vcard-ph">{ICON.car}</div>
+                        )}
+                        <span className="hx-vcard-shade" />
+                      </div>
+                      <div className="hx-vcard-body">
+                        <div className="hx-vcard-city">{c.city || "—"}</div>
+                        <h3 className="hx-vcard-title">{title}</h3>
+                        <div className="hx-vcard-price">{price}</div>
+                        <span className="hx-vcard-cta">{copy.home.showcase.view}</span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              {!liveLoading && liveSales.length === 0 && (
+                <p className="hx-vault-empty">{copy.home.showcase.emptySale}</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="hx-vault-band hx-vault-band-rent">
+          <div className="hx-vault-band-h">
+            <span className="hx-vtag hx-vtag-rent">{copy.home.showcase.forRent}</span>
+            <Link to="/rentals" className="hx-vault-all">{copy.home.showcase.viewAllRent} →</Link>
+          </div>
+          <div className="hx-vrail-wrap">
+            <div className="hx-vrail">
+              {liveLoading && (
+                <div className="hx-vskel-wrap">
+                  {[1, 2, 3, 4].map((k) => (
+                    <div key={`r-${k}`} className="hx-vskel hx-vskel-rent" />
+                  ))}
+                </div>
+              )}
+              {!liveLoading &&
+                liveRentals.map((r) => {
+                  const img = r.images?.[0];
+                  const title = r.title || `${r.brand || ""} ${r.model || ""}`.trim() || "—";
+                  const ppd = r.pricePerDay != null ? `${Number(r.pricePerDay).toLocaleString()} ${copy.home.showcase.mad}${copy.home.showcase.perDay}` : "—";
+                  return (
+                    <Link key={r._id} to={`/rentals/${r._id}`} className="hx-vcard hx-vcard-rent">
+                      <div className="hx-vcard-img-wrap">
+                        {img ? (
+                          <img src={img} alt="" className="hx-vcard-img" loading="lazy" decoding="async" />
+                        ) : (
+                          <div className="hx-vcard-ph">{ICON.car}</div>
+                        )}
+                        <span className="hx-vcard-shade" />
+                      </div>
+                      <div className="hx-vcard-body">
+                        <div className="hx-vcard-city">{r.city || "—"}</div>
+                        <h3 className="hx-vcard-title">{title}</h3>
+                        <div className="hx-vcard-price hx-vcard-price-rent">{ppd}</div>
+                        <span className="hx-vcard-cta">{copy.home.showcase.view}</span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              {!liveLoading && liveRentals.length === 0 && (
+                <p className="hx-vault-empty">{copy.home.showcase.emptyRent}</p>
+              )}
+            </div>
+          </div>
         </div>
       </section>
 

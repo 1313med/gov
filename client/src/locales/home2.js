@@ -20,12 +20,13 @@ export const home2Dict = {
       getStarted: "Get Started",
     },
     hero: {
-      kicker: "Elite Service Car Experience",
-      line1: "Elite",
-      line2: "Rent & Sell",
-      line3: "Cars.",
+      kicker: "Goovoiture — with you in traffic",
+      line1: "An empire",
+      line2: "of cars on",
+      line3: "your side.",
       body:
-        "Premium vehicles, trusted owners, and secure listings. Your high-end platform to rent fast or sell smart.",
+        "Same roads, same rush — a platform built to work for you: verified sales, transparent rentals, and service that clears the lane instead of blocking it.",
+      intent: "Not against you · For your journey",
       rent: "Rent a Car",
       browseSale: "Browse for Sale",
       statVehicles: "Vehicles Listed",
@@ -35,6 +36,7 @@ export const home2Dict = {
       heroAlt: "Premium sports car",
     },
     marquee: [
+      "Same traffic · Better ally",
       "Verified Listings",
       "Secure Payments",
       "Premium Fleet",
@@ -43,6 +45,7 @@ export const home2Dict = {
       "Zero Hidden Fees",
       "Elite Service",
       "Admin Moderated",
+      "With you · Not in your way",
     ],
     services: {
       eyebrow: "Our Services",
@@ -79,6 +82,22 @@ export const home2Dict = {
       title2: "Luxury Cars.",
       sub: "Handpicked executive vehicles for clients who expect nothing less than elite standards.",
       viewDetails: "View Details",
+    },
+    showcase: {
+      eyebrow: "Live showroom",
+      title1: "Buy & rent",
+      title2: "from the same lane.",
+      sub:
+        "A pulse of real listings — cars to own and cars to drive today. Scroll each rail, then dive into the full marketplace.",
+      forSale: "For sale",
+      forRent: "For rent",
+      viewAllSale: "All cars for sale",
+      viewAllRent: "All rentals",
+      emptySale: "No sale listings loaded — open the showroom to browse everything.",
+      emptyRent: "No rentals loaded — open the fleet to see availability.",
+      perDay: "/ day",
+      mad: "MAD",
+      view: "View",
     },
     featuredCars: [
       {
@@ -305,12 +324,13 @@ export const home2Dict = {
       getStarted: "Commencer",
     },
     hero: {
-      kicker: "L’expérience automobile d’exception",
-      line1: "L’élite",
-      line2: "Louer & vendre",
-      line3: "des voitures.",
+      kicker: "Goovoiture — avec vous dans le trafic",
+      line1: "Un empire",
+      line2: "automobile à",
+      line3: "vos côtés.",
       body:
-        "Véhicules premium, propriétaires vérifiés et annonces sécurisées. La plateforme haut de gamme pour louer vite ou vendre intelligemment.",
+        "Les mêmes routes, les mêmes embouteillages — une plateforme pensée pour vous : ventes vérifiées, locations transparentes, un service qui dégage la voie au lieu de la bloquer.",
+      intent: "Pas contre vous · Pour votre trajet",
       rent: "Louer une voiture",
       browseSale: "Parcourir les ventes",
       statVehicles: "Véhicules listés",
@@ -320,6 +340,7 @@ export const home2Dict = {
       heroAlt: "Voiture de sport premium",
     },
     marquee: [
+      "Même trafic · Meilleur allié",
       "Annonces vérifiées",
       "Paiements sécurisés",
       "Flotte premium",
@@ -328,6 +349,7 @@ export const home2Dict = {
       "Sans frais cachés",
       "Service d’élite",
       "Modération par l’admin",
+      "Avec vous · Sans obstacle",
     ],
     services: {
       eyebrow: "Nos services",
@@ -365,6 +387,22 @@ export const home2Dict = {
       sub:
         "Véhicules d’exception choisis pour les clients qui exigent des standards d’élite.",
       viewDetails: "Voir les détails",
+    },
+    showcase: {
+      eyebrow: "Showroom en direct",
+      title1: "Acheter & louer",
+      title2: "sur la même voie.",
+      sub:
+        "Des annonces réelles — voitures à posséder et voitures à conduire aujourd’hui. Faites défiler chaque bande, puis explorez tout le catalogue.",
+      forSale: "À vendre",
+      forRent: "À louer",
+      viewAllSale: "Toutes les voitures en vente",
+      viewAllRent: "Toutes les locations",
+      emptySale: "Aucune annonce vente chargée — ouvrez le showroom pour tout parcourir.",
+      emptyRent: "Aucune location chargée — ouvrez la flotte pour voir les disponibilités.",
+      perDay: "/ jour",
+      mad: "MAD",
+      view: "Voir",
     },
     featuredCars: [
       {
