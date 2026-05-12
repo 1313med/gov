@@ -595,6 +595,14 @@ export default function HomeScreen() {
               {auth.role === "rental_owner" && (
                 <>
                   <NavItem s={s} C={C} isDark={isDark} icon="analytics-outline" label={fr ? "Statistiques" : "Analytics"} onPress={() => router.push("/owner-analytics")} color={C.accent} />
+                  <NavItem
+                    s={s}
+                    C={C}
+                    isDark={isDark}
+                    icon="calendar-outline"
+                    label={fr ? "Calendrier" : "Calendar"}
+                    onPress={() => router.push("/owner-booking-calendar")}
+                  />
                   <NavItem s={s} C={C} isDark={isDark} icon="car-outline" label={fr ? "Mon parc" : "My Fleet"} onPress={() => router.push("/my-fleet")} />
                   <NavItem s={s} C={C} isDark={isDark} icon="construct-outline" label={fr ? "Maintenance" : "Maintenance"} onPress={() => router.push("/maintenance")} />
                   <NavItem s={s} C={C} isDark={isDark} icon="clipboard-outline" label={fr ? "Réservations" : "Bookings"} onPress={() => router.push("/owner-bookings")} />

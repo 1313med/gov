@@ -48,6 +48,7 @@ function RootNavigator() {
       <Stack.Screen name="add-rental" options={{ headerShown: true, headerTitle: "Add Rental", headerStyle: hdr }} />
       <Stack.Screen name="owner-bookings" options={{ headerShown: true, headerTitle: "Bookings", headerStyle: hdr }} />
       <Stack.Screen name="owner-analytics" options={{ headerShown: true, headerTitle: "Analytics", headerStyle: hdr }} />
+      <Stack.Screen name="owner-booking-calendar" options={{ headerShown: true, headerTitle: "Calendar", headerStyle: hdr }} />
       <Stack.Screen
         name="maintenance"
         options={{ headerShown: true, headerTitle: "Maintenance", headerStyle: hdr, headerBackTitle: "Back" }}
