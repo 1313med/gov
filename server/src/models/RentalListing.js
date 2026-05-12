@@ -57,6 +57,10 @@ const rentalListingSchema = new mongoose.Schema(
     },
     minRentalDays: { type: Number, default: 1 },
 
+    /** Owner can deliver the car to the airport for an extra one-time fee (MAD). */
+    airportDeliveryOffered: { type: Boolean, default: false },
+    airportDeliveryFeeMad:  { type: Number, default: 0 },
+
     images: [{ type: String }],
 
     // Manually blocked periods (maintenance, personal use, etc.)

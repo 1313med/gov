@@ -86,6 +86,11 @@ export default function MyFleetScreen() {
   const [showOfferForm, setShowOfferForm] = useState(false);
   const [savingPromos, setSavingPromos] = useState(false);
 
+  const [airportRental, setAirportRental] = useState(null);
+  const [airportOffered, setAirportOffered] = useState(false);
+  const [airportFee, setAirportFee] = useState("");
+  const [savingAirport, setSavingAirport] = useState(false);
+
   const load = async () => {
     try {
       const { data } = await getOwnerRentals();
@@ -146,6 +151,45 @@ export default function MyFleetScreen() {
       Alert.alert("Error", e?.response?.data?.message || (fr ? "Échec de l’enregistrement" : "Save failed"));
     } finally {
       setSavingPromos(false);
+    }
+  };
+
+  const openAirport = (car) => {
+    setAirportRental(car);
+    setAirportOffered(!!car.airportDeliveryOffered);
+    setAirportFee(
+      car.airportDeliveryFeeMad != null && Number(car.airportDeliveryFeeMad) > 0
+        ? String(car.airportDeliveryFeeMad)
+        : "",
+    );
+  };
+
+  const closeAirport = () => {
+    setAirportRental(null);
+    setAirportFee("");
+    setAirportOffered(false);
+  };
+
+  const saveAirport = async () => {
+    if (!airportRental) return;
+    const fee = Math.max(0, parseFloat(String(airportFee).replace(",", ".")) || 0);
+    if (airportOffered && fee <= 0) {
+      Alert.alert(fr ? "Tarif" : "Fee", fr ? "Entrez un montant supérieur à 0 MAD." : "Enter a fee greater than 0 MAD.");
+      return;
+    }
+    setSavingAirport(true);
+    try {
+      const { data } = await updateRental(airportRental._id, {
+        airportDeliveryOffered: airportOffered,
+        airportDeliveryFeeMad: airportOffered ? fee : 0,
+      });
+      setRentals((p) => p.map((c) => (c._id === data._id ? data : c)));
+      Alert.alert("", fr ? "Service aéroport enregistré." : "Airport service saved.");
+      closeAirport();
+    } catch (e) {
+      Alert.alert("Error", e?.response?.data?.message || (fr ? "Échec" : "Save failed"));
+    } finally {
+      setSavingAirport(false);
     }
   };
 
@@ -227,6 +271,12 @@ export default function MyFleetScreen() {
                       </Text>
                     </View>
                   )}
+                  {item.airportDeliveryOffered && Number(item.airportDeliveryFeeMad) > 0 && (
+                    <View style={s.airBadge}>
+                      <Ionicons name="airplane-outline" size={11} color="#38bdf8" />
+                      <Text style={s.airBadgeText}>{item.airportDeliveryFeeMad} MAD</Text>
+                    </View>
+                  )}
                   {item.city && (
                     <View style={s.cityRow}>
                       <Ionicons name="location-outline" size={12} color={C.muted} />
@@ -238,6 +288,10 @@ export default function MyFleetScreen() {
                   <TouchableOpacity onPress={() => openPromos(item)} style={[s.actionBtn, s.actionPromo]}>
                     <Ionicons name="pricetag-outline" size={15} color="#fbbf24" />
                     <Text style={[s.actionBtnText, { color: "#fbbf24" }]}>{fr ? "Promos" : "Deals"}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => openAirport(item)} style={[s.actionBtn, s.actionAirport]}>
+                    <Ionicons name="airplane-outline" size={15} color="#38bdf8" />
+                    <Text style={[s.actionBtnText, { color: "#38bdf8" }]}>{fr ? "Aéroport" : "Airport"}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => router.push("/owner-bookings")}
@@ -428,6 +482,65 @@ export default function MyFleetScreen() {
           </KeyboardAvoidingView>
         </View>
       </Modal>
+
+      <Modal visible={!!airportRental} animationType="slide" transparent onRequestClose={closeAirport}>
+        <View style={s.modalOverlay}>
+          <Pressable style={s.modalBackdrop} onPress={closeAirport} />
+          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={s.modalSheetWrap}>
+            <View style={s.modalBox}>
+              <View style={s.modalHead}>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={s.modalTitle}>{fr ? "Livraison aéroport" : "Airport delivery"}</Text>
+                  <Text style={s.modalSub} numberOfLines={1}>
+                    {airportRental?.title}
+                  </Text>
+                </View>
+                <TouchableOpacity onPress={closeAirport} hitSlop={12} style={s.modalClose}>
+                  <Ionicons name="close" size={22} color={C.muted} />
+                </TouchableOpacity>
+              </View>
+              <Text style={s.modalHint}>
+                {fr
+                  ? "Proposez de déposer le véhicule à l'aéroport pour le client. Tarif unique en MAD."
+                  : "Offer to bring the car to the airport for your renter. One-time fee in MAD."}
+              </Text>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                <Text style={{ color: C.white, fontWeight: "700", fontSize: 15 }}>{fr ? "Activer" : "Enabled"}</Text>
+                <Switch
+                  value={airportOffered}
+                  onValueChange={setAirportOffered}
+                  trackColor={{ false: C.border, true: "rgba(56,189,248,0.35)" }}
+                  thumbColor={airportOffered ? "#38bdf8" : C.muted}
+                />
+              </View>
+              {airportOffered ? (
+                <>
+                  <Text style={s.formLabel}>{fr ? "Tarif (MAD)" : "Fee (MAD)"}</Text>
+                  <TextInput
+                    value={airportFee}
+                    onChangeText={setAirportFee}
+                    placeholder="250"
+                    placeholderTextColor={C.muted}
+                    keyboardType="decimal-pad"
+                    style={s.input}
+                  />
+                </>
+              ) : null}
+              <TouchableOpacity
+                onPress={saveAirport}
+                disabled={savingAirport}
+                style={[s.saveBtn, savingAirport && { opacity: 0.7 }]}
+              >
+                {savingAirport ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={s.saveBtnText}>{fr ? "Enregistrer" : "Save"}</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -482,6 +595,18 @@ function createMyFleetStyles(C) {
       borderColor: "rgba(251,191,36,0.28)",
     },
     promoBadgeText: { color: "#fbbf24", fontSize: 10, fontWeight: "800", letterSpacing: 0.3 },
+    airBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 999,
+      backgroundColor: "rgba(56,189,248,0.12)",
+      borderWidth: 1,
+      borderColor: "rgba(56,189,248,0.28)",
+    },
+    airBadgeText: { color: "#38bdf8", fontSize: 10, fontWeight: "800", letterSpacing: 0.3 },
     cityRow: { flexDirection: "row", alignItems: "center" },
     cityText: { color: C.muted, fontSize: 12, marginLeft: 4 },
     actionsRow: { flexDirection: "row", gap: 6, flexWrap: "wrap" },
@@ -497,6 +622,7 @@ function createMyFleetStyles(C) {
       gap: 4,
     },
     actionPromo: { backgroundColor: "rgba(251,191,36,0.1)", borderColor: "rgba(251,191,36,0.35)" },
+    actionAirport: { backgroundColor: "rgba(56,189,248,0.1)", borderColor: "rgba(56,189,248,0.35)" },
     actionBtnText: { fontSize: 12, fontWeight: "600" },
     modalOverlay: {
       flex: 1,

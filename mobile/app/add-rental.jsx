@@ -5,6 +5,7 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
+  Switch,
   Alert,
   ActivityIndicator,
   Image,
@@ -77,6 +78,8 @@ export default function AddRentalScreen() {
     gearbox: "",
     city: "",
     description: "",
+    airportDeliveryOffered: false,
+    airportDeliveryFeeMad: "",
   });
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -134,6 +137,14 @@ export default function AddRentalScreen() {
     if (!Number.isFinite(ppd) || ppd <= 0) {
       return Alert.alert(fr ? "Prix" : "Price", fr ? "Prix / jour invalide" : "Invalid price per day");
     }
+    const adOffered = !!form.airportDeliveryOffered;
+    const adFee = Math.max(0, parseFloat(String(form.airportDeliveryFeeMad).replace(",", ".")) || 0);
+    if (adOffered && adFee <= 0) {
+      return Alert.alert(
+        fr ? "Aéroport" : "Airport",
+        fr ? "Indiquez un tarif supérieur à 0 MAD pour la livraison à l'aéroport." : "Enter an airport service fee greater than 0 MAD.",
+      );
+    }
     setLoading(true);
     try {
       let imageUrls = [];
@@ -156,6 +167,8 @@ export default function AddRentalScreen() {
         fuel: form.fuel?.trim() || undefined,
         gearbox: form.gearbox?.trim() || undefined,
         images: imageUrls,
+        airportDeliveryOffered: adOffered,
+        airportDeliveryFeeMad: adOffered ? adFee : 0,
       };
       await createRental(payload);
       Alert.alert(fr ? "Succès" : "Success", fr ? "Location soumise pour approbation." : "Rental submitted for approval.", [
@@ -315,6 +328,44 @@ export default function AddRentalScreen() {
             </View>
           </View>
         ))}
+
+        <View style={[s.groupCard, { backgroundColor: photoCardBg }]}>
+          <View style={[s.cardAccent, { backgroundColor: "#38bdf8" }]} />
+          <View style={s.cardInner}>
+            <View style={s.sectionHead}>
+              <View style={[s.sectionIconWrap, { backgroundColor: "#38bdf828" }]}>
+                <Ionicons name="airplane-outline" size={20} color="#38bdf8" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={s.sectionTitle}>{fr ? "Livraison aéroport" : "Airport delivery"}</Text>
+                <Text style={s.sectionHint}>
+                  {fr
+                    ? "Vous amenez le véhicule à l'aéroport pour le client (frais unique en MAD)."
+                    : "You bring the car to the airport for the client (one-time fee in MAD)."}
+                </Text>
+              </View>
+              <Switch
+                value={!!form.airportDeliveryOffered}
+                onValueChange={(v) => set("airportDeliveryOffered", v)}
+                trackColor={{ false: C.border, true: "rgba(56,189,248,0.35)" }}
+                thumbColor={form.airportDeliveryOffered ? "#38bdf8" : C.muted}
+              />
+            </View>
+            {form.airportDeliveryOffered ? (
+              <View style={s.fieldWrap}>
+                <Text style={s.fieldLabel}>{fr ? "Tarif service aéroport (MAD)" : "Airport service fee (MAD)"}</Text>
+                <TextInput
+                  value={form.airportDeliveryFeeMad}
+                  onChangeText={(v) => set("airportDeliveryFeeMad", v)}
+                  placeholder="250"
+                  placeholderTextColor={C.muted}
+                  keyboardType="decimal-pad"
+                  style={s.input}
+                />
+              </View>
+            ) : null}
+          </View>
+        </View>
 
         <TouchableOpacity onPress={handleSubmit} disabled={loading} activeOpacity={0.9} style={s.submitOuter}>
           <LinearGradient

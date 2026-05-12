@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo } from "react";
 import { View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, Dimensions, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { getRentalById, bookRental } from "../../src/api/rental";
+import { getRentalById, bookRental, getRentalBookings } from "../../src/api/rental";
+import RentalBookingCalendar from "../../src/components/RentalBookingCalendar";
 import { startConversation } from "../../src/api/message";
 import { addRentalFavorite, removeRentalFavorite, getRentalFavorites } from "../../src/api/user";
 import ReviewSection from "../../src/components/ReviewSection";
@@ -19,6 +20,38 @@ function utcMillisFromDateOnly(str) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(str);
   if (!m) return NaN;
   return Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+}
+
+function ymdFromUtcMs(ms) {
+  const d = new Date(ms);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+}
+
+/** Confirmed bookings + owner availability → set of blocked YYYY-MM-DD (UTC day). */
+function buildBlockedDaySet(rental, confirmedBookings) {
+  const set = new Set();
+  const addRange = (isoStart, isoEnd) => {
+    const a = new Date(isoStart);
+    const b = new Date(isoEnd);
+    if (Number.isNaN(+a) || Number.isNaN(+b)) return;
+    let t = Date.UTC(a.getUTCFullYear(), a.getUTCMonth(), a.getUTCDate());
+    const end = Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), b.getUTCDate());
+    if (end < t) return;
+    for (; t <= end; t += 86400000) set.add(ymdFromUtcMs(t));
+  };
+  (confirmedBookings || []).forEach((b) => addRange(b.startDate, b.endDate));
+  (rental?.availability || []).forEach((r) => addRange(r.startDate, r.endDate));
+  return set;
+}
+
+function rangeIncludesBlockedDay(startStr, endStr, blockedSet) {
+  const a = utcMillisFromDateOnly(startStr);
+  const b = utcMillisFromDateOnly(endStr);
+  if (!Number.isFinite(a) || !Number.isFinite(b) || b < a) return false;
+  for (let t = a; t <= b; t += 86400000) {
+    if (blockedSet.has(ymdFromUtcMs(t))) return true;
+  }
+  return false;
 }
 
 /** Inclusive calendar days (start and end both count). */
@@ -78,23 +111,6 @@ function offerLineSummary(o, fr) {
   return o.description?.trim() || (fr ? "Offre personnalisée (voir détails)" : "Custom offer — see details");
 }
 
-function createRentalPickerStyles(C) {
-  return StyleSheet.create({
-    label: { color: C.muted, fontSize: 12, marginBottom: 4 },
-    trigger: { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 12, flexDirection: "row", alignItems: "center" },
-    triggerText: { marginLeft: 8, fontSize: 13 },
-    picker: { backgroundColor: C.card, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginTop: 8, padding: 12 },
-    pickerRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 12 },
-    col: { alignItems: "center" },
-    colLabel: { color: C.muted, fontSize: 11, marginBottom: 4 },
-    colCtrl: { flexDirection: "row", alignItems: "center" },
-    ctrlBtn: { padding: 4 },
-    colVal: { color: C.white, fontWeight: "700", minWidth: 40, textAlign: "center" },
-    confirmBtn: { backgroundColor: C.primary, borderRadius: 12, paddingVertical: 8, alignItems: "center" },
-    confirmText: { color: "#fff", fontWeight: "700", fontSize: 13 },
-  });
-}
-
 function createRentalDetailScreenStyles(C) {
   return StyleSheet.create({
     center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: C.bg },
@@ -119,7 +135,6 @@ function createRentalDetailScreenStyles(C) {
     specLabel: { color: C.muted, fontSize: 11, marginLeft: 4 },
     specValue: { color: C.white, fontWeight: "500", fontSize: 13 },
     descText: { color: C.slate, fontSize: 13, lineHeight: 20 },
-    datesRow: { flexDirection: "row", gap: 12, marginBottom: 16 },
     summaryBox: { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 12, marginBottom: 16 },
     summaryRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 4 },
     summaryLabel: { color: C.muted, fontSize: 13 },
@@ -155,64 +170,9 @@ function useRentalDetailSheets() {
   return useMemo(
     () => ({
       C,
-      ds: createRentalPickerStyles(C),
       s: createRentalDetailScreenStyles(C),
     }),
     [C],
-  );
-}
-
-function DatePicker({ label, value, onChange }) {
-  const { C, ds } = useRentalDetailSheets();
-  const today = new Date();
-  const [show, setShow] = useState(false);
-  const [day, setDay] = useState(today.getDate());
-  const [month, setMonth] = useState(today.getMonth() + 1);
-  const [year, setYear] = useState(today.getFullYear());
-
-  const confirm = () => {
-    const d = new Date(year, month - 1, day);
-    onChange(d.toISOString().split("T")[0]);
-    setShow(false);
-  };
-
-  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-
-  return (
-    <View style={{ flex:1 }}>
-      <Text style={ds.label}>{label}</Text>
-      <TouchableOpacity onPress={() => setShow(!show)} style={ds.trigger}>
-        <Ionicons name="calendar-outline" size={16} color={C.muted} />
-        <Text style={[ds.triggerText, value ? { color: C.white } : { color: C.muted }]}>{value || "Select"}</Text>
-      </TouchableOpacity>
-      {show && (
-        <View style={ds.picker}>
-          <View style={ds.pickerRow}>
-            {[
-              { label:"Day", val:day, min:1, max:31, set:setDay },
-              { label:"Month", val:months[month-1], rawVal:month, min:1, max:12, set:setMonth },
-              { label:"Year", val:year, set:setYear },
-            ].map((col, idx) => (
-              <View key={idx} style={ds.col}>
-                <Text style={ds.colLabel}>{col.label}</Text>
-                <View style={ds.colCtrl}>
-                  <TouchableOpacity onPress={() => col.set(v => col.min !== undefined ? Math.max(col.min, v - 1) : v - 1)} style={ds.ctrlBtn}>
-                    <Ionicons name="remove" size={16} color={C.primary} />
-                  </TouchableOpacity>
-                  <Text style={ds.colVal}>{col.val}</Text>
-                  <TouchableOpacity onPress={() => col.set(v => col.max !== undefined ? Math.min(col.max, v + 1) : v + 1)} style={ds.ctrlBtn}>
-                    <Ionicons name="add" size={16} color={C.primary} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))}
-          </View>
-          <TouchableOpacity onPress={confirm} style={ds.confirmBtn}>
-            <Text style={ds.confirmText}>Confirm</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
   );
 }
 
@@ -230,18 +190,42 @@ export default function RentalDetailsScreen() {
   const [isFav, setIsFav] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [confirmedBookings, setConfirmedBookings] = useState([]);
   const [booking, setBooking] = useState(false);
   const [contacting, setContacting] = useState(false);
 
+  const blockedDaySet = useMemo(
+    () => buildBlockedDaySet(rental, confirmedBookings),
+    [rental, confirmedBookings],
+  );
+
   useEffect(() => {
-    getRentalById(id)
-      .then(({ data }) => setRental(data))
-      .catch(() => Alert.alert("Error", "Failed to load rental"))
-      .finally(() => setLoading(false));
-    if (auth) {
-      getRentalFavorites().then(({ data }) => setIsFav(data.some(f => (f._id||f) === id))).catch(() => {});
-    }
+    let cancelled = false;
+    setLoading(true);
+    Promise.all([getRentalById(id), getRentalBookings(id).catch(() => ({ data: [] }))])
+      .then(([rentRes, bookRes]) => {
+        if (cancelled) return;
+        setRental(rentRes.data);
+        setConfirmedBookings(Array.isArray(bookRes.data) ? bookRes.data : []);
+      })
+      .catch(() => {
+        if (!cancelled) Alert.alert("Error", "Failed to load rental");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
   }, [id]);
+
+  useEffect(() => {
+    if (!auth) {
+      setIsFav(false);
+      return;
+    }
+    getRentalFavorites()
+      .then(({ data }) => setIsFav(data.some((f) => (f._id || f) === id)))
+      .catch(() => {});
+  }, [auth, id]);
 
   const toggleFav = async () => {
     if (!auth) return Alert.alert(t.needAuth);
@@ -259,6 +243,9 @@ export default function RentalDetailsScreen() {
     if (!auth) return Alert.alert(t.needAuth);
     if (!startDate || !endDate) return Alert.alert(t.selectDatesError);
     if (days <= 0) return Alert.alert("End date must be on or after start date");
+    if (rangeIncludesBlockedDay(startDate, endDate, blockedDaySet)) {
+      return Alert.alert(t.errorTitle || "Error", t.unavailableRange);
+    }
     setBooking(true);
     try {
       await bookRental(id, { startDate, endDate });
@@ -338,6 +325,29 @@ export default function RentalDetailsScreen() {
           {rental.year && <><Text style={s.metaDot}>·</Text><Text style={s.metaText}>{rental.year}</Text></>}
         </View>
 
+        {rental.airportDeliveryOffered && Number(rental.airportDeliveryFeeMad) > 0 && (
+          <View style={[s.card, { flexDirection: "row", alignItems: "center", gap: 12 }]}>
+            <View
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                backgroundColor: "rgba(56,189,248,0.15)",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Ionicons name="airplane-outline" size={22} color="#38bdf8" />
+            </View>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={s.cardTitle}>{t.airportTitle}</Text>
+              <Text style={s.descText}>
+                {t.airportBody(Number(rental.airportDeliveryFeeMad).toLocaleString(lang === "fr" ? "fr-FR" : "en-US"))}
+              </Text>
+            </View>
+          </View>
+        )}
+
         {/* Specs */}
         <View style={s.card}>
           <Text style={s.cardTitle}>{t.specifications}</Text>
@@ -392,10 +402,28 @@ export default function RentalDetailsScreen() {
         {/* Booking card */}
         <View style={s.card}>
           <Text style={s.cardTitle}>{t.selectDates}</Text>
-          <View style={s.datesRow}>
-            <DatePicker label={t.start} value={startDate} onChange={setStartDate} />
-            <DatePicker label={t.end} value={endDate} onChange={setEndDate} />
-          </View>
+          <RentalBookingCalendar
+            blockedDays={blockedDaySet}
+            startDate={startDate}
+            endDate={endDate}
+            fr={lang === "fr"}
+            onRangeChange={({ startDate: s, endDate: e }) => {
+              setStartDate(s);
+              setEndDate(e);
+            }}
+          />
+          {(startDate || endDate) ? (
+            <View style={{ marginTop: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <Text style={{ color: C.muted, fontSize: 12 }}>
+                {startDate ? `${t.start}: ${startDate}` : ""}
+                {startDate && endDate ? "  ·  " : ""}
+                {endDate ? `${t.end}: ${endDate}` : ""}
+              </Text>
+              <TouchableOpacity onPress={() => { setStartDate(""); setEndDate(""); }}>
+                <Text style={{ color: C.primary, fontSize: 12, fontWeight: "700" }}>{t.clearDates}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
 
           {days > 0 && (
             <View style={s.summaryBox}>
@@ -470,6 +498,10 @@ const en = {
   documentsLater:"Not now",
   documentsProfile:"My profile",
   errorTitle:"Error",
+  unavailableRange:"This car is not available on the selected dates (already booked or blocked). Please choose different dates.",
+  clearDates:"Clear",
+  airportTitle:"Airport delivery",
+  airportBody:(fee) => `The owner can bring the car to the airport. One-time add-on: ${fee} MAD — confirm with the owner when you book.`,
 };
 const fr = {
   notFound:"Location introuvable.", specifications:"Caractéristiques",
@@ -485,6 +517,10 @@ const fr = {
   documentsLater:"Plus tard",
   documentsProfile:"Mon profil",
   errorTitle:"Erreur",
+  unavailableRange:"Ce véhicule n'est pas disponible sur ces dates (déjà réservé ou bloqué). Choisissez d'autres dates.",
+  clearDates:"Effacer",
+  airportTitle:"Livraison aéroport",
+  airportBody:(fee) => `Le propriétaire peut amener le véhicule à l'aéroport. Supplément unique : ${fee} MAD — à confirmer avec lui lors de la réservation.`,
 };
 
 

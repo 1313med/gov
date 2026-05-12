@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { Platform } from "react-native";
 import { io } from "socket.io-client";
 import * as Notifications from "expo-notifications";
 import { SERVER_URL } from "../config";
@@ -56,12 +57,23 @@ export function SocketProvider({ children }) {
       setLiveNotification(n);
       setTimeout(() => setLiveNotification(null), 4000);
       const body = n?.message || "You have a new notification";
+      const t = n?.type;
+      const title =
+        t === "approved"
+          ? "Booking confirmed"
+          : t === "rejected"
+            ? "Booking declined"
+            : t === "pending"
+              ? "Goovoiture"
+              : "Goovoiture";
+      const bookingChannel = ["approved", "rejected", "pending"].includes(t);
       Notifications.scheduleNotificationAsync({
         content: {
-          title: "Goovoiture",
+          title,
           body,
           sound: "default",
-          data: { type: n?.type || "notification" },
+          data: { type: t || "notification" },
+          ...(Platform.OS === "android" && bookingChannel ? { android: { channelId: "bookings" } } : {}),
         },
         trigger: null,
       }).catch(() => {});

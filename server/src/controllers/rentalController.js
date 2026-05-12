@@ -18,10 +18,20 @@ exports.createRental = async (req, res, next) => {
       title, description, pricePerDay, city, brand, model, year, mileage,
       fuel, gearbox, color, doors, seats, features, fuelPolicy, cancelPolicy,
       minRentalDays, images, availability,
+      airportDeliveryOffered,
+      airportDeliveryFeeMad,
     } = req.body;
 
     if (!title || !pricePerDay || !city || !brand || !model || !year) {
       return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const adOffered = !!airportDeliveryOffered;
+    const adFee = Math.max(0, Number(airportDeliveryFeeMad) || 0);
+    if (adOffered && adFee <= 0) {
+      return res.status(400).json({
+        message: "Airport delivery fee (MAD) must be greater than 0 when airport service is enabled",
+      });
     }
 
     const rental = await RentalListing.create({
@@ -33,6 +43,8 @@ exports.createRental = async (req, res, next) => {
       minRentalDays: minRentalDays || 1,
       images: images || [],
       availability: availability || [],
+      airportDeliveryOffered: adOffered,
+      airportDeliveryFeeMad: adOffered ? adFee : 0,
       status: "pending",
     });
 
@@ -72,11 +84,21 @@ exports.updateRental = async (req, res, next) => {
       "conditionPhotos",
       "documents",
       "offers",
+      "airportDeliveryOffered",
+      "airportDeliveryFeeMad",
     ];
     for (const field of ALLOWED_UPDATE_FIELDS) {
       if (Object.prototype.hasOwnProperty.call(req.body, field)) {
         rental[field] = req.body[field];
       }
+    }
+    if (rental.airportDeliveryOffered && (!Number(rental.airportDeliveryFeeMad) || rental.airportDeliveryFeeMad <= 0)) {
+      return res.status(400).json({
+        message: "Airport delivery fee (MAD) must be greater than 0 when airport service is enabled",
+      });
+    }
+    if (!rental.airportDeliveryOffered) {
+      rental.airportDeliveryFeeMad = 0;
     }
     await rental.save();
     res.json(rental);

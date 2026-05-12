@@ -21,6 +21,7 @@ import {
   updateBookingStatus,
   markBookingPaid,
   updateBookingMedia,
+  setOwnerBookingArchive,
 } from "../src/api/booking";
 import { uploadListingImages } from "../src/api/upload";
 import { submitCustomerFeedback, getFeedbackForBooking, getFeedbackForCustomer } from "../src/api/customerFeedback";
@@ -32,6 +33,17 @@ import { openExternalUrl } from "../src/utils/openExternalUrl";
 import { shareBookingPdf } from "../src/utils/bookingPdf";
 
 const PAGE_SIZE = 15;
+
+function buildOwnerBookingParams(page, limit, filter, listScope) {
+  const params = { page, limit };
+  if (listScope === "archived") {
+    params.archive = "only";
+  } else {
+    params.archive = "exclude";
+    if (filter && filter !== "all") params.status = filter;
+  }
+  return params;
+}
 
 const DEFAULT_STATS = { total: 0, pending: 0, confirmed: 0, completed: 0, rejected: 0, cancelled: 0, revenue: 0 };
 
@@ -243,6 +255,19 @@ function createOwnerBookingsStyles(C, isDark) {
       filterChipActive: { backgroundColor: C.primary, borderColor: C.primary },
       filterChipText: { color: C.muted, fontSize: 12, fontWeight: "700" },
       filterChipTextActive: { color: "#fff" },
+      scopeRow: { flexDirection: "row", gap: 8, marginTop: 12, marginHorizontal: -16, paddingHorizontal: 16 },
+      scopeChip: {
+        flex: 1,
+        paddingVertical: 12,
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: C.border,
+        backgroundColor: C.card,
+        alignItems: "center",
+      },
+      scopeChipOn: { borderColor: C.primary, backgroundColor: "rgba(124,107,255,0.14)" },
+      scopeChipText: { color: C.muted, fontSize: 13, fontWeight: "800" },
+      scopeChipTextOn: { color: C.white },
       empty: { alignItems: "center", paddingVertical: 72, paddingHorizontal: 24 },
       emptyTitle: { color: C.white, fontWeight: "800", fontSize: 18, marginTop: 16, textAlign: "center" },
       emptySub: { color: C.muted, fontSize: 13, marginTop: 8, textAlign: "center", lineHeight: 20 },
@@ -837,6 +862,7 @@ export default function OwnerBookingsScreen() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [filter, setFilter] = useState("all");
+  const [listScope, setListScope] = useState("active");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [expanded, setExpanded] = useState(null);
@@ -855,7 +881,7 @@ export default function OwnerBookingsScreen() {
   useEffect(() => {
     let alive = true;
     setLoading(true);
-    getOwnerBookings({ page: 1, limit: PAGE_SIZE, status: filter })
+    getOwnerBookings(buildOwnerBookingParams(1, PAGE_SIZE, filter, listScope))
       .then(({ data }) => {
         if (!alive) return;
         applyBookingsPayload(data, 1);
@@ -869,11 +895,11 @@ export default function OwnerBookingsScreen() {
         if (alive) setLoading(false);
       });
     return () => { alive = false; };
-  }, [filter, fr]);
+  }, [filter, fr, listScope]);
 
   const loadPage = (p) => {
     setLoading(true);
-    getOwnerBookings({ page: p, limit: PAGE_SIZE, status: filter })
+    getOwnerBookings(buildOwnerBookingParams(p, PAGE_SIZE, filter, listScope))
       .then(({ data }) => applyBookingsPayload(data, p))
       .catch(() => Alert.alert("Error", fr ? "Échec chargement" : "Failed to load"))
       .finally(() => setLoading(false));
@@ -881,10 +907,34 @@ export default function OwnerBookingsScreen() {
 
   const onRefresh = () => {
     setRefreshing(true);
-    getOwnerBookings({ page, limit: PAGE_SIZE, status: filter })
+    getOwnerBookings(buildOwnerBookingParams(page, PAGE_SIZE, filter, listScope))
       .then(({ data }) => applyBookingsPayload(data, page))
       .catch(() => {})
       .finally(() => setRefreshing(false));
+  };
+
+  const archivePress = (item, isRestore) => {
+    Alert.alert(
+      isRestore ? (fr ? "Restaurer ?" : "Restore?") : (fr ? "Archiver ?" : "Archive?"),
+      isRestore
+        ? (fr ? "La réservation réapparaîtra dans l'onglet actif." : "This booking will show again under active bookings.")
+        : (fr ? "Masque cette réservation terminée de la liste principale." : "Hides this finished booking from your main list."),
+      [
+        { text: fr ? "Annuler" : "Cancel" },
+        {
+          text: "OK",
+          onPress: async () => {
+            try {
+              const { data } = await setOwnerBookingArchive(item._id, { archived: !isRestore });
+              mergeBooking(data);
+              loadPage(page);
+            } catch (e) {
+              Alert.alert("Error", e?.response?.data?.message || (fr ? "Échec" : "Failed"));
+            }
+          },
+        },
+      ],
+    );
   };
 
   const changeStatus = (id, status) => {
@@ -973,28 +1023,64 @@ export default function OwnerBookingsScreen() {
             ))}
           </ScrollView>
         </View>
-        <View style={s.filterBar}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.filterScroll} nestedScrollEnabled>
-            {FILTERS.map((item) => (
-              <TouchableOpacity
-                key={item}
-                onPress={() => {
-                  setFilter(item);
-                  setExpanded(null);
-                }}
-                activeOpacity={0.85}
-                style={[s.filterChip, filter === item && s.filterChipActive]}
-              >
-                <Text style={[s.filterChipText, filter === item && s.filterChipTextActive]}>
-                  {filterChipLabel(item, fr)} · {filterCount(item)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+        <View style={s.scopeRow}>
+          <TouchableOpacity
+            onPress={() => {
+              setListScope("active");
+              setPage(1);
+              setExpanded(null);
+            }}
+            activeOpacity={0.85}
+            style={[s.scopeChip, listScope === "active" && s.scopeChipOn]}
+          >
+            <Text style={[s.scopeChipText, listScope === "active" && s.scopeChipTextOn]}>
+              {fr ? "Actives" : "Active"}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              setListScope("archived");
+              setPage(1);
+              setExpanded(null);
+            }}
+            activeOpacity={0.85}
+            style={[s.scopeChip, listScope === "archived" && s.scopeChipOn]}
+          >
+            <Text style={[s.scopeChipText, listScope === "archived" && s.scopeChipTextOn]}>
+              {fr ? "Archives" : "Archive"}
+            </Text>
+          </TouchableOpacity>
         </View>
+        {listScope === "active" ? (
+          <View style={s.filterBar}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.filterScroll} nestedScrollEnabled>
+              {FILTERS.map((item) => (
+                <TouchableOpacity
+                  key={item}
+                  onPress={() => {
+                    setFilter(item);
+                    setExpanded(null);
+                  }}
+                  activeOpacity={0.85}
+                  style={[s.filterChip, filter === item && s.filterChipActive]}
+                >
+                  <Text style={[s.filterChipText, filter === item && s.filterChipTextActive]}>
+                    {filterChipLabel(item, fr)} · {filterCount(item)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        ) : (
+          <Text style={[s.listHeadSub, { marginTop: 10, marginBottom: 4 }]}>
+            {fr
+              ? "Réservations terminées que vous avez archivées."
+              : "Completed bookings you moved out of your main list."}
+          </Text>
+        )}
       </View>
     ),
-    [s, insets.top, fr, stats, filter]
+    [s, insets.top, fr, stats, filter, listScope]
   );
 
   if (loading && bookings.length === 0) {
@@ -1032,7 +1118,13 @@ export default function OwnerBookingsScreen() {
             </View>
             <Text style={s.emptyTitle}>{fr ? "Aucune réservation" : "No bookings here"}</Text>
             <Text style={s.emptySub}>
-              {fr ? "Changez de filtre ou attendez de nouvelles demandes." : "Try another filter or check back for new requests."}
+              {listScope === "archived"
+                ? fr
+                  ? "Aucune réservation archivée pour le moment."
+                  : "No archived bookings yet. Archive a completed rental from the Active tab."
+                : fr
+                  ? "Changez de filtre ou attendez de nouvelles demandes."
+                  : "Try another filter or check back for new requests."}
             </Text>
           </View>
         }
@@ -1161,11 +1253,19 @@ export default function OwnerBookingsScreen() {
                   </>
                 )}
                 {item.status === "completed" && (
-                  rated[item._id] ? (
-                    <Text style={s.rated}>{fr ? "Avis envoyé" : "Review submitted"}</Text>
-                  ) : (
-                    <ActionBtn label={fr ? "Noter le client" : "Rate customer"} variant="violet" onPress={() => setFeedbackBooking(item)} />
-                  )
+                  <>
+                    {listScope === "active" &&
+                      (rated[item._id] ? (
+                        <Text style={s.rated}>{fr ? "Avis envoyé" : "Review submitted"}</Text>
+                      ) : (
+                        <ActionBtn label={fr ? "Noter le client" : "Rate customer"} variant="violet" onPress={() => setFeedbackBooking(item)} />
+                      ))}
+                    <ActionBtn
+                      label={listScope === "archived" ? (fr ? "Désarchiver" : "Restore") : fr ? "Archiver" : "Archive"}
+                      variant="blue"
+                      onPress={() => archivePress(item, listScope === "archived")}
+                    />
+                  </>
                 )}
               </View>
 

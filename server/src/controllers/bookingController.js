@@ -121,14 +121,39 @@ exports.getBookingsForOwner = async (req, res, next) => {
       : { total: 0, pending: 0, confirmed: 0, completed: 0, rejected: 0, cancelled: 0, revenue: 0 };
 
     // 3. Build paginated query filter
+    // archive=exclude (default): hide owner-archived completed rows from the active list
+    // archive=only: archived completed only
+    // archive=include: legacy — all rows (no archive filter)
+    const archiveMode = String(req.query.archive || "exclude").toLowerCase();
     const filter = { rentalId: { $in: rentalIds }, deletedAt: null };
-    if (status) filter.status = status;
+
+    if (archiveMode === "only") {
+      filter.status = "completed";
+      filter.ownerArchivedAt = { $ne: null };
+    } else if (archiveMode === "include") {
+      if (status) filter.status = status;
+    } else {
+      if (status === "completed") {
+        filter.status = "completed";
+        filter.ownerArchivedAt = null;
+      } else if (status) {
+        filter.status = status;
+      } else {
+        filter.$or = [
+          { status: { $ne: "completed" } },
+          { ownerArchivedAt: null },
+        ];
+      }
+    }
 
     const total = await Booking.countDocuments(filter);
     const pages = Math.ceil(total / limit) || 0;
 
     const bookings = await Booking.find(filter)
-      .populate("rentalId", "title pricePerDay city images")
+      .populate(
+        "rentalId",
+        "title pricePerDay city images airportDeliveryOffered airportDeliveryFeeMad"
+      )
       .populate(
         "customerId",
         "name phone email city avatar driverLicense nationalId"
@@ -277,6 +302,26 @@ exports.cancelBooking = async (req, res, next) => {
 
     res.json({ booking, penaltyMessage });
   } catch (error) { next(error); }
+};
+
+// ── RENTAL OWNER – Archive / restore completed booking in list ───────────────
+exports.setOwnerBookingArchive = async (req, res, next) => {
+  try {
+    const wantArchive = !!req.body?.archived;
+    const booking = await Booking.findOne({ _id: req.params.id, deletedAt: null }).populate("rentalId");
+    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    if (booking.rentalId.rentalOwnerId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    if (booking.status !== "completed") {
+      return res.status(400).json({ message: "Only completed bookings can be archived" });
+    }
+    booking.ownerArchivedAt = wantArchive ? new Date() : null;
+    await booking.save();
+    res.json(booking);
+  } catch (error) {
+    next(error);
+  }
 };
 
 // ── RENTAL OWNER – Update condition photos & documents ───────────────────────

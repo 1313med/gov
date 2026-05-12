@@ -45,6 +45,9 @@ const bookingSchema = new mongoose.Schema(
     customerConfirmedReturn:  { type: Boolean, default: false },
     returnNotificationSent:   { type: Boolean, default: false },
 
+    /** Owner hid this row from the default list after rental ended (mobile / owner UX). */
+    ownerArchivedAt: { type: Date, default: null },
+
     // Soft delete
     deletedAt: { type: Date, default: null },
   },

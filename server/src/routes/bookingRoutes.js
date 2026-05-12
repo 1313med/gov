@@ -10,6 +10,7 @@ const {
   markBookingPaid,
   updateBookingMedia,
   confirmReturn,
+  setOwnerBookingArchive,
 } = require("../controllers/bookingController");
 
 // Customer
@@ -19,6 +20,7 @@ router.put("/:id/confirm-return", protect, role("customer"), confirmReturn);
 
 // Rental owner
 router.get("/owner", protect, role("rental_owner"), getBookingsForOwner);
+router.put("/:id/owner-archive", protect, role("rental_owner"), setOwnerBookingArchive);
 router.put("/:id/status", protect, role("rental_owner"), updateBookingStatus);
 router.put("/:id/dates", protect, role("rental_owner"), updateBookingDates);
 router.put("/:id/paid",  protect, role("rental_owner"), markBookingPaid);
