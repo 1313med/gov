@@ -168,6 +168,7 @@ const rentalsEn = {
   fuelType: "Fuel type",
   gearbox: "Gearbox",
   any: "Any",
+  airportFilter: "Airport delivery only",
   saveListing: "Save listing",
   savedListing: "Saved",
 };
@@ -226,6 +227,7 @@ const rentalsFr = {
   fuelType: "Carburant",
   gearbox: "Boîte",
   any: "Tous",
+  airportFilter: "Livraison aéroport uniquement",
   saveListing: "Enregistrer",
   savedListing: "Enregistré",
 };

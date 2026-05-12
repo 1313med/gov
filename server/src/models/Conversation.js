@@ -14,6 +14,12 @@ const conversationSchema = new mongoose.Schema(
     lastMessageAt: { type: Date },
     // Unread count per user: { userId: count }
     unreadCount: { type: Map, of: Number, default: {} },
+
+    /** Users who hid this thread from their main inbox (per-user archive). */
+    archivedBy: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+      default: [],
+    },
   },
   { timestamps: true }
 );

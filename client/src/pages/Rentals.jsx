@@ -688,6 +688,7 @@ export default function Rentals() {
   const [filters, setFilters] = useState({
     brand: "", minPrice: "", maxPrice: "",
     startDate: "", endDate: "", fuel: "", gearbox: "",
+    airportOnly: false,
   });
 
   const titleParts = useMemo(() => {
@@ -748,6 +749,7 @@ export default function Rentals() {
           if (filters.brand && !(r.brand || "").toLowerCase().includes(filters.brand.toLowerCase())) return false;
           if (filters.fuel && (r.fuel || "").toLowerCase() !== filters.fuel.toLowerCase()) return false;
           if (filters.gearbox && (r.gearbox || "").toLowerCase() !== filters.gearbox.toLowerCase()) return false;
+          if (filters.airportOnly && !(r.airportDeliveryOffered && Number(r.airportDeliveryFeeMad) > 0)) return false;
           return true;
         }),
         sortKey
@@ -771,15 +773,16 @@ export default function Rentals() {
     { key: "maxPrice", label: `${copy.rentals.maxPh}: ${filters.maxPrice}`, cond: !!filters.maxPrice },
     { key: "fuel", label: `${copy.rentals.fuelType}: ${filters.fuel}`, cond: !!filters.fuel },
     { key: "gearbox", label: `${copy.rentals.gearbox}: ${filters.gearbox}`, cond: !!filters.gearbox },
+    { key: "airportOnly", label: copy.rentals.airportFilter, cond: !!filters.airportOnly },
     { key: "startDate", label: `${copy.rentals.start}: ${filters.startDate}`, cond: !!filters.startDate },
     { key: "endDate", label: `${copy.rentals.end}: ${filters.endDate}`, cond: !!filters.endDate },
   ].filter((c) => c.cond);
 
   const advCount = CHIP_DEFS.length;
 
-  const removeChip = (key) => setFilters(f => ({ ...f, [key]: "" }));
+  const removeChip = (key) => setFilters((f) => ({ ...f, [key]: key === "airportOnly" ? false : "" }));
   const clearAll   = () => {
-    setFilters({ brand: "", minPrice: "", maxPrice: "", startDate: "", endDate: "", fuel: "", gearbox: "" });
+    setFilters({ brand: "", minPrice: "", maxPrice: "", startDate: "", endDate: "", fuel: "", gearbox: "", airportOnly: false });
     setCitySearch(""); setLocationKey(ALL_LOC); setActiveTab("all");
   };
 
@@ -931,6 +934,16 @@ export default function Rentals() {
                   <option key={o} value={o}>{o}</option>
                 ))}
               </select>
+            </div>
+            <div className="rp-adv-field" style={{ gridColumn: "1 / -1" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", userSelect: "none" }}>
+                <input
+                  type="checkbox"
+                  checked={!!filters.airportOnly}
+                  onChange={(e) => setFilters((f) => ({ ...f, airportOnly: e.target.checked }))}
+                />
+                <span className="rp-adv-label" style={{ margin: 0 }}>{copy.rentals.airportFilter}</span>
+              </label>
             </div>
             <div className="rp-adv-field">
               <span className="rp-adv-label">{copy.rentals.start}</span>

@@ -145,6 +145,12 @@ exports.getRentals = async (req, res, next) => {
     if (fuel)    { const rx = safeRegex(fuel);    if (rx) query.fuel    = rx; }
     if (gearbox) { const rx = safeRegex(gearbox); if (rx) query.gearbox = rx; }
 
+    const airportFlag = String(req.query.airport || "").toLowerCase();
+    if (["1", "true", "yes"].includes(airportFlag)) {
+      query.airportDeliveryOffered = true;
+      query.airportDeliveryFeeMad = { $gt: 0 };
+    }
+
     if (minPrice !== undefined || maxPrice !== undefined) {
       query.pricePerDay = {};
       if (minPrice !== undefined) query.pricePerDay.$gte = minPrice;

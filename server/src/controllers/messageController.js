@@ -6,14 +6,56 @@ const { emitMessage } = require("../utils/socketManager");
 const emailService = require("../utils/emailService");
 
 // GET /api/messages/conversations  – list all conversations for current user
+// Query: archive=1 → only threads this user archived; default → active (not archived for this user)
 exports.getConversations = asyncHandler(async (req, res) => {
-  const conversations = await Conversation.find({
-    participants: req.user._id,
-  })
+  const uid = req.user._id;
+  const wantArchived = ["1", "true", "yes"].includes(String(req.query.archive || "").toLowerCase());
+
+  let filter;
+  if (wantArchived) {
+    filter = { participants: uid, archivedBy: uid };
+  } else {
+    filter = {
+      participants: uid,
+      $or: [
+        { archivedBy: { $exists: false } },
+        { archivedBy: { $size: 0 } },
+        { archivedBy: { $nin: [uid] } },
+      ],
+    };
+  }
+
+  const conversations = await Conversation.find(filter)
     .populate("participants", "name avatar role")
     .sort({ lastMessageAt: -1 });
 
   res.json(conversations);
+});
+
+// PUT /api/messages/conversations/:conversationId/archive  – per-user archive / restore
+exports.setConversationArchive = asyncHandler(async (req, res) => {
+  const { conversationId } = req.params;
+  const archived = !!req.body?.archived;
+
+  const conversation = await Conversation.findById(conversationId);
+  if (!conversation) {
+    res.status(404);
+    throw new Error("Conversation not found");
+  }
+  if (!conversation.participants.some((p) => p.toString() === req.user._id.toString())) {
+    res.status(403);
+    throw new Error("Forbidden");
+  }
+
+  const uid = req.user._id;
+  if (archived) {
+    await Conversation.updateOne({ _id: conversationId }, { $addToSet: { archivedBy: uid } });
+  } else {
+    await Conversation.updateOne({ _id: conversationId }, { $pull: { archivedBy: uid } });
+  }
+
+  const updated = await Conversation.findById(conversationId).populate("participants", "name avatar role");
+  res.json(updated);
 });
 
 // POST /api/messages/conversations  – start or get existing conversation
@@ -41,6 +83,7 @@ exports.startConversation = asyncHandler(async (req, res) => {
       participants: [req.user._id, recipientId],
       listingId: listingId || null,
       listingModel: listingModel || null,
+      archivedBy: [],
     });
     conversation = await conversation.populate("participants", "name avatar role");
   }

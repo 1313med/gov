@@ -6,10 +6,12 @@ const {
   startConversation,
   getMessages,
   sendMessage,
+  setConversationArchive,
 } = require("../controllers/messageController");
 
 router.get("/conversations", protect, getConversations);
 router.post("/conversations", protect, startConversation);
+router.put("/conversations/:conversationId/archive", protect, setConversationArchive);
 router.get("/:conversationId", protect, getMessages);
 router.post("/:conversationId", protect, sendMessage);
 

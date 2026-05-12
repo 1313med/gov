@@ -18,8 +18,9 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { Swipeable, GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { getConversations, getMessages, sendMessage } from "../../src/api/message";
+import { getConversations, getMessages, sendMessage, setConversationArchive } from "../../src/api/message";
 import { useAuth } from "../../src/context/AuthContext";
 import { useSocket } from "../../src/context/SocketContext";
 import { useAppLang } from "../../src/context/AppLangContext";
@@ -98,7 +99,7 @@ function lastMessagePreview(item, fr) {
   return fr ? "Aucun message" : "No messages yet";
 }
 
-function ConversationRow({ item, onOpen, authId, fr, C, isDark, titleColor, subColor, ctaGrad }) {
+function ConversationRow({ item, onOpen, onArchived, archiveScope, authId, fr, C, isDark, titleColor, subColor, ctaGrad }) {
   const other = item.participants?.find((p) => String(p._id || p) !== String(authId));
   const name = other?.name || "User";
   const initial = name[0]?.toUpperCase() || "?";
@@ -106,69 +107,101 @@ function ConversationRow({ item, onOpen, authId, fr, C, isDark, titleColor, subC
   const unread = unreadForUser(item, authId);
   const timeStr = formatConvTime(item.lastMessageAt, fr);
   const scale = useRef(new Animated.Value(1)).current;
+  const swipeRef = useRef(null);
   const pressIn = () => Animated.spring(scale, { toValue: 0.98, friction: 6, useNativeDriver: true }).start();
   const pressOut = () => Animated.spring(scale, { toValue: 1, friction: 5, useNativeDriver: true }).start();
   const preview = lastMessagePreview(item, fr);
+  const showArchive = archiveScope === "active";
 
-  return (
-    <Pressable onPress={() => onOpen(item)} onPressIn={pressIn} onPressOut={pressOut}>
-      <Animated.View
+  const renderRightActions = () => (
+    <View style={{ flexDirection: "row", alignItems: "stretch" }}>
+      <Pressable
+        onPress={async () => {
+          swipeRef.current?.close();
+          try {
+            await setConversationArchive(item._id, { archived: showArchive });
+            onArchived?.();
+          } catch {}
+        }}
         style={{
-          transform: [{ scale }],
+          width: 92,
+          backgroundColor: showArchive ? "#475569" : "#059669",
+          justifyContent: "center",
+          alignItems: "center",
+          borderTopRightRadius: 20,
+          borderBottomRightRadius: 20,
           marginBottom: 14,
-          borderRadius: 20,
-          overflow: "hidden",
-          borderWidth: 1,
-          borderColor: isDark ? "rgba(124,107,255,0.2)" : "rgba(98,72,232,0.14)",
-          backgroundColor: C.card,
-          shadowColor: C.primary,
-          shadowOffset: { width: 0, height: 10 },
-          shadowOpacity: isDark ? 0.15 : 0.08,
-          shadowRadius: 16,
-          elevation: 5,
         }}
       >
-        <LinearGradient
-          colors={isDark ? ["rgba(124,107,255,0.06)", "transparent"] : ["rgba(98,72,232,0.05)", "transparent"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-        <View style={{ flexDirection: "row", alignItems: "center", padding: 16 }}>
-          <LinearGradient colors={ctaGrad} style={{ width: 54, height: 54, borderRadius: 18, padding: 2, marginRight: 14 }}>
-            {avatarUri ? (
-              <Image source={{ uri: avatarUri }} style={{ width: 50, height: 50, borderRadius: 16 }} />
-            ) : (
-              <View style={{ width: 50, height: 50, borderRadius: 16, backgroundColor: isDark ? "#0f1123" : "#f1f5f9", alignItems: "center", justifyContent: "center" }}>
-                <Text style={{ color: C.primary, fontWeight: "900", fontSize: 20 }}>{initial}</Text>
-              </View>
-            )}
-          </LinearGradient>
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-              <Text style={{ color: titleColor, fontWeight: "800", fontSize: 16, flex: 1 }} numberOfLines={1}>
-                {name}
-              </Text>
-              {!!timeStr && <Text style={{ color: subColor, fontSize: 11, fontWeight: "600" }}>{timeStr}</Text>}
-            </View>
-            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6, gap: 8 }}>
-              <Text style={{ color: unread > 0 ? titleColor : subColor, fontSize: 14, fontWeight: unread > 0 ? "700" : "500", flex: 1 }} numberOfLines={1}>
-                {preview}
-              </Text>
-              {unread > 0 ? (
-                <View style={{ backgroundColor: C.primary, minWidth: 22, height: 22, borderRadius: 11, alignItems: "center", justifyContent: "center", paddingHorizontal: 6 }}>
-                  <Text style={{ color: "#fff", fontSize: 11, fontWeight: "900" }}>{unread > 9 ? "9+" : unread}</Text>
+        <Ionicons name={showArchive ? "archive-outline" : "arrow-undo-outline"} size={24} color="#fff" />
+        <Text style={{ color: "#fff", fontSize: 10, fontWeight: "800", marginTop: 4, textAlign: "center" }}>
+          {showArchive ? (fr ? "Archiver" : "Archive") : fr ? "Restaurer" : "Restore"}
+        </Text>
+      </Pressable>
+    </View>
+  );
+
+  return (
+    <Swipeable ref={swipeRef} renderRightActions={renderRightActions} overshootRight={false}>
+      <Pressable onPress={() => onOpen(item)} onPressIn={pressIn} onPressOut={pressOut}>
+        <Animated.View
+          style={{
+            transform: [{ scale }],
+            marginBottom: 14,
+            borderRadius: 20,
+            overflow: "hidden",
+            borderWidth: 1,
+            borderColor: isDark ? "rgba(124,107,255,0.2)" : "rgba(98,72,232,0.14)",
+            backgroundColor: C.card,
+            shadowColor: C.primary,
+            shadowOffset: { width: 0, height: 10 },
+            shadowOpacity: isDark ? 0.15 : 0.08,
+            shadowRadius: 16,
+            elevation: 5,
+          }}
+        >
+          <LinearGradient
+            colors={isDark ? ["rgba(124,107,255,0.06)", "transparent"] : ["rgba(98,72,232,0.05)", "transparent"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+            pointerEvents="none"
+          />
+          <View style={{ flexDirection: "row", alignItems: "center", padding: 16 }}>
+            <LinearGradient colors={ctaGrad} style={{ width: 54, height: 54, borderRadius: 18, padding: 2, marginRight: 14 }}>
+              {avatarUri ? (
+                <Image source={{ uri: avatarUri }} style={{ width: 50, height: 50, borderRadius: 16 }} />
+              ) : (
+                <View style={{ width: 50, height: 50, borderRadius: 16, backgroundColor: isDark ? "#0f1123" : "#f1f5f9", alignItems: "center", justifyContent: "center" }}>
+                  <Text style={{ color: C.primary, fontWeight: "900", fontSize: 20 }}>{initial}</Text>
                 </View>
-              ) : null}
+              )}
+            </LinearGradient>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <Text style={{ color: titleColor, fontWeight: "800", fontSize: 16, flex: 1 }} numberOfLines={1}>
+                  {name}
+                </Text>
+                {!!timeStr && <Text style={{ color: subColor, fontSize: 11, fontWeight: "600" }}>{timeStr}</Text>}
+              </View>
+              <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6, gap: 8 }}>
+                <Text style={{ color: unread > 0 ? titleColor : subColor, fontSize: 14, fontWeight: unread > 0 ? "700" : "500", flex: 1 }} numberOfLines={1}>
+                  {preview}
+                </Text>
+                {unread > 0 ? (
+                  <View style={{ backgroundColor: C.primary, minWidth: 22, height: 22, borderRadius: 11, alignItems: "center", justifyContent: "center", paddingHorizontal: 6 }}>
+                    <Text style={{ color: "#fff", fontSize: 11, fontWeight: "900" }}>{unread > 9 ? "9+" : unread}</Text>
+                  </View>
+                ) : null}
+              </View>
+            </View>
+            <View style={{ marginLeft: 8, width: 32, height: 32, borderRadius: 10, backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(15,23,42,0.06)", alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name="chevron-forward" size={18} color={C.muted} />
             </View>
           </View>
-          <View style={{ marginLeft: 8, width: 32, height: 32, borderRadius: 10, backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(15,23,42,0.06)", alignItems: "center", justifyContent: "center" }}>
-            <Ionicons name="chevron-forward" size={18} color={C.muted} />
-          </View>
-        </View>
-      </Animated.View>
-    </Pressable>
+        </Animated.View>
+      </Pressable>
+    </Swipeable>
   );
 }
 
@@ -189,6 +222,7 @@ export default function MessagesScreen() {
   const shimmerTrack = isDark ? "rgba(255,255,255,0.07)" : "rgba(15,23,42,0.08)";
 
   const [conversations, setConversations] = useState([]);
+  const [inboxScope, setInboxScope] = useState("active");
   const [active, setActive] = useState(null);
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
@@ -210,10 +244,11 @@ export default function MessagesScreen() {
   }, [orbPulse]);
 
   const fetchConversations = useCallback(() => {
-    return getConversations()
+    const params = inboxScope === "archived" ? { archive: 1 } : {};
+    return getConversations(params)
       .then(({ data }) => setConversations(Array.isArray(data) ? data : []))
       .catch(() => setConversations([]));
-  }, []);
+  }, [inboxScope]);
 
   useEffect(() => {
     clearMessageBadge();
@@ -282,23 +317,63 @@ export default function MessagesScreen() {
 
   if (!auth) return <View style={{ flex: 1, backgroundColor: C.bg }}>{guestLogin}</View>;
 
-  const listHeader = (
-    <LinearGradient colors={heroGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingTop: insets.top + 10, paddingBottom: 22, overflow: "hidden" }}>
-      <GlowOrb scaleAnim={orbPulse} colors={orbA} style={{ width: 200, height: 200, top: -70, right: -60 }} />
-      <GlowOrb scaleAnim={orbPulse} colors={orbB} style={{ width: 170, height: 170, bottom: -40, left: -70 }} />
-      <View style={{ paddingHorizontal: 20 }}>
-        <Text style={{ color: C.primary, fontSize: 10, fontWeight: "800", letterSpacing: 2.2, textTransform: "uppercase", marginBottom: 8 }}>{fr ? "Boîte de réception" : "Inbox"}</Text>
-        <Text style={{ color: titleColor, fontWeight: "900", fontSize: 28, letterSpacing: -0.8, lineHeight: 34 }}>
-          {fr ? "Messages" : "Messages"}
-        </Text>
-        <Text style={{ color: subColor, fontSize: 14, lineHeight: 21, marginTop: 10, fontWeight: "500", maxWidth: 340 }}>
-          {fr
-            ? "Touchez une conversation pour reprendre où vous vous êtes arrêté."
-            : "Tap a thread to pick up where you left off — fast, clear, and calm."}
-        </Text>
-        <HeroShimmer color={C.primary} track={shimmerTrack} />
-      </View>
-    </LinearGradient>
+  const listHeader = useMemo(
+    () => (
+      <LinearGradient colors={heroGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingTop: insets.top + 10, paddingBottom: 22, overflow: "hidden" }}>
+        <GlowOrb scaleAnim={orbPulse} colors={orbA} style={{ width: 200, height: 200, top: -70, right: -60 }} />
+        <GlowOrb scaleAnim={orbPulse} colors={orbB} style={{ width: 170, height: 170, bottom: -40, left: -70 }} />
+        <View style={{ paddingHorizontal: 20 }}>
+          <Text style={{ color: C.primary, fontSize: 10, fontWeight: "800", letterSpacing: 2.2, textTransform: "uppercase", marginBottom: 8 }}>{fr ? "Boîte de réception" : "Inbox"}</Text>
+          <Text style={{ color: titleColor, fontWeight: "900", fontSize: 28, letterSpacing: -0.8, lineHeight: 34 }}>
+            {fr ? "Messages" : "Messages"}
+          </Text>
+          <Text style={{ color: subColor, fontSize: 14, lineHeight: 21, marginTop: 10, fontWeight: "500", maxWidth: 340 }}>
+            {fr
+              ? "Touchez une conversation pour reprendre où vous vous êtes arrêté."
+              : "Tap a thread to pick up where you left off — fast, clear, and calm."}
+          </Text>
+          <HeroShimmer color={C.primary} track={shimmerTrack} />
+          <View style={{ flexDirection: "row", gap: 10, marginTop: 16 }}>
+            <TouchableOpacity
+              onPress={() => setInboxScope("active")}
+              activeOpacity={0.88}
+              style={{
+                flex: 1,
+                paddingVertical: 12,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: inboxScope === "active" ? C.primary : isDark ? "rgba(255,255,255,0.12)" : "rgba(15,23,42,0.1)",
+                backgroundColor: inboxScope === "active" ? (isDark ? "rgba(124,107,255,0.16)" : "rgba(98,72,232,0.1)") : isDark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.75)",
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ color: inboxScope === "active" ? titleColor : subColor, fontSize: 13, fontWeight: "800" }}>{fr ? "Actives" : "Active"}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setInboxScope("archived")}
+              activeOpacity={0.88}
+              style={{
+                flex: 1,
+                paddingVertical: 12,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: inboxScope === "archived" ? C.primary : isDark ? "rgba(255,255,255,0.12)" : "rgba(15,23,42,0.1)",
+                backgroundColor: inboxScope === "archived" ? (isDark ? "rgba(124,107,255,0.16)" : "rgba(98,72,232,0.1)") : isDark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.75)",
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ color: inboxScope === "archived" ? titleColor : subColor, fontSize: 13, fontWeight: "800" }}>{fr ? "Archives" : "Archive"}</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={{ color: subColor, fontSize: 12, marginTop: 12, lineHeight: 17, fontWeight: "600" }}>
+            {fr
+              ? "Glissez vers la gauche sur une ligne pour archiver ou restaurer."
+              : "Swipe left on a row to archive it or restore it from Archive."}
+          </Text>
+        </View>
+      </LinearGradient>
+    ),
+    [insets.top, fr, inboxScope, C.primary, titleColor, subColor, heroGrad, isDark, orbPulse, shimmerTrack],
   );
 
   if (active) {
@@ -451,39 +526,57 @@ export default function MessagesScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: C.bg }}>
-      {conversations.length === 0 ? (
-        <FlatList
-          data={[]}
-          ListHeaderComponent={
-            <>
-              {listHeader}
-              <View style={{ paddingHorizontal: 24, paddingTop: 32, paddingBottom: 48, alignItems: "center" }}>
-                <LinearGradient colors={isDark ? ["rgba(124,107,255,0.2)", "rgba(56,189,248,0.12)"] : ["rgba(98,72,232,0.14)", "rgba(14,165,233,0.08)"]} style={{ width: 96, height: 96, borderRadius: 32, alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
-                  <Ionicons name="chatbubbles-outline" size={44} color={C.primary} />
-                </LinearGradient>
-                <Text style={{ color: titleColor, fontWeight: "800", fontSize: 19, textAlign: "center" }}>{fr ? "Aucune conversation" : "No conversations yet"}</Text>
-                <Text style={{ color: subColor, fontSize: 14, marginTop: 10, textAlign: "center", lineHeight: 21, maxWidth: 300 }}>
-                  {fr ? "Ouvrez une annonce et contactez le vendeur ou le loueur." : "Open a listing and message the seller or host."}
-                </Text>
-              </View>
-            </>
-          }
-          renderItem={() => null}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.primary} />}
-        />
-      ) : (
-        <FlatList
-          data={conversations}
-          keyExtractor={(i) => i._id}
-          ListHeaderComponent={listHeader}
-          contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 28 }}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.primary} />}
-          renderItem={({ item }) => (
-            <ConversationRow item={item} onOpen={openConv} authId={auth._id} fr={fr} C={C} isDark={isDark} titleColor={titleColor} subColor={subColor} ctaGrad={ctaGrad} />
-          )}
-        />
-      )}
-    </View>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: C.bg }}>
+      <FlatList
+        data={conversations}
+        keyExtractor={(i) => i._id}
+        ListHeaderComponent={listHeader}
+        contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 28, flexGrow: 1 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.primary} />}
+        ListEmptyComponent={
+          <View style={{ alignItems: "center", paddingVertical: 48, paddingHorizontal: 16 }}>
+            <LinearGradient
+              colors={isDark ? ["rgba(124,107,255,0.2)", "rgba(56,189,248,0.12)"] : ["rgba(98,72,232,0.14)", "rgba(14,165,233,0.08)"]}
+              style={{ width: 96, height: 96, borderRadius: 32, alignItems: "center", justifyContent: "center", marginBottom: 20 }}
+            >
+              <Ionicons name="chatbubbles-outline" size={44} color={C.primary} />
+            </LinearGradient>
+            <Text style={{ color: titleColor, fontWeight: "800", fontSize: 19, textAlign: "center" }}>
+              {inboxScope === "archived"
+                ? fr
+                  ? "Aucune conversation archivée"
+                  : "No archived conversations"
+                : fr
+                  ? "Aucune conversation"
+                  : "No conversations yet"}
+            </Text>
+            <Text style={{ color: subColor, fontSize: 14, marginTop: 10, textAlign: "center", lineHeight: 21, maxWidth: 300 }}>
+              {inboxScope === "archived"
+                ? fr
+                  ? "Les fils que vous archivez (glissement à gauche) apparaissent ici."
+                  : "Threads you swipe to archive show up here."
+                : fr
+                  ? "Ouvrez une annonce et contactez le vendeur ou le loueur."
+                  : "Open a listing and message the seller or host."}
+            </Text>
+          </View>
+        }
+        renderItem={({ item }) => (
+          <ConversationRow
+            item={item}
+            onOpen={openConv}
+            onArchived={fetchConversations}
+            archiveScope={inboxScope}
+            authId={auth._id}
+            fr={fr}
+            C={C}
+            isDark={isDark}
+            titleColor={titleColor}
+            subColor={subColor}
+            ctaGrad={ctaGrad}
+          />
+        )}
+      />
+    </GestureHandlerRootView>
   );
 }

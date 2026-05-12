@@ -146,6 +146,7 @@ export default function RentalsScreen() {
   const [cityDraft, setCityDraft] = useState("");
   const [city, setCity] = useState("");
   const [priceKey, setPriceKey] = useState("any");
+  const [airportOnly, setAirportOnly] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
   const orbPulse = useRef(new Animated.Value(1)).current;
@@ -169,7 +170,12 @@ export default function RentalsScreen() {
     setLoading(true);
     try {
       const pr = PRICES.find((r) => r.key === priceKey);
-      const { data } = await getApprovedRentals({ city: city || undefined, minPrice: pr?.min, maxPrice: pr?.max });
+      const { data } = await getApprovedRentals({
+        city: city || undefined,
+        minPrice: pr?.min,
+        maxPrice: pr?.max,
+        ...(airportOnly ? { airport: 1 } : {}),
+      });
       setRentals(Array.isArray(data) ? data : data.rentals || []);
     } catch {
       Alert.alert("Error", fr ? "Échec du chargement" : "Failed to load rentals");
@@ -177,11 +183,11 @@ export default function RentalsScreen() {
       setLoading(false);
       setHydrated(true);
     }
-  }, [city, priceKey, fr]);
+  }, [city, priceKey, airportOnly, fr]);
 
   useEffect(() => {
     load();
-  }, [city, priceKey]);
+  }, [city, priceKey, airportOnly]);
 
   useEffect(() => {
     if (auth) getRentalFavorites().then(({ data }) => setFavorites(data.map((f) => f._id || f))).catch(() => {});
@@ -318,6 +324,35 @@ export default function RentalsScreen() {
                     );
                   })}
                 </ScrollView>
+                <TouchableOpacity
+                  activeOpacity={0.88}
+                  onPress={() => setAirportOnly((v) => !v)}
+                  style={{
+                    marginTop: 12,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 10,
+                    paddingVertical: 14,
+                    paddingHorizontal: 16,
+                    borderRadius: 16,
+                    borderWidth: 1,
+                    borderColor: airportOnly
+                      ? "transparent"
+                      : isDark
+                        ? "rgba(255,255,255,0.12)"
+                        : "rgba(15,23,42,0.1)",
+                    overflow: "hidden",
+                  }}
+                >
+                  {airportOnly ? (
+                    <LinearGradient colors={ctaGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
+                  ) : null}
+                  <Ionicons name={airportOnly ? "airplane" : "airplane-outline"} size={20} color={airportOnly ? "#fff" : C.accent} style={{ zIndex: 1 }} />
+                  <Text style={{ zIndex: 1, color: airportOnly ? "#fff" : subColor, fontSize: 14, fontWeight: "800" }}>
+                    {fr ? "Livraison aéroport uniquement" : "Airport delivery only"}
+                  </Text>
+                </TouchableOpacity>
               </View>
             ) : null}
           </Animated.View>
@@ -369,7 +404,13 @@ export default function RentalsScreen() {
                 </LinearGradient>
                 <Text style={{ color: titleColor, fontWeight: "800", fontSize: 19, textAlign: "center" }}>{fr ? "Aucune location trouvée" : "No rentals found"}</Text>
                 <Text style={{ color: subColor, fontSize: 14, marginTop: 10, textAlign: "center", lineHeight: 21 }}>
-                  {fr ? "Essayez une autre ville ou une tranche de prix." : "Try another city or price range."}
+                  {airportOnly
+                    ? fr
+                      ? "Aucune voiture avec livraison aéroport ne correspond. Désactivez le filtre Aéroport ou élargissez la recherche."
+                      : "No cars with airport delivery match. Turn off the Airport filter or broaden your search."
+                    : fr
+                      ? "Essayez une autre ville ou une tranche de prix."
+                      : "Try another city or price range."}
                 </Text>
               </View>
             ) : null
