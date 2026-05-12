@@ -6,6 +6,24 @@ const emailService = require("../utils/emailService");
 const { emitNotification } = require("../utils/socketManager");
 const { safeRegex, safeNumber } = require("../utils/sanitize");
 
+/** Dedupe POST /record-view for same listing + visitor (double fetch / React Strict Mode). */
+const rentalViewDedupe = new Map();
+const RENTAL_VIEW_DEDUPE_MS = 3 * 60 * 1000;
+
+function pruneRentalViewDedupe() {
+  const now = Date.now();
+  if (rentalViewDedupe.size < 400) return;
+  for (const [k, exp] of rentalViewDedupe) {
+    if (exp < now) rentalViewDedupe.delete(k);
+  }
+}
+
+function viewerKeyForRentalView(req) {
+  const fwd = (req.headers["x-forwarded-for"] || "").split(",")[0].trim();
+  const ip = fwd || req.ip || req.socket?.remoteAddress || "";
+  return String(ip || "unknown").slice(0, 64);
+}
+
 const notify = async (userId, message, type) => {
   const n = await Notification.create({ user: userId, message, type });
   emitNotification(userId.toString(), n);
@@ -177,7 +195,7 @@ exports.getRentals = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
-// Rental details (public)
+// Rental details (public) — does not increment views (see POST :id/record-view)
 exports.getRentalById = async (req, res, next) => {
   try {
     const rental = await RentalListing.findOne({
@@ -188,6 +206,64 @@ exports.getRentalById = async (req, res, next) => {
     if (!rental) return res.status(404).json({ message: "Rental not found" });
     res.json(rental);
   } catch (error) { next(error); }
+};
+
+/** POST /api/rental/:id/record-view — count one listing view (deduped per visitor + listing). */
+exports.recordRentalView = async (req, res, next) => {
+  try {
+    const rentalId = req.params.id;
+    const rental = await RentalListing.findOne({
+      _id: rentalId,
+      status: "approved",
+      deletedAt: null,
+    }).select("_id");
+    if (!rental) return res.status(404).json({ message: "Rental not found" });
+
+    const visitor = viewerKeyForRentalView(req);
+    const key = `${rentalId}:${visitor}`;
+    pruneRentalViewDedupe();
+    const now = Date.now();
+    const until = rentalViewDedupe.get(key);
+    if (until && until > now) {
+      return res.json({ recorded: false, deduped: true });
+    }
+    rentalViewDedupe.set(key, now + RENTAL_VIEW_DEDUPE_MS);
+
+    await RentalListing.updateOne({ _id: rentalId }, { $inc: { viewCount: 1 } });
+    res.json({ recorded: true });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/** GET /api/rental/owner/listing-views — per-vehicle view counts for dashboard */
+exports.getOwnerListingViews = async (req, res, next) => {
+  try {
+    const rentals = await RentalListing.find({ rentalOwnerId: req.user._id, deletedAt: null })
+      .select("_id title brand model year city images viewCount status")
+      .sort({ viewCount: -1, updatedAt: -1 })
+      .lean();
+
+    const totalViews = rentals.reduce((s, r) => s + (r.viewCount || 0), 0);
+    const vehicles = rentals.map((r) => ({
+      rentalId: r._id,
+      title: r.title,
+      subtitle: [r.brand, r.model, r.year].filter(Boolean).join(" "),
+      city: r.city,
+      image: Array.isArray(r.images) && r.images[0] ? r.images[0] : null,
+      views: r.viewCount || 0,
+      status: r.status,
+    }));
+
+    res.json({
+      totalViews,
+      listingCount: rentals.length,
+      avgViewsPerListing: rentals.length ? Math.round((totalViews / rentals.length) * 10) / 10 : 0,
+      vehicles,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 // Create booking (customer)

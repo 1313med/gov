@@ -6,6 +6,8 @@ const {
   createBooking, getOwnerBookings,
   getAdminRentals, updateRentalStatus,
   getBookingsForRental, getMyRentals,
+  getOwnerListingViews,
+  recordRentalView,
 } = require("../controllers/rentalController");
 const { protect, role } = require("../middlewares/authMiddleware");
 
@@ -14,6 +16,7 @@ router.get("/", getRentals);
 
 // OWNER ROUTES (must come before :id)
 router.get("/owner/bookings", protect, role("rental_owner"), getOwnerBookings);
+router.get("/owner/listing-views", protect, role("rental_owner"), getOwnerListingViews);
 router.get("/owner/mine", protect, role("rental_owner"), getMyRentals);
 
 // ADMIN
@@ -30,6 +33,7 @@ router.post(
 
 // RENTAL DETAILS
 router.get("/:id/bookings", getBookingsForRental);
+router.post("/:id/record-view", recordRentalView);
 router.get("/:id", getRentalById);
 
 // CRUD (owner)

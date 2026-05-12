@@ -50,6 +50,10 @@ function RootNavigator() {
       <Stack.Screen name="owner-analytics" options={{ headerShown: true, headerTitle: "Analytics", headerStyle: hdr }} />
       <Stack.Screen name="owner-booking-calendar" options={{ headerShown: true, headerTitle: "Calendar", headerStyle: hdr }} />
       <Stack.Screen
+        name="owner-listing-views"
+        options={{ headerShown: true, headerTitle: "Listing views", headerStyle: hdr, headerBackTitle: "Back" }}
+      />
+      <Stack.Screen
         name="maintenance"
         options={{ headerShown: true, headerTitle: "Maintenance", headerStyle: hdr, headerBackTitle: "Back" }}
       />

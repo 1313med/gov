@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, Dimensions, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { getRentalById, bookRental, getRentalBookings } from "../../src/api/rental";
+import { getRentalById, bookRental, getRentalBookings, recordRentalView } from "../../src/api/rental";
 import RentalBookingCalendar from "../../src/components/RentalBookingCalendar";
 import { startConversation } from "../../src/api/message";
 import { addRentalFavorite, removeRentalFavorite, getRentalFavorites } from "../../src/api/user";
@@ -207,6 +207,7 @@ export default function RentalDetailsScreen() {
         if (cancelled) return;
         setRental(rentRes.data);
         setConfirmedBookings(Array.isArray(bookRes.data) ? bookRes.data : []);
+        recordRentalView(String(id)).catch(() => {});
       })
       .catch(() => {
         if (!cancelled) Alert.alert("Error", "Failed to load rental");

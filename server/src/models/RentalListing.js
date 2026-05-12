@@ -104,6 +104,9 @@ const rentalListingSchema = new mongoose.Schema(
       default: "pending",
     },
 
+    /** Public detail page opens (GET /rental/:id when approved). */
+    viewCount: { type: Number, default: 0 },
+
     // Soft delete
     deletedAt: { type: Date, default: null },
   },

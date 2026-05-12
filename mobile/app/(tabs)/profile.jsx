@@ -722,9 +722,17 @@ export default function ProfileScreen() {
               isDark={isDark}
               labelColor={titleColor}
             />
-            <QuickActionCard icon="car-outline" label={fr ? "Mon parc" : "My Fleet"} onPress={() => router.push("/my-fleet")} C={C} isDark={isDark} labelColor={titleColor} />
-            <QuickActionCard icon="construct-outline" label={fr ? "Maintenance" : "Maintenance"} onPress={() => router.push("/maintenance")} C={C} isDark={isDark} labelColor={titleColor} />
             <QuickActionCard icon="clipboard-outline" label={fr ? "Réservations" : "Bookings"} onPress={() => router.push("/owner-bookings")} C={C} isDark={isDark} labelColor={titleColor} />
+            <QuickActionCard icon="car-outline" label={fr ? "Mon parc" : "My Fleet"} onPress={() => router.push("/my-fleet")} C={C} isDark={isDark} labelColor={titleColor} />
+            <QuickActionCard
+              icon="pulse-outline"
+              label={fr ? "Visibilité des annonces" : "Listing views"}
+              onPress={() => router.push("/owner-listing-views")}
+              C={C}
+              isDark={isDark}
+              labelColor={titleColor}
+            />
+            <QuickActionCard icon="construct-outline" label={fr ? "Maintenance" : "Maintenance"} onPress={() => router.push("/maintenance")} C={C} isDark={isDark} labelColor={titleColor} />
             <QuickActionCard
               icon="add-circle-outline"
               label={fr ? "Ajouter location" : "Add Rental"}

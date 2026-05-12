@@ -217,6 +217,7 @@ export default function RentalDetails() {
         const res = await api.get(`/rental/${id}`);
         const rentalData = res.data;
         setRental(rentalData);
+        api.post(`/rental/${id}/record-view`).catch(() => {});
 
         // Owner blocked periods
         if (rentalData.availability?.length) {
