@@ -9,6 +9,7 @@ import {
   Easing,
   Dimensions,
   Pressable,
+  Platform,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -18,6 +19,7 @@ import { useAuth } from "../../src/context/AuthContext";
 import { useAppLang } from "../../src/context/AppLangContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import { useSocket } from "../../src/context/SocketContext";
+import QuickActionCard from "../../src/components/QuickActionCard";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 
@@ -199,86 +201,105 @@ const statCardStyles = StyleSheet.create({
   label: { fontSize: 10, fontWeight: "700", marginTop: 4, letterSpacing: 0.6, textTransform: "uppercase" },
 });
 
-function FeatureTile({ icon, color, title, desc, anim, isDark, large }) {
+/** Compact 2×2 “Why us” tile — low vertical footprint, layered finish. */
+function FeatureEliteCompact({ icon, color, title, desc, anim, isDark }) {
+  const curve = Platform.OS === "ios" ? { borderCurve: "continuous" } : {};
+  const rim = isDark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.9)";
+  const spec = isDark ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.88)";
+  const titleCol = isDark ? "#f1f5f9" : "#0f172a";
+  const descCol = isDark ? "#94a3b8" : "#64748b";
+
   return (
     <Animated.View
-      style={[
-        {
-          opacity: anim.opacity,
-          transform: [{ translateY: anim.translate }],
-          width: large ? "100%" : "48.2%",
-        },
-      ]}
+      style={{
+        width: "48.2%",
+        opacity: anim.opacity,
+        transform: [{ translateY: anim.translate }],
+      }}
     >
-      <LinearGradient
-        colors={
-          isDark
-            ? ["rgba(20,21,40,0.95)", "rgba(12,14,28,0.98)"]
-            : ["#ffffff", "#f8fafc"]
-        }
+      <View
         style={[
-          featureStyles.tile,
           {
-            borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.06)",
-            minHeight: large ? 132 : 148,
+            marginBottom: 10,
+            borderRadius: 18,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 5 },
+            shadowOpacity: isDark ? 0.4 : 0.1,
+            shadowRadius: 12,
+            elevation: 6,
           },
+          curve,
         ]}
       >
         <LinearGradient
-          colors={[`${color}35`, `${color}08`]}
-          style={featureStyles.iconWrap}
-        >
-          <Ionicons name={icon} size={large ? 26 : 22} color={color} />
-        </LinearGradient>
-        <Text style={[featureStyles.title, { color: isDark ? "#f1f5f9" : "#0f172a" }]}>{title}</Text>
-        <Text style={[featureStyles.desc, { color: isDark ? "#94a3b8" : "#64748b" }]}>{desc}</Text>
-      </LinearGradient>
-    </Animated.View>
-  );
-}
-
-const featureStyles = StyleSheet.create({
-  tile: {
-    borderRadius: 20,
-    borderWidth: 1,
-    padding: 18,
-    flex: 1,
-  },
-  iconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 14,
-  },
-  title: { fontWeight: "800", fontSize: 14, marginBottom: 6, letterSpacing: -0.2 },
-  desc: { fontSize: 12, lineHeight: 18 },
-});
-
-function NavItem({ icon, label, onPress, color, s, C, isDark }) {
-  const c = color ?? C.primary;
-  const scale = useRef(new Animated.Value(1)).current;
-  return (
-    <Pressable
-      onPress={onPress}
-      onPressIn={() => Animated.spring(scale, { toValue: 0.98, useNativeDriver: true }).start()}
-      onPressOut={() => Animated.spring(scale, { toValue: 1, friction: 4, useNativeDriver: true }).start()}
-    >
-      <Animated.View style={[s.navItem, { transform: [{ scale }] }]}>
-        <LinearGradient
-          colors={isDark ? ["rgba(124,107,255,0.12)", "transparent"] : ["rgba(98,72,232,0.08)", "transparent"]}
+          colors={isDark ? ["#14162a", "#0a0c14"] : ["#ffffff", "#eef2f6"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-        <View style={[s.navIcon, { backgroundColor: c + "22" }]}>
-          <Ionicons name={icon} size={18} color={c} />
-        </View>
-        <Text style={s.navLabel}>{label}</Text>
-        <Ionicons name="chevron-forward" size={16} color={C.muted} />
-      </Animated.View>
-    </Pressable>
+          style={[
+            {
+              borderRadius: 18,
+              borderWidth: 1,
+              borderColor: isDark ? "rgba(255,255,255,0.09)" : "rgba(15,23,42,0.06)",
+              paddingVertical: 11,
+              paddingHorizontal: 11,
+              overflow: "hidden",
+              minHeight: 88,
+            },
+            curve,
+          ]}
+        >
+          <LinearGradient
+            colors={[`${color}16`, "transparent"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+            pointerEvents="none"
+          />
+          <LinearGradient
+            colors={[spec, "transparent"]}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+            style={{ position: "absolute", top: 0, left: "20%", right: "20%", height: 1, opacity: 0.85 }}
+            pointerEvents="none"
+          />
+          <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 9 }}>
+            <View style={{ width: 3, marginTop: 3, borderRadius: 2, backgroundColor: color, opacity: 0.95, minHeight: 36 }} />
+            <LinearGradient
+              colors={[`${color}40`, `${color}10`]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[{ width: 36, height: 36, borderRadius: 11, alignItems: "center", justifyContent: "center" }, curve]}
+            >
+              <View
+                style={[
+                  {
+                    width: 32,
+                    height: 32,
+                    borderRadius: 9,
+                    borderWidth: 1,
+                    borderColor: rim,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: isDark ? "rgba(0,0,0,0.22)" : "rgba(255,255,255,0.55)",
+                  },
+                  curve,
+                ]}
+              >
+                <Ionicons name={icon} size={16} color={color} />
+              </View>
+            </LinearGradient>
+            <View style={{ flex: 1, minWidth: 0, paddingTop: 1 }}>
+              <Text style={{ color: titleCol, fontSize: 12, fontWeight: "800", letterSpacing: -0.2, lineHeight: 15 }} numberOfLines={2}>
+                {title}
+              </Text>
+              <Text style={{ color: descCol, fontSize: 10, lineHeight: 13, marginTop: 4, fontWeight: "600" }} numberOfLines={2}>
+                {desc}
+              </Text>
+            </View>
+          </View>
+        </LinearGradient>
+      </View>
+    </Animated.View>
   );
 }
 
@@ -296,7 +317,7 @@ export default function HomeScreen() {
   const orbPulse = useRef(new Animated.Value(1)).current;
 
   const statAnims = useStaggeredEntrance(3, 280);
-  const featureAnims = useStaggeredEntrance(4, 420);
+  const featureAnims = useStaggeredEntrance(4, 260);
   const quickFade = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -521,45 +542,42 @@ export default function HomeScreen() {
           ))}
         </View>
 
-        <View style={s.section}>
-          <Text style={[s.sectionEyebrow, { color: C.primary }]}>{fr ? "Pourquoi nous choisir" : "Why us"}</Text>
-          <Text style={[s.sectionTitle, { color: titleColor }]}>{fr ? "L'art du mouvement" : "The art of motion"}</Text>
-          <Text style={[s.sectionSub, { color: subColor }]}>
+        <View style={s.sectionWhy}>
+          <Text style={[s.sectionEyebrow, { color: C.primary, marginBottom: 5 }]}>{fr ? "Pourquoi nous choisir" : "Why us"}</Text>
+          <Text style={[s.sectionTitleTight, { color: titleColor }]}>{fr ? "L'art du mouvement" : "The art of motion"}</Text>
+          <Text style={[s.sectionSubTight, { color: subColor }]}>
             {fr
               ? "Chaque détail compte — de la vérification à la signature."
               : "Every detail matters — from verification to the handoff."}
           </Text>
 
           <View style={s.bento}>
-            <FeatureTile
-              {...features[0]}
-              title={fr ? features[0].fr[0] : features[0].en[0]}
-              desc={fr ? features[0].fr[1] : features[0].en[1]}
-              anim={featureAnims[0]}
-              isDark={isDark}
-              large
-            />
             <View style={s.bentoRow}>
-              {features.slice(1, 3).map((f, j) => (
-                <FeatureTile
+              {features.slice(0, 2).map((f, j) => (
+                <FeatureEliteCompact
                   key={f.en[0]}
-                  {...f}
+                  icon={f.icon}
+                  color={f.color}
                   title={fr ? f.fr[0] : f.en[0]}
                   desc={fr ? f.fr[1] : f.en[1]}
-                  anim={featureAnims[j + 1]}
+                  anim={featureAnims[j]}
                   isDark={isDark}
-                  large={false}
                 />
               ))}
             </View>
-            <FeatureTile
-              {...features[3]}
-              title={fr ? features[3].fr[0] : features[3].en[0]}
-              desc={fr ? features[3].fr[1] : features[3].en[1]}
-              anim={featureAnims[3]}
-              isDark={isDark}
-              large
-            />
+            <View style={s.bentoRow}>
+              {features.slice(2, 4).map((f, j) => (
+                <FeatureEliteCompact
+                  key={f.en[0]}
+                  icon={f.icon}
+                  color={f.color}
+                  title={fr ? f.fr[0] : f.en[0]}
+                  desc={fr ? f.fr[1] : f.en[1]}
+                  anim={featureAnims[j + 2]}
+                  isDark={isDark}
+                />
+              ))}
+            </View>
           </View>
         </View>
 
@@ -567,10 +585,9 @@ export default function HomeScreen() {
           <View style={s.section}>
             <Text style={[s.sectionEyebrow, { color: C.accent }]}>{fr ? "Espace pro" : "Your workspace"}</Text>
             <Text style={[s.sectionTitle, { color: titleColor }]}>{fr ? "Accès rapide" : "Quick actions"}</Text>
-            <Animated.View style={{ opacity: quickFade }}>
+            <Animated.View style={[s.quickActionsStack, { opacity: quickFade }]}>
               {auth.role === "customer" && (
-                <NavItem
-                  s={s}
+                <QuickActionCard
                   C={C}
                   isDark={isDark}
                   icon="calendar-outline"
@@ -580,9 +597,8 @@ export default function HomeScreen() {
               )}
               {auth.role === "seller" && (
                 <>
-                  <NavItem s={s} C={C} isDark={isDark} icon="list-outline" label={fr ? "Mes annonces" : "My Sales"} onPress={() => router.push("/my-sales")} />
-                  <NavItem
-                    s={s}
+                  <QuickActionCard C={C} isDark={isDark} icon="list-outline" label={fr ? "Mes annonces" : "My Sales"} onPress={() => router.push("/my-sales")} />
+                  <QuickActionCard
                     C={C}
                     isDark={isDark}
                     icon="add-circle-outline"
@@ -594,20 +610,18 @@ export default function HomeScreen() {
               )}
               {auth.role === "rental_owner" && (
                 <>
-                  <NavItem s={s} C={C} isDark={isDark} icon="analytics-outline" label={fr ? "Statistiques" : "Analytics"} onPress={() => router.push("/owner-analytics")} color={C.accent} />
-                  <NavItem
-                    s={s}
+                  <QuickActionCard C={C} isDark={isDark} icon="analytics-outline" label={fr ? "Statistiques" : "Analytics"} onPress={() => router.push("/owner-analytics")} color={C.accent} />
+                  <QuickActionCard
                     C={C}
                     isDark={isDark}
                     icon="calendar-outline"
                     label={fr ? "Calendrier" : "Calendar"}
                     onPress={() => router.push("/owner-booking-calendar")}
                   />
-                  <NavItem s={s} C={C} isDark={isDark} icon="car-outline" label={fr ? "Mon parc" : "My Fleet"} onPress={() => router.push("/my-fleet")} />
-                  <NavItem s={s} C={C} isDark={isDark} icon="construct-outline" label={fr ? "Maintenance" : "Maintenance"} onPress={() => router.push("/maintenance")} />
-                  <NavItem s={s} C={C} isDark={isDark} icon="clipboard-outline" label={fr ? "Réservations" : "Bookings"} onPress={() => router.push("/owner-bookings")} />
-                  <NavItem
-                    s={s}
+                  <QuickActionCard C={C} isDark={isDark} icon="car-outline" label={fr ? "Mon parc" : "My Fleet"} onPress={() => router.push("/my-fleet")} />
+                  <QuickActionCard C={C} isDark={isDark} icon="construct-outline" label={fr ? "Maintenance" : "Maintenance"} onPress={() => router.push("/maintenance")} />
+                  <QuickActionCard C={C} isDark={isDark} icon="clipboard-outline" label={fr ? "Réservations" : "Bookings"} onPress={() => router.push("/owner-bookings")} />
+                  <QuickActionCard
                     C={C}
                     isDark={isDark}
                     icon="add-circle-outline"
@@ -618,8 +632,7 @@ export default function HomeScreen() {
                 </>
               )}
               {auth.role === "admin" && (
-                <NavItem
-                  s={s}
+                <QuickActionCard
                   C={C}
                   isDark={isDark}
                   icon="shield-checkmark-outline"
@@ -750,6 +763,9 @@ function createHomeStyles(C, isDark) {
     pillText: { fontSize: 13, fontWeight: "700" },
     statsRow: { flexDirection: "row", paddingHorizontal: 22, gap: 10, marginTop: 4 },
     section: { paddingHorizontal: 22, paddingTop: 32, paddingBottom: 8 },
+    sectionWhy: { paddingHorizontal: 22, paddingTop: 20, paddingBottom: 4 },
+    sectionTitleTight: { fontWeight: "800", fontSize: 22, letterSpacing: -0.55, marginBottom: 4 },
+    sectionSubTight: { fontSize: 13, lineHeight: 19, marginBottom: 12, fontWeight: "500" },
     sectionEyebrow: {
       fontSize: 11,
       fontWeight: "800",
@@ -759,22 +775,9 @@ function createHomeStyles(C, isDark) {
     },
     sectionTitle: { fontWeight: "800", fontSize: 26, letterSpacing: -0.6, marginBottom: 8 },
     sectionSub: { fontSize: 14, lineHeight: 22, marginBottom: 22, fontWeight: "500" },
-    bento: { gap: 12 },
-    bentoRow: { flexDirection: "row", flexWrap: "wrap", gap: 12, justifyContent: "space-between" },
-    navItem: {
-      borderRadius: 16,
-      flexDirection: "row",
-      alignItems: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 16,
-      marginBottom: 10,
-      borderWidth: 1,
-      borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.08)",
-      overflow: "hidden",
-      backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.85)",
-    },
-    navIcon: { width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center", marginRight: 14 },
-    navLabel: { color: C.white, fontWeight: "600", flex: 1, fontSize: 15 },
+    bento: { gap: 8 },
+    bentoRow: { flexDirection: "row", flexWrap: "wrap", gap: 10, justifyContent: "space-between" },
+    quickActionsStack: { marginTop: 6, gap: 0 },
     joinCard: {
       borderRadius: 24,
       padding: 28,

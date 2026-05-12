@@ -25,6 +25,7 @@ import { useAuth } from "../../src/context/AuthContext";
 import { useAppLang } from "../../src/context/AppLangContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import ThemeToggle from "../../src/components/ThemeToggle";
+import QuickActionCard from "../../src/components/QuickActionCard";
 import { resolveMediaUrl } from "../../src/utils/mediaUrl";
 import { alpha } from "../../src/theme";
 
@@ -162,46 +163,6 @@ function ProfileGlassCard({ isDark, C, sheenProgress, style, children, lightColo
     <LinearGradient colors={lightColors} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={style}>
       {children}
     </LinearGradient>
-  );
-}
-
-function NavItem({ icon, label, onPress, C, isDark, titleColor, subColor, accent }) {
-  const scale = useRef(new Animated.Value(1)).current;
-  const c = accent || C.primary;
-  return (
-    <Pressable
-      onPress={onPress}
-      onPressIn={() => Animated.spring(scale, { toValue: 0.98, useNativeDriver: true }).start()}
-      onPressOut={() => Animated.spring(scale, { toValue: 1, friction: 4, useNativeDriver: true }).start()}
-    >
-      <Animated.View
-        style={[
-          {
-            transform: [{ scale }],
-            borderRadius: 16,
-            marginBottom: 10,
-            borderWidth: 1,
-            borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.08)",
-            backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.85)",
-            overflow: "hidden",
-          },
-        ]}
-      >
-        <LinearGradient
-          colors={isDark ? ["rgba(124,107,255,0.1)", "transparent"] : ["rgba(98,72,232,0.06)", "transparent"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-        <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 16, gap: 14 }}>
-          <LinearGradient colors={[`${c}35`, `${c}12`]} style={{ width: 42, height: 42, borderRadius: 12, alignItems: "center", justifyContent: "center" }}>
-            <Ionicons name={icon} size={20} color={c} />
-          </LinearGradient>
-          <Text style={{ color: titleColor, fontWeight: "600", flex: 1, fontSize: 15 }}>{label}</Text>
-          <Ionicons name="chevron-forward" size={18} color={subColor} />
-        </View>
-      </Animated.View>
-    </Pressable>
   );
 }
 
@@ -555,14 +516,13 @@ export default function ProfileScreen() {
             </View>
           </ProfileGlassCard>
         ) : (
-          <NavItem
+          <QuickActionCard
             icon="create-outline"
             label={fr ? "Modifier le profil" : "Edit profile"}
             onPress={() => setEditing(true)}
             C={C}
             isDark={isDark}
-            titleColor={titleColor}
-            subColor={subColor}
+            labelColor={titleColor}
           />
         )}
 
@@ -711,27 +671,81 @@ export default function ProfileScreen() {
         </ProfileGlassCard>
 
         <Text style={[s.sectionEyebrow, { color: C.accent, marginTop: 8 }]}>{fr ? "Navigation" : "Shortcuts"}</Text>
-        <NavItem icon="notifications-outline" label={fr ? "Notifications" : "Notifications"} onPress={() => router.push("/notifications")} C={C} isDark={isDark} titleColor={titleColor} subColor={subColor} />
+        <QuickActionCard
+          icon="notifications-outline"
+          label={fr ? "Notifications" : "Notifications"}
+          onPress={() => router.push("/notifications")}
+          C={C}
+          isDark={isDark}
+          labelColor={titleColor}
+        />
         {auth.role === "customer" && (
-          <NavItem icon="calendar-outline" label={fr ? "Mes réservations" : "My Bookings"} onPress={() => router.push("/my-bookings")} C={C} isDark={isDark} titleColor={titleColor} subColor={subColor} />
+          <QuickActionCard
+            icon="calendar-outline"
+            label={fr ? "Mes réservations" : "My Bookings"}
+            onPress={() => router.push("/my-bookings")}
+            C={C}
+            isDark={isDark}
+            labelColor={titleColor}
+          />
         )}
         {auth.role === "seller" && (
           <>
-            <NavItem icon="list-outline" label={fr ? "Mes annonces" : "My Sales"} onPress={() => router.push("/my-sales")} C={C} isDark={isDark} titleColor={titleColor} subColor={subColor} />
-            <NavItem icon="add-circle-outline" label={fr ? "Nouvelle annonce" : "New Listing"} onPress={() => router.push("/new-sale")} C={C} isDark={isDark} titleColor={titleColor} subColor={subColor} accent={C.accent} />
+            <QuickActionCard icon="list-outline" label={fr ? "Mes annonces" : "My Sales"} onPress={() => router.push("/my-sales")} C={C} isDark={isDark} labelColor={titleColor} />
+            <QuickActionCard
+              icon="add-circle-outline"
+              label={fr ? "Nouvelle annonce" : "New Listing"}
+              onPress={() => router.push("/new-sale")}
+              C={C}
+              isDark={isDark}
+              labelColor={titleColor}
+              color={C.accent}
+            />
           </>
         )}
         {auth.role === "rental_owner" && (
           <>
-            <NavItem icon="analytics-outline" label={fr ? "Statistiques & analyses" : "Analytics & insights"} onPress={() => router.push("/owner-analytics")} C={C} isDark={isDark} titleColor={titleColor} subColor={subColor} accent={C.accent} />
-            <NavItem icon="car-outline" label={fr ? "Mon parc" : "My Fleet"} onPress={() => router.push("/my-fleet")} C={C} isDark={isDark} titleColor={titleColor} subColor={subColor} />
-            <NavItem icon="construct-outline" label={fr ? "Maintenance" : "Maintenance"} onPress={() => router.push("/maintenance")} C={C} isDark={isDark} titleColor={titleColor} subColor={subColor} />
-            <NavItem icon="clipboard-outline" label={fr ? "Réservations" : "Bookings"} onPress={() => router.push("/owner-bookings")} C={C} isDark={isDark} titleColor={titleColor} subColor={subColor} />
-            <NavItem icon="add-circle-outline" label={fr ? "Ajouter location" : "Add Rental"} onPress={() => router.push("/add-rental")} C={C} isDark={isDark} titleColor={titleColor} subColor={subColor} accent={C.accent} />
+            <QuickActionCard
+              icon="analytics-outline"
+              label={fr ? "Statistiques & analyses" : "Analytics & insights"}
+              onPress={() => router.push("/owner-analytics")}
+              C={C}
+              isDark={isDark}
+              labelColor={titleColor}
+              color={C.accent}
+            />
+            <QuickActionCard
+              icon="calendar-outline"
+              label={fr ? "Calendrier" : "Calendar"}
+              onPress={() => router.push("/owner-booking-calendar")}
+              C={C}
+              isDark={isDark}
+              labelColor={titleColor}
+            />
+            <QuickActionCard icon="car-outline" label={fr ? "Mon parc" : "My Fleet"} onPress={() => router.push("/my-fleet")} C={C} isDark={isDark} labelColor={titleColor} />
+            <QuickActionCard icon="construct-outline" label={fr ? "Maintenance" : "Maintenance"} onPress={() => router.push("/maintenance")} C={C} isDark={isDark} labelColor={titleColor} />
+            <QuickActionCard icon="clipboard-outline" label={fr ? "Réservations" : "Bookings"} onPress={() => router.push("/owner-bookings")} C={C} isDark={isDark} labelColor={titleColor} />
+            <QuickActionCard
+              icon="add-circle-outline"
+              label={fr ? "Ajouter location" : "Add Rental"}
+              onPress={() => router.push("/add-rental")}
+              C={C}
+              isDark={isDark}
+              labelColor={titleColor}
+              color={C.accent}
+            />
           </>
         )}
         {auth.role === "admin" && (
-          <NavItem icon="shield-checkmark-outline" label={fr ? "Modération admin" : "Admin Moderation"} onPress={() => router.push("/admin-moderation")} C={C} isDark={isDark} titleColor={titleColor} subColor={subColor} accent={C.accent} />
+          <QuickActionCard
+            icon="shield-checkmark-outline"
+            label={fr ? "Modération admin" : "Admin Moderation"}
+            onPress={() => router.push("/admin-moderation")}
+            C={C}
+            isDark={isDark}
+            labelColor={titleColor}
+            color={C.accent}
+          />
         )}
 
         <Text style={[s.sectionEyebrow, { color: C.primary, marginTop: 10 }]}>{fr ? "Langue & apparence" : "Language & appearance"}</Text>
