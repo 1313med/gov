@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -18,7 +18,7 @@ import {
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getMyBookings, cancelBooking, rescheduleMyBooking, getAlternativeRentalsForBooking, chooseVehicleResolution, submitBookingCustomerReview } from "../src/api/booking";
 import { useAppLang } from "../src/context/AppLangContext";
@@ -86,8 +86,12 @@ export default function MyBookingsScreen() {
   const insets = useSafeAreaInsets();
   const s = useMemo(() => createMyBookingsStyles(C, isDark), [C, isDark]);
   const router = useRouter();
+  const params = useLocalSearchParams();
   const fr = lang === "fr";
   const [bookings, setBookings] = useState([]);
+  const [highlightId, setHighlightId] = useState(null);
+  const [pinnedBookingId, setPinnedBookingId] = useState(null);
+  const highlightTimerRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [rescheduleTarget, setRescheduleTarget] = useState(null);
@@ -118,6 +122,45 @@ export default function MyBookingsScreen() {
   useEffect(() => {
     load();
   }, []);
+
+  useEffect(
+    () => () => {
+      if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+    },
+    []
+  );
+
+  const rawHighlight = params.highlight;
+  const highlightParam = rawHighlight
+    ? String(Array.isArray(rawHighlight) ? rawHighlight[0] : rawHighlight)
+    : null;
+
+  useEffect(() => {
+    if (!highlightParam || !bookings.length) return;
+    const id = highlightParam;
+    setHighlightId(id);
+    setPinnedBookingId(id);
+    if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+    highlightTimerRef.current = setTimeout(() => {
+      setHighlightId(null);
+      setPinnedBookingId(null);
+      highlightTimerRef.current = null;
+    }, 5000);
+    try {
+      router.setParams({ highlight: undefined });
+    } catch {
+      /* noop */
+    }
+  }, [highlightParam, bookings.length, router]);
+
+  const displayBookings = useMemo(() => {
+    if (!pinnedBookingId || !bookings.length) return bookings;
+    const ix = bookings.findIndex((b) => String(b._id) === pinnedBookingId);
+    if (ix <= 0) return bookings;
+    const next = [...bookings];
+    const [row] = next.splice(ix, 1);
+    return [row, ...next];
+  }, [bookings, pinnedBookingId]);
 
   const openReschedule = (item) => {
     setRescheduleTarget(item);
@@ -345,7 +388,7 @@ export default function MyBookingsScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
       <FlatList
-        data={bookings}
+        data={displayBookings}
         keyExtractor={(i) => i._id}
         ListHeaderComponent={listHeader}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24 }}
@@ -438,7 +481,21 @@ export default function MyBookingsScreen() {
           }
 
           return (
-            <View style={[s.card, { borderLeftColor: st.text }]}>
+            <View
+              style={[
+                s.card,
+                { borderLeftColor: st.text },
+                highlightId && String(item._id) === highlightId
+                  ? {
+                      borderWidth: 2,
+                      borderColor: C.primary,
+                      shadowColor: C.primary,
+                      shadowOpacity: isDark ? 0.35 : 0.2,
+                      shadowRadius: 12,
+                    }
+                  : null,
+              ]}
+            >
               <TouchableOpacity
                 onPress={() => router.push(`/rentals/${item.rentalId?._id || item.rentalId}`)}
                 activeOpacity={0.9}

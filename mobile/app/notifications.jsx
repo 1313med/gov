@@ -13,11 +13,13 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { getNotifications, markAsRead } from "../src/api/notification";
+import { getNotifications, markAsRead, archiveNotification } from "../src/api/notification";
 import { useSocket } from "../src/context/SocketContext";
 import { useAppLang } from "../src/context/AppLangContext";
 import { useTheme } from "../src/context/ThemeContext";
+import { useAuth } from "../src/context/AuthContext";
 
 function timeAgo(date, fr) {
   const mins = Math.floor((Date.now() - new Date(date)) / 60000);
@@ -36,6 +38,8 @@ function timeAgo(date, fr) {
 }
 
 export default function NotificationsScreen() {
+  const router = useRouter();
+  const { auth } = useAuth();
   const { clearNotificationBadge } = useSocket();
   const { lang } = useAppLang();
   const { colors: C, isDark } = useTheme();
@@ -54,28 +58,48 @@ export default function NotificationsScreen() {
   );
 
   const [notifs, setNotifs] = useState([]);
+  const [inboxScope, setInboxScope] = useState("active"); // "active" | "archived"
+  const [archivedCount, setArchivedCount] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [tabLoading, setTabLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const listFade = useRef(new Animated.Value(0)).current;
   const heroSlide = useRef(new Animated.Value(16)).current;
 
-  const load = async () => {
+  const load = async (opts = {}) => {
+    const scope = opts.scope ?? inboxScope;
+    const isPull = opts.pull === true;
     try {
-      const { data } = await getNotifications();
-      setNotifs(data);
-      clearNotificationBadge();
+      const params = scope === "archived" ? { scope: "archived" } : {};
+      const { data } = await getNotifications(params);
+      setNotifs(Array.isArray(data) ? data : []);
+      if (scope === "archived") setArchivedCount(data.length);
+      if (scope === "active") clearNotificationBadge();
     } catch {
       /* silent */
     } finally {
       setLoading(false);
-      setRefreshing(false);
+      if (isPull) setRefreshing(false);
+      setTabLoading(false);
     }
   };
 
   useEffect(() => {
-    load();
+    load({ scope: "active" });
   }, []);
+
+  const switchInboxScope = (scope) => {
+    if (scope === inboxScope) return;
+    setInboxScope(scope);
+    setTabLoading(true);
+    load({ scope });
+  };
+
+  const onPullRefresh = () => {
+    setRefreshing(true);
+    load({ scope: inboxScope, pull: true });
+  };
 
   useEffect(() => {
     if (loading) return;
@@ -102,6 +126,46 @@ export default function NotificationsScreen() {
     try {
       await markAsRead(n._id);
       setNotifs((p) => p.map((x) => (x._id === n._id ? { ...x, read: true } : x)));
+    } catch {
+      /* silent */
+    }
+  };
+
+  const bookingIdStr = (n) => {
+    const b = n?.bookingId;
+    if (!b) return null;
+    if (typeof b === "object" && b._id) return String(b._id);
+    return String(b);
+  };
+
+  const openNotification = async (n) => {
+    if (!n.read) await read(n);
+    const bid = bookingIdStr(n);
+    if (!bid) return;
+    if (auth?.role === "rental_owner") {
+      router.push(`/owner-bookings?openBookingId=${encodeURIComponent(bid)}`);
+      return;
+    }
+    if (auth?.role === "customer") {
+      router.push(`/my-bookings?highlight=${encodeURIComponent(bid)}`);
+    }
+  };
+
+  const archive = async (n) => {
+    try {
+      await archiveNotification(n._id, true);
+      setNotifs((p) => p.filter((x) => x._id !== n._id));
+      setArchivedCount((c) => (c == null ? 1 : c + 1));
+    } catch {
+      /* silent */
+    }
+  };
+
+  const restoreFromArchive = async (n) => {
+    try {
+      await archiveNotification(n._id, false);
+      setNotifs((p) => p.filter((x) => x._id !== n._id));
+      setArchivedCount((c) => Math.max(0, (c ?? 1) - 1));
     } catch {
       /* silent */
     }
@@ -147,7 +211,7 @@ export default function NotificationsScreen() {
           flexGrow: 1,
         }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={C.primary} />
+          <RefreshControl refreshing={refreshing} onRefresh={onPullRefresh} tintColor={C.primary} />
         }
         ListHeaderComponent={
           <Animated.View style={{ opacity: listFade, transform: [{ translateY: heroSlide }] }}>
@@ -164,6 +228,45 @@ export default function NotificationsScreen() {
                   ? "Réservations, messages et mises à jour — tout au même endroit."
                   : "Bookings, messages, and updates — distilled into one calm inbox."}
               </Text>
+              <View style={s.scopeTabs}>
+                <TouchableOpacity
+                  onPress={() => switchInboxScope("active")}
+                  activeOpacity={0.85}
+                  style={[
+                    s.scopeTab,
+                    inboxScope === "active" ? s.scopeTabOn : null,
+                    { borderColor: inboxScope === "active" ? C.primary : isDark ? "rgba(255,255,255,0.12)" : "rgba(15,23,42,0.12)" },
+                  ]}
+                >
+                  <Ionicons
+                    name="mail-outline"
+                    size={16}
+                    color={inboxScope === "active" ? "#fff" : subColor}
+                  />
+                  <Text style={[s.scopeTabText, { color: inboxScope === "active" ? "#fff" : subColor }]}>
+                    {fr ? "Boîte de réception" : "Inbox"}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => switchInboxScope("archived")}
+                  activeOpacity={0.85}
+                  style={[
+                    s.scopeTab,
+                    inboxScope === "archived" ? s.scopeTabOn : null,
+                    { borderColor: inboxScope === "archived" ? C.primary : isDark ? "rgba(255,255,255,0.12)" : "rgba(15,23,42,0.12)" },
+                  ]}
+                >
+                  <Ionicons
+                    name="archive-outline"
+                    size={16}
+                    color={inboxScope === "archived" ? "#fff" : subColor}
+                  />
+                  <Text style={[s.scopeTabText, { color: inboxScope === "archived" ? "#fff" : subColor }]}>
+                    {fr ? "Archives" : "Archived"}
+                    {archivedCount != null && archivedCount > 0 ? ` (${archivedCount})` : ""}
+                  </Text>
+                </TouchableOpacity>
+              </View>
               <View style={s.heroStats}>
                 <LinearGradient colors={accentGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.unreadPill}>
                   <Ionicons name="mail-unread-outline" size={16} color="#fff" />
@@ -177,11 +280,18 @@ export default function NotificationsScreen() {
                 </LinearGradient>
                 <View style={[s.totalChip, { borderColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(15,23,42,0.1)" }]}>
                   <Text style={[s.totalChipText, { color: subColor }]}>
-                    {notifs.length} {fr ? "au total" : "total"}
+                    {inboxScope === "archived"
+                      ? `${notifs.length} ${fr ? "archivée(s)" : "archived"}`
+                      : `${notifs.length} ${fr ? "au total" : "total"}`}
                   </Text>
                 </View>
               </View>
             </LinearGradient>
+            {tabLoading ? (
+              <View style={s.tabLoading}>
+                <ActivityIndicator color={C.primary} size="small" />
+              </View>
+            ) : null}
           </Animated.View>
         }
         ListEmptyComponent={
@@ -190,73 +300,109 @@ export default function NotificationsScreen() {
               colors={isDark ? ["rgba(124,107,255,0.15)", "rgba(56,189,248,0.08)"] : ["rgba(98,72,232,0.12)", "rgba(14,165,233,0.06)"]}
               style={s.emptyOrb}
             >
-              <Ionicons name="notifications-off-outline" size={48} color={C.primary} />
+              <Ionicons name={inboxScope === "archived" ? "archive-outline" : "notifications-off-outline"} size={48} color={C.primary} />
             </LinearGradient>
             <Text style={[s.emptyTitle, { color: titleColor }]}>
-              {fr ? "Aucune notification" : "Nothing new yet"}
+              {inboxScope === "archived"
+                ? fr
+                  ? "Aucune archive"
+                  : "No archived items"
+                : fr
+                  ? "Aucune notification"
+                  : "Nothing new yet"}
             </Text>
             <Text style={[s.emptySub, { color: subColor }]}>
-              {fr
-                ? "Quand quelque chose arrive, vous le verrez ici — élégant et clair."
-                : "When something happens, it will land here — clean and instant."}
+              {inboxScope === "archived"
+                ? fr
+                  ? "Les notifications que vous archivez apparaîtront ici. Touchez « Boîte de réception » pour revenir."
+                  : "Notifications you archive show up here. Tap Inbox to go back."
+                : fr
+                  ? "Quand quelque chose arrive, vous le verrez ici — élégant et clair."
+                  : "When something happens, it will land here — clean and instant."}
             </Text>
           </Animated.View>
         }
         renderItem={({ item }) => {
-          const [icon, color] = ICONS[item.type] || ICONS.default;
+          const bid = bookingIdStr(item);
+          const iconKey = bid ? "booking" : item.type;
+          const [icon, color] = ICONS[iconKey] || ICONS[item.type] || ICONS.default;
           const unread = !item.read;
           return (
             <Animated.View style={{ opacity: listFade }}>
-              <Pressable onPress={() => read(item)} style={({ pressed }) => [{ transform: [{ scale: pressed ? 0.985 : 1 }] }]}>
-                <LinearGradient
-                  colors={
-                    unread
-                      ? isDark
-                        ? ["rgba(124,107,255,0.14)", "rgba(20,21,40,0.95)"]
-                        : ["rgba(98,72,232,0.1)", "#ffffff"]
-                      : isDark
-                        ? ["rgba(255,255,255,0.04)", "rgba(12,14,28,0.98)"]
-                        : ["#ffffff", "#f8fafc"]
-                  }
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={[
-                    s.card,
-                    {
-                      borderColor: unread
-                        ? isDark
-                          ? "rgba(124,107,255,0.45)"
-                          : "rgba(98,72,232,0.35)"
-                        : isDark
-                          ? "rgba(255,255,255,0.08)"
-                          : "rgba(15,23,42,0.08)",
-                      borderLeftWidth: unread ? 4 : 1,
-                      borderLeftColor: unread ? C.primary : undefined,
-                    },
-                  ]}
-                >
+              <View style={s.cardOuter}>
+                <Pressable onPress={() => openNotification(item)} style={({ pressed }) => [{ transform: [{ scale: pressed ? 0.985 : 1 }] }]}>
                   <LinearGradient
-                    colors={[`${color}40`, `${color}12`]}
-                    style={s.iconOrb}
+                    colors={
+                      unread
+                        ? isDark
+                          ? ["rgba(124,107,255,0.14)", "rgba(20,21,40,0.95)"]
+                          : ["rgba(98,72,232,0.1)", "#ffffff"]
+                        : isDark
+                          ? ["rgba(255,255,255,0.04)", "rgba(12,14,28,0.98)"]
+                          : ["#ffffff", "#f8fafc"]
+                    }
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={[
+                      s.card,
+                      {
+                        borderColor: unread
+                          ? isDark
+                            ? "rgba(124,107,255,0.45)"
+                            : "rgba(98,72,232,0.35)"
+                          : isDark
+                            ? "rgba(255,255,255,0.08)"
+                            : "rgba(15,23,42,0.08)",
+                        borderLeftWidth: unread ? 4 : 1,
+                        borderLeftColor: unread ? C.primary : undefined,
+                      },
+                    ]}
                   >
-                    <Ionicons name={icon} size={22} color={color} />
+                    <LinearGradient
+                      colors={[`${color}40`, `${color}12`]}
+                      style={s.iconOrb}
+                    >
+                      <Ionicons name={icon} size={22} color={color} />
+                    </LinearGradient>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={[s.msg, unread && s.msgUnread, { color: unread ? titleColor : subColor }]}>
+                        {item.message}
+                      </Text>
+                      <View style={s.timeRow}>
+                        <Ionicons name="time-outline" size={12} color={C.muted} />
+                        <Text style={s.time}>{timeAgo(item.createdAt, fr)}</Text>
+                      </View>
+                      {bid ? (
+                        <Text style={[s.openHint, { color: C.muted }]}>
+                          {fr ? "Appuyer sur la carte pour ouvrir la réservation" : "Tap the card to open this booking"}
+                        </Text>
+                      ) : null}
+                    </View>
+                    {unread && (
+                      <View style={s.dotWrap}>
+                        <LinearGradient colors={accentGrad} style={s.dot} />
+                      </View>
+                    )}
                   </LinearGradient>
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <Text style={[s.msg, unread && s.msgUnread, { color: unread ? titleColor : subColor }]}>
-                      {item.message}
-                    </Text>
-                    <View style={s.timeRow}>
-                      <Ionicons name="time-outline" size={12} color={C.muted} />
-                      <Text style={s.time}>{timeAgo(item.createdAt, fr)}</Text>
-                    </View>
-                  </View>
-                  {unread && (
-                    <View style={s.dotWrap}>
-                      <LinearGradient colors={accentGrad} style={s.dot} />
-                    </View>
+                </Pressable>
+                <View style={[s.archiveBar, { borderTopColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(15,23,42,0.06)" }]}>
+                  {inboxScope === "archived" ? (
+                    <TouchableOpacity onPress={() => restoreFromArchive(item)} style={s.archiveBtn} activeOpacity={0.75}>
+                      <Ionicons name="arrow-undo-outline" size={18} color={C.primary} />
+                      <Text style={[s.archiveBtnText, { color: C.primary }]}>
+                        {fr ? "Remettre dans la boîte de réception" : "Move back to inbox"}
+                      </Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity onPress={() => archive(item)} style={s.archiveBtn} activeOpacity={0.75}>
+                      <Ionicons name="archive-outline" size={18} color={C.primary} />
+                      <Text style={[s.archiveBtnText, { color: C.primary }]}>
+                        {fr ? "Archiver la notification" : "Archive notification"}
+                      </Text>
+                    </TouchableOpacity>
                   )}
-                </LinearGradient>
-              </Pressable>
+                </View>
+              </View>
             </Animated.View>
           );
         }}
@@ -314,7 +460,32 @@ function createNotificationsStyles(C, isDark) {
     },
     heroTitle: { fontSize: 26, fontWeight: "800", letterSpacing: -0.6, marginLeft: 8 },
     heroSub: { fontSize: 14, lineHeight: 21, marginTop: 10, marginLeft: 8, fontWeight: "500" },
-    heroStats: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 18, marginLeft: 8, flexWrap: "wrap" },
+    scopeTabs: {
+      flexDirection: "row",
+      gap: 10,
+      marginTop: 16,
+      marginLeft: 8,
+      marginRight: 8,
+    },
+    scopeTab: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      paddingVertical: 12,
+      paddingHorizontal: 12,
+      borderRadius: 14,
+      borderWidth: 1,
+      backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.55)",
+    },
+    scopeTabOn: {
+      backgroundColor: C.primary,
+      borderColor: C.primary,
+    },
+    scopeTabText: { fontSize: 13, fontWeight: "800" },
+    tabLoading: { paddingVertical: 10, alignItems: "center" },
+    heroStats: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 14, marginLeft: 8, flexWrap: "wrap" },
     unreadPill: {
       flexDirection: "row",
       alignItems: "center",
@@ -349,13 +520,19 @@ function createNotificationsStyles(C, isDark) {
     },
     emptyTitle: { fontWeight: "800", fontSize: 20, marginTop: 20, textAlign: "center" },
     emptySub: { fontSize: 14, marginTop: 10, textAlign: "center", lineHeight: 22, maxWidth: 300 },
+    cardOuter: {
+      marginBottom: 12,
+      borderRadius: 18,
+      overflow: "hidden",
+      borderWidth: 1,
+      borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(15,23,42,0.06)",
+    },
     card: {
       flexDirection: "row",
       alignItems: "flex-start",
       padding: 16,
-      marginBottom: 12,
-      borderRadius: 18,
-      borderWidth: 1,
+      borderRadius: 0,
+      borderWidth: 0,
       gap: 14,
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 8 },
@@ -374,6 +551,16 @@ function createNotificationsStyles(C, isDark) {
     msgUnread: { fontWeight: "700" },
     timeRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 8 },
     time: { color: C.muted, fontSize: 11, fontWeight: "700", letterSpacing: 0.3 },
+    archiveBar: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      paddingVertical: 10,
+      paddingHorizontal: 12,
+      alignItems: "center",
+      backgroundColor: isDark ? "rgba(8,10,20,0.6)" : "rgba(248,250,252,0.95)",
+    },
+    archiveBtn: { flexDirection: "row", alignItems: "center", gap: 8 },
+    archiveBtnText: { fontSize: 12, fontWeight: "800" },
+    openHint: { fontSize: 11, fontWeight: "600", marginTop: 8 },
     dotWrap: { paddingTop: 4 },
     dot: { width: 10, height: 10, borderRadius: 5 },
   });

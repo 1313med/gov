@@ -256,6 +256,39 @@ exports.getBookingsForOwner = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
+/** Rental owner: fetch one booking by id (same shape as list row) for deep links / notifications. */
+exports.getOwnerBookingOne = async (req, res, next) => {
+  try {
+    const rentals = await RentalListing.find({
+      rentalOwnerId: req.user._id,
+      deletedAt: null,
+    }).select("_id");
+    const rentalIds = rentals.map((r) => r._id);
+    if (!rentalIds.length) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    const booking = await Booking.findOne({
+      _id: req.params.id,
+      rentalId: { $in: rentalIds },
+      deletedAt: null,
+    })
+      .populate(
+        "rentalId",
+        "title pricePerDay city images airportDeliveryOffered airportDeliveryFeeMad"
+      )
+      .populate(
+        "customerId",
+        "name phone email city avatar driverLicense nationalId"
+      );
+
+    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    res.json(booking);
+  } catch (error) {
+    next(error);
+  }
+};
+
 // ── RENTAL OWNER – Update booking status (confirm / reject / complete) ────────
 exports.updateBookingStatus = async (req, res, next) => {
   try {

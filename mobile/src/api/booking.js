@@ -6,6 +6,8 @@ export const cancelBooking = (id) => api.put(`/bookings/${id}/cancel`);
 export const rescheduleMyBooking = (id, body) => api.put(`/bookings/${id}/customer-dates`, body);
 /** @param {{ page?: number, limit?: number, status?: string }} params */
 export const getOwnerBookings = (params) => api.get("/bookings/owner", { params });
+/** Owner: single booking row (notifications deep link). */
+export const getOwnerBookingOne = (id) => api.get(`/bookings/owner/booking/${id}`);
 export const updateBookingStatus = (id, status) =>
   api.put(`/bookings/${id}/status`, { status });
 /** Owner: hide booking from default list or restore (`archived: true|false`). Completed, rejected, or cancelled. */

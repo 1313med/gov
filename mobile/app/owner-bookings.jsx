@@ -21,8 +21,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import {
   getOwnerBookings,
+  getOwnerBookingOne,
   updateBookingStatus,
   markBookingPaid,
   updateBookingMedia,
@@ -1097,6 +1099,8 @@ function BookingAttentionGlow({ active, primary, children }) {
 }
 
 export default function OwnerBookingsScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams();
   const { lang } = useAppLang();
   const { auth } = useAuth();
   const { C, s, isDark, a } = useOwnerBookingsStyles();
@@ -1299,6 +1303,60 @@ export default function OwnerBookingsScreen() {
   const mergeBooking = (updated) => {
     setBookings((prev) => prev.map((b) => (b._id === updated._id ? { ...b, ...updated } : b)));
   };
+
+  const bookingsRef = useRef(bookings);
+  bookingsRef.current = bookings;
+
+  useEffect(() => {
+    const raw = params.openBookingId;
+    if (!raw || loading) return;
+    const id = String(Array.isArray(raw) ? raw[0] : raw);
+
+    const clearParam = () => {
+      try {
+        router.setParams({ openBookingId: undefined });
+      } catch {
+        /* noop */
+      }
+    };
+
+    const list = bookingsRef.current;
+    const match = list.find((b) => String(b._id) === id);
+    if (match) {
+      if (match.ownerArchivedAt) {
+        setListScope("archived");
+        setFilter("all");
+      }
+      setExpanded(id);
+      clearParam();
+      return;
+    }
+
+    let alive = true;
+    (async () => {
+      try {
+        const { data } = await getOwnerBookingOne(id);
+        if (!alive || !data) {
+          clearParam();
+          return;
+        }
+        if (data.ownerArchivedAt) {
+          setListScope("archived");
+          setFilter("all");
+        } else {
+          setBookings((prev) => (prev.some((b) => String(b._id) === id) ? prev : [data, ...prev]));
+        }
+        setExpanded(id);
+      } catch {
+        /* not found / not owner */
+      } finally {
+        if (alive) clearParam();
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [params.openBookingId, loading, router]);
 
   const acknowledgeBookingChange = async (id) => {
     setAckingChangeId(id);

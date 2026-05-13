@@ -32,6 +32,14 @@ const notificationSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    archived: {
+      type: Boolean,
+      default: false,
+    },
+    archivedAt: {
+      type: Date,
+      default: null,
+    },
     // Optional reference used by return/feedback notification actions
     bookingId: {
       type: mongoose.Schema.Types.ObjectId,

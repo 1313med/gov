@@ -91,8 +91,8 @@ function listingViewPeriodBounds(period) {
   return null;
 }
 
-const notify = async (userId, message, type) => {
-  const n = await Notification.create({ user: userId, message, type });
+const notify = async (userId, message, type, bookingId = null) => {
+  const n = await Notification.create({ user: userId, message, type, bookingId: bookingId || undefined });
   emitNotification(userId.toString(), n);
 };
 
@@ -471,8 +471,8 @@ exports.createBooking = async (req, res, next) => {
       ownerBookingAlertAt: new Date(),
     });
 
-    // Notify owner
-    await notify(rental.rentalOwnerId, `New booking request for "${rental.title}"`, "pending");
+    // Notify owner (bookingId enables deep link from notifications)
+    await notify(rental.rentalOwnerId, `New booking request for "${rental.title}"`, "pending", booking._id);
 
     const owner = await User.findById(rental.rentalOwnerId);
     if (owner?.email) emailService.sendBookingRequest(booking, rental, owner).catch(() => {});
