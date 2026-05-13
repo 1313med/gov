@@ -9,6 +9,7 @@ import {
   Image,
   Dimensions,
   Platform,
+  Pressable,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -16,9 +17,19 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppLang } from "../src/context/AppLangContext";
 import { useTheme } from "../src/context/ThemeContext";
 import { getOwnerListingViews } from "../src/api/rental";
+import { getListingViewQueryParams } from "../src/utils/listingViewPeriodRange";
 import { resolveMediaUrl } from "../src/utils/mediaUrl";
 
 const { width: W } = Dimensions.get("window");
+
+const PERIODS = [
+  { id: "all", en: "All time", fr: "Total" },
+  { id: "today", en: "Today", fr: "Aujourd'hui" },
+  { id: "yesterday", en: "Yesterday", fr: "Hier" },
+  { id: "last_week", en: "Last 7 days", fr: "7 derniers j." },
+  { id: "last_month", en: "Last month", fr: "Mois dernier" },
+  { id: "year", en: "This year", fr: "Cette année" },
+];
 
 function statusLabel(status, fr) {
   const s = String(status || "").toLowerCase();
@@ -153,6 +164,25 @@ function createStyles(C, isDark) {
     pill: { alignSelf: "flex-start", marginTop: 6, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, borderWidth: 1 },
     pillTxt: { fontSize: 9, fontWeight: "900" },
     empty: { borderRadius: 22, borderWidth: 1, padding: 32, alignItems: "center", marginTop: 4, borderColor: C.border, backgroundColor: C.card },
+    chipRow: { marginTop: 16, marginBottom: 2, paddingHorizontal: 4 },
+    chipScroll: { flexGrow: 0 },
+    chipScrollContent: { flexDirection: "row", gap: 8, paddingVertical: 4, paddingRight: 8 },
+    chip: {
+      paddingHorizontal: 14,
+      paddingVertical: 9,
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: C.border,
+      backgroundColor: isDark ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.85)",
+      ...curve,
+    },
+    chipActive: {
+      borderColor: C.primary + "aa",
+      backgroundColor: C.primary + "22",
+    },
+    chipTxt: { fontSize: 12, fontWeight: "800", color: C.muted },
+    chipTxtActive: { color: C.white },
+    headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 },
   });
 }
 
@@ -163,23 +193,24 @@ export default function OwnerListingViewsScreen() {
   const fr = lang === "fr";
   const s = useMemo(() => createStyles(C, isDark), [C, isDark]);
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [fetching, setFetching] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [period, setPeriod] = useState("all");
 
   const load = useCallback(async () => {
+    setFetching(true);
     try {
-      const { data: d } = await getOwnerListingViews();
+      const { data: d } = await getOwnerListingViews(getListingViewQueryParams(period));
       setData(d && typeof d === "object" ? d : null);
     } catch {
       setData(null);
     } finally {
-      setLoading(false);
+      setFetching(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [period]);
 
   useEffect(() => {
-    setLoading(true);
     load();
   }, [load]);
 
@@ -189,7 +220,7 @@ export default function OwnerListingViewsScreen() {
     return Math.max(1, ...v.map((x) => x.views || 0));
   }, [data]);
 
-  if (loading) {
+  if (fetching && data === null) {
     return (
       <View style={[s.center, { backgroundColor: C.bg }]}>
         <ActivityIndicator color={C.primary} size="large" />
@@ -211,9 +242,39 @@ export default function OwnerListingViewsScreen() {
       contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: insets.bottom + 36 }}
       showsVerticalScrollIndicator={false}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={C.primary} />
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => {
+            setRefreshing(true);
+            load();
+          }}
+          tintColor={C.primary}
+        />
       }
     >
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={s.chipScroll}
+        contentContainerStyle={s.chipRow}
+      >
+        <View style={s.chipScrollContent}>
+          {PERIODS.map((p) => {
+            const active = period === p.id;
+            return (
+              <Pressable
+                key={p.id}
+                onPress={() => setPeriod(p.id)}
+                style={[s.chip, active && s.chipActive]}
+                disabled={fetching}
+              >
+                <Text style={[s.chipTxt, active && s.chipTxtActive]}>{fr ? p.fr : p.en}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </ScrollView>
+
       <View style={[s.board, { backgroundColor: C.surface }]}>
         <View style={[s.orb, { width: 220, height: 220, top: -90, right: -70, backgroundColor: C.primary }]} />
         <View style={[s.orb, { width: 160, height: 160, bottom: -50, left: -40, backgroundColor: C.accent }]} />
@@ -223,8 +284,13 @@ export default function OwnerListingViewsScreen() {
         />
         <View style={s.boardInner}>
           <View style={s.boardHeader}>
-            <Text style={s.kicker}>{fr ? "INSIGHT" : "INSIGHT"}</Text>
-            <Text style={s.h1}>{fr ? "Portée de vos annonces" : "Listing reach"}</Text>
+            <View style={s.headerRow}>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={s.kicker}>{fr ? "INSIGHT" : "INSIGHT"}</Text>
+                <Text style={s.h1}>{fr ? "Portée de vos annonces" : "Listing reach"}</Text>
+              </View>
+              {fetching && data ? <ActivityIndicator color={C.primary} /> : null}
+            </View>
             <Text style={s.sub}>
               {fr
                 ? "Les vues comptent une ouverture de fiche (dédupliquée par visiteur sur quelques minutes)."
@@ -253,9 +319,13 @@ export default function OwnerListingViewsScreen() {
           </View>
 
           <Text style={s.footnote}>
-            {fr
-              ? "Les onglets ou rafraîchissements rapides ne gonflent plus le total grâce à la déduplication."
-              : "Rapid tab switches or refreshes no longer inflate totals thanks to deduplication."}
+            {period === "all"
+              ? fr
+                ? "Les onglets ou rafraîchissements rapides ne gonflent plus le total grâce à la déduplication."
+                : "Rapid tab switches or refreshes no longer inflate totals thanks to deduplication."
+              : fr
+                ? "Les périodes utilisent le fuseau de votre appareil. Les totaux comptent les vues enregistrées depuis le suivi horodaté (le « Total » reste le cumul sur l’annonce)."
+                : "Periods use your device’s time zone. Totals count timestamped views since tracking shipped; “All time” still uses each listing’s lifetime counter."}
           </Text>
         </View>
       </View>

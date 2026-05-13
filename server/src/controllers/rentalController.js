@@ -1,4 +1,5 @@
 const RentalListing = require("../models/RentalListing");
+const RentalViewEvent = require("../models/RentalViewEvent");
 const Booking = require("../models/Booking");
 const Notification = require("../models/Notification");
 const User = require("../models/User");
@@ -22,6 +23,71 @@ function viewerKeyForRentalView(req) {
   const fwd = (req.headers["x-forwarded-for"] || "").split(",")[0].trim();
   const ip = fwd || req.ip || req.socket?.remoteAddress || "";
   return String(ip || "unknown").slice(0, 64);
+}
+
+const LISTING_VIEW_PERIOD_KEYS = new Set([
+  "all",
+  "today",
+  "yesterday",
+  "last_week",
+  "last_month",
+  "year",
+]);
+
+const MAX_LISTING_VIEW_WINDOW_MS = 400 * 24 * 60 * 60 * 1000;
+const LISTING_VIEW_END_FUTURE_SLACK_MS = 24 * 60 * 60 * 1000;
+
+/** Optional `from` / `to` (ISO) from the client so periods use the device calendar, not UTC-only. */
+function parseListingViewWindow(req) {
+  const fromRaw = req.query.from;
+  const toRaw = req.query.to;
+  if (fromRaw == null || toRaw == null || String(fromRaw) === "" || String(toRaw) === "") {
+    return null;
+  }
+  const start = new Date(String(fromRaw));
+  const end = new Date(String(toRaw));
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null;
+  if (start.getTime() > end.getTime()) return null;
+  if (end.getTime() - start.getTime() > MAX_LISTING_VIEW_WINDOW_MS) return null;
+  if (end.getTime() > Date.now() + LISTING_VIEW_END_FUTURE_SLACK_MS) return null;
+  return { start, end };
+}
+
+/** UTC bounds fallback when the client does not send `from` / `to` (events table). */
+function listingViewPeriodBounds(period) {
+  const now = new Date();
+  if (period === "today") {
+    const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    return { start, end: now };
+  }
+  if (period === "yesterday") {
+    const day = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    day.setUTCDate(day.getUTCDate() - 1);
+    const start = new Date(Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate()));
+    const end = new Date(start);
+    end.setUTCDate(end.getUTCDate() + 1);
+    end.setUTCMilliseconds(-1);
+    return { start, end };
+  }
+  if (period === "last_week") {
+    const end = now;
+    const start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    return { start, end };
+  }
+  if (period === "last_month") {
+    const y = now.getUTCFullYear();
+    const m = now.getUTCMonth();
+    const py = m === 0 ? y - 1 : y;
+    const pm = m === 0 ? 11 : m - 1;
+    const start = new Date(Date.UTC(py, pm, 1));
+    const end = new Date(Date.UTC(py, pm + 1, 0, 23, 59, 59, 999));
+    return { start, end };
+  }
+  if (period === "year") {
+    const start = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
+    return { start, end: now };
+  }
+  return null;
 }
 
 const notify = async (userId, message, type) => {
@@ -230,6 +296,7 @@ exports.recordRentalView = async (req, res, next) => {
     rentalViewDedupe.set(key, now + RENTAL_VIEW_DEDUPE_MS);
 
     await RentalListing.updateOne({ _id: rentalId }, { $inc: { viewCount: 1 } });
+    await RentalViewEvent.create({ rentalId, at: new Date() });
     res.json({ recorded: true });
   } catch (error) {
     next(error);
@@ -239,23 +306,54 @@ exports.recordRentalView = async (req, res, next) => {
 /** GET /api/rental/owner/listing-views — per-vehicle view counts for dashboard */
 exports.getOwnerListingViews = async (req, res, next) => {
   try {
+    const raw = String(req.query.period || "all").toLowerCase();
+    const period = LISTING_VIEW_PERIOD_KEYS.has(raw) ? raw : "all";
+
     const rentals = await RentalListing.find({ rentalOwnerId: req.user._id, deletedAt: null })
       .select("_id title brand model year city images viewCount status")
       .sort({ viewCount: -1, updatedAt: -1 })
       .lean();
 
-    const totalViews = rentals.reduce((s, r) => s + (r.viewCount || 0), 0);
-    const vehicles = rentals.map((r) => ({
+    let viewsByRentalId = null;
+    if (period !== "all") {
+      const bounds = parseListingViewWindow(req) || listingViewPeriodBounds(period);
+      if (bounds) {
+        const ids = rentals.map((r) => r._id);
+        if (ids.length) {
+          const agg = await RentalViewEvent.aggregate([
+            {
+              $match: {
+                rentalId: { $in: ids },
+                at: { $gte: bounds.start, $lte: bounds.end },
+              },
+            },
+            { $group: { _id: "$rentalId", views: { $sum: 1 } } },
+          ]);
+          viewsByRentalId = new Map(agg.map((x) => [String(x._id), x.views]));
+        } else {
+          viewsByRentalId = new Map();
+        }
+      }
+    }
+
+    let vehicles = rentals.map((r) => ({
       rentalId: r._id,
       title: r.title,
       subtitle: [r.brand, r.model, r.year].filter(Boolean).join(" "),
       city: r.city,
       image: Array.isArray(r.images) && r.images[0] ? r.images[0] : null,
-      views: r.viewCount || 0,
+      views: viewsByRentalId ? viewsByRentalId.get(String(r._id)) || 0 : r.viewCount || 0,
       status: r.status,
     }));
 
+    if (viewsByRentalId) {
+      vehicles = vehicles.sort((a, b) => (b.views || 0) - (a.views || 0));
+    }
+
+    const totalViews = vehicles.reduce((s, v) => s + (v.views || 0), 0);
+
     res.json({
+      period,
       totalViews,
       listingCount: rentals.length,
       avgViewsPerListing: rentals.length ? Math.round((totalViews / rentals.length) * 10) / 10 : 0,

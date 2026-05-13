@@ -12,7 +12,8 @@ export const deleteRental = (id) => api.delete(`/rental/${id}`);
 export const bookRental = (id, data) => api.post(`/rental/${id}/book`, data);
 export const getRentalBookings = (id) => api.get(`/rental/${id}/bookings`);
 export const getOwnerBookings = () => api.get("/rental/owner/bookings");
-export const getOwnerListingViews = () => api.get("/rental/owner/listing-views");
+export const getOwnerListingViews = (params = {}) =>
+  api.get("/rental/owner/listing-views", { params });
 export const getAdminRentals = () => api.get("/rental/admin");
 export const updateRentalStatus = (id, status) =>
   api.put(`/rental/admin/${id}/status`, { status });
