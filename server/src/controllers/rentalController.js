@@ -4,6 +4,7 @@ const Booking = require("../models/Booking");
 const Notification = require("../models/Notification");
 const User = require("../models/User");
 const emailService = require("../utils/emailService");
+const { computeBookingTotalForRental } = require("../utils/bookingPricing");
 const { emitNotification } = require("../utils/socketManager");
 const { safeRegex, safeNumber } = require("../utils/sanitize");
 
@@ -426,34 +427,7 @@ exports.createBooking = async (req, res, next) => {
       });
     }
 
-    // UTC calendar days, inclusive of start and end (e.g. May 7–May 11 = 5 days)
-    const MS_PER_DAY = 24 * 60 * 60 * 1000;
-    const startUTC = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate());
-    const endUTC   = Date.UTC(end.getUTCFullYear(),   end.getUTCMonth(),   end.getUTCDate());
-    const days = Math.max(1, Math.floor((endUTC - startUTC) / MS_PER_DAY) + 1);
-
-    // Apply best active offer
-    let totalAmount = days * rental.pricePerDay;
-    let appliedOffer = null;
-    const now = new Date();
-    const activeOffers = (rental.offers || []).filter(
-      (o) => o.isActive && days >= o.minDays && (!o.expiresAt || new Date(o.expiresAt) > now)
-    );
-
-    let bestSaving = 0;
-    for (const offer of activeOffers) {
-      let saving = 0;
-      if (offer.type === "free_days") {
-        saving = offer.freeExtraDays * rental.pricePerDay;
-      } else if (offer.type === "percent_discount") {
-        saving = totalAmount * (offer.discountPercent / 100);
-      }
-      if (saving > bestSaving) {
-        bestSaving = saving;
-        appliedOffer = offer;
-      }
-    }
-    if (appliedOffer) totalAmount = Math.max(0, totalAmount - bestSaving);
+    const { totalAmount, appliedOffer } = computeBookingTotalForRental(rental, start, end);
 
     const booking = await Booking.create({
       rentalId, customerId: req.user._id,

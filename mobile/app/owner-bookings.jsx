@@ -22,6 +22,8 @@ import {
   markBookingPaid,
   updateBookingMedia,
   setOwnerBookingArchive,
+  declareOwnerVehicleIssue,
+  ownerConfirmVehicleRefund,
 } from "../src/api/booking";
 import { uploadListingImages } from "../src/api/upload";
 import { submitCustomerFeedback, getFeedbackForBooking, getFeedbackForCustomer } from "../src/api/customerFeedback";
@@ -56,6 +58,20 @@ const STATUS = {
 };
 
 const FILTERS = ["all", "pending", "confirmed", "completed", "rejected", "cancelled"];
+
+function ownerVehiclePhase(b) {
+  return b?.vehicleResolutionPhase || "none";
+}
+
+function hoursUntilStart(iso) {
+  return (new Date(iso).getTime() - Date.now()) / 3600000;
+}
+
+function canReportVehicleIssue(item) {
+  if (!["pending", "confirmed"].includes(item.status)) return false;
+  if (ownerVehiclePhase(item) !== "none") return false;
+  return hoursUntilStart(item.startDate) > 0;
+}
 
 function filterChipLabel(key, fr) {
   const m = fr
@@ -325,6 +341,25 @@ function createOwnerBookingsStyles(C, isDark) {
         gap: 10,
       },
       pdfRowText: { flex: 1, color: C.white, fontSize: 13, fontWeight: "600" },
+      vehicleBanner: {
+        marginBottom: 12,
+        padding: 12,
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: "rgba(245,158,11,0.45)",
+        backgroundColor: "rgba(245,158,11,0.1)",
+      },
+      vehicleBannerT: { color: "#fde68a", fontSize: 12, fontWeight: "700", marginBottom: 8, lineHeight: 17 },
+      vehicleRefundBtn: {
+        marginTop: 8,
+        backgroundColor: "rgba(124,107,255,0.18)",
+        borderRadius: 12,
+        paddingVertical: 12,
+        alignItems: "center",
+        borderWidth: 1,
+        borderColor: C.primary,
+      },
+      vehicleRefundBtnT: { color: "#fff", fontWeight: "800", fontSize: 13 },
     }),
   };
 }
@@ -976,6 +1011,54 @@ export default function OwnerBookingsScreen() {
     ]);
   };
 
+  const reportVehicleIssue = (item) => {
+    Alert.alert(
+      fr ? "Véhicule indisponible ?" : "Vehicle unavailable?",
+      fr
+        ? "Le client sera notifié et pourra demander un remboursement ou une autre voiture de votre flotte (mêmes dates), tant que le départ n’a pas eu lieu."
+        : "The customer will be notified and can request a refund or another car from your fleet (same dates), as long as pickup has not started yet.",
+      [
+        { text: fr ? "Annuler" : "Cancel", style: "cancel" },
+        {
+          text: fr ? "Notifier le client" : "Notify customer",
+          onPress: async () => {
+            try {
+              await declareOwnerVehicleIssue(item._id, { note: "" });
+              loadPage(page);
+            } catch (e) {
+              Alert.alert("Error", e?.response?.data?.message || (fr ? "Échec" : "Failed"));
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const confirmOwnerVehicleRefund = (item) => {
+    const mad = Number(item.vehicleResolutionRefundMad) || 0;
+    Alert.alert(
+      fr ? "Confirmer le remboursement" : "Confirm refund",
+      fr
+        ? `Confirmez avoir remboursé ${mad.toLocaleString("fr-FR")} MAD au client (hors application).`
+        : `Confirm you refunded ${mad.toLocaleString("en-US")} MAD to the customer (outside the app).`,
+      [
+        { text: fr ? "Annuler" : "Cancel", style: "cancel" },
+        {
+          text: fr ? "Confirmer" : "Confirm",
+          onPress: async () => {
+            try {
+              const { data } = await ownerConfirmVehicleRefund(item._id);
+              mergeBooking(data);
+              loadPage(page);
+            } catch (e) {
+              Alert.alert("Error", e?.response?.data?.message || (fr ? "Échec" : "Failed"));
+            }
+          },
+        },
+      ],
+    );
+  };
+
   const mergeBooking = (updated) => {
     setBookings((prev) => prev.map((b) => (b._id === updated._id ? { ...b, ...updated } : b)));
   };
@@ -1222,6 +1305,34 @@ export default function OwnerBookingsScreen() {
                 </View>
               )}
 
+              {(ownerVehiclePhase(item) === "awaiting_owner_refund" ||
+                ownerVehiclePhase(item) === "awaiting_owner_diff_refund") && (
+                <View style={s.vehicleBanner}>
+                  <Text style={s.vehicleBannerT}>
+                    {ownerVehiclePhase(item) === "awaiting_owner_refund"
+                      ? fr
+                        ? `Remboursement demandé par le client : ${Number(item.vehicleResolutionRefundMad || 0).toLocaleString("fr-FR")} MAD. Remboursez-le puis confirmez ici.`
+                        : `Customer requested refund: ${Number(item.vehicleResolutionRefundMad || 0).toLocaleString("en-US")} MAD. Refund them, then confirm here.`
+                      : fr
+                        ? `Différence de prix à rembourser : ${Number(item.vehicleResolutionRefundMad || 0).toLocaleString("fr-FR")} MAD.`
+                        : `Price difference to refund: ${Number(item.vehicleResolutionRefundMad || 0).toLocaleString("en-US")} MAD.`}
+                  </Text>
+                  <TouchableOpacity style={s.vehicleRefundBtn} onPress={() => confirmOwnerVehicleRefund(item)} activeOpacity={0.85}>
+                    <Text style={s.vehicleRefundBtnT}>{fr ? "Confirmer le remboursement" : "Confirm refund done"}</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {ownerVehiclePhase(item) === "awaiting_customer" && (
+                <View style={[s.vehicleBanner, { borderColor: "rgba(96,165,250,0.45)", backgroundColor: "rgba(96,165,250,0.1)" }]}>
+                  <Text style={[s.vehicleBannerT, { color: "#bae6fd" }]}>
+                    {fr
+                      ? "Le client doit choisir un remboursement ou une autre voiture (mêmes dates)."
+                      : "The customer must choose a refund or another car (same dates)."}
+                  </Text>
+                </View>
+              )}
+
               <TouchableOpacity
                 onPress={() => exportPdf(item)}
                 disabled={pdfForId === item._id}
@@ -1240,6 +1351,13 @@ export default function OwnerBookingsScreen() {
               </TouchableOpacity>
 
               <View style={s.actionsRow}>
+                {canReportVehicleIssue(item) && (
+                  <ActionBtn
+                    label={fr ? "Véhicule indispo." : "Car unavailable"}
+                    variant="red"
+                    onPress={() => reportVehicleIssue(item)}
+                  />
+                )}
                 {item.status === "pending" && (
                   <>
                     <ActionBtn label={fr ? "Confirmer" : "Confirm"} variant="green" onPress={() => changeStatus(item._id, "confirmed")} />

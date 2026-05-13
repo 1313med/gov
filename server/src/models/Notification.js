@@ -13,7 +13,17 @@ const notificationSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["pending", "approved", "rejected", "sold", "return_confirm", "feedback_request"],
+      enum: [
+        "pending",
+        "approved",
+        "rejected",
+        "sold",
+        "return_confirm",
+        "feedback_request",
+        "vehicle_issue",
+        "refund_pending",
+        "refund_done",
+      ],
       required: true,
     },
     read: {
