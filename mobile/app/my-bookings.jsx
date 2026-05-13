@@ -13,13 +13,14 @@ import {
   Modal,
   Platform,
   ScrollView,
+  TextInput,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { getMyBookings, cancelBooking, rescheduleMyBooking, getAlternativeRentalsForBooking, chooseVehicleResolution } from "../src/api/booking";
+import { getMyBookings, cancelBooking, rescheduleMyBooking, getAlternativeRentalsForBooking, chooseVehicleResolution, submitBookingCustomerReview } from "../src/api/booking";
 import { useAppLang } from "../src/context/AppLangContext";
 import { useTheme } from "../src/context/ThemeContext";
 import { resolveMediaUrl } from "../src/utils/mediaUrl";
@@ -75,6 +76,7 @@ const ST = {
   pending: { bg: "rgba(245,158,11,0.12)", border: "rgba(245,158,11,0.4)", text: "#f59e0b", icon: "time-outline" },
   confirmed: { bg: "rgba(52,211,153,0.12)", border: "rgba(52,211,153,0.4)", text: "#34d399", icon: "checkmark-circle-outline" },
   completed: { bg: "rgba(96,165,250,0.12)", border: "rgba(96,165,250,0.4)", text: "#60a5fa", icon: "flag-outline" },
+  expired: { bg: "rgba(148,163,184,0.18)", border: "rgba(148,163,184,0.45)", text: "#94a3b8", icon: "hourglass-outline" },
   cancelled: { bg: "rgba(239,68,68,0.12)", border: "rgba(239,68,68,0.4)", text: "#f87171", icon: "close-circle-outline" },
 };
 
@@ -97,6 +99,10 @@ export default function MyBookingsScreen() {
   const [swapAlternatives, setSwapAlternatives] = useState([]);
   const [swapLoading, setSwapLoading] = useState(false);
   const [swapSubmitting, setSwapSubmitting] = useState(false);
+  const [feedbackBooking, setFeedbackBooking] = useState(null);
+  const [fbOverall, setFbOverall] = useState(null);
+  const [fbNote, setFbNote] = useState("");
+  const [fbSubmitting, setFbSubmitting] = useState(false);
 
   const load = async () => {
     try {
@@ -253,6 +259,30 @@ export default function MyBookingsScreen() {
     );
   };
 
+  const closeFeedbackModal = () => {
+    if (fbSubmitting) return;
+    setFeedbackBooking(null);
+    setFbOverall(null);
+    setFbNote("");
+  };
+
+  const submitTripFeedback = async () => {
+    if (!feedbackBooking || !fbOverall) {
+      Alert.alert(fr ? "Choix requis" : "Required", fr ? "Indiquez si l’expérience était bonne ou mauvaise." : "Pick good or bad overall.");
+      return;
+    }
+    setFbSubmitting(true);
+    try {
+      await submitBookingCustomerReview(feedbackBooking._id, { overall: fbOverall, note: fbNote });
+      closeFeedbackModal();
+      await load();
+    } catch (e) {
+      Alert.alert(fr ? "Impossible" : "Error", e?.response?.data?.message || (fr ? "Réessayez." : "Try again."));
+    } finally {
+      setFbSubmitting(false);
+    }
+  };
+
   const promptCancelBooking = (item) => {
     const id = item._id;
     const h = hoursUntilStart(item.startDate);
@@ -343,7 +373,7 @@ export default function MyBookingsScreen() {
           const usedChange = !!item.customerDateChangeUsed;
           const vPhase = vehiclePhase(item);
           const bookingLockedNoFurther =
-            item.status === "confirmed" && h > 0 && usedChange && calDays <= 1;
+            item.status === "confirmed" && h > 0 && usedChange && (calDays <= 1 || h <= 24);
           const canCancelBooking =
             item.status === "pending" ||
             (item.status === "confirmed" &&
@@ -355,6 +385,9 @@ export default function MyBookingsScreen() {
             h > 0 &&
             calDays === 1;
 
+          const showTripFeedbackCta =
+            (item.status === "expired" || item.status === "completed") && !item.hasCustomerBookingReview;
+
           const img = resolveMediaUrl(item.rentalId?.images?.[0]);
           const title =
             item.rentalId?.title || `${item.rentalId?.brand || ""} ${item.rentalId?.model || ""}`.trim() || "Rental";
@@ -365,8 +398,8 @@ export default function MyBookingsScreen() {
               policyEl = (
                 <Text style={s.policyLocked}>
                   {fr
-                    ? "Plus d’actions possibles : vous avez déjà modifié les dates une fois. La réservation est figée jusqu’au départ."
-                    : "No further changes: you already updated your dates once. Your booking is set until pickup."}
+                    ? "Plus d’actions possibles : vous avez déjà modifié les dates une fois. Annulation en ligne indisponible (y compris dans les 24h avant le départ). La réservation est figée jusqu’au départ."
+                    : "No further changes: you already updated your dates once. Online cancellation is not available (including within 24h before pickup). Your booking is set until pickup."}
                 </Text>
               );
             } else {
@@ -516,6 +549,25 @@ export default function MyBookingsScreen() {
                     <Text style={s.cancelText}>{fr ? "Annuler la réservation" : "Cancel booking"}</Text>
                   </TouchableOpacity>
                 ) : null}
+
+                {showTripFeedbackCta ? (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setFeedbackBooking(item);
+                      setFbOverall(null);
+                      setFbNote("");
+                    }}
+                    style={[s.secondaryBtn, { marginTop: canCancelBooking ? 10 : 0 }]}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={s.secondaryBtnText}>{fr ? "Donner un avis sur la location" : "Rate this rental"}</Text>
+                  </TouchableOpacity>
+                ) : null}
+                {item.hasCustomerBookingReview ? (
+                  <Text style={[s.policyHint, { marginTop: 10 }]}>
+                    {fr ? "Merci pour votre avis sur cette location." : "Thanks for your rental feedback."}
+                  </Text>
+                ) : null}
               </View>
             </View>
           );
@@ -652,6 +704,61 @@ export default function MyBookingsScreen() {
             >
               <Text style={s.modalSecondaryTxt}>{fr ? "Fermer" : "Close"}</Text>
             </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={!!feedbackBooking} transparent animationType="fade" onRequestClose={closeFeedbackModal}>
+        <View style={s.modalBackdrop}>
+          <View style={[s.modalCard, { alignSelf: "center", width: Math.min(SCREEN_W - 32, 400) }]}>
+            <Text style={s.modalTitle}>{fr ? "Votre avis" : "Your feedback"}</Text>
+            <Text style={s.modalSub}>
+              {fr
+                ? "Comment s’est passée la location ? Un seul envoi par réservation."
+                : "How was the trip? You can submit once per booking."}
+            </Text>
+            <View style={{ flexDirection: "row", gap: 10, marginBottom: 12 }}>
+              <TouchableOpacity
+                onPress={() => setFbOverall("good")}
+                style={[
+                  s.modalSecondary,
+                  { flex: 1, borderColor: fbOverall === "good" ? "#34d399" : undefined, backgroundColor: fbOverall === "good" ? "rgba(52,211,153,0.12)" : undefined },
+                ]}
+              >
+                <Text style={[s.modalSecondaryTxt, fbOverall === "good" && { color: "#34d399" }]}>{fr ? "Bien" : "Good"}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setFbOverall("bad")}
+                style={[
+                  s.modalSecondary,
+                  { flex: 1, borderColor: fbOverall === "bad" ? "#f87171" : undefined, backgroundColor: fbOverall === "bad" ? "rgba(248,113,113,0.12)" : undefined },
+                ]}
+              >
+                <Text style={[s.modalSecondaryTxt, fbOverall === "bad" && { color: "#f87171" }]}>{fr ? "Moins bien" : "Poor"}</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={s.modalLabel}>{fr ? "Commentaire (optionnel)" : "Comment (optional)"}</Text>
+            <TextInput
+              style={[s.fbNoteInput, { color: C.white }]}
+              placeholderTextColor={C.muted}
+              placeholder={fr ? "Détails…" : "Details…"}
+              value={fbNote}
+              onChangeText={setFbNote}
+              multiline
+              maxLength={1500}
+            />
+            <View style={s.modalBtnRow}>
+              <TouchableOpacity onPress={closeFeedbackModal} style={s.modalSecondary} disabled={fbSubmitting}>
+                <Text style={s.modalSecondaryTxt}>{fr ? "Fermer" : "Close"}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={submitTripFeedback}
+                style={[s.modalPrimary, fbSubmitting && { opacity: 0.6 }]}
+                disabled={fbSubmitting}
+              >
+                <Text style={s.modalPrimaryTxt}>{fbSubmitting ? "…" : fr ? "Envoyer" : "Send"}</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -831,5 +938,16 @@ function createMyBookingsStyles(C, isDark) {
     altImgPh: { alignItems: "center", justifyContent: "center" },
     altTitle: { color: C.white, fontWeight: "700", fontSize: 14 },
     altMeta: { color: C.muted, fontSize: 12, marginTop: 4 },
+    fbNoteInput: {
+      borderWidth: 1,
+      borderColor: C.border,
+      borderRadius: 12,
+      padding: 12,
+      minHeight: 88,
+      textAlignVertical: "top",
+      backgroundColor: C.inputBg,
+      marginBottom: 8,
+      fontSize: 14,
+    },
   });
 }

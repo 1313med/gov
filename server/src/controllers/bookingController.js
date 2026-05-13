@@ -1,8 +1,10 @@
 const Booking = require("../models/Booking");
+const BookingCustomerReview = require("../models/BookingCustomerReview");
 const RentalListing = require("../models/RentalListing");
 const Notification = require("../models/Notification");
 const User = require("../models/User");
 const emailService = require("../utils/emailService");
+const { processEndedConfirmedBookings } = require("../utils/bookingLifecycle");
 const { computeBookingTotalForRental } = require("../utils/bookingPricing");
 const { emitNotification } = require("../utils/socketManager");
 
@@ -45,8 +47,8 @@ exports.confirmReturn = async (req, res, next) => {
     }).populate("rentalId", "title rentalOwnerId");
 
     if (!booking) return res.status(404).json({ message: "Booking not found" });
-    if (booking.status !== "confirmed") {
-      return res.status(400).json({ message: "Only confirmed bookings can be marked as returned" });
+    if (!["confirmed", "expired"].includes(booking.status)) {
+      return res.status(400).json({ message: "Only active or ended bookings can be marked as returned" });
     }
     if (booking.customerConfirmedReturn) {
       return res.status(400).json({ message: "You already confirmed the return" });
@@ -76,6 +78,7 @@ exports.confirmReturn = async (req, res, next) => {
 const OWNER_VALID_TRANSITIONS = {
   pending:   ["confirmed", "rejected"],
   confirmed: ["completed"],
+  expired:   ["completed"],
   rejected:  [],
   cancelled: [],
   completed: [],
@@ -84,9 +87,21 @@ const OWNER_VALID_TRANSITIONS = {
 // ── CUSTOMER – My bookings ────────────────────────────────────────────────────
 exports.getMyBookings = async (req, res, next) => {
   try {
+    await processEndedConfirmedBookings({ customerId: req.user._id });
     const bookings = await Booking.find({ customerId: req.user._id, deletedAt: null })
       .populate("rentalId")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
+    const ids = bookings.map((b) => b._id);
+    if (ids.length) {
+      const reviews = await BookingCustomerReview.find({ bookingId: { $in: ids } })
+        .select("bookingId")
+        .lean();
+      const has = new Set(reviews.map((r) => String(r.bookingId)));
+      bookings.forEach((b) => {
+        b.hasCustomerBookingReview = has.has(String(b._id));
+      });
+    }
     res.json(bookings);
   } catch (error) { next(error); }
 };
@@ -113,9 +128,21 @@ exports.getBookingsForOwner = async (req, res, next) => {
         total: 0,
         pages: 0,
         page: 1,
-        stats: { total: 0, pending: 0, confirmed: 0, completed: 0, rejected: 0, cancelled: 0, revenue: 0 },
+        stats: {
+          total: 0,
+          pending: 0,
+          confirmed: 0,
+          expired: 0,
+          completed: 0,
+          rejected: 0,
+          cancelled: 0,
+          revenue: 0,
+          newPending: 0,
+        },
       });
     }
+
+    await processEndedConfirmedBookings({ rentalIdIn: rentalIds });
 
     // 2. Aggregated stats over ALL bookings (not paginated — needed for header cards)
     const [statsResult] = await Booking.aggregate([
@@ -126,6 +153,7 @@ exports.getBookingsForOwner = async (req, res, next) => {
           total:     { $sum: 1 },
           pending:   { $sum: { $cond: [{ $eq: ["$status", "pending"] },   1, 0] } },
           confirmed: { $sum: { $cond: [{ $eq: ["$status", "confirmed"] }, 1, 0] } },
+          expired:   { $sum: { $cond: [{ $eq: ["$status", "expired"] },   1, 0] } },
           completed: { $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] } },
           rejected:  { $sum: { $cond: [{ $eq: ["$status", "rejected"] },  1, 0] } },
           cancelled: { $sum: { $cond: [{ $eq: ["$status", "cancelled"] }, 1, 0] } },
@@ -133,17 +161,35 @@ exports.getBookingsForOwner = async (req, res, next) => {
         },
       },
     ]);
+    const newPending = await Booking.countDocuments({
+      rentalId: { $in: rentalIds },
+      deletedAt: null,
+      status: "pending",
+      isNewForOwner: true,
+    });
     const stats = statsResult
       ? {
           total:     statsResult.total,
           pending:   statsResult.pending,
           confirmed: statsResult.confirmed,
+          expired:   statsResult.expired,
           completed: statsResult.completed,
           rejected:  statsResult.rejected,
           cancelled: statsResult.cancelled,
           revenue:   statsResult.revenue,
+          newPending,
         }
-      : { total: 0, pending: 0, confirmed: 0, completed: 0, rejected: 0, cancelled: 0, revenue: 0 };
+      : {
+          total: 0,
+          pending: 0,
+          confirmed: 0,
+          expired: 0,
+          completed: 0,
+          rejected: 0,
+          cancelled: 0,
+          revenue: 0,
+          newPending: 0,
+        };
 
     // 3. Build paginated query filter
     // archive=exclude (default): hide owner-archived completed rows from the active list
@@ -256,6 +302,9 @@ exports.updateBookingStatus = async (req, res, next) => {
     }
 
     booking.status = status;
+    if (status === "confirmed" || status === "rejected") {
+      booking.isNewForOwner = false;
+    }
     await booking.save();
 
     const customer = await User.findById(booking.customerId);
@@ -297,6 +346,14 @@ exports.cancelBooking = async (req, res, next) => {
       if (new Date(booking.startDate).getTime() <= Date.now()) {
         return res.status(400).json({
           message: "Pickup has already started or passed; cancellation here is not available.",
+        });
+      }
+      const hBlock = hoursUntilPickup(booking.startDate);
+      if (booking.customerDateChangeUsed && hBlock > 0 && hBlock <= 24) {
+        return res.status(400).json({
+          code: "BOOKING_NO_FURTHER_CHANGES",
+          message:
+            "You already used your one-time date change close to pickup. Online cancellation is no longer available for this booking.",
         });
       }
       const cal = calendarDaysUntilPickupDay(booking.startDate);
@@ -823,3 +880,99 @@ exports.ownerConfirmVehicleRefund = async (req, res, next) => {
   }
 };
 
+// ── RENTAL OWNER – Dismiss “new request” highlight on a pending booking ─────
+exports.ownerClearBookingNewFlag = async (req, res, next) => {
+  try {
+    const booking = await Booking.findOne({ _id: req.params.id, deletedAt: null }).populate(
+      "rentalId",
+      "rentalOwnerId"
+    );
+    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    if (booking.rentalId.rentalOwnerId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    booking.isNewForOwner = false;
+    await booking.save();
+    res.json(booking);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ── CUSTOMER – Post-trip review of rental / owner (one per booking) ──────────
+exports.submitBookingCustomerReview = async (req, res, next) => {
+  try {
+    const { overall, note } = req.body;
+    if (!["good", "bad"].includes(overall)) {
+      return res.status(400).json({ message: "overall must be \"good\" or \"bad\"" });
+    }
+
+    const booking = await Booking.findOne({ _id: req.params.id, deletedAt: null }).populate(
+      "rentalId",
+      "title rentalOwnerId"
+    );
+    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    if (booking.customerId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    if (!["expired", "completed"].includes(booking.status)) {
+      return res.status(400).json({
+        message: "Feedback is only available after the rental period has ended.",
+      });
+    }
+
+    const existing = await BookingCustomerReview.findOne({ bookingId: booking._id });
+    if (existing) {
+      return res.status(400).json({ message: "You already submitted feedback for this booking" });
+    }
+
+    const rental = booking.rentalId;
+    const ownerId = rental.rentalOwnerId;
+    const review = await BookingCustomerReview.create({
+      bookingId: booking._id,
+      customerId: booking.customerId,
+      ownerId,
+      rentalId: rental._id,
+      overall,
+      note: typeof note === "string" ? note.slice(0, 1500) : "",
+    });
+
+    const cust = await User.findById(booking.customerId).select("name");
+    const first = cust?.name?.trim()?.split(/\s+/)[0] || "A customer";
+    const title = rental?.title || "a rental";
+    await notify(
+      ownerId,
+      `${first} left feedback for "${title}". Open Bookings to see details.`,
+      "customer_rental_review",
+      booking._id
+    );
+
+    res.status(201).json(review);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getBookingCustomerReview = async (req, res, next) => {
+  try {
+    const booking = await Booking.findOne({ _id: req.params.id, deletedAt: null }).populate(
+      "rentalId",
+      "rentalOwnerId"
+    );
+    if (!booking) return res.status(404).json({ message: "Booking not found" });
+
+    const isCustomer = booking.customerId.toString() === req.user._id.toString();
+    const isOwner =
+      booking.rentalId?.rentalOwnerId &&
+      booking.rentalId.rentalOwnerId.toString() === req.user._id.toString();
+
+    if (!isCustomer && !isOwner) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    const feedback = await BookingCustomerReview.findOne({ bookingId: booking._id }).lean();
+    res.json({ feedback: feedback || null });
+  } catch (error) {
+    next(error);
+  }
+};

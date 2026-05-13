@@ -434,6 +434,7 @@ exports.createBooking = async (req, res, next) => {
       startDate: start, endDate: end,
       status: "pending", totalAmount,
       appliedOfferTitle: appliedOffer?.title || null,
+      isNewForOwner: true,
     });
 
     // Notify owner

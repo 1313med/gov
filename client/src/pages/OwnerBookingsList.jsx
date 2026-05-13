@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import jsPDF from "jspdf";
-import { getOwnerBookings, updateBookingStatus, markBookingPaid, updateBookingMedia } from "../api/booking";
+import { getOwnerBookings, updateBookingStatus, markBookingPaid, updateBookingMedia, ownerClearBookingNewFlag } from "../api/booking";
 import { submitCustomerFeedback, getFeedbackForBooking } from "../api/customerFeedback";
 import OwnerLayout from "../components/owner/OwnerLayout";
 import { useAppLang } from "../context/AppLangContext";
@@ -368,6 +368,7 @@ const STYLES = `
   .obl-stat.total::before    { background:rgba(255,255,255,.12); }
   .obl-stat.pending::before  { background:#fbbf24; }
   .obl-stat.confirmed::before{ background:#4ade80; }
+  .obl-stat.expired::before  { background:#94a3b8; }
   .obl-stat.completed::before{ background:#7c6cfc; }
   .obl-stat.revenue::before  { background:linear-gradient(90deg,#7c6cfc,#2af5c0); }
   .obl-stat-icon { width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; margin-bottom:12px; }
@@ -395,6 +396,7 @@ const STYLES = `
   .obl-td { padding:14px 16px; border-bottom:1px solid rgba(255,255,255,.04); font-size:12px; vertical-align:middle; }
   .obl-tr:last-child > .obl-td { border-bottom:none; }
   .obl-tr:hover > .obl-td { background:rgba(255,255,255,.015); }
+  .obl-tr-new > .obl-td { background: rgba(245,158,11,0.07) !important; box-shadow: inset 3px 0 0 #f59e0b; }
 
   .obl-car-img { width:44px; height:34px; border-radius:7px; object-fit:cover; border:1px solid rgba(255,255,255,.07); flex-shrink:0; }
   .obl-car-placeholder { width:44px; height:34px; border-radius:7px; background:rgba(124,108,252,.08); border:1px dashed rgba(124,108,252,.2); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
@@ -414,6 +416,7 @@ const STYLES = `
   .obl-badge { display:inline-flex; align-items:center; gap:5px; font-size:10px; letter-spacing:.06em; text-transform:uppercase; padding:4px 10px; border-radius:99px; white-space:nowrap; border:1px solid; }
   .obl-badge.pending   { background:rgba(251,191,36,.1);  color:#fbbf24; border-color:rgba(251,191,36,.25); }
   .obl-badge.confirmed { background:rgba(74,222,128,.1);  color:#4ade80; border-color:rgba(74,222,128,.25); }
+  .obl-badge.expired   { background:rgba(148,163,184,.12); color:#94a3b8; border-color:rgba(148,163,184,.28); }
   .obl-badge.rejected  { background:rgba(248,113,113,.1); color:#f87171; border-color:rgba(248,113,113,.25); }
   .obl-badge.cancelled { background:rgba(148,163,184,.1); color:#94a3b8; border-color:rgba(148,163,184,.25); }
   .obl-badge.completed { background:rgba(124,108,252,.1); color:#a78bfa; border-color:rgba(124,108,252,.25); }
@@ -599,7 +602,7 @@ const STYLES = `
   }
 `;
 
-const STATUS_FILTERS = ["all", "pending", "confirmed", "completed", "rejected", "cancelled"];
+const STATUS_FILTERS = ["all", "pending", "confirmed", "expired", "completed", "rejected", "cancelled"];
 const PAGE_SIZE = 20;
 
 /* ─── media panel ─────────────────────────────────────────────────────── */
@@ -896,7 +899,15 @@ export default function OwnerBookingsList() {
   // Server-provided paginated bookings for the current page
   const [bookings,  setBookings]  = useState([]);
   // Server-provided aggregate stats (always over ALL bookings, not just current page)
-  const [stats,     setStats]     = useState({ total: 0, pending: 0, confirmed: 0, completed: 0, revenue: 0 });
+  const [stats,     setStats]     = useState({
+    total: 0,
+    pending: 0,
+    confirmed: 0,
+    expired: 0,
+    completed: 0,
+    revenue: 0,
+    newPending: 0,
+  });
   const [totalPages, setTotalPages] = useState(0);
   const [loading,   setLoading]   = useState(true);
   const [filter,    setFilter]    = useState("all");
@@ -916,7 +927,15 @@ export default function OwnerBookingsList() {
     try {
       const { data } = await getOwnerBookings({ page: p, limit: PAGE_SIZE, status: f });
       setBookings(data.bookings || []);
-      setStats(data.stats || { total: 0, pending: 0, confirmed: 0, completed: 0, revenue: 0 });
+      setStats(data.stats || {
+        total: 0,
+        pending: 0,
+        confirmed: 0,
+        expired: 0,
+        completed: 0,
+        revenue: 0,
+        newPending: 0,
+      });
       setTotalPages(data.pages || 0);
     } catch {
       setBookings([]);
@@ -962,7 +981,7 @@ export default function OwnerBookingsList() {
   });
 
   // Destructure server stats for header cards
-  const { total, pending, confirmed, completed, revenue } = stats;
+  const { total, pending, confirmed, expired, completed, revenue, newPending } = stats;
 
   function handleFilterChange(f) { setFilter(f); setPage(1); }
   function handleSearch(e)       { setSearch(e.target.value); }
@@ -999,7 +1018,14 @@ export default function OwnerBookingsList() {
             <div className="obl-stat-icon" style={{ background: "rgba(251,191,36,.1)" }}>
               <Clock size={16} color="#fbbf24" />
             </div>
-            <div className="obl-stat-val" style={{ color: "#fbbf24" }}>{pending}</div>
+            <div className="obl-stat-val" style={{ color: "#fbbf24", display: "flex", alignItems: "center", gap: 6 }}>
+              {pending}
+              {(newPending ?? 0) > 0 ? (
+                <span style={{ fontSize: 11, fontWeight: 800, background: "#f59e0b", color: "#111", borderRadius: 6, padding: "2px 6px" }}>
+                  +{newPending}
+                </span>
+              ) : null}
+            </div>
             <div className="obl-stat-lbl">{t.stats.pending}</div>
           </div>
           <div className="obl-stat confirmed">
@@ -1008,6 +1034,13 @@ export default function OwnerBookingsList() {
             </div>
             <div className="obl-stat-val" style={{ color: "#4ade80" }}>{confirmed}</div>
             <div className="obl-stat-lbl">{t.stats.confirmed}</div>
+          </div>
+          <div className="obl-stat expired">
+            <div className="obl-stat-icon" style={{ background: "rgba(148,163,184,.12)" }}>
+              <Clock size={16} color="#94a3b8" />
+            </div>
+            <div className="obl-stat-val" style={{ color: "#94a3b8" }}>{expired ?? 0}</div>
+            <div className="obl-stat-lbl">{t.stats.expired}</div>
           </div>
           <div className="obl-stat completed">
             <div className="obl-stat-icon" style={{ background: "rgba(124,108,252,.12)" }}>
@@ -1093,7 +1126,7 @@ export default function OwnerBookingsList() {
 
                     return (
                       <>
-                        <tr key={b._id} className="obl-tr">
+                        <tr key={b._id} className={`obl-tr${b.status === "pending" && b.isNewForOwner ? " obl-tr-new" : ""}`}>
                           {/* car */}
                           <td className="obl-td">
                             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -1149,7 +1182,7 @@ export default function OwnerBookingsList() {
                                   <button className="obl-act-btn reject"  disabled={busy} onClick={() => changeStatus(b._id, "rejected")}>{t.reject}</button>
                                 </>
                               )}
-                              {b.status === "confirmed" && (
+                              {(b.status === "confirmed" || b.status === "expired") && (
                                 <button className="obl-act-btn complete" disabled={busy} onClick={() => changeStatus(b._id, "completed")}>{t.complete}</button>
                               )}
                               {b.status === "completed" && (
@@ -1173,7 +1206,18 @@ export default function OwnerBookingsList() {
                           <td className="obl-td">
                             <button
                               className={`obl-expand-btn${isOpen ? " open" : ""}`}
-                              onClick={() => setExpanded(isOpen ? null : b._id)}
+                              onClick={async () => {
+                                const willOpen = !isOpen;
+                                if (willOpen && b.status === "pending" && b.isNewForOwner) {
+                                  try {
+                                    const { data } = await ownerClearBookingNewFlag(b._id);
+                                    setBookings((prev) => prev.map((x) => (x._id === data._id ? { ...x, ...data } : x)));
+                                  } catch {
+                                    /* ignore */
+                                  }
+                                }
+                                setExpanded(willOpen ? b._id : null);
+                              }}
                             >
                               {photoCount + docCount > 0 && (
                                 <span style={{ color: "#fbbf24", marginRight: 2 }}>{photoCount + docCount}</span>

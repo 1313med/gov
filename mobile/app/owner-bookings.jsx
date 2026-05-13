@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   TextInput,
   Modal,
   ScrollView,
+  Animated,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -24,6 +25,7 @@ import {
   setOwnerBookingArchive,
   declareOwnerVehicleIssue,
   ownerConfirmVehicleRefund,
+  ownerClearBookingNewFlag,
 } from "../src/api/booking";
 import { uploadListingImages } from "../src/api/upload";
 import { submitCustomerFeedback, getFeedbackForBooking, getFeedbackForCustomer } from "../src/api/customerFeedback";
@@ -47,17 +49,28 @@ function buildOwnerBookingParams(page, limit, filter, listScope) {
   return params;
 }
 
-const DEFAULT_STATS = { total: 0, pending: 0, confirmed: 0, completed: 0, rejected: 0, cancelled: 0, revenue: 0 };
+const DEFAULT_STATS = {
+  total: 0,
+  pending: 0,
+  confirmed: 0,
+  expired: 0,
+  completed: 0,
+  rejected: 0,
+  cancelled: 0,
+  revenue: 0,
+  newPending: 0,
+};
 
 const STATUS = {
   pending: { bg: "rgba(245,158,11,0.1)", border: "rgba(245,158,11,0.3)", text: "#f59e0b", icon: "time-outline" },
   confirmed: { bg: "rgba(52,211,153,0.1)", border: "rgba(52,211,153,0.3)", text: "#34d399", icon: "checkmark-circle-outline" },
+  expired: { bg: "rgba(148,163,184,0.14)", border: "rgba(148,163,184,0.35)", text: "#94a3b8", icon: "hourglass-outline" },
   completed: { bg: "rgba(96,165,250,0.1)", border: "rgba(96,165,250,0.3)", text: "#60a5fa", icon: "flag-outline" },
   rejected: { bg: "rgba(239,68,68,0.1)", border: "rgba(239,68,68,0.3)", text: "#f87171", icon: "close-circle-outline" },
   cancelled: { bg: "rgba(148,163,184,0.12)", border: "rgba(148,163,184,0.3)", text: "#94a3b8", icon: "ban-outline" },
 };
 
-const FILTERS = ["all", "pending", "confirmed", "completed", "rejected", "cancelled"];
+const FILTERS = ["all", "pending", "confirmed", "expired", "completed", "rejected", "cancelled"];
 
 function ownerVehiclePhase(b) {
   return b?.vehicleResolutionPhase || "none";
@@ -79,6 +92,7 @@ function filterChipLabel(key, fr) {
         all: "Tout",
         pending: "Attente",
         confirmed: "Confirmées",
+        expired: "Expirées",
         completed: "Terminées",
         rejected: "Refusées",
         cancelled: "Annulées",
@@ -87,6 +101,7 @@ function filterChipLabel(key, fr) {
         all: "All",
         pending: "Pending",
         confirmed: "Confirmed",
+        expired: "Ended",
         completed: "Done",
         rejected: "Rejected",
         cancelled: "Cancelled",
@@ -258,6 +273,23 @@ function createOwnerBookingsStyles(C, isDark) {
       },
       statPillVal: { color: C.white, fontWeight: "800", fontSize: 15, letterSpacing: -0.3 },
       statPillLbl: { color: C.muted, fontSize: 9, marginTop: 3, fontWeight: "700", letterSpacing: 0.3 },
+      statPillHighlight: {
+        borderColor: "rgba(245,158,11,0.55)",
+        shadowColor: "#f59e0b",
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.45,
+        shadowRadius: 10,
+        elevation: 6,
+      },
+      statPillTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+      statNewBadge: {
+        marginLeft: 6,
+        backgroundColor: "#f59e0b",
+        borderRadius: 8,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+      },
+      statNewBadgeT: { color: "#111827", fontWeight: "900", fontSize: 10 },
       filterBar: { marginTop: 2, marginBottom: 0, marginHorizontal: -16, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: C.border },
       filterScroll: { paddingHorizontal: 16, gap: 8, alignItems: "center" },
       filterChip: {
@@ -299,6 +331,13 @@ function createOwnerBookingsStyles(C, isDark) {
         shadowOpacity: isDark ? 0.35 : 0.07,
         shadowRadius: 14,
         elevation: 4,
+      },
+      cardNewRequest: {
+        borderColor: "rgba(245,158,11,0.55)",
+        shadowColor: "#f59e0b",
+        shadowOpacity: 0.25,
+        shadowRadius: 12,
+        elevation: 8,
       },
       cardPad: { padding: 16 },
       cardTop: { flexDirection: "row", alignItems: "center", gap: 14, marginBottom: 12 },
@@ -905,6 +944,20 @@ export default function OwnerBookingsScreen() {
   const [rated, setRated] = useState({});
   const [profileBooking, setProfileBooking] = useState(null);
   const [pdfForId, setPdfForId] = useState(null);
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const n = stats.newPending ?? 0;
+    if (n <= 0) return undefined;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.05, duration: 700, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 700, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [stats.newPending, pulseAnim]);
 
   const applyBookingsPayload = (data, p) => {
     setBookings(Array.isArray(data?.bookings) ? data.bookings : []);
@@ -1096,14 +1149,32 @@ export default function OwnerBookingsScreen() {
               ["total", fr ? "Total" : "Total", stats.total],
               ["pending", fr ? "Attente" : "Pending", stats.pending],
               ["confirmed", fr ? "Confirm." : "Live", stats.confirmed],
+              ["expired", fr ? "Expirées" : "Ended", stats.expired ?? 0],
               ["completed", fr ? "Terminé" : "Done", stats.completed],
               ["revenue", fr ? "MAD" : "MAD", stats.revenue?.toLocaleString?.(fr ? "fr-FR" : "en-US") ?? stats.revenue],
-            ].map(([k, label, val]) => (
-              <View key={k} style={s.statPill}>
-                <Text style={s.statPillVal}>{val}</Text>
-                <Text style={s.statPillLbl}>{label}</Text>
-              </View>
-            ))}
+            ].map(([k, label, val]) => {
+              const isPending = k === "pending";
+              const newN = stats.newPending ?? 0;
+              const highlight = isPending && newN > 0;
+              const inner = (
+                <View style={[s.statPill, highlight && s.statPillHighlight]}>
+                  <View style={s.statPillTop}>
+                    <Text style={s.statPillVal}>{val}</Text>
+                    {highlight ? (
+                      <View style={s.statNewBadge}>
+                        <Text style={s.statNewBadgeT}>+{newN}</Text>
+                      </View>
+                    ) : null}
+                  </View>
+                  <Text style={s.statPillLbl}>{label}</Text>
+                </View>
+              );
+              return (
+                <Animated.View key={k} style={highlight ? { transform: [{ scale: pulseAnim }] } : undefined}>
+                  {inner}
+                </Animated.View>
+              );
+            })}
           </ScrollView>
         </View>
         <View style={s.scopeRow}>
@@ -1163,7 +1234,7 @@ export default function OwnerBookingsScreen() {
         )}
       </View>
     ),
-    [s, insets.top, fr, stats, filter, listScope]
+    [s, insets.top, fr, stats, filter, listScope, pulseAnim]
   );
 
   if (loading && bookings.length === 0) {
@@ -1229,9 +1300,29 @@ export default function OwnerBookingsScreen() {
           const open = expanded === item._id;
           const carImg = resolveMediaUrl(item.rentalId?.images?.[0]);
           return (
-            <View style={[s.card, { borderLeftWidth: 4, borderLeftColor: st.text }]}>
+            <View
+              style={[
+                s.card,
+                item.status === "pending" && item.isNewForOwner ? s.cardNewRequest : null,
+                { borderLeftWidth: 4, borderLeftColor: st.text },
+              ]}
+            >
               <View style={s.cardPad}>
-              <TouchableOpacity onPress={() => setExpanded(open ? null : item._id)} activeOpacity={0.9}>
+              <TouchableOpacity
+                onPress={async () => {
+                  const willOpen = expanded !== item._id;
+                  if (willOpen && item.status === "pending" && item.isNewForOwner) {
+                    try {
+                      const { data } = await ownerClearBookingNewFlag(item._id);
+                      mergeBooking(data);
+                    } catch {
+                      /* ignore */
+                    }
+                  }
+                  setExpanded(willOpen ? item._id : null);
+                }}
+                activeOpacity={0.9}
+              >
                 <View style={s.cardTop}>
                   {carImg ? (
                     <Image source={{ uri: carImg }} style={s.thumb} />
@@ -1364,7 +1455,7 @@ export default function OwnerBookingsScreen() {
                     <ActionBtn label={fr ? "Refuser" : "Reject"} variant="red" onPress={() => changeStatus(item._id, "rejected")} />
                   </>
                 )}
-                {item.status === "confirmed" && (
+                {(item.status === "confirmed" || item.status === "expired") && (
                   <>
                     <ActionBtn label={fr ? "Terminer" : "Complete"} variant="blue" onPress={() => changeStatus(item._id, "completed")} />
                     <ActionBtn label={item.isPaid ? (fr ? "Paiement" : "Payment") : fr ? "Marquer payé" : "Mark paid"} variant="violet" onPress={() => handlePaid(item._id)} />

@@ -25,3 +25,8 @@ export const getAlternativeRentalsForBooking = (id) => api.get(`/bookings/${id}/
 export const chooseVehicleResolution = (id, body) => api.put(`/bookings/${id}/vehicle-resolution`, body);
 /** Owner: mark refund (full cancel or post-swap difference) as processed off-app. */
 export const ownerConfirmVehicleRefund = (id) => api.put(`/bookings/${id}/owner-confirm-vehicle-refund`);
+/** Owner: clears “new request” highlight on a pending booking. */
+export const ownerClearBookingNewFlag = (id) => api.put(`/bookings/${id}/owner-clear-booking-new`);
+/** Customer: post-trip review `{ overall: 'good'|'bad', note?: string }`. */
+export const submitBookingCustomerReview = (id, body) => api.post(`/bookings/${id}/customer-booking-review`, body);
+export const getBookingCustomerReview = (id) => api.get(`/bookings/${id}/customer-booking-review`);

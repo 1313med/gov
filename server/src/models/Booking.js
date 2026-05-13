@@ -17,7 +17,7 @@ const bookingSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["pending", "confirmed", "rejected", "cancelled", "completed"],
+      enum: ["pending", "confirmed", "rejected", "cancelled", "completed", "expired"],
       default: "pending",
     },
 
@@ -28,6 +28,12 @@ const bookingSchema = new mongoose.Schema(
     cancelledAt:       { type: Date },
 
     customerDateChangeUsed: { type: Boolean, default: false },
+
+    /** Owner has not yet opened this pending request from the list (highlight + badge). */
+    isNewForOwner: { type: Boolean, default: false },
+
+    /** After trip end: customer was prompted (email + in-app) to leave rental feedback. */
+    customerRentalFeedbackPromptSent: { type: Boolean, default: false },
 
     conditionPhotos: {
       before: [{ type: String }],

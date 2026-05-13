@@ -77,6 +77,24 @@ exports.sendBookingRequest = (booking, rental, owner) =>
       </div>`,
   });
 
+exports.sendCustomerRentalFeedbackInvite = (booking, rental, customer) =>
+  send({
+    to: customer.email,
+    subject: `How was your rental? – ${rental?.title || "Your trip"}`,
+    html: `
+      <div style="font-family:sans-serif;max-width:560px;margin:auto">
+        <h2 style="color:#3d3af5">Share your feedback</h2>
+        <p>Hi ${customer.name}, your rental period for <strong>${rental?.title || "your booking"}</strong> has ended.</p>
+        <p>We’d love a short review of the car and your experience — it helps other renters and your host.</p>
+        <p style="text-align:center;margin:28px 0">
+          <a href="${process.env.CLIENT_URL}/my-bookings" style="background:#7c6bff;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block">
+            Leave feedback
+          </a>
+        </p>
+        <p style="color:#888;font-size:13px">Dates: ${new Date(booking.startDate).toDateString()} → ${new Date(booking.endDate).toDateString()}</p>
+      </div>`,
+  });
+
 exports.sendBookingSubmitted = (booking, rental, customer) =>
   send({
     to: customer.email,

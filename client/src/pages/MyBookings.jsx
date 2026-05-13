@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getMyBookings, confirmReturn, rescheduleMyBooking } from "../api/booking";
+import { getMyBookings, confirmReturn, rescheduleMyBooking, submitBookingCustomerReview } from "../api/booking";
 import { api } from "../api/axios";
 import { Link } from "react-router-dom";
 import { useAppLang } from "../context/AppLangContext";
@@ -38,6 +38,7 @@ const STATUS_STYLES = {
   rejected:  "bg-red-50 text-red-800 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800",
   cancelled: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600",
   completed: "bg-violet-50 text-violet-800 border-violet-200 dark:bg-violet-950/40 dark:text-violet-300 dark:border-violet-800",
+  expired:   "bg-slate-100 text-slate-600 border-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-600",
 };
 
 export default function MyBookings() {
@@ -54,6 +55,10 @@ export default function MyBookings() {
   const [rescheduleOpen, setRescheduleOpen] = useState(null);
   const [rsStart, setRsStart] = useState("");
   const [rsEnd, setRsEnd] = useState("");
+  const [feedbackBooking, setFeedbackBooking] = useState(null);
+  const [fbOverall, setFbOverall] = useState(null);
+  const [fbNote, setFbNote] = useState("");
+  const [fbSubmitting, setFbSubmitting] = useState(false);
 
   const load = () =>
     getMyBookings()
@@ -136,11 +141,39 @@ export default function MyBookings() {
     try {
       await confirmReturn(id);
       setBookings((prev) =>
-        prev.map((b) => b._id === id ? { ...b, customerConfirmedReturn: true } : b)
+        prev.map((b) => (b._id === id ? { ...b, customerConfirmedReturn: true } : b))
       );
     } catch (err) {
       alert(err?.response?.data?.message || t.returnFail);
     } finally { setReturning(null); }
+  };
+
+  const closeFeedbackModal = () => {
+    if (fbSubmitting) return;
+    setFeedbackBooking(null);
+    setFbOverall(null);
+    setFbNote("");
+  };
+
+  const submitFeedbackModal = async () => {
+    if (!feedbackBooking || !fbOverall) {
+      alert(lang === "fr" ? "Choisissez « bien » ou « moins bien »." : "Choose good or poor overall.");
+      return;
+    }
+    setFbSubmitting(true);
+    try {
+      await submitBookingCustomerReview(feedbackBooking._id, { overall: fbOverall, note: fbNote });
+      setBookings((prev) =>
+        prev.map((b) =>
+          b._id === feedbackBooking._id ? { ...b, hasCustomerBookingReview: true } : b
+        )
+      );
+      closeFeedbackModal();
+    } catch (err) {
+      alert(err?.response?.data?.message || (lang === "fr" ? "Échec" : "Failed"));
+    } finally {
+      setFbSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -174,7 +207,7 @@ export default function MyBookings() {
           const h = hoursUntilStart(b.startDate);
           const calDays = calendarDaysUntilPickupDay(b.startDate);
           const bookingLocked =
-            b.status === "confirmed" && h > 0 && b.customerDateChangeUsed && calDays <= 1;
+            b.status === "confirmed" && h > 0 && b.customerDateChangeUsed && (calDays <= 1 || h <= 24);
           const canCancel =
             b.status === "pending" ||
             (b.status === "confirmed" &&
@@ -186,11 +219,16 @@ export default function MyBookings() {
             h > 0 &&
             calDays === 1;
           const isPastEndDate  = b.endDate && new Date() > new Date(b.endDate);
-          const showReturnBtn  = b.status === "confirmed" && isPastEndDate && !b.customerConfirmedReturn;
+          const showReturnBtn  =
+            (b.status === "confirmed" || b.status === "expired") &&
+            isPastEndDate &&
+            !b.customerConfirmedReturn;
           const days = b.startDate && b.endDate
             ? Math.ceil((new Date(b.endDate) - new Date(b.startDate)) / 86400000)
             : null;
           const offerRescheduleHint = calDays === 1 && !b.customerDateChangeUsed;
+          const showTripFeedback =
+            (b.status === "expired" || b.status === "completed") && !b.hasCustomerBookingReview;
 
           return (
             <div
@@ -218,8 +256,8 @@ export default function MyBookings() {
                   {b.status === "confirmed" && h > 0 && bookingLocked && (
                     <p className="mt-2 text-[12px] text-slate-600 dark:text-slate-300 font-semibold m-0 leading-snug rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 px-3 py-2.5 text-center">
                       {lang === "fr"
-                        ? "Plus d’actions possibles : vous avez déjà modifié les dates une fois. La réservation est figée jusqu’au départ."
-                        : "No further changes: you already updated your dates once. Your booking is set until pickup."}
+                        ? "Plus d’actions possibles : vous avez déjà modifié les dates une fois. Annulation en ligne indisponible (y compris dans les 24h avant le départ). La réservation est figée jusqu’au départ."
+                        : "No further changes: you already updated your dates once. Online cancellation is not available (including within 24h before pickup). Your booking is set until pickup."}
                     </p>
                   )}
                   {b.status === "confirmed" && h > 0 && !bookingLocked && !(h >= 48 || calDays >= CALENDAR_DAYS_REFUND_CANCEL_MIN) && (
@@ -271,7 +309,7 @@ export default function MyBookings() {
                 </div>
               )}
 
-              {b.customerConfirmedReturn && b.status === "confirmed" && (
+              {b.customerConfirmedReturn && (b.status === "confirmed" || b.status === "expired") && (
                 <p className="mt-2.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                   {t.returnedWaiting}
                 </p>
@@ -311,6 +349,25 @@ export default function MyBookings() {
                   >
                     {cancelling === b._id ? t.cancelling : t.cancel}
                   </button>
+                )}
+
+                {showTripFeedback && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFeedbackBooking(b);
+                      setFbOverall(null);
+                      setFbNote("");
+                    }}
+                    className="text-xs font-semibold text-indigo-600 dark:text-violet-400 bg-transparent border border-indigo-200 dark:border-violet-700 rounded-lg px-3 py-1 cursor-pointer hover:bg-indigo-50 dark:hover:bg-violet-950/30"
+                  >
+                    {lang === "fr" ? "Donner un avis" : "Leave feedback"}
+                  </button>
+                )}
+                {b.hasCustomerBookingReview && (
+                  <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                    {lang === "fr" ? "Merci pour votre avis." : "Thanks for your feedback."}
+                  </span>
                 )}
               </div>
             </div>
@@ -395,6 +452,82 @@ export default function MyBookings() {
                   : lang === "fr"
                     ? "Enregistrer"
                     : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {feedbackBooking && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/55 px-4 py-8"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closeFeedbackModal();
+          }}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
+              {lang === "fr" ? "Votre avis" : "Your feedback"}
+            </h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 m-0">
+              {lang === "fr"
+                ? "Comment s’est passée la location ? Un seul envoi par réservation."
+                : "How was the trip? You can submit once per booking."}
+            </p>
+            <div className="flex gap-2 mb-4">
+              <button
+                type="button"
+                onClick={() => setFbOverall("good")}
+                className={`flex-1 rounded-lg border px-3 py-2 text-sm font-semibold ${
+                  fbOverall === "good"
+                    ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200"
+                    : "border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200"
+                }`}
+              >
+                {lang === "fr" ? "Bien" : "Good"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setFbOverall("bad")}
+                className={`flex-1 rounded-lg border px-3 py-2 text-sm font-semibold ${
+                  fbOverall === "bad"
+                    ? "border-red-400 bg-red-50 dark:bg-red-950/30 text-red-800 dark:text-red-200"
+                    : "border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200"
+                }`}
+              >
+                {lang === "fr" ? "Moins bien" : "Poor"}
+              </button>
+            </div>
+            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
+              {lang === "fr" ? "Commentaire (optionnel)" : "Comment (optional)"}
+            </label>
+            <textarea
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 min-h-[88px]"
+              value={fbNote}
+              onChange={(e) => setFbNote(e.target.value)}
+              maxLength={1500}
+            />
+            <div className="mt-6 flex flex-wrap gap-2 justify-end">
+              <button
+                type="button"
+                onClick={closeFeedbackModal}
+                disabled={fbSubmitting}
+                className="rounded-lg border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
+              >
+                {lang === "fr" ? "Fermer" : "Close"}
+              </button>
+              <button
+                type="button"
+                onClick={submitFeedbackModal}
+                disabled={fbSubmitting}
+                className="rounded-lg border-0 bg-indigo-600 dark:bg-violet-600 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-700 dark:hover:bg-violet-500 disabled:opacity-50"
+              >
+                {fbSubmitting ? "…" : lang === "fr" ? "Envoyer" : "Send"}
               </button>
             </div>
           </div>

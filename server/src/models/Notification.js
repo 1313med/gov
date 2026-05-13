@@ -23,6 +23,8 @@ const notificationSchema = new mongoose.Schema(
         "vehicle_issue",
         "refund_pending",
         "refund_done",
+        "rental_ended_feedback",
+        "customer_rental_review",
       ],
       required: true,
     },
