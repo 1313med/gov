@@ -4,6 +4,7 @@ import {
   Text,
   FlatList,
   TouchableOpacity,
+  Pressable,
   ActivityIndicator,
   Alert,
   RefreshControl,
@@ -14,6 +15,7 @@ import {
   ScrollView,
   Animated,
   Easing,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -44,6 +46,7 @@ function buildOwnerBookingParams(page, limit, filter, listScope) {
   const params = { page, limit };
   if (listScope === "archived") {
     params.archive = "only";
+    if (filter && filter !== "all") params.status = filter;
   } else {
     params.archive = "exclude";
     if (filter && filter !== "all") params.status = filter;
@@ -73,6 +76,16 @@ const STATUS = {
 };
 
 const FILTERS = ["all", "pending", "confirmed", "expired", "completed", "rejected", "cancelled"];
+
+/** Archive tab: only these status filters (+ all). */
+const ARCHIVE_FILTERS = ["all", "completed", "cancelled", "rejected"];
+
+const DEFAULT_ARCHIVED_STATS = {
+  total: 0,
+  completed: 0,
+  rejected: 0,
+  cancelled: 0,
+};
 
 function ownerVehiclePhase(b) {
   return b?.vehicleResolutionPhase || "none";
@@ -116,6 +129,33 @@ function createOwnerBookingsStyles(C, isDark) {
     a: StyleSheet.create({
       btn: { flex: 1, minWidth: "30%", borderWidth: 1, borderRadius: 14, paddingVertical: 12, alignItems: "center" },
       btnText: { fontSize: 12, fontWeight: "800", letterSpacing: 0.2 },
+      actionChipOuter: {
+        flex: 1,
+        minWidth: "30%",
+        borderRadius: 16,
+        overflow: "hidden",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: isDark ? 0.45 : 0.18,
+        shadowRadius: 10,
+        elevation: 6,
+      },
+      actionChipInner: {
+        borderRadius: 16,
+        borderWidth: 1,
+        paddingVertical: 12,
+        paddingHorizontal: 10,
+        overflow: "hidden",
+      },
+      actionChipRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, minWidth: 0 },
+      actionChipLabel: {
+        fontSize: 11,
+        fontWeight: "800",
+        letterSpacing: 0.15,
+        textAlign: "center",
+        flex: 1,
+        flexShrink: 1,
+        minWidth: 0,
+      },
     }),
     m: StyleSheet.create({
       wrap: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: C.border },
@@ -355,7 +395,15 @@ function createOwnerBookingsStyles(C, isDark) {
       offer: { color: "#fbbf24", fontSize: 12, marginBottom: 8 },
       paidRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
       paidText: { color: C.green, fontSize: 12, fontWeight: "500", marginLeft: 4 },
-      actionsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+      actionsRow: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        gap: 10,
+        marginTop: 6,
+        paddingTop: 14,
+        borderTopWidth: 1,
+        borderTopColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(15,23,42,0.08)",
+      },
       pages: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 8, marginTop: 8 },
       pageBtn: { width: 36, height: 36, borderRadius: 8, borderWidth: 1, borderColor: C.border, alignItems: "center", justifyContent: "center", backgroundColor: C.card },
       pageBtnOn: { backgroundColor: C.pillBg, borderColor: C.primary },
@@ -412,19 +460,77 @@ function useOwnerBookingsStyles() {
   return useMemo(() => ({ C, isDark, ...createOwnerBookingsStyles(C, isDark) }), [C, isDark]);
 }
 
-function ActionBtn({ label, variant, onPress }) {
-  const { C, a } = useOwnerBookingsStyles();
-  const colors = {
-    green: { bg: "rgba(52,211,153,0.14)", border: "rgba(52,211,153,0.45)", text: "#34d399" },
-    red: { bg: "rgba(239,68,68,0.12)", border: "rgba(239,68,68,0.45)", text: "#f87171" },
-    blue: { bg: "rgba(96,165,250,0.14)", border: "rgba(96,165,250,0.45)", text: "#60a5fa" },
-    violet: { bg: "rgba(124,107,255,0.16)", border: "rgba(124,107,255,0.5)", text: C.primary },
-  };
-  const c = colors[variant] || colors.blue;
+function ActionBtn({ label, variant, onPress, ionicon }) {
+  const { C, a, isDark } = useOwnerBookingsStyles();
+  const scale = useRef(new Animated.Value(1)).current;
+  const curve = Platform.OS === "ios" ? { borderCurve: "continuous" } : {};
+
+  const preset = useMemo(() => {
+    const glow = isDark ? 0.22 : 0.12;
+    const m = {
+      green: {
+        colors: isDark ? ["#0f766e", "#134e4a"] : ["#10b981", "#059669"],
+        border: isDark ? "rgba(110,231,183,0.45)" : "rgba(16,185,129,0.55)",
+        text: "#ecfdf5",
+        shadow: "#059669",
+        icon: ionicon || "checkmark-circle",
+      },
+      red: {
+        colors: isDark ? ["#b91c1c", "#7f1d1d"] : ["#ef4444", "#dc2626"],
+        border: isDark ? "rgba(252,165,165,0.45)" : "rgba(220,38,38,0.45)",
+        text: "#fff7ed",
+        shadow: "#dc2626",
+        icon: ionicon || "alert-circle",
+      },
+      blue: {
+        colors: isDark ? ["#2563eb", "#1e3a8a"] : ["#3b82f6", "#2563eb"],
+        border: isDark ? "rgba(147,197,253,0.45)" : "rgba(37,99,235,0.45)",
+        text: "#eff6ff",
+        shadow: "#2563eb",
+        icon: ionicon || "flag-outline",
+      },
+      violet: {
+        colors: isDark ? ["#6d5dfc", "#4338ca"] : ["#7c6bff", "#5b4ddb"],
+        border: isDark ? "rgba(199,210,254,0.35)" : "rgba(91,77,219,0.45)",
+        text: "#faf5ff",
+        shadow: C.primary,
+        icon: ionicon || "wallet-outline",
+      },
+    };
+    const p = m[variant] || m.blue;
+    return { ...p, sheen: `rgba(255,255,255,${glow})` };
+  }, [variant, isDark, C.primary, ionicon]);
+
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.85} style={[a.btn, { backgroundColor: c.bg, borderColor: c.border }]}>
-      <Text style={[a.btnText, { color: c.text }]}>{label}</Text>
-    </TouchableOpacity>
+    <Pressable
+      onPress={onPress}
+      onPressIn={() => Animated.spring(scale, { toValue: 0.97, friction: 5, useNativeDriver: true }).start()}
+      onPressOut={() => Animated.spring(scale, { toValue: 1, friction: 5, useNativeDriver: true }).start()}
+      style={{ flex: 1, minWidth: "30%" }}
+    >
+      <Animated.View
+        style={[
+          a.actionChipOuter,
+          { width: "100%", transform: [{ scale }], shadowColor: preset.shadow },
+        ]}
+      >
+        <LinearGradient colors={preset.colors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[a.actionChipInner, { borderColor: preset.border }, curve]}>
+          <LinearGradient
+            colors={[preset.sheen, "transparent"]}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+            style={[StyleSheet.absoluteFill, { height: "42%" }]}
+            pointerEvents="none"
+          />
+          <View style={a.actionChipRow}>
+            <Ionicons name={preset.icon} size={17} color={preset.text} style={{ opacity: 0.95 }} />
+            <Text style={[a.actionChipLabel, { color: preset.text }]} numberOfLines={2}>
+              {label}
+            </Text>
+          </View>
+        </LinearGradient>
+      </Animated.View>
+    </Pressable>
   );
 }
 
@@ -998,6 +1104,7 @@ export default function OwnerBookingsScreen() {
   const fr = lang === "fr";
   const [bookings, setBookings] = useState([]);
   const [stats, setStats] = useState(DEFAULT_STATS);
+  const [archivedStats, setArchivedStats] = useState(DEFAULT_ARCHIVED_STATS);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [filter, setFilter] = useState("all");
@@ -1038,6 +1145,7 @@ export default function OwnerBookingsScreen() {
   const applyBookingsPayload = (data, p) => {
     setBookings(Array.isArray(data?.bookings) ? data.bookings : []);
     setStats(data?.stats || DEFAULT_STATS);
+    setArchivedStats(data?.archivedStats || DEFAULT_ARCHIVED_STATS);
     setTotalPages(data?.pages ?? 0);
     setPage(data?.page ?? p);
   };
@@ -1082,7 +1190,7 @@ export default function OwnerBookingsScreen() {
       isRestore ? (fr ? "Restaurer ?" : "Restore?") : (fr ? "Archiver ?" : "Archive?"),
       isRestore
         ? (fr ? "La réservation réapparaîtra dans l'onglet actif." : "This booking will show again under active bookings.")
-        : (fr ? "Masque cette réservation terminée de la liste principale." : "Hides this finished booking from your main list."),
+        : (fr ? "Masque cette réservation de la liste principale." : "Hides this booking from your main list."),
       [
         { text: fr ? "Annuler" : "Cancel" },
         {
@@ -1223,6 +1331,11 @@ export default function OwnerBookingsScreen() {
     return stats[key] ?? 0;
   };
 
+  const archiveFilterCount = (key) => {
+    if (key === "all") return archivedStats.total;
+    return archivedStats[key] ?? 0;
+  };
+
   const listHeader = useCallback(
     () => (
       <View>
@@ -1284,6 +1397,7 @@ export default function OwnerBookingsScreen() {
               setListScope("archived");
               setPage(1);
               setExpanded(null);
+              setFilter((f) => (ARCHIVE_FILTERS.includes(f) ? f : "all"));
             }}
             activeOpacity={0.85}
             style={[s.scopeChip, listScope === "archived" && s.scopeChipOn]}
@@ -1314,15 +1428,29 @@ export default function OwnerBookingsScreen() {
             </ScrollView>
           </View>
         ) : (
-          <Text style={[s.listHeadSub, { marginTop: 10, marginBottom: 4 }]}>
-            {fr
-              ? "Réservations terminées que vous avez archivées."
-              : "Completed bookings you moved out of your main list."}
-          </Text>
+          <View style={s.filterBar}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.filterScroll} nestedScrollEnabled>
+              {ARCHIVE_FILTERS.map((item) => (
+                <TouchableOpacity
+                  key={item}
+                  onPress={() => {
+                    setFilter(item);
+                    setExpanded(null);
+                  }}
+                  activeOpacity={0.85}
+                  style={[s.filterChip, filter === item && s.filterChipActive]}
+                >
+                  <Text style={[s.filterChipText, filter === item && s.filterChipTextActive]}>
+                    {filterChipLabel(item, fr)} · {archiveFilterCount(item)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
         )}
       </View>
     ),
-    [s, insets.top, fr, stats, filter, listScope, pulseAnim, C]
+    [s, insets.top, fr, stats, archivedStats, filter, listScope, pulseAnim, C]
   );
 
   if (loading && bookings.length === 0) {
@@ -1361,9 +1489,13 @@ export default function OwnerBookingsScreen() {
             <Text style={s.emptyTitle}>{fr ? "Aucune réservation" : "No bookings here"}</Text>
             <Text style={s.emptySub}>
               {listScope === "archived"
-                ? fr
-                  ? "Aucune réservation archivée pour le moment."
-                  : "No archived bookings yet. Archive a completed rental from the Active tab."
+                ? filter !== "all"
+                  ? fr
+                    ? "Aucune réservation archivée pour ce filtre. Essayez un autre filtre ci-dessus."
+                    : "No archived bookings match this filter. Try another chip above."
+                  : fr
+                    ? "Aucune réservation archivée pour le moment. Archivage possible pour les locations terminées, refusées ou annulées (onglet Actives)."
+                    : "No archived bookings yet. Archive completed, rejected, or cancelled rentals from the Active tab."
                 : fr
                   ? "Changez de filtre ou attendez de nouvelles demandes."
                   : "Try another filter or check back for new requests."}
@@ -1563,19 +1695,30 @@ export default function OwnerBookingsScreen() {
                   <ActionBtn
                     label={fr ? "Véhicule indispo." : "Car unavailable"}
                     variant="red"
+                    ionicon="car-outline"
                     onPress={() => reportVehicleIssue(item)}
                   />
                 )}
                 {item.status === "pending" && (
                   <>
                     <ActionBtn label={fr ? "Confirmer" : "Confirm"} variant="green" onPress={() => changeStatus(item._id, "confirmed")} />
-                    <ActionBtn label={fr ? "Refuser" : "Reject"} variant="red" onPress={() => changeStatus(item._id, "rejected")} />
+                    <ActionBtn
+                      label={fr ? "Refuser" : "Reject"}
+                      variant="red"
+                      ionicon="close-circle-outline"
+                      onPress={() => changeStatus(item._id, "rejected")}
+                    />
                   </>
                 )}
                 {(item.status === "confirmed" || item.status === "expired") && (
                   <>
                     <ActionBtn label={fr ? "Terminer" : "Complete"} variant="blue" onPress={() => changeStatus(item._id, "completed")} />
-                    <ActionBtn label={item.isPaid ? (fr ? "Paiement" : "Payment") : fr ? "Marquer payé" : "Mark paid"} variant="violet" onPress={() => handlePaid(item._id)} />
+                    <ActionBtn
+                      label={item.isPaid ? (fr ? "Paiement" : "Payment") : fr ? "Marquer payé" : "Mark paid"}
+                      variant="violet"
+                      ionicon="wallet-outline"
+                      onPress={() => handlePaid(item._id)}
+                    />
                   </>
                 )}
                 {item.status === "completed" && (
@@ -1584,14 +1727,28 @@ export default function OwnerBookingsScreen() {
                       (rated[item._id] ? (
                         <Text style={s.rated}>{fr ? "Avis envoyé" : "Review submitted"}</Text>
                       ) : (
-                        <ActionBtn label={fr ? "Noter le client" : "Rate customer"} variant="violet" onPress={() => setFeedbackBooking(item)} />
+                        <ActionBtn
+                          label={fr ? "Noter le client" : "Rate customer"}
+                          variant="violet"
+                          ionicon="star-outline"
+                          onPress={() => setFeedbackBooking(item)}
+                        />
                       ))}
                     <ActionBtn
                       label={listScope === "archived" ? (fr ? "Désarchiver" : "Restore") : fr ? "Archiver" : "Archive"}
                       variant="blue"
+                      ionicon="archive-outline"
                       onPress={() => archivePress(item, listScope === "archived")}
                     />
                   </>
+                )}
+                {(item.status === "rejected" || item.status === "cancelled") && (
+                  <ActionBtn
+                    label={listScope === "archived" ? (fr ? "Désarchiver" : "Restore") : fr ? "Archiver" : "Archive"}
+                    variant="blue"
+                    ionicon="archive-outline"
+                    onPress={() => archivePress(item, listScope === "archived")}
+                  />
                 )}
               </View>
 

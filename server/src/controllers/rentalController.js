@@ -365,6 +365,39 @@ exports.getOwnerListingViews = async (req, res, next) => {
   }
 };
 
+/** GET /api/rental/owner/listing-views-attention-count — deduped view events since owner last opened listing views (rolling 7d if never opened). */
+exports.getOwnerListingViewAttentionCount = async (req, res, next) => {
+  try {
+    const rentals = await RentalListing.find({ rentalOwnerId: req.user._id, deletedAt: null }).select("_id");
+    const rentalIds = rentals.map((r) => r._id);
+    if (!rentalIds.length) return res.json({ count: 0 });
+
+    const seenAt = req.user.rentalListingViewsSeenAt;
+    const since = seenAt
+      ? new Date(seenAt)
+      : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    const count = await RentalViewEvent.countDocuments({
+      rentalId: { $in: rentalIds },
+      at: { $gt: since },
+    });
+    res.json({ count });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/** POST /api/rental/owner/listing-views-seen — owner opened listing views; clears home badge. */
+exports.markOwnerListingViewsSeen = async (req, res, next) => {
+  try {
+    req.user.rentalListingViewsSeenAt = new Date();
+    await req.user.save();
+    res.json({ ok: true, rentalListingViewsSeenAt: req.user.rentalListingViewsSeenAt });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Create booking (customer)
 exports.createBooking = async (req, res, next) => {
   try {

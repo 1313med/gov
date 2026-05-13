@@ -14,6 +14,9 @@ export const getRentalBookings = (id) => api.get(`/rental/${id}/bookings`);
 export const getOwnerBookings = () => api.get("/rental/owner/bookings");
 export const getOwnerListingViews = (params = {}) =>
   api.get("/rental/owner/listing-views", { params });
+export const getOwnerListingViewAttentionCount = () =>
+  api.get("/rental/owner/listing-views-attention-count");
+export const markOwnerListingViewsSeen = () => api.post("/rental/owner/listing-views-seen");
 export const getAdminRentals = () => api.get("/rental/admin");
 export const updateRentalStatus = (id, status) =>
   api.put(`/rental/admin/${id}/status`, { status });

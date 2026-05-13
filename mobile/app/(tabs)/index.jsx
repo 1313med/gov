@@ -21,6 +21,7 @@ import { useTheme } from "../../src/context/ThemeContext";
 import { useSocket } from "../../src/context/SocketContext";
 import QuickActionCard from "../../src/components/QuickActionCard";
 import { useOwnerBookingAttentionCount } from "../../src/hooks/useOwnerBookingAttentionCount";
+import { useOwnerListingViewAttentionCount } from "../../src/hooks/useOwnerListingViewAttentionCount";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 
@@ -307,6 +308,7 @@ function FeatureEliteCompact({ icon, color, title, desc, anim, isDark }) {
 export default function HomeScreen() {
   const { auth } = useAuth();
   const bookingAttentionCount = useOwnerBookingAttentionCount();
+  const listingViewAttentionCount = useOwnerListingViewAttentionCount();
   const { unreadNotifications } = useSocket();
   const { lang } = useAppLang();
   const { colors: C, isDark } = useTheme();
@@ -612,21 +614,34 @@ export default function HomeScreen() {
               )}
               {auth.role === "rental_owner" && (
                 <>
-                  <QuickActionCard C={C} isDark={isDark} icon="analytics-outline" label={fr ? "Statistiques" : "Analytics"} onPress={() => router.push("/owner-analytics")} color={C.accent} />
                   <QuickActionCard
+                    featured
+                    featuredKicker={fr ? "APERÇU" : "INSIGHTS"}
+                    featuredSubtitle={fr ? "Performance & tendances" : "Performance & trends"}
                     C={C}
                     isDark={isDark}
-                    icon="calendar-outline"
-                    label={fr ? "Calendrier" : "Calendar"}
-                    onPress={() => router.push("/owner-booking-calendar")}
+                    icon="analytics-outline"
+                    label={fr ? "Statistiques" : "Analytics"}
+                    onPress={() => router.push("/owner-analytics")}
+                    color={C.accent}
                   />
                   <QuickActionCard
+                    elevated
+                    elevatedKicker={fr ? "À SUIVRE" : "PIPELINE"}
+                    elevatedSubtitle={fr ? "Demandes, statuts et planning" : "Requests, status & schedule"}
                     C={C}
                     isDark={isDark}
                     icon="clipboard-outline"
                     label={fr ? "Réservations" : "Bookings"}
                     onPress={() => router.push("/owner-bookings")}
                     attentionCount={bookingAttentionCount}
+                  />
+                  <QuickActionCard
+                    C={C}
+                    isDark={isDark}
+                    icon="calendar-outline"
+                    label={fr ? "Calendrier" : "Calendar"}
+                    onPress={() => router.push("/owner-booking-calendar")}
                   />
                   <QuickActionCard C={C} isDark={isDark} icon="car-outline" label={fr ? "Mon parc" : "My Fleet"} onPress={() => router.push("/my-fleet")} />
                   <QuickActionCard
@@ -635,6 +650,8 @@ export default function HomeScreen() {
                     icon="pulse-outline"
                     label={fr ? "Visibilité des annonces" : "Listing views"}
                     onPress={() => router.push("/owner-listing-views")}
+                    attentionCount={listingViewAttentionCount}
+                    attentionWeight="soft"
                   />
                   <QuickActionCard C={C} isDark={isDark} icon="construct-outline" label={fr ? "Maintenance" : "Maintenance"} onPress={() => router.push("/maintenance")} />
                   <QuickActionCard

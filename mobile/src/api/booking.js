@@ -8,7 +8,7 @@ export const rescheduleMyBooking = (id, body) => api.put(`/bookings/${id}/custom
 export const getOwnerBookings = (params) => api.get("/bookings/owner", { params });
 export const updateBookingStatus = (id, status) =>
   api.put(`/bookings/${id}/status`, { status });
-/** Owner: hide completed booking from default list (`archived: true`) or show again (`false`). */
+/** Owner: hide booking from default list or restore (`archived: true|false`). Completed, rejected, or cancelled. */
 export const setOwnerBookingArchive = (id, body) =>
   api.put(`/bookings/${id}/owner-archive`, body);
 export const updateBookingDates = (id, data) =>

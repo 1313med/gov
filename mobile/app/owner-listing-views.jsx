@@ -11,12 +11,13 @@ import {
   Platform,
   Pressable,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppLang } from "../src/context/AppLangContext";
 import { useTheme } from "../src/context/ThemeContext";
-import { getOwnerListingViews } from "../src/api/rental";
+import { getOwnerListingViews, markOwnerListingViewsSeen } from "../src/api/rental";
 import { getListingViewQueryParams } from "../src/utils/listingViewPeriodRange";
 import { resolveMediaUrl } from "../src/utils/mediaUrl";
 
@@ -213,6 +214,12 @@ export default function OwnerListingViewsScreen() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useFocusEffect(
+    useCallback(() => {
+      markOwnerListingViewsSeen().catch(() => {});
+    }, [])
+  );
 
   const maxViews = useMemo(() => {
     const v = data?.vehicles;

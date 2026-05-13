@@ -7,6 +7,8 @@ const {
   getAdminRentals, updateRentalStatus,
   getBookingsForRental, getMyRentals,
   getOwnerListingViews,
+  getOwnerListingViewAttentionCount,
+  markOwnerListingViewsSeen,
   recordRentalView,
 } = require("../controllers/rentalController");
 const { protect, role } = require("../middlewares/authMiddleware");
@@ -17,6 +19,8 @@ router.get("/", getRentals);
 // OWNER ROUTES (must come before :id)
 router.get("/owner/bookings", protect, role("rental_owner"), getOwnerBookings);
 router.get("/owner/listing-views", protect, role("rental_owner"), getOwnerListingViews);
+router.get("/owner/listing-views-attention-count", protect, role("rental_owner"), getOwnerListingViewAttentionCount);
+router.post("/owner/listing-views-seen", protect, role("rental_owner"), markOwnerListingViewsSeen);
 router.get("/owner/mine", protect, role("rental_owner"), getMyRentals);
 
 // ADMIN

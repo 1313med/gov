@@ -139,6 +139,7 @@ exports.getBookingsForOwner = async (req, res, next) => {
           revenue: 0,
           newPending: 0,
         },
+        archivedStats: { total: 0, completed: 0, rejected: 0, cancelled: 0 },
       });
     }
 
@@ -191,30 +192,48 @@ exports.getBookingsForOwner = async (req, res, next) => {
           newPending: 0,
         };
 
+    const [archivedStatsAgg] = await Booking.aggregate([
+      {
+        $match: {
+          rentalId: { $in: rentalIds },
+          deletedAt: null,
+          ownerArchivedAt: { $ne: null },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+          completed: { $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] } },
+          rejected: { $sum: { $cond: [{ $eq: ["$status", "rejected"] }, 1, 0] } },
+          cancelled: { $sum: { $cond: [{ $eq: ["$status", "cancelled"] }, 1, 0] } },
+        },
+      },
+    ]);
+    const archivedStats = archivedStatsAgg
+      ? {
+          total: archivedStatsAgg.total,
+          completed: archivedStatsAgg.completed,
+          rejected: archivedStatsAgg.rejected,
+          cancelled: archivedStatsAgg.cancelled,
+        }
+      : { total: 0, completed: 0, rejected: 0, cancelled: 0 };
+
     // 3. Build paginated query filter
-    // archive=exclude (default): hide owner-archived completed rows from the active list
-    // archive=only: archived completed only
+    // archive=exclude (default): hide any owner-archived row from the active list
+    // archive=only: owner-archived rows only (completed, rejected, cancelled, …)
     // archive=include: legacy — all rows (no archive filter)
     const archiveMode = String(req.query.archive || "exclude").toLowerCase();
     const filter = { rentalId: { $in: rentalIds }, deletedAt: null };
 
     if (archiveMode === "only") {
-      filter.status = "completed";
       filter.ownerArchivedAt = { $ne: null };
+      if (status) filter.status = status;
     } else if (archiveMode === "include") {
       if (status) filter.status = status;
     } else {
-      if (status === "completed") {
-        filter.status = "completed";
-        filter.ownerArchivedAt = null;
-      } else if (status) {
-        filter.status = status;
-      } else {
-        filter.$or = [
-          { status: { $ne: "completed" } },
-          { ownerArchivedAt: null },
-        ];
-      }
+      filter.ownerArchivedAt = null;
+      if (status) filter.status = status;
     }
 
     const total = await Booking.countDocuments(filter);
@@ -233,7 +252,7 @@ exports.getBookingsForOwner = async (req, res, next) => {
       .skip((page - 1) * limit)
       .limit(limit);
 
-    res.json({ bookings, total, pages, page, stats });
+    res.json({ bookings, total, pages, page, stats, archivedStats });
   } catch (error) { next(error); }
 };
 
@@ -520,7 +539,7 @@ exports.customerRescheduleBooking = async (req, res, next) => {
   }
 };
 
-// ── RENTAL OWNER – Archive / restore completed booking in list ───────────────
+// ── RENTAL OWNER – Archive / restore booking in list (completed, rejected, cancelled) ─
 exports.setOwnerBookingArchive = async (req, res, next) => {
   try {
     const wantArchive = !!req.body?.archived;
@@ -529,8 +548,11 @@ exports.setOwnerBookingArchive = async (req, res, next) => {
     if (booking.rentalId.rentalOwnerId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Forbidden" });
     }
-    if (booking.status !== "completed") {
-      return res.status(400).json({ message: "Only completed bookings can be archived" });
+    const archivable = ["completed", "rejected", "cancelled"];
+    if (!archivable.includes(booking.status)) {
+      return res.status(400).json({
+        message: "Only completed, rejected, or cancelled bookings can be archived.",
+      });
     }
     booking.ownerArchivedAt = wantArchive ? new Date() : null;
     await booking.save();

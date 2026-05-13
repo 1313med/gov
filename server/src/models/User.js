@@ -52,6 +52,9 @@ const userSchema = new mongoose.Schema(
     // Favorites
     favorites:       [{ type: mongoose.Schema.Types.ObjectId, ref: "SaleListing" }],
     rentalFavorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "RentalListing" }],
+
+    /** Rental owner: last time they opened listing-views; used to badge “new” views on home. */
+    rentalListingViewsSeenAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

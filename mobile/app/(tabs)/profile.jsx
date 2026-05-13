@@ -27,6 +27,7 @@ import { useTheme } from "../../src/context/ThemeContext";
 import ThemeToggle from "../../src/components/ThemeToggle";
 import QuickActionCard from "../../src/components/QuickActionCard";
 import { useOwnerBookingAttentionCount } from "../../src/hooks/useOwnerBookingAttentionCount";
+import { useOwnerListingViewAttentionCount } from "../../src/hooks/useOwnerListingViewAttentionCount";
 import { resolveMediaUrl } from "../../src/utils/mediaUrl";
 import { alpha } from "../../src/theme";
 
@@ -170,6 +171,7 @@ function ProfileGlassCard({ isDark, C, sheenProgress, style, children, lightColo
 export default function ProfileScreen() {
   const { auth, logout } = useAuth();
   const bookingAttentionCount = useOwnerBookingAttentionCount();
+  const listingViewAttentionCount = useOwnerListingViewAttentionCount();
   const { lang, setLang } = useAppLang();
   const { colors: C, isDark } = useTheme();
   const router = useRouter();
@@ -741,6 +743,8 @@ export default function ProfileScreen() {
               C={C}
               isDark={isDark}
               labelColor={titleColor}
+              attentionCount={listingViewAttentionCount}
+              attentionWeight="soft"
             />
             <QuickActionCard icon="construct-outline" label={fr ? "Maintenance" : "Maintenance"} onPress={() => router.push("/maintenance")} C={C} isDark={isDark} labelColor={titleColor} />
             <QuickActionCard
