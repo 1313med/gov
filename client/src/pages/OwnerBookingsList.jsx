@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import jsPDF from "jspdf";
-import { getOwnerBookings, updateBookingStatus, markBookingPaid, updateBookingMedia, ownerClearBookingNewFlag } from "../api/booking";
+import { getOwnerBookings, updateBookingStatus, markBookingPaid, updateBookingMedia, ownerAckBookingAlert } from "../api/booking";
 import { submitCustomerFeedback, getFeedbackForBooking } from "../api/customerFeedback";
 import OwnerLayout from "../components/owner/OwnerLayout";
 import { useAppLang } from "../context/AppLangContext";
@@ -954,6 +954,18 @@ export default function OwnerBookingsList() {
     finally { setActing(null); }
   }
 
+  async function acknowledgeBookingChange(id) {
+    setActing(id);
+    try {
+      const { data } = await ownerAckBookingAlert(id);
+      setBookings((p) => p.map((b) => (b._id === id ? { ...b, ...data } : b)));
+    } catch (e) {
+      alert(e?.response?.data?.message || t.actFail);
+    } finally {
+      setActing(null);
+    }
+  }
+
   async function togglePaid(id) {
     setActing(id);
     try {
@@ -1126,7 +1138,7 @@ export default function OwnerBookingsList() {
 
                     return (
                       <>
-                        <tr key={b._id} className={`obl-tr${b.status === "pending" && b.isNewForOwner ? " obl-tr-new" : ""}`}>
+                        <tr key={b._id} className={`obl-tr${(b.status === "pending" && (b.ownerBookingAlertAt || b.isNewForOwner)) || (b.ownerBookingAlertAt && ["confirmed", "expired", "cancelled"].includes(b.status)) ? " obl-tr-new" : ""}`}>
                           {/* car */}
                           <td className="obl-td">
                             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -1176,6 +1188,16 @@ export default function OwnerBookingsList() {
                           {/* actions */}
                           <td className="obl-td">
                             <div className="obl-actions">
+                              {b.ownerBookingAlertAt && ["confirmed", "expired", "cancelled"].includes(b.status) && (
+                                <button
+                                  type="button"
+                                  className="obl-act-btn confirm"
+                                  disabled={busy}
+                                  onClick={() => acknowledgeBookingChange(b._id)}
+                                >
+                                  {t.ackReviewed}
+                                </button>
+                              )}
                               {b.status === "pending" && (
                                 <>
                                   <button className="obl-act-btn confirm" disabled={busy} onClick={() => changeStatus(b._id, "confirmed")}>{t.confirm}</button>
@@ -1205,18 +1227,10 @@ export default function OwnerBookingsList() {
                           {/* files expand */}
                           <td className="obl-td">
                             <button
+                              type="button"
                               className={`obl-expand-btn${isOpen ? " open" : ""}`}
-                              onClick={async () => {
-                                const willOpen = !isOpen;
-                                if (willOpen && b.status === "pending" && b.isNewForOwner) {
-                                  try {
-                                    const { data } = await ownerClearBookingNewFlag(b._id);
-                                    setBookings((prev) => prev.map((x) => (x._id === data._id ? { ...x, ...data } : x)));
-                                  } catch {
-                                    /* ignore */
-                                  }
-                                }
-                                setExpanded(willOpen ? b._id : null);
+                              onClick={() => {
+                                setExpanded(!isOpen ? b._id : null);
                               }}
                             >
                               {photoCount + docCount > 0 && (

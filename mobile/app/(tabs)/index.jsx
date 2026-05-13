@@ -20,6 +20,7 @@ import { useAppLang } from "../../src/context/AppLangContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import { useSocket } from "../../src/context/SocketContext";
 import QuickActionCard from "../../src/components/QuickActionCard";
+import { useOwnerBookingAttentionCount } from "../../src/hooks/useOwnerBookingAttentionCount";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 
@@ -305,6 +306,7 @@ function FeatureEliteCompact({ icon, color, title, desc, anim, isDark }) {
 
 export default function HomeScreen() {
   const { auth } = useAuth();
+  const bookingAttentionCount = useOwnerBookingAttentionCount();
   const { unreadNotifications } = useSocket();
   const { lang } = useAppLang();
   const { colors: C, isDark } = useTheme();
@@ -618,7 +620,14 @@ export default function HomeScreen() {
                     label={fr ? "Calendrier" : "Calendar"}
                     onPress={() => router.push("/owner-booking-calendar")}
                   />
-                  <QuickActionCard C={C} isDark={isDark} icon="clipboard-outline" label={fr ? "Réservations" : "Bookings"} onPress={() => router.push("/owner-bookings")} />
+                  <QuickActionCard
+                    C={C}
+                    isDark={isDark}
+                    icon="clipboard-outline"
+                    label={fr ? "Réservations" : "Bookings"}
+                    onPress={() => router.push("/owner-bookings")}
+                    attentionCount={bookingAttentionCount}
+                  />
                   <QuickActionCard C={C} isDark={isDark} icon="car-outline" label={fr ? "Mon parc" : "My Fleet"} onPress={() => router.push("/my-fleet")} />
                   <QuickActionCard
                     C={C}

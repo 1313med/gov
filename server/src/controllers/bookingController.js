@@ -302,8 +302,9 @@ exports.updateBookingStatus = async (req, res, next) => {
     }
 
     booking.status = status;
-    if (status === "confirmed" || status === "rejected") {
+    if (["confirmed", "rejected", "completed"].includes(status)) {
       booking.isNewForOwner = false;
+      booking.ownerBookingAlertAt = null;
     }
     await booking.save();
 
@@ -388,6 +389,7 @@ exports.cancelBooking = async (req, res, next) => {
     const wasPending = booking.status === "pending";
     booking.status = "cancelled";
     booking.cancelledAt = new Date();
+    booking.ownerBookingAlertAt = new Date();
     await booking.save();
 
     const title = booking.rentalId?.title || "your rental";
@@ -500,6 +502,7 @@ exports.customerRescheduleBooking = async (req, res, next) => {
     booking.totalAmount = totalAmount;
     booking.appliedOfferTitle = appliedOffer?.title || null;
     booking.customerDateChangeUsed = true;
+    booking.ownerBookingAlertAt = new Date();
     await booking.save();
 
     const customer = await User.findById(booking.customerId).select("name");
@@ -634,6 +637,8 @@ exports.declareOwnerVehicleIssue = async (req, res, next) => {
     booking.ownerVehicleIssueAt = new Date();
     booking.ownerVehicleIssueNote = note;
     booking.vehicleResolutionPhase = "awaiting_customer";
+    booking.isNewForOwner = false;
+    booking.ownerBookingAlertAt = null;
     await booking.save();
 
     const title = booking.rentalId?.title || "a vehicle";
@@ -892,8 +897,70 @@ exports.ownerClearBookingNewFlag = async (req, res, next) => {
       return res.status(403).json({ message: "Forbidden" });
     }
     booking.isNewForOwner = false;
+    if (booking.status !== "pending") {
+      booking.ownerBookingAlertAt = null;
+    }
     await booking.save();
     res.json(booking);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ── RENTAL OWNER – Acknowledge read (e.g. date change) without confirm/reject ──
+exports.ownerAckBookingAlert = async (req, res, next) => {
+  try {
+    const booking = await Booking.findOne({ _id: req.params.id, deletedAt: null }).populate(
+      "rentalId",
+      "rentalOwnerId"
+    );
+    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    if (booking.rentalId.rentalOwnerId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    if (booking.status === "pending") {
+      return res.status(400).json({
+        message: "Pending requests are cleared when you confirm or reject.",
+      });
+    }
+    booking.ownerBookingAlertAt = null;
+    await booking.save();
+    res.json(booking);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ── RENTAL OWNER – Booking hub badge (home / profile) ───────────────────────
+exports.getOwnerBookingAttentionCount = async (req, res, next) => {
+  try {
+    const rentals = await RentalListing.find({ rentalOwnerId: req.user._id, deletedAt: null }).select("_id");
+    const rentalIds = rentals.map((r) => r._id);
+    if (!rentalIds.length) return res.json({ count: 0 });
+
+    const count = await Booking.countDocuments({
+      rentalId: { $in: rentalIds },
+      deletedAt: null,
+      $or: [{ ownerBookingAlertAt: { $ne: null } }, { status: "pending", isNewForOwner: true }],
+    });
+    res.json({ count });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/** Clears “needs review” flags after the owner has visited the bookings hub (blur). */
+exports.clearOwnerBookingAlerts = async (req, res, next) => {
+  try {
+    const rentals = await RentalListing.find({ rentalOwnerId: req.user._id, deletedAt: null }).select("_id");
+    const rentalIds = rentals.map((r) => r._id);
+    if (!rentalIds.length) return res.json({ ok: true, modified: 0 });
+
+    const result = await Booking.updateMany(
+      { rentalId: { $in: rentalIds }, deletedAt: null },
+      { $set: { ownerBookingAlertAt: null, isNewForOwner: false } }
+    );
+    res.json({ ok: true, modified: result.modifiedCount });
   } catch (error) {
     next(error);
   }

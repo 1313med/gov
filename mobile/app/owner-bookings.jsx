@@ -13,8 +13,10 @@ import {
   Modal,
   ScrollView,
   Animated,
+  Easing,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import {
@@ -25,7 +27,7 @@ import {
   setOwnerBookingArchive,
   declareOwnerVehicleIssue,
   ownerConfirmVehicleRefund,
-  ownerClearBookingNewFlag,
+  ownerAckBookingAlert,
 } from "../src/api/booking";
 import { uploadListingImages } from "../src/api/upload";
 import { submitCustomerFeedback, getFeedbackForBooking, getFeedbackForCustomer } from "../src/api/customerFeedback";
@@ -274,22 +276,22 @@ function createOwnerBookingsStyles(C, isDark) {
       statPillVal: { color: C.white, fontWeight: "800", fontSize: 15, letterSpacing: -0.3 },
       statPillLbl: { color: C.muted, fontSize: 9, marginTop: 3, fontWeight: "700", letterSpacing: 0.3 },
       statPillHighlight: {
-        borderColor: "rgba(245,158,11,0.55)",
-        shadowColor: "#f59e0b",
+        borderColor: "rgba(124,107,255,0.45)",
+        shadowColor: "#7c6bff",
         shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.45,
-        shadowRadius: 10,
-        elevation: 6,
+        shadowOpacity: 0.35,
+        shadowRadius: 12,
+        elevation: 8,
       },
       statPillTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-      statNewBadge: {
+      statNewBadgeGrad: {
         marginLeft: 6,
-        backgroundColor: "#f59e0b",
         borderRadius: 8,
-        paddingHorizontal: 6,
-        paddingVertical: 2,
+        paddingHorizontal: 7,
+        paddingVertical: 3,
+        overflow: "hidden",
       },
-      statNewBadgeT: { color: "#111827", fontWeight: "900", fontSize: 10 },
+      statNewBadgeT: { color: "#fff", fontWeight: "900", fontSize: 10, letterSpacing: 0.2 },
       filterBar: { marginTop: 2, marginBottom: 0, marginHorizontal: -16, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: C.border },
       filterScroll: { paddingHorizontal: 16, gap: 8, alignItems: "center" },
       filterChip: {
@@ -324,20 +326,13 @@ function createOwnerBookingsStyles(C, isDark) {
         borderWidth: 1,
         borderColor: C.border,
         borderRadius: 20,
-        marginBottom: 14,
+        marginBottom: 0,
         overflow: "hidden",
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 6 },
         shadowOpacity: isDark ? 0.35 : 0.07,
         shadowRadius: 14,
         elevation: 4,
-      },
-      cardNewRequest: {
-        borderColor: "rgba(245,158,11,0.55)",
-        shadowColor: "#f59e0b",
-        shadowOpacity: 0.25,
-        shadowRadius: 12,
-        elevation: 8,
       },
       cardPad: { padding: 16 },
       cardTop: { flexDirection: "row", alignItems: "center", gap: 14, marginBottom: 12 },
@@ -380,6 +375,15 @@ function createOwnerBookingsStyles(C, isDark) {
         gap: 10,
       },
       pdfRowText: { flex: 1, color: C.white, fontSize: 13, fontWeight: "600" },
+      changeNoticeBanner: {
+        marginBottom: 12,
+        padding: 12,
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: "rgba(124,107,255,0.45)",
+        backgroundColor: "rgba(124,107,255,0.1)",
+      },
+      changeNoticeT: { color: C.slate, fontSize: 12, fontWeight: "700", marginBottom: 10, lineHeight: 17 },
       vehicleBanner: {
         marginBottom: 12,
         padding: 12,
@@ -925,10 +929,71 @@ function CustomerProfileModal({ visible, booking, fr, ownerId, onClose }) {
   );
 }
 
+function bookingRowNeedsAttentionPulse(item) {
+  if (item.status === "pending" && (item.ownerBookingAlertAt || item.isNewForOwner)) return true;
+  if (item.ownerBookingAlertAt && ["confirmed", "expired", "cancelled"].includes(item.status)) return true;
+  return false;
+}
+
+function needsOwnerChangeAck(item) {
+  return !!item.ownerBookingAlertAt && ["confirmed", "expired", "cancelled"].includes(item.status);
+}
+
+/** Soft violet ring until owner acts (confirm/reject/car unavailable, or explicit change ack). */
+function BookingAttentionGlow({ active, primary, children }) {
+  const ring = useRef(new Animated.Value(0.12)).current;
+  useEffect(() => {
+    if (!active) {
+      ring.setValue(0);
+      return undefined;
+    }
+    ring.setValue(0.14);
+    const a = Animated.loop(
+      Animated.sequence([
+        Animated.timing(ring, {
+          toValue: 0.38,
+          duration: 2800,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(ring, {
+          toValue: 0.1,
+          duration: 2800,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    a.start();
+    return () => a.stop();
+  }, [active, ring]);
+  return (
+    <View style={{ marginBottom: 14, position: "relative", borderRadius: 21 }}>
+      {active ? (
+        <Animated.View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            left: -1,
+            right: -1,
+            top: -1,
+            bottom: -1,
+            borderRadius: 21,
+            borderWidth: 1.5,
+            borderColor: primary,
+            opacity: ring,
+          }}
+        />
+      ) : null}
+      {children}
+    </View>
+  );
+}
+
 export default function OwnerBookingsScreen() {
   const { lang } = useAppLang();
   const { auth } = useAuth();
-  const { C, s, isDark } = useOwnerBookingsStyles();
+  const { C, s, isDark, a } = useOwnerBookingsStyles();
   const insets = useSafeAreaInsets();
   const fr = lang === "fr";
   const [bookings, setBookings] = useState([]);
@@ -944,6 +1009,7 @@ export default function OwnerBookingsScreen() {
   const [rated, setRated] = useState({});
   const [profileBooking, setProfileBooking] = useState(null);
   const [pdfForId, setPdfForId] = useState(null);
+  const [ackingChangeId, setAckingChangeId] = useState(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -951,8 +1017,18 @@ export default function OwnerBookingsScreen() {
     if (n <= 0) return undefined;
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.05, duration: 700, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 700, useNativeDriver: true }),
+        Animated.timing(pulseAnim, {
+          toValue: 1.004,
+          duration: 2400,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 2400,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
       ])
     );
     loop.start();
@@ -1116,6 +1192,18 @@ export default function OwnerBookingsScreen() {
     setBookings((prev) => prev.map((b) => (b._id === updated._id ? { ...b, ...updated } : b)));
   };
 
+  const acknowledgeBookingChange = async (id) => {
+    setAckingChangeId(id);
+    try {
+      const { data } = await ownerAckBookingAlert(id);
+      mergeBooking(data);
+    } catch (e) {
+      Alert.alert("Error", e?.response?.data?.message || (fr ? "Échec" : "Failed"));
+    } finally {
+      setAckingChangeId(null);
+    }
+  };
+
   const exportPdf = async (b) => {
     setPdfForId(b._id);
     try {
@@ -1161,9 +1249,9 @@ export default function OwnerBookingsScreen() {
                   <View style={s.statPillTop}>
                     <Text style={s.statPillVal}>{val}</Text>
                     {highlight ? (
-                      <View style={s.statNewBadge}>
+                      <LinearGradient colors={[C.primary, "#6366f1"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.statNewBadgeGrad}>
                         <Text style={s.statNewBadgeT}>+{newN}</Text>
-                      </View>
+                      </LinearGradient>
                     ) : null}
                   </View>
                   <Text style={s.statPillLbl}>{label}</Text>
@@ -1234,7 +1322,7 @@ export default function OwnerBookingsScreen() {
         )}
       </View>
     ),
-    [s, insets.top, fr, stats, filter, listScope, pulseAnim]
+    [s, insets.top, fr, stats, filter, listScope, pulseAnim, C]
   );
 
   if (loading && bookings.length === 0) {
@@ -1299,27 +1387,20 @@ export default function OwnerBookingsScreen() {
           const end = new Date(item.endDate).toLocaleDateString();
           const open = expanded === item._id;
           const carImg = resolveMediaUrl(item.rentalId?.images?.[0]);
+          const pulseRow = bookingRowNeedsAttentionPulse(item);
           return (
+            <BookingAttentionGlow active={pulseRow} primary={C.primary}>
             <View
               style={[
                 s.card,
-                item.status === "pending" && item.isNewForOwner ? s.cardNewRequest : null,
+                pulseRow ? { borderColor: "rgba(124,107,255,0.32)" } : null,
                 { borderLeftWidth: 4, borderLeftColor: st.text },
               ]}
             >
               <View style={s.cardPad}>
               <TouchableOpacity
-                onPress={async () => {
-                  const willOpen = expanded !== item._id;
-                  if (willOpen && item.status === "pending" && item.isNewForOwner) {
-                    try {
-                      const { data } = await ownerClearBookingNewFlag(item._id);
-                      mergeBooking(data);
-                    } catch {
-                      /* ignore */
-                    }
-                  }
-                  setExpanded(willOpen ? item._id : null);
+                onPress={() => {
+                  setExpanded(expanded !== item._id ? item._id : null);
                 }}
                 activeOpacity={0.9}
               >
@@ -1441,6 +1522,42 @@ export default function OwnerBookingsScreen() {
                 )}
               </TouchableOpacity>
 
+              {needsOwnerChangeAck(item) ? (
+                <View style={s.changeNoticeBanner}>
+                  <Text style={s.changeNoticeT}>
+                    {item.status === "cancelled"
+                      ? fr
+                        ? "Le client a annulé cette réservation. Confirmez que vous avez pris connaissance."
+                        : "The customer cancelled this booking. Confirm you have reviewed it."
+                      : fr
+                        ? "Le client a modifié les dates (une fois). Vérifiez le total et les dates, puis confirmez que vous avez pris connaissance."
+                        : "The customer changed the dates (one-time). Review dates and total, then confirm you have acknowledged the update."}
+                  </Text>
+                  <TouchableOpacity
+                    disabled={ackingChangeId === item._id}
+                    onPress={() => acknowledgeBookingChange(item._id)}
+                    activeOpacity={0.85}
+                    style={[
+                      a.btn,
+                      {
+                        minWidth: "100%",
+                        backgroundColor: "rgba(52,211,153,0.14)",
+                        borderColor: "rgba(52,211,153,0.45)",
+                        opacity: ackingChangeId === item._id ? 0.7 : 1,
+                      },
+                    ]}
+                  >
+                    {ackingChangeId === item._id ? (
+                      <ActivityIndicator color="#34d399" />
+                    ) : (
+                      <Text style={[a.btnText, { color: "#34d399" }]}>
+                        {fr ? "Confirmer (pris en compte)" : "Confirm — I've reviewed this"}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              ) : null}
+
               <View style={s.actionsRow}>
                 {canReportVehicleIssue(item) && (
                   <ActionBtn
@@ -1483,6 +1600,7 @@ export default function OwnerBookingsScreen() {
               )}
               </View>
             </View>
+            </BookingAttentionGlow>
           );
         }}
       />

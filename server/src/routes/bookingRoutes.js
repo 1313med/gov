@@ -19,6 +19,9 @@ const {
   ownerClearBookingNewFlag,
   submitBookingCustomerReview,
   getBookingCustomerReview,
+  getOwnerBookingAttentionCount,
+  clearOwnerBookingAlerts,
+  ownerAckBookingAlert,
 } = require("../controllers/bookingController");
 
 // Customer
@@ -32,8 +35,11 @@ router.get("/:id/alternative-rentals", protect, role("customer"), getAlternative
 router.put("/:id/vehicle-resolution", protect, role("customer"), chooseCustomerVehicleResolution);
 
 // Rental owner
+router.get("/owner/attention-count", protect, role("rental_owner"), getOwnerBookingAttentionCount);
+router.post("/owner/clear-booking-alerts", protect, role("rental_owner"), clearOwnerBookingAlerts);
 router.get("/owner", protect, role("rental_owner"), getBookingsForOwner);
 router.put("/:id/owner-clear-booking-new", protect, role("rental_owner"), ownerClearBookingNewFlag);
+router.put("/:id/owner-ack-booking-alert", protect, role("rental_owner"), ownerAckBookingAlert);
 router.put("/:id/owner-archive", protect, role("rental_owner"), setOwnerBookingArchive);
 router.post("/:id/owner-vehicle-issue", protect, role("rental_owner"), declareOwnerVehicleIssue);
 router.put("/:id/owner-confirm-vehicle-refund", protect, role("rental_owner"), ownerConfirmVehicleRefund);

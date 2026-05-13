@@ -1366,6 +1366,7 @@ const ownerBookingsListEn = {
   complete: "Complete",
   reviewed: "✓ Reviewed",
   rateCustomer: "Rate customer",
+  ackReviewed: "Confirm — I've reviewed this",
   pdfBtn: "PDF",
   pdfTitle: "Download booking PDF",
   status: {
@@ -1474,6 +1475,7 @@ const ownerBookingsListFr = {
   complete: "Terminer",
   reviewed: "✓ Évalué",
   rateCustomer: "Évaluer le client",
+  ackReviewed: "Confirmer (pris en compte)",
   pdfBtn: "PDF",
   pdfTitle: "Télécharger le PDF de la réservation",
   status: {

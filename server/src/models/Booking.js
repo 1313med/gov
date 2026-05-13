@@ -32,6 +32,12 @@ const bookingSchema = new mongoose.Schema(
     /** Owner has not yet opened this pending request from the list (highlight + badge). */
     isNewForOwner: { type: Boolean, default: false },
 
+    /**
+     * Set when the customer does something the owner should notice (new request, date change, cancel).
+     * Cleared when the owner leaves the bookings hub or dismisses a row — drives home / profile badges.
+     */
+    ownerBookingAlertAt: { type: Date, default: null },
+
     /** After trip end: customer was prompted (email + in-app) to leave rental feedback. */
     customerRentalFeedbackPromptSent: { type: Boolean, default: false },
 

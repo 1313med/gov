@@ -27,6 +27,12 @@ export const chooseVehicleResolution = (id, body) => api.put(`/bookings/${id}/ve
 export const ownerConfirmVehicleRefund = (id) => api.put(`/bookings/${id}/owner-confirm-vehicle-refund`);
 /** Owner: clears “new request” highlight on a pending booking. */
 export const ownerClearBookingNewFlag = (id) => api.put(`/bookings/${id}/owner-clear-booking-new`);
+/** Owner: count of bookings needing attention (new / changed / cancelled since last hub visit). */
+export const getOwnerBookingAttentionCount = () => api.get("/bookings/owner/attention-count");
+/** Owner: clear attention flags (call when leaving bookings hub). */
+export const clearOwnerBookingAlerts = () => api.post("/bookings/owner/clear-booking-alerts");
+/** Owner: clear “date changed” style alert after reading (not for pending — use confirm/reject). */
+export const ownerAckBookingAlert = (id) => api.put(`/bookings/${id}/owner-ack-booking-alert`);
 /** Customer: post-trip review `{ overall: 'good'|'bad', note?: string }`. */
 export const submitBookingCustomerReview = (id, body) => api.post(`/bookings/${id}/customer-booking-review`, body);
 export const getBookingCustomerReview = (id) => api.get(`/bookings/${id}/customer-booking-review`);

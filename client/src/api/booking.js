@@ -33,8 +33,8 @@ export const chooseVehicleResolution = (id, body) =>
   api.put(`/bookings/${id}/vehicle-resolution`, body);
 export const ownerConfirmVehicleRefund = (id) =>
   api.put(`/bookings/${id}/owner-confirm-vehicle-refund`);
-export const ownerClearBookingNewFlag = (id) =>
-  api.put(`/bookings/${id}/owner-clear-booking-new`);
+export const ownerAckBookingAlert = (id) =>
+  api.put(`/bookings/${id}/owner-ack-booking-alert`);
 export const submitBookingCustomerReview = (id, body) =>
   api.post(`/bookings/${id}/customer-booking-review`, body);
 export const getBookingCustomerReview = (id) =>

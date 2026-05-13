@@ -26,6 +26,7 @@ import { useAppLang } from "../../src/context/AppLangContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import ThemeToggle from "../../src/components/ThemeToggle";
 import QuickActionCard from "../../src/components/QuickActionCard";
+import { useOwnerBookingAttentionCount } from "../../src/hooks/useOwnerBookingAttentionCount";
 import { resolveMediaUrl } from "../../src/utils/mediaUrl";
 import { alpha } from "../../src/theme";
 
@@ -168,6 +169,7 @@ function ProfileGlassCard({ isDark, C, sheenProgress, style, children, lightColo
 
 export default function ProfileScreen() {
   const { auth, logout } = useAuth();
+  const bookingAttentionCount = useOwnerBookingAttentionCount();
   const { lang, setLang } = useAppLang();
   const { colors: C, isDark } = useTheme();
   const router = useRouter();
@@ -722,7 +724,15 @@ export default function ProfileScreen() {
               isDark={isDark}
               labelColor={titleColor}
             />
-            <QuickActionCard icon="clipboard-outline" label={fr ? "Réservations" : "Bookings"} onPress={() => router.push("/owner-bookings")} C={C} isDark={isDark} labelColor={titleColor} />
+            <QuickActionCard
+              icon="clipboard-outline"
+              label={fr ? "Réservations" : "Bookings"}
+              onPress={() => router.push("/owner-bookings")}
+              C={C}
+              isDark={isDark}
+              labelColor={titleColor}
+              attentionCount={bookingAttentionCount}
+            />
             <QuickActionCard icon="car-outline" label={fr ? "Mon parc" : "My Fleet"} onPress={() => router.push("/my-fleet")} C={C} isDark={isDark} labelColor={titleColor} />
             <QuickActionCard
               icon="pulse-outline"
