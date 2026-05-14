@@ -210,6 +210,46 @@ exports.sendNewMessage = (sender, recipient, preview) =>
       </div>`,
   });
 
+exports.sendCarExpiryReminder = (user, alerts) => {
+  const rows = alerts
+    .map(
+      (a) => `
+    <tr>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0">${a.label}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;color:${a.daysLeft <= 7 ? "#c93030" : "#d97706"};font-weight:700">
+        ${a.daysLeft <= 0 ? "Expiré" : `${a.daysLeft} jour(s)`}
+      </td>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0">${a.expiryDate}</td>
+    </tr>`,
+    )
+    .join("");
+
+  return send({
+    to: user.email,
+    subject: `Rappel Mon Garage — ${alerts.length} échéance(s) à renouveler`,
+    html: `
+      <div style="font-family:sans-serif;max-width:600px;margin:auto">
+        <h2 style="color:#141412">Rappel Mon Garage 🚗</h2>
+        <p>Bonjour ${user.name}, votre véhicule <strong>${alerts[0]?.carName || ""}</strong> a des échéances qui approchent.</p>
+        <table style="width:100%;border-collapse:collapse;margin:20px 0">
+          <thead>
+            <tr style="background:#f8f8f8">
+              <th style="padding:10px 12px;text-align:left;font-size:12px;color:#888;text-transform:uppercase">Document / Service</th>
+              <th style="padding:10px 12px;text-align:left;font-size:12px;color:#888;text-transform:uppercase">Délai</th>
+              <th style="padding:10px 12px;text-align:left;font-size:12px;color:#888;text-transform:uppercase">Date d'expiration</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <p style="text-align:center;margin:24px 0">
+          <a href="${process.env.CLIENT_URL}" style="background:#7c6bff;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block">
+            Ouvrir Mon Garage
+          </a>
+        </p>
+      </div>`,
+  });
+};
+
 exports.sendMaintenanceReminder = (owner, records) => {
   const rows = records.map((r) => `
     <tr>

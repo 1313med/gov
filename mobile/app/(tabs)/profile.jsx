@@ -684,6 +684,15 @@ export default function ProfileScreen() {
           isDark={isDark}
           labelColor={titleColor}
         />
+        <QuickActionCard
+          icon="car-sport-outline"
+          label={fr ? "Mon Garage" : "My Garage"}
+          onPress={() => router.push("/mon-garage")}
+          C={C}
+          isDark={isDark}
+          labelColor={titleColor}
+          color="#a78bfa"
+        />
         {auth.role === "customer" && (
           <QuickActionCard
             icon="calendar-outline"

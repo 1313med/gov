@@ -65,6 +65,7 @@ app.use("/api/messages",      require("./routes/messageRoutes"));
 app.use("/api/maintenance",   require("./routes/maintenanceRoutes"));
 app.use("/api/admin",            require("./routes/adminRoutes"));
 app.use("/api/customer-feedback", require("./routes/customerFeedbackRoutes"));
+app.use("/api/user-car",          require("./routes/userCarRoutes"));
 
 // ERROR HANDLING
 app.use(notFound);

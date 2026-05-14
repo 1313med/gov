@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect, useCallback } from "react";
+import { useMemo, useRef, useEffect, useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Dimensions,
   Pressable,
   Platform,
+  Image,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -23,6 +24,7 @@ import QuickActionCard from "../../src/components/QuickActionCard";
 import BrandFooterLogo from "../../src/components/BrandFooterLogo";
 import { useOwnerBookingAttentionCount } from "../../src/hooks/useOwnerBookingAttentionCount";
 import { useOwnerListingViewAttentionCount } from "../../src/hooks/useOwnerListingViewAttentionCount";
+import { getMyCar } from "../../src/api/userCar";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 
@@ -306,10 +308,100 @@ function FeatureEliteCompact({ icon, color, title, desc, anim, isDark }) {
   );
 }
 
+function daysLeftHome(dateStr) {
+  if (!dateStr) return null;
+  return Math.ceil((new Date(dateStr) - new Date()) / (1000 * 60 * 60 * 24));
+}
+
+function kmLeftHome(car) {
+  if (!car?.vidange?.lastKm || !car?.vidange?.intervalKm || !car?.currentMileage) return null;
+  return car.vidange.lastKm + car.vidange.intervalKm - car.currentMileage;
+}
+
+function useGarageSummary(auth) {
+  const [car, setCar] = useState(null);
+  useEffect(() => {
+    if (!auth) { setCar(null); return; }
+    getMyCar().then(({ data }) => setCar(data)).catch(() => setCar(null));
+  }, [auth]);
+
+  const alertCount = useMemo(() => {
+    if (!car) return 0;
+    let n = 0;
+    const checkDays = (d) => { if (d !== null && d <= 30) n++; };
+    const checkKm   = (k) => { if (k !== null && k <= 1500) n++; };
+    checkDays(daysLeftHome(car.assurance?.expiryDate));
+    checkDays(daysLeftHome(car.visiteTechnique?.expiryDate));
+    checkDays(daysLeftHome(car.vignette?.expiryDate));
+    checkDays(daysLeftHome(car.permis?.expiryDate));
+    checkKm(kmLeftHome(car));
+    return n;
+  }, [car]);
+
+  return { car, alertCount };
+}
+
+function GarageWidget({ car, alertCount, C, isDark, fr, router }) {
+  const titleColor = isDark ? "#f8fafc" : "#0f172a";
+  const subColor   = isDark ? "#94a3b8" : "#475569";
+  const primaryGrad = isDark ? ["#7c6bff", "#5b4ddb", "#4338ca"] : ["#6248e8", "#4f46e5", "#4338ca"];
+
+  const statusColor = alertCount === 0 ? (C.green ?? "#22c55e") : alertCount <= 2 ? "#f97316" : "#ef4444";
+  const statusIcon  = alertCount === 0 ? "checkmark-circle" : "alert-circle";
+  const statusText  = car
+    ? (alertCount === 0
+        ? (fr ? "Tout est à jour" : "All up to date")
+        : (fr ? `${alertCount} échéance(s)` : `${alertCount} item(s) due`))
+    : (fr ? "Aucune voiture" : "No car added");
+
+  return (
+    <TouchableOpacity onPress={() => router.push("/mon-garage")} activeOpacity={0.82}>
+      <LinearGradient
+        colors={isDark ? ["rgba(255,255,255,0.06)", "rgba(255,255,255,0.02)"] : ["rgba(255,255,255,0.95)", "rgba(248,250,252,0.88)"]}
+        style={{
+          borderRadius: 20,
+          borderWidth: 1,
+          borderColor: isDark ? "rgba(124,107,255,0.22)" : "rgba(98,72,232,0.14)",
+          padding: 16,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 14,
+        }}
+      >
+        {car?.image ? (
+          <Image
+            source={{ uri: car.image }}
+            style={{ width: 56, height: 46, borderRadius: 12, backgroundColor: isDark ? "#1e293b" : "#e2e8f0" }}
+            resizeMode="cover"
+          />
+        ) : (
+          <LinearGradient colors={primaryGrad} style={{ width: 46, height: 46, borderRadius: 14, alignItems: "center", justifyContent: "center", shadowColor: "#7c6bff", shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.35, shadowRadius: 10, elevation: 8 }}>
+            <Ionicons name="car-sport" size={22} color="#fff" />
+          </LinearGradient>
+        )}
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 11, fontWeight: "800", letterSpacing: 1.6, textTransform: "uppercase", color: C.primary, marginBottom: 3 }}>
+            {fr ? "Mon Garage" : "My Garage"}
+          </Text>
+          <Text style={{ fontSize: 15, fontWeight: "800", color: titleColor, letterSpacing: -0.2 }}>
+            {car ? `${car.brand}${car.model ? " " + car.model : ""}${car.year ? " " + car.year : ""}` : (fr ? "Ajouter ma voiture" : "Add my car")}
+          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 4 }}>
+            <Ionicons name={statusIcon} size={13} color={statusColor} />
+            <Text style={{ fontSize: 12, fontWeight: "700", color: statusColor }}>{statusText}</Text>
+          </View>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={isDark ? "#334155" : "#cbd5e1"} />
+      </LinearGradient>
+    </TouchableOpacity>
+  );
+}
+
 export default function HomeScreen() {
   const { auth } = useAuth();
   const bookingAttentionCount = useOwnerBookingAttentionCount();
   const listingViewAttentionCount = useOwnerListingViewAttentionCount();
+  const { car: garageCar, alertCount: garageAlertCount } = useGarageSummary(auth);
   const { unreadNotifications } = useSocket();
   const { lang } = useAppLang();
   const { colors: C, isDark } = useTheme();
@@ -676,6 +768,10 @@ export default function HomeScreen() {
                 />
               )}
             </Animated.View>
+            <View style={{ marginTop: 20 }}>
+              <Text style={[s.sectionEyebrow, { color: C.primary, marginBottom: 10 }]}>{fr ? "Mon Garage" : "My Garage"}</Text>
+              <GarageWidget car={garageCar} alertCount={garageAlertCount} C={C} isDark={isDark} fr={fr} router={router} />
+            </View>
             <BrandFooterLogo style={{ marginTop: 16, marginBottom: 4 }} />
           </View>
         )}
