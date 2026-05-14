@@ -1,7 +1,15 @@
 const express = require("express");
 const router = express.Router();
 const { protect } = require("../middlewares/authMiddleware");
-const { getReviews, createReview, deleteReview } = require("../controllers/reviewController");
+const {
+  getReviews,
+  createReview,
+  deleteReview,
+  getMyRentalReviewWriteEligibility,
+} = require("../controllers/reviewController");
+
+// GET /api/reviews/:targetModel/:targetId/me/eligibility (auth)
+router.get("/:targetModel/:targetId/me/eligibility", protect, getMyRentalReviewWriteEligibility);
 
 // GET /api/reviews/:targetModel/:targetId  (public)
 router.get("/:targetModel/:targetId", getReviews);

@@ -26,6 +26,7 @@ import { useAppLang } from "../../src/context/AppLangContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import ThemeToggle from "../../src/components/ThemeToggle";
 import QuickActionCard from "../../src/components/QuickActionCard";
+import BrandFooterLogo from "../../src/components/BrandFooterLogo";
 import { useOwnerBookingAttentionCount } from "../../src/hooks/useOwnerBookingAttentionCount";
 import { useOwnerListingViewAttentionCount } from "../../src/hooks/useOwnerListingViewAttentionCount";
 import { resolveMediaUrl } from "../../src/utils/mediaUrl";
@@ -825,6 +826,8 @@ export default function ProfileScreen() {
             <Text style={{ color: C.red, fontWeight: "800", fontSize: 15 }}>{fr ? "Déconnexion" : "Logout"}</Text>
           </LinearGradient>
         </TouchableOpacity>
+
+        <BrandFooterLogo style={{ marginTop: 20, marginBottom: 6 }} />
       </View>
     </ScrollView>
   );

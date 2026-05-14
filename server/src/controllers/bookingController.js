@@ -1,10 +1,12 @@
 const Booking = require("../models/Booking");
 const BookingCustomerReview = require("../models/BookingCustomerReview");
+const Review = require("../models/Review");
 const RentalListing = require("../models/RentalListing");
 const Notification = require("../models/Notification");
 const User = require("../models/User");
 const emailService = require("../utils/emailService");
 const { processEndedConfirmedBookings } = require("../utils/bookingLifecycle");
+const { canCustomerLeaveRentalListingReview } = require("../utils/reviewEligibility");
 const { computeBookingTotalForRental } = require("../utils/bookingPricing");
 const { emitNotification } = require("../utils/socketManager");
 
@@ -1031,9 +1033,15 @@ exports.submitBookingCustomerReview = async (req, res, next) => {
     if (booking.customerId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Forbidden" });
     }
-    if (!["expired", "completed"].includes(booking.status)) {
+    if (!["confirmed", "completed", "expired"].includes(booking.status)) {
       return res.status(400).json({
-        message: "Feedback is only available after the rental period has ended.",
+        message: "Feedback is only available for a confirmed or completed rental.",
+      });
+    }
+    if (!canCustomerLeaveRentalListingReview(booking)) {
+      return res.status(400).json({
+        message:
+          "You can submit feedback starting on the last day of your rental (checkout day), not before.",
       });
     }
 
@@ -1053,15 +1061,49 @@ exports.submitBookingCustomerReview = async (req, res, next) => {
       note: typeof note === "string" ? note.slice(0, 1500) : "",
     });
 
-    const cust = await User.findById(booking.customerId).select("name");
+    const rating = overall === "good" ? 5 : 2;
+    let commentText = typeof note === "string" ? note.trim().slice(0, 1000) : "";
+    if (!commentText) {
+      commentText =
+        overall === "good" ? "Great rental experience." : "Rental did not meet expectations.";
+    }
+
+    try {
+      await Review.findOneAndUpdate(
+        { bookingId: booking._id },
+        {
+          $set: {
+            authorId: booking.customerId,
+            targetId: rental._id,
+            targetModel: "RentalListing",
+            rating,
+            comment: commentText,
+            bookingId: booking._id,
+          },
+        },
+        { upsert: true, new: true }
+      );
+    } catch (syncErr) {
+      await BookingCustomerReview.deleteOne({ _id: review._id });
+      throw syncErr;
+    }
+
+    const cust = await User.findById(booking.customerId).select("name email");
+    const ownerUser = await User.findById(ownerId).select("name email");
     const first = cust?.name?.trim()?.split(/\s+/)[0] || "A customer";
     const title = rental?.title || "a rental";
+    const listingPath = `/rentals/${rental._id}`;
     await notify(
       ownerId,
-      `${first} left feedback for "${title}". Open Bookings to see details.`,
+      `${first} posted a public review on "${title}" (visible on your listing). Open Bookings for trip details or view reviews on the rental page.`,
       "customer_rental_review",
       booking._id
     );
+    if (ownerUser?.email) {
+      emailService
+        .sendOwnerListingReviewPosted(ownerUser, rental, cust, { overall, listingPath })
+        .catch(() => {});
+    }
 
     res.status(201).json(review);
   } catch (error) {

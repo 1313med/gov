@@ -95,6 +95,32 @@ exports.sendCustomerRentalFeedbackInvite = (booking, rental, customer) =>
       </div>`,
   });
 
+/** Owner: customer’s post-trip feedback was published on the rental listing (public reviews). */
+exports.sendOwnerListingReviewPosted = (owner, rental, customer, { overall, listingPath }) => {
+  const base = (process.env.CLIENT_URL || "").replace(/\/$/, "");
+  const url = `${base}${listingPath}`;
+  const summary =
+    overall === "good"
+      ? "They left a positive review (shown on your listing’s Reviews section)."
+      : "They left a review that needs attention (shown on your listing’s Reviews section).";
+  return send({
+    to: owner.email,
+    subject: `New review on your rental — ${rental?.title || "Your listing"}`,
+    html: `
+      <div style="font-family:sans-serif;max-width:560px;margin:auto">
+        <h2 style="color:#3d3af5">New customer review</h2>
+        <p>Hi ${owner.name}, <strong>${customer?.name || "A customer"}</strong> shared feedback after their trip for <strong>${rental?.title || "your listing"}</strong>.</p>
+        <p>${summary}</p>
+        <p style="text-align:center;margin:28px 0">
+          <a href="${url}" style="background:#7c6bff;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block">
+            View listing &amp; reviews
+          </a>
+        </p>
+        <p style="color:#888;font-size:13px">You were also notified in the app. Trip details remain in your owner bookings.</p>
+      </div>`,
+  });
+};
+
 exports.sendBookingSubmitted = (booking, rental, customer) =>
   send({
     to: customer.email,

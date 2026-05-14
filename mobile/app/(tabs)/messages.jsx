@@ -73,6 +73,112 @@ function HeroShimmer({ color, track }) {
   );
 }
 
+/** Full-screen loading — matches inbox hero / orb language, no default spinner. */
+function MessagesEliteLoader({ fr, C, isDark, heroGrad, orbPulse, orbA, orbB, ctaGrad, shimmerTrack, titleColor, subColor }) {
+  const ringSpin = useRef(new Animated.Value(0)).current;
+  const ringSpinRev = useRef(new Animated.Value(0)).current;
+  const corePulse = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const a = Animated.loop(
+      Animated.timing(ringSpin, { toValue: 1, duration: 10000, easing: Easing.linear, useNativeDriver: true })
+    );
+    const b = Animated.loop(
+      Animated.timing(ringSpinRev, { toValue: 1, duration: 15000, easing: Easing.linear, useNativeDriver: true })
+    );
+    const c = Animated.loop(
+      Animated.sequence([
+        Animated.timing(corePulse, { toValue: 1.04, duration: 1600, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(corePulse, { toValue: 1, duration: 1600, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      ])
+    );
+    a.start();
+    b.start();
+    c.start();
+    return () => {
+      a.stop();
+      b.stop();
+      c.stop();
+    };
+  }, [ringSpin, ringSpinRev, corePulse]);
+
+  const rotate = ringSpin.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "360deg"] });
+  const rotateRev = ringSpinRev.interpolate({ inputRange: [0, 1], outputRange: ["360deg", "0deg"] });
+  const ringTint = isDark ? "rgba(124,107,255,0.45)" : "rgba(98,72,232,0.5)";
+  const ringSoft = isDark ? "rgba(56,189,248,0.22)" : "rgba(14,165,233,0.28)";
+
+  return (
+    <LinearGradient colors={heroGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flex: 1 }}>
+      <GlowOrb scaleAnim={orbPulse} colors={orbA} style={{ width: 300, height: 300, top: -120, right: -100 }} />
+      <GlowOrb scaleAnim={orbPulse} colors={orbB} style={{ width: 240, height: 240, bottom: -60, left: -90 }} />
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 28 }}>
+        <View style={{ width: 132, height: 132, alignItems: "center", justifyContent: "center", marginBottom: 32 }}>
+          <Animated.View
+            style={{
+              position: "absolute",
+              width: 132,
+              height: 132,
+              borderRadius: 66,
+              borderWidth: 2,
+              borderColor: "transparent",
+              borderTopColor: ringTint,
+              borderLeftColor: ringSoft,
+              transform: [{ rotate }],
+            }}
+          />
+          <Animated.View
+            style={{
+              position: "absolute",
+              width: 118,
+              height: 118,
+              borderRadius: 59,
+              borderWidth: 1.5,
+              borderColor: "transparent",
+              borderBottomColor: isDark ? "rgba(167,139,250,0.35)" : "rgba(129,140,248,0.45)",
+              borderRightColor: ringSoft,
+              transform: [{ rotate: rotateRev }],
+            }}
+          />
+          <Animated.View style={{ transform: [{ scale: corePulse }] }}>
+            <LinearGradient
+              colors={ctaGrad}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                width: 76,
+                height: 76,
+                borderRadius: 26,
+                alignItems: "center",
+                justifyContent: "center",
+                shadowColor: C.primary,
+                shadowOffset: { width: 0, height: 14 },
+                shadowOpacity: isDark ? 0.45 : 0.28,
+                shadowRadius: 22,
+                elevation: 14,
+              }}
+            >
+              <Ionicons name="chatbubbles" size={32} color="#fff" />
+            </LinearGradient>
+          </Animated.View>
+        </View>
+
+        <Text style={{ color: C.primary, fontSize: 10, fontWeight: "800", letterSpacing: 3.2, textTransform: "uppercase", marginBottom: 10 }}>
+          {fr ? "Boîte de réception" : "Inbox"}
+        </Text>
+        <Text style={{ color: titleColor, fontSize: 24, fontWeight: "800", letterSpacing: -0.6, textAlign: "center" }}>
+          {fr ? "Préparation" : "Preparing"}
+        </Text>
+        <Text style={{ color: subColor, fontSize: 15, fontWeight: "600", marginTop: 10, textAlign: "center", lineHeight: 22, maxWidth: 280 }}>
+          {fr ? "Récupération de vos fils de discussion…" : "Fetching your conversation threads…"}
+        </Text>
+        <View style={{ width: Math.min(280, SCREEN_W - 56), marginTop: 22 }}>
+          <HeroShimmer color={C.primary} track={shimmerTrack} />
+        </View>
+      </View>
+    </LinearGradient>
+  );
+}
+
 function formatConvTime(iso, fr) {
   if (!iso) return "";
   const d = new Date(iso);
@@ -516,12 +622,19 @@ export default function MessagesScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: C.bg, alignItems: "center", justifyContent: "center" }}>
-        <LinearGradient colors={ctaGrad} style={{ width: 72, height: 72, borderRadius: 36, alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
-          <ActivityIndicator color="#fff" size="large" />
-        </LinearGradient>
-        <Text style={{ color: subColor, fontSize: 14, fontWeight: "600" }}>{fr ? "Chargement…" : "Loading…"}</Text>
-      </View>
+      <MessagesEliteLoader
+        fr={fr}
+        C={C}
+        isDark={isDark}
+        heroGrad={heroGrad}
+        orbPulse={orbPulse}
+        orbA={orbA}
+        orbB={orbB}
+        ctaGrad={ctaGrad}
+        shimmerTrack={shimmerTrack}
+        titleColor={titleColor}
+        subColor={subColor}
+      />
     );
   }
 

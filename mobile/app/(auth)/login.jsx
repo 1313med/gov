@@ -7,6 +7,7 @@ import { useAuth } from "../../src/context/AuthContext";
 import { useAppLang } from "../../src/context/AppLangContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import ThemeToggle from "../../src/components/ThemeToggle";
+import BrandFooterLogo from "../../src/components/BrandFooterLogo";
 import { getApiErrorMessage } from "../../src/utils/apiErrorMessage";
 import { clearLoginForm, loadLoginForm, saveLoginForm } from "../../src/utils/authStorage";
 
@@ -143,7 +144,9 @@ export default function LoginScreen() {
           <TouchableOpacity onPress={handleLogin} disabled={loading} style={[s.btn, { opacity: loading ? 0.7 : 1 }]}>
             <Text style={s.btnText}>{loading ? c.authenticating : `${c.signInBtn} →`}</Text>
           </TouchableOpacity>
+        </View>
 
+        <View style={s.belowForm}>
           <View style={s.dividerRow}>
             <View style={s.dividerLine} />
             <Text style={s.dividerText}>{lang === "fr" ? "Nouveau sur Goovoiture ?" : "New to Goovoiture?"}</Text>
@@ -162,6 +165,8 @@ export default function LoginScreen() {
             </View>
             <Ionicons name="chevron-forward" size={18} color={C.muted} />
           </TouchableOpacity>
+
+          <BrandFooterLogo style={{ marginTop: 20 }} />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -260,9 +265,10 @@ function createLoginStyles(C) {
     rememberRow: { flexDirection: "row", alignItems: "center", gap: 6 },
     rememberText: { color: C.muted, fontSize: 12 },
     forgotText: { color: C.primary, fontSize: 12, fontWeight: "600" },
-    btn: { backgroundColor: C.primary, borderRadius: 12, paddingVertical: 16, alignItems: "center", marginBottom: 24 },
+    btn: { backgroundColor: C.primary, borderRadius: 12, paddingVertical: 16, alignItems: "center", marginBottom: 0 },
+    belowForm: { marginHorizontal: 24, marginTop: 18, paddingBottom: 8 },
     btnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
-    dividerRow: { flexDirection: "row", alignItems: "center", marginBottom: 24 },
+    dividerRow: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
     dividerLine: { flex: 1, height: 1, backgroundColor: C.border },
     dividerText: { color: C.muted, fontSize: 12, marginHorizontal: 12 },
     registerCard: {

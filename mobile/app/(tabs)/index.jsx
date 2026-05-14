@@ -20,6 +20,7 @@ import { useAppLang } from "../../src/context/AppLangContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import { useSocket } from "../../src/context/SocketContext";
 import QuickActionCard from "../../src/components/QuickActionCard";
+import BrandFooterLogo from "../../src/components/BrandFooterLogo";
 import { useOwnerBookingAttentionCount } from "../../src/hooks/useOwnerBookingAttentionCount";
 import { useOwnerListingViewAttentionCount } from "../../src/hooks/useOwnerListingViewAttentionCount";
 
@@ -675,6 +676,7 @@ export default function HomeScreen() {
                 />
               )}
             </Animated.View>
+            <BrandFooterLogo style={{ marginTop: 16, marginBottom: 4 }} />
           </View>
         )}
 

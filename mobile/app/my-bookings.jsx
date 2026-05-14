@@ -62,6 +62,16 @@ function calendarDaysUntilPickupDay(iso) {
   return Math.round((startDay.getTime() - today.getTime()) / 86400000);
 }
 
+function startOfLocalDayFromDate(d) {
+  const x = new Date(d);
+  return new Date(x.getFullYear(), x.getMonth(), x.getDate(), 0, 0, 0, 0);
+}
+
+/** Same rule as server: trip feedback from last rental day (local), not before. */
+function isOnOrAfterLastRentalDay(endDateIso) {
+  return startOfLocalDayFromDate(new Date()).getTime() >= startOfLocalDayFromDate(new Date(endDateIso)).getTime();
+}
+
 /** API / UI helper for vehicle-unavailable flow. */
 function vehiclePhase(b) {
   return b?.vehicleResolutionPhase || "none";
@@ -439,7 +449,9 @@ export default function MyBookingsScreen() {
             calDays === 1;
 
           const showTripFeedbackCta =
-            (item.status === "expired" || item.status === "completed") && !item.hasCustomerBookingReview;
+            !item.hasCustomerBookingReview &&
+            ["confirmed", "completed", "expired"].includes(item.status) &&
+            isOnOrAfterLastRentalDay(item.endDate);
 
           const img = resolveMediaUrl(item.rentalId?.images?.[0]);
           const title =

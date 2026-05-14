@@ -28,12 +28,28 @@ const reviewSchema = new mongoose.Schema(
       type: String,
       maxlength: 1000,
     },
+    /** When set, this row was created from post-trip booking feedback (one public review per booking). */
+    bookingId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Booking",
+      default: null,
+    },
   },
   { timestamps: true }
 );
 
-// One review per user per target
-reviewSchema.index({ authorId: 1, targetId: 1 }, { unique: true });
+// Trip-feedback reviews: at most one listing review document per booking
+reviewSchema.index({ bookingId: 1 }, { unique: true, sparse: true });
+// Manual “write a review” on a listing: one per author per target when not tied to a booking
+reviewSchema.index(
+  { authorId: 1, targetId: 1, targetModel: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      $or: [{ bookingId: { $exists: false } }, { bookingId: null }],
+    },
+  }
+);
 reviewSchema.index({ targetId: 1 });
 
 module.exports = mongoose.model("Review", reviewSchema);

@@ -29,6 +29,16 @@ function addOneLocalDayYmd(ymdStr) {
   return localYMD(d);
 }
 
+function startOfLocalDay(d) {
+  const x = new Date(d);
+  return new Date(x.getFullYear(), x.getMonth(), x.getDate(), 0, 0, 0, 0);
+}
+
+/** Same rule as server: reviews / trip feedback from the last rental day onward (local dates). */
+function isOnOrAfterLastRentalDay(endIso) {
+  return startOfLocalDay(new Date()).getTime() >= startOfLocalDay(new Date(endIso)).getTime();
+}
+
 /** Same rule as server: refund cancel if pickup is at least this many local calendar days after today. */
 const CALENDAR_DAYS_REFUND_CANCEL_MIN = 2;
 
@@ -236,7 +246,9 @@ export default function MyBookings() {
             : null;
           const offerRescheduleHint = calDays === 1 && !b.customerDateChangeUsed;
           const showTripFeedback =
-            (b.status === "expired" || b.status === "completed") && !b.hasCustomerBookingReview;
+            !b.hasCustomerBookingReview &&
+            ["confirmed", "completed", "expired"].includes(b.status) &&
+            isOnOrAfterLastRentalDay(b.endDate);
 
           return (
             <div
