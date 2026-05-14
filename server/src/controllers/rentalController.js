@@ -3,7 +3,8 @@ const RentalViewEvent = require("../models/RentalViewEvent");
 const Booking = require("../models/Booking");
 const Notification = require("../models/Notification");
 const User = require("../models/User");
-const emailService = require("../utils/emailService");
+const emailService    = require("../utils/emailService");
+const whatsappService = require("../utils/whatsappService");
 const { computeBookingTotalForRental } = require("../utils/bookingPricing");
 const { emitNotification } = require("../utils/socketManager");
 const { safeRegex, safeNumber } = require("../utils/sanitize");
@@ -476,12 +477,11 @@ exports.createBooking = async (req, res, next) => {
 
     const owner = await User.findById(rental.rentalOwnerId);
     if (owner?.email) emailService.sendBookingRequest(booking, rental, owner).catch(() => {});
+    if (owner?.phone) whatsappService.sendBookingRequest(owner, booking, rental, req.user).catch(() => {});
 
-    // Notify customer by email that request was submitted
-    const customerUser = await User.findById(req.user._id).select("name email");
-    if (customerUser?.email) {
-      emailService.sendBookingSubmitted(booking, rental, customerUser).catch(() => {});
-    }
+    // Notify customer by email + WhatsApp that request was submitted
+    const customerUser = await User.findById(req.user._id).select("name email phone");
+    if (customerUser?.email) emailService.sendBookingSubmitted(booking, rental, customerUser).catch(() => {});
 
     res.status(201).json(booking);
   } catch (error) { next(error); }

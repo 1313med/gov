@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState, useMemo } from "react";
+import { useEffect, useRef, useCallback, useState, useMemo, memo } from "react";
 import {
   View,
   Text,
@@ -19,6 +19,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../src/context/ThemeContext";
 import { useAppLang } from "../src/context/AppLangContext";
 import { getMyCar, deleteCar } from "../src/api/userCar";
+import { getRecommendations } from "../src/utils/garageRecommendations";
 
 // ── helpers ────────────────────────────────────────────────────────────────────
 function daysLeft(dateStr) {
@@ -212,6 +213,8 @@ export default function MonGarageScreen() {
     };
   }, [car]);
 
+  const recommendations = useMemo(() => car ? getRecommendations(car) : [], [car]);
+
   const alertCount = useMemo(() => {
     if (!statuses) return 0;
     let n = 0;
@@ -227,8 +230,17 @@ export default function MonGarageScreen() {
     return n;
   }, [statuses]);
 
-  const goEdit = useCallback(() => router.push({ pathname: "/add-car", params: { id: car?._id } }), [car, router]);
-  const goAdd  = useCallback(() => router.push("/add-car"), [router]);
+  const goEdit     = useCallback(() => router.push({ pathname: "/add-car", params: { id: car?._id } }), [car, router]);
+  const goAdd      = useCallback(() => router.push("/add-car"), [router]);
+  const goEstimate = useCallback(() => router.push({
+    pathname: "/estimate",
+    params: { brand: car?.brand || "", model: car?.model || "", year: String(car?.year || ""), mileage: String(car?.currentMileage || ""), fuel: car?.fuelType || "" },
+  }), [car, router]);
+  const goSell     = useCallback(() => router.push({
+    pathname: "/verify-seller",
+    params: { brand: car?.brand || "", model: car?.model || "", year: String(car?.year || ""), mileage: String(car?.currentMileage || ""), fuel: car?.fuelType || "" },
+  }), [car, router]);
+  const goAlerts   = useCallback(() => router.push("/price-alerts"), [router]);
 
   if (loading) {
     return (
@@ -396,6 +408,90 @@ export default function MonGarageScreen() {
               />
             )}
           </LinearGradient>
+
+          {/* ── Estimate + Sell CTAs ─────────────────────────────────── */}
+          <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
+            <TouchableOpacity onPress={goEstimate} activeOpacity={0.85} style={{ flex: 1 }}>
+              <LinearGradient
+                colors={isDark ? ["rgba(98,72,232,0.22)", "rgba(67,56,202,0.12)"] : ["rgba(98,72,232,0.12)", "rgba(67,56,202,0.06)"]}
+                style={[styles.card, { borderColor: isDark ? "rgba(124,107,255,0.35)" : "rgba(98,72,232,0.25)", alignItems: "center", paddingVertical: 16 }]}
+              >
+                <LinearGradient colors={primaryGrad} style={{ width: 36, height: 36, borderRadius: 11, alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
+                  <Ionicons name="calculator-outline" size={18} color="#fff" />
+                </LinearGradient>
+                <Text style={{ fontSize: 13, fontWeight: "800", color: titleColor, textAlign: "center" }}>
+                  {fr ? "Estimer la valeur" : "Estimate value"}
+                </Text>
+                <Text style={{ fontSize: 11, color: subColor, marginTop: 2 }}>
+                  {fr ? "Prix du marché" : "Market price"}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={goSell} activeOpacity={0.85} style={{ flex: 1 }}>
+              <LinearGradient
+                colors={isDark ? ["rgba(167,139,250,0.22)", "rgba(124,107,255,0.10)"] : ["rgba(167,139,250,0.14)", "rgba(124,107,255,0.06)"]}
+                style={[styles.card, { borderColor: isDark ? "rgba(167,139,250,0.35)" : "rgba(124,107,255,0.25)", alignItems: "center", paddingVertical: 16 }]}
+              >
+                <LinearGradient colors={["#a78bfa", "#7c6bff"]} style={{ width: 36, height: 36, borderRadius: 11, alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
+                  <Ionicons name="pricetag-outline" size={18} color="#fff" />
+                </LinearGradient>
+                <Text style={{ fontSize: 13, fontWeight: "800", color: titleColor, textAlign: "center" }}>
+                  {fr ? "Vendre cette voiture" : "Sell this car"}
+                </Text>
+                <Text style={{ fontSize: 11, color: subColor, marginTop: 2 }}>
+                  {fr ? "Créer une annonce" : "Create listing"}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+
+          {/* Price alerts shortcut */}
+          <TouchableOpacity onPress={goAlerts} activeOpacity={0.82} style={{ marginTop: 10 }}>
+            <LinearGradient
+              colors={isDark ? ["rgba(34,197,94,0.12)", "rgba(22,163,74,0.06)"] : ["rgba(34,197,94,0.09)", "rgba(22,163,74,0.04)"]}
+              style={[styles.card, { borderColor: isDark ? "rgba(34,197,94,0.28)" : "rgba(34,197,94,0.22)", flexDirection: "row", alignItems: "center", gap: 12 }]}
+            >
+              <LinearGradient colors={["#22c55e", "#16a34a"]} style={{ width: 38, height: 38, borderRadius: 12, alignItems: "center", justifyContent: "center" }}>
+                <Ionicons name="notifications-outline" size={18} color="#fff" />
+              </LinearGradient>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 14, fontWeight: "800", color: titleColor }}>
+                  {fr ? "Alertes prix" : "Price alerts"}
+                </Text>
+                <Text style={{ fontSize: 12, color: subColor }}>
+                  {fr ? "Suivez les prix des voitures qui vous intéressent" : "Track prices of cars you're interested in"}
+                </Text>
+              </View>
+              <Ionicons name="arrow-forward" size={16} color={isDark ? "#22c55e" : "#16a34a"} />
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {/* ── Goovoiture Recommendations ───────────────────────────── */}
+          {recommendations.length > 0 && (
+            <LinearGradient colors={cardBg} style={[styles.card, { borderColor: cardBorder, marginTop: 12 }]}>
+              <SectionHeader icon="bulb-outline" title={fr ? "Recommandations Goovoiture" : "Goovoiture recommendations"} color="#a78bfa" isDark={isDark} />
+              {recommendations.map((rec, i) => (
+                <TouchableOpacity
+                  key={i}
+                  activeOpacity={rec.action === "estimate" ? 0.8 : 1}
+                  onPress={rec.action === "estimate" ? goEstimate : undefined}
+                  style={{ flexDirection: "row", alignItems: "flex-start", paddingVertical: 12, borderBottomWidth: i < recommendations.length - 1 ? 1 : 0, borderBottomColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(15,23,42,0.06)", gap: 12 }}
+                >
+                  <View style={{ width: 34, height: 34, borderRadius: 11, backgroundColor: `${rec.color}20`, alignItems: "center", justifyContent: "center", marginTop: 1, flexShrink: 0 }}>
+                    <Ionicons name={rec.icon} size={16} color={rec.color} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 3 }}>
+                      <Text style={{ fontSize: 14, fontWeight: "800", color: titleColor, flex: 1 }}>{rec.title}</Text>
+                      {rec.action === "estimate" && <Ionicons name="arrow-forward" size={13} color={rec.color} />}
+                    </View>
+                    <Text style={{ fontSize: 13, color: subColor, lineHeight: 19 }}>{rec.body}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </LinearGradient>
+          )}
 
           {/* Marketplace bridge */}
           <TouchableOpacity

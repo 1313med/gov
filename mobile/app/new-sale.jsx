@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator, Image, KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
@@ -27,9 +27,15 @@ export default function NewSaleScreen() {
   const { colors: C } = useTheme();
   const s = useMemo(() => createNewSaleStyles(C), [C]);
   const router = useRouter();
+  const params = useLocalSearchParams();
   const fr = lang === "fr";
 
-  const [form, setForm] = useState({ title:"", brand:"", model:"", year:"", mileage:"", price:"", fuel:"", gearbox:"", city:"", description:"" });
+  const [form, setForm] = useState({
+    title: params.brand && params.model ? `${params.brand} ${params.model} ${params.year || ""}`.trim() : "",
+    brand: params.brand || "", model: params.model || "", year: params.year || "",
+    mileage: params.mileage || "", price: "", fuel: params.fuel || "",
+    gearbox: params.gearbox || "", city: "", description: "",
+  });
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [locating, setLocating] = useState(false);

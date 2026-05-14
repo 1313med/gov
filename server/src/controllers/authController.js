@@ -2,7 +2,8 @@ const asyncHandler = require("express-async-handler");
 const crypto = require("crypto");
 const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
-const emailService = require("../utils/emailService");
+const emailService    = require("../utils/emailService");
+const whatsappService = require("../utils/whatsappService");
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -63,6 +64,7 @@ exports.register = asyncHandler(async (req, res) => {
     emailService.sendWelcome(user).catch(() => {});
     scheduleVerification(user).catch(() => {});
   }
+  if (user.phone) whatsappService.sendWelcome(user).catch(() => {});
 
   res.status(201).json({
     message: "Account created. Please verify your email before logging in.",

@@ -250,6 +250,47 @@ exports.sendCarExpiryReminder = (user, alerts) => {
   });
 };
 
+exports.sendPriceAlert = (user, alert, matches) => {
+  const rows = matches.slice(0, 5).map((l) => `
+    <tr>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0">${l.title}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;color:#0c9966;font-weight:700">${l.price.toLocaleString()} MAD</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0">${l.city || "—"}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0">${l.year || "—"}</td>
+    </tr>`).join("");
+
+  return send({
+    to: user.email,
+    subject: `🔔 Alerte Prix — ${matches.length} ${alert.brand}${alert.model ? " " + alert.model : ""} sous ${alert.maxPrice.toLocaleString()} MAD`,
+    html: `
+      <div style="font-family:sans-serif;max-width:600px;margin:auto">
+        <h2 style="color:#7c6bff">🔔 Alerte Prix Goovoiture</h2>
+        <p>Bonjour ${user.name}, nous avons trouvé <strong>${matches.length} annonce(s)</strong> correspondant à votre alerte :</p>
+        <p style="background:#f8f8f8;padding:10px 14px;border-radius:8px">
+          <strong>${alert.brand}${alert.model ? " " + alert.model : ""}</strong> · Max <strong>${alert.maxPrice.toLocaleString()} MAD</strong>
+          ${alert.minYear ? " · Depuis " + alert.minYear : ""}${alert.city ? " · " + alert.city : ""}
+        </p>
+        <table style="width:100%;border-collapse:collapse;margin:20px 0">
+          <thead>
+            <tr style="background:#f8f8f8">
+              <th style="padding:10px 12px;text-align:left;font-size:12px;color:#888;text-transform:uppercase">Annonce</th>
+              <th style="padding:10px 12px;text-align:left;font-size:12px;color:#888;text-transform:uppercase">Prix</th>
+              <th style="padding:10px 12px;text-align:left;font-size:12px;color:#888;text-transform:uppercase">Ville</th>
+              <th style="padding:10px 12px;text-align:left;font-size:12px;color:#888;text-transform:uppercase">Année</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <p style="text-align:center;margin:24px 0">
+          <a href="${process.env.CLIENT_URL}/cars" style="background:#7c6bff;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block">
+            Voir les annonces
+          </a>
+        </p>
+        <p style="color:#aaa;font-size:12px">Gérez vos alertes dans l'app Goovoiture → Alertes Prix</p>
+      </div>`,
+  });
+};
+
 exports.sendMaintenanceReminder = (owner, records) => {
   const rows = records.map((r) => `
     <tr>

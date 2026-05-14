@@ -4,11 +4,12 @@
  * within 30 days (first alert) or 7 days (urgent alert) and notifies the user.
  * alertSentAt is stamped per item so we don't spam the same alert twice.
  */
-const cron        = require("node-cron");
-const UserCar     = require("../models/UserCar");
-const User        = require("../models/User");
-const emailService = require("./emailService");
-const logger      = require("./logger");
+const cron             = require("node-cron");
+const UserCar          = require("../models/UserCar");
+const User             = require("../models/User");
+const emailService     = require("./emailService");
+const whatsappService  = require("./whatsappService");
+const logger           = require("./logger");
 
 const ALERT_WINDOW_DAYS  = 30; // first alert when ≤ 30 days remaining
 const RESEND_AFTER_DAYS  = 7;  // re-alert if still not renewed after 7 more days
@@ -92,6 +93,9 @@ function start() {
 
         if (alerts.length > 0) {
           await emailService.sendCarExpiryReminder(user, alerts).catch(() => {});
+          if (user.phone) {
+            await whatsappService.sendCarExpiryAlert(user, carName, alerts).catch(() => {});
+          }
           logger.info(`Mon Garage alert sent to ${user.email} (${alerts.length} item(s)) — ${carName}`);
         }
       }

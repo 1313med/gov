@@ -94,7 +94,7 @@ exports.getSaleById = asyncHandler(async (req, res) => {
   const sale = await SaleListing.findOne({
     _id: req.params.id,
     deletedAt: null,
-  }).populate("sellerId", "name phone city avatar");
+  }).populate("sellerId", "name phone city avatar nationalId");
 
   if (!sale) return res.status(404).json({ message: "Listing not found" });
   if (sale.status !== "approved") return res.status(403).json({ message: "This listing is not public" });

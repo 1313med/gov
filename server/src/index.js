@@ -21,6 +21,7 @@ const { setIo } = require("./utils/socketManager");
 const maintenanceCron = require("./utils/maintenanceCron");
 const returnCron      = require("./utils/returnCron");
 const userCarCron     = require("./utils/userCarCron");
+const priceAlertCron  = require("./utils/priceAlertCron");
 const logger = require("./utils/logger");
 
 const PORT = process.env.PORT || 5000;
@@ -74,6 +75,7 @@ connectDB()
     maintenanceCron.start();
     returnCron.start();
     userCarCron.start();
+    priceAlertCron.start();
     server.listen(PORT, "0.0.0.0", () => {
       logger.info(`Server running on port ${PORT} [${process.env.NODE_ENV || "development"}]`);
     });

@@ -4,7 +4,8 @@ const Review = require("../models/Review");
 const RentalListing = require("../models/RentalListing");
 const Notification = require("../models/Notification");
 const User = require("../models/User");
-const emailService = require("../utils/emailService");
+const emailService    = require("../utils/emailService");
+const whatsappService = require("../utils/whatsappService");
 const { processEndedConfirmedBookings } = require("../utils/bookingLifecycle");
 const { canCustomerLeaveRentalListingReview } = require("../utils/reviewEligibility");
 const { computeBookingTotalForRental } = require("../utils/bookingPricing");
@@ -69,6 +70,10 @@ exports.confirmReturn = async (req, res, next) => {
         "feedback_request",
         booking._id,
       );
+      const owner = await User.findById(ownerId).select("phone").lean();
+      if (owner?.phone) {
+        whatsappService.sendReturnConfirmed(owner, req.user.name, booking.rentalId).catch(() => {});
+      }
     }
 
     res.json({ message: "Return confirmed", booking });
@@ -368,11 +373,14 @@ exports.updateBookingStatus = async (req, res, next) => {
     if (status === "confirmed") {
       await notify(booking.customerId, `Your booking for "${rental.title}" has been confirmed.`, "approved");
       if (customer?.email) emailService.sendBookingConfirmed(booking, rental, customer).catch(() => {});
+      if (customer?.phone) whatsappService.sendBookingConfirmed(customer, booking, rental).catch(() => {});
     } else if (status === "rejected") {
       await notify(booking.customerId, `Your booking for "${rental.title}" was rejected.`, "rejected");
       if (customer?.email) emailService.sendBookingRejected(booking, rental, customer).catch(() => {});
+      if (customer?.phone) whatsappService.sendBookingRejected(customer, booking, rental).catch(() => {});
     } else if (status === "completed") {
       await notify(booking.customerId, `Your rental of "${rental.title}" is now marked as completed. Thank you!`, "approved");
+      if (customer?.phone) whatsappService.sendBookingCompleted(customer, rental).catch(() => {});
     }
 
     res.json(booking);
@@ -452,6 +460,19 @@ exports.cancelBooking = async (req, res, next) => {
       : `A booking for "${title}" was cancelled by the customer. If payment applies, estimated refund after ${feePct}% processing fee: about ${estimatedRefund} MAD (${paid} MAD paid).`;
 
     await notify(booking.rentalId.rentalOwnerId, ownerMsg, "pending", booking._id);
+
+    // WhatsApp: notify owner and customer
+    const cancelInfo = { wasPending, estimatedRefund, feePct };
+    const [ownerUser, customerUser] = await Promise.all([
+      User.findById(booking.rentalId.rentalOwnerId).select("phone").lean(),
+      User.findById(booking.customerId).select("phone").lean(),
+    ]);
+    if (ownerUser?.phone) {
+      whatsappService.sendBookingCancelledToOwner(ownerUser, booking, booking.rentalId, cancelInfo).catch(() => {});
+    }
+    if (customerUser?.phone && !wasPending) {
+      whatsappService.sendBookingCancelledToCustomer(customerUser, booking, booking.rentalId, cancelInfo).catch(() => {});
+    }
 
     res.json({
       booking,

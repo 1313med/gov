@@ -693,6 +693,24 @@ export default function ProfileScreen() {
           labelColor={titleColor}
           color="#a78bfa"
         />
+        <QuickActionCard
+          icon="calculator-outline"
+          label={fr ? "Estimer ma voiture" : "Estimate my car"}
+          onPress={() => router.push("/estimate")}
+          C={C}
+          isDark={isDark}
+          labelColor={titleColor}
+          color="#38bdf8"
+        />
+        <QuickActionCard
+          icon="notifications-outline"
+          label={fr ? "Alertes prix" : "Price alerts"}
+          onPress={() => router.push("/price-alerts")}
+          C={C}
+          isDark={isDark}
+          labelColor={titleColor}
+          color="#22c55e"
+        />
         {auth.role === "customer" && (
           <QuickActionCard
             icon="calendar-outline"
