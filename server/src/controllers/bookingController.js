@@ -378,9 +378,10 @@ exports.updateBookingStatus = async (req, res, next) => {
 };
 
 // ── CUSTOMER – Cancel own booking ─────────────────────────────────────────────
-// Pending: always allowed. Confirmed: refund cancel if pickup is ≥48h away OR
-// pickup date is at least CUSTOMER_CANCEL_REFUND_MIN_CALENDAR_DAYS after today
-// (local). Otherwise one-time reschedule may apply on the calendar day before pickup.
+// Pending: allowed unless the customer already used their one-time date change.
+// Confirmed: refund cancel if pickup is ≥48h away OR pickup local date is at least
+// CUSTOMER_CANCEL_REFUND_MIN_CALENDAR_DAYS after today — unless they already rescheduled
+// once; then online cancellation is never allowed (they already exercised the escape hatch).
 exports.cancelBooking = async (req, res, next) => {
   try {
     const booking = await Booking.findOne({ _id: req.params.id, deletedAt: null })
@@ -395,28 +396,21 @@ exports.cancelBooking = async (req, res, next) => {
       return res.status(400).json({ message: "This booking cannot be cancelled" });
     }
 
+    if (booking.customerDateChangeUsed) {
+      return res.status(400).json({
+        code: "BOOKING_NO_CANCEL_AFTER_RESCHEDULE",
+        message:
+          "You already used your one-time date change on this booking. Online cancellation is no longer available.",
+      });
+    }
+
     if (booking.status === "confirmed") {
       if (new Date(booking.startDate).getTime() <= Date.now()) {
         return res.status(400).json({
           message: "Pickup has already started or passed; cancellation here is not available.",
         });
       }
-      const hBlock = hoursUntilPickup(booking.startDate);
-      if (booking.customerDateChangeUsed && hBlock > 0 && hBlock <= 24) {
-        return res.status(400).json({
-          code: "BOOKING_NO_FURTHER_CHANGES",
-          message:
-            "You already used your one-time date change close to pickup. Online cancellation is no longer available for this booking.",
-        });
-      }
       const cal = calendarDaysUntilPickupDay(booking.startDate);
-      if (booking.customerDateChangeUsed && cal >= 0 && cal <= 1) {
-        return res.status(400).json({
-          code: "BOOKING_NO_FURTHER_CHANGES",
-          message:
-            "You already used your one-time date change. No further changes or online cancellation — your booking is set for pickup today or tomorrow.",
-        });
-      }
       const h = hoursUntilPickup(booking.startDate);
       const canRefundCancelOnline =
         h >= CUSTOMER_CANCEL_REFUND_MIN_HOURS || cal >= CUSTOMER_CANCEL_REFUND_MIN_CALENDAR_DAYS;

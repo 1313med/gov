@@ -315,8 +315,6 @@ export default function MessagesScreen() {
     </LinearGradient>
   );
 
-  if (!auth) return <View style={{ flex: 1, backgroundColor: C.bg }}>{guestLogin}</View>;
-
   const listHeader = useMemo(
     () => (
       <LinearGradient colors={heroGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingTop: insets.top + 10, paddingBottom: 22, overflow: "hidden" }}>
@@ -375,6 +373,8 @@ export default function MessagesScreen() {
     ),
     [insets.top, fr, inboxScope, C.primary, titleColor, subColor, heroGrad, isDark, orbPulse, shimmerTrack],
   );
+
+  if (!auth) return <View style={{ flex: 1, backgroundColor: C.bg }}>{guestLogin}</View>;
 
   if (active) {
     const other = active.participants?.find((p) => String(p._id || p) !== String(auth._id));

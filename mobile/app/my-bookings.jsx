@@ -327,6 +327,15 @@ export default function MyBookingsScreen() {
   };
 
   const promptCancelBooking = (item) => {
+    if (item.customerDateChangeUsed) {
+      Alert.alert(
+        fr ? "Annulation indisponible" : "Cancellation unavailable",
+        fr
+          ? "Vous avez déjà utilisé votre modification de dates unique. L’annulation en ligne n’est plus possible."
+          : "You already used your one-time date change. Online cancellation is no longer available."
+      );
+      return;
+    }
     const id = item._id;
     const h = hoursUntilStart(item.startDate);
     const calDays = calendarDaysUntilPickupDay(item.startDate);
@@ -415,13 +424,14 @@ export default function MyBookingsScreen() {
           const calDays = calendarDaysUntilPickupDay(item.startDate);
           const usedChange = !!item.customerDateChangeUsed;
           const vPhase = vehiclePhase(item);
+          /** After the one-time reschedule, customer may not cancel online (any pickup date). */
           const bookingLockedNoFurther =
-            item.status === "confirmed" && h > 0 && usedChange && (calDays <= 1 || h <= 24);
+            usedChange && ["pending", "confirmed"].includes(item.status) && h > 0;
           const canCancelBooking =
-            item.status === "pending" ||
-            (item.status === "confirmed" &&
-              !bookingLockedNoFurther &&
-              (h >= HOURS_REFUND_CANCEL_MIN || calDays >= CALENDAR_DAYS_REFUND_CANCEL_MIN));
+            !bookingLockedNoFurther &&
+            (item.status === "pending" ||
+              (item.status === "confirmed" &&
+                (h >= HOURS_REFUND_CANCEL_MIN || calDays >= CALENDAR_DAYS_REFUND_CANCEL_MIN)));
           const canOpenReschedule =
             (item.status === "pending" || item.status === "confirmed") &&
             !usedChange &&
@@ -436,47 +446,45 @@ export default function MyBookingsScreen() {
             item.rentalId?.title || `${item.rentalId?.brand || ""} ${item.rentalId?.model || ""}`.trim() || "Rental";
 
           let policyEl = null;
-          if (item.status === "confirmed" && h > 0) {
-            if (bookingLockedNoFurther) {
+          if (bookingLockedNoFurther) {
+            policyEl = (
+              <Text style={s.policyLocked}>
+                {fr
+                  ? "Vous avez utilisé votre unique changement de dates. L’annulation en ligne n’est plus disponible ; la réservation reste ferme jusqu’au départ."
+                  : "You used your one-time date change. Online cancellation is no longer available; the booking stands until pickup."}
+              </Text>
+            );
+          } else if (item.status === "confirmed" && h > 0) {
+            const canRefundCancel = h >= HOURS_REFUND_CANCEL_MIN || calDays >= CALENDAR_DAYS_REFUND_CANCEL_MIN;
+            if (canRefundCancel) {
               policyEl = (
-                <Text style={s.policyLocked}>
+                <Text style={s.policyHint}>
                   {fr
-                    ? "Plus d’actions possibles : vous avez déjà modifié les dates une fois. Annulation en ligne indisponible (y compris dans les 24h avant le départ). La réservation est figée jusqu’au départ."
-                    : "No further changes: you already updated your dates once. Online cancellation is not available (including within 24h before pickup). Your booking is set until pickup."}
+                    ? `Annulation remboursable : plus de 48h avant le départ, ou date de départ au calendrier dans au moins 2 jours — remboursement estimé ≈ ${estimateRefundMad(item.totalAmount).toLocaleString("fr-FR")} MAD (frais ${TX_FEE_PERCENT}%).`
+                    : `Refundable cancel: more than 48h before pickup, or pickup is at least two calendar days away — estimated refund ≈ ${estimateRefundMad(item.totalAmount).toLocaleString("en-US")} MAD after ${TX_FEE_PERCENT}% fee.`}
                 </Text>
               );
             } else {
-              const canRefundCancel = h >= HOURS_REFUND_CANCEL_MIN || calDays >= CALENDAR_DAYS_REFUND_CANCEL_MIN;
-              if (canRefundCancel) {
-                policyEl = (
-                  <Text style={s.policyHint}>
-                    {fr
-                      ? `Annulation remboursable : plus de 48h avant le départ, ou date de départ au calendrier dans au moins 2 jours — remboursement estimé ≈ ${estimateRefundMad(item.totalAmount).toLocaleString("fr-FR")} MAD (frais ${TX_FEE_PERCENT}%).`
-                      : `Refundable cancel: more than 48h before pickup, or pickup is at least two calendar days away — estimated refund ≈ ${estimateRefundMad(item.totalAmount).toLocaleString("en-US")} MAD after ${TX_FEE_PERCENT}% fee.`}
-                  </Text>
-                );
-              } else {
-                const offerReschedule = calDays === 1 && !usedChange;
-                policyEl = (
-                  <Text style={s.policyWarn}>
-                    {fr
-                      ? h <= 24
-                        ? offerReschedule
-                          ? "Moins de 24h avant le départ : annulation non remboursable. Vous pouvez changer les dates une seule fois si le véhicule est libre."
-                          : "Moins de 24h avant le départ : annulation non remboursable."
-                        : offerReschedule
-                          ? "Moins de 48h avant le départ : annulation en ligne indisponible. Vous pouvez changer les dates une seule fois si le véhicule est libre."
-                          : "Moins de 48h avant le départ : annulation en ligne indisponible."
-                      : h <= 24
-                        ? offerReschedule
-                          ? "Within 24h of pickup: not refundable. You may change dates once if the car is available."
-                          : "Within 24h of pickup: not refundable."
-                        : offerReschedule
-                          ? "Within 48h of pickup: online cancellation unavailable. You may change dates once if the car is available."
-                          : "Within 48h of pickup: online cancellation unavailable."}
-                  </Text>
-                );
-              }
+              const offerReschedule = calDays === 1 && !usedChange;
+              policyEl = (
+                <Text style={s.policyWarn}>
+                  {fr
+                    ? h <= 24
+                      ? offerReschedule
+                        ? "Moins de 24h avant le départ : annulation non remboursable. Vous pouvez changer les dates une seule fois si le véhicule est libre."
+                        : "Moins de 24h avant le départ : annulation non remboursable."
+                      : offerReschedule
+                        ? "Moins de 48h avant le départ : annulation en ligne indisponible. Vous pouvez changer les dates une seule fois si le véhicule est libre."
+                        : "Moins de 48h avant le départ : annulation en ligne indisponible."
+                    : h <= 24
+                      ? offerReschedule
+                        ? "Within 24h of pickup: not refundable. You may change dates once if the car is available."
+                        : "Within 24h of pickup: not refundable."
+                      : offerReschedule
+                        ? "Within 48h of pickup: online cancellation unavailable. You may change dates once if the car is available."
+                        : "Within 48h of pickup: online cancellation unavailable."}
+                </Text>
+              );
             }
           }
 
@@ -541,14 +549,6 @@ export default function MyBookingsScreen() {
                 </View>
 
                 {policyEl}
-
-                {usedChange &&
-                (item.status === "pending" || item.status === "confirmed") &&
-                !bookingLockedNoFurther ? (
-                  <Text style={[s.policyHint, { marginTop: 8 }]}>
-                    {fr ? "Modification de dates déjà utilisée pour cette réservation." : "You already used your one-time date change for this booking."}
-                  </Text>
-                ) : null}
 
                 {vPhase === "awaiting_customer" && (item.status === "pending" || item.status === "confirmed") ? (
                   <View style={s.vehicleIssueBox}>

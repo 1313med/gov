@@ -70,6 +70,14 @@ export default function MyBookings() {
   const localizeStatus = (s) => t.status[s] || s;
 
   const handleCancel = async (b) => {
+    if (b.customerDateChangeUsed) {
+      alert(
+        lang === "fr"
+          ? "Vous avez déjà utilisé votre modification de dates unique. L’annulation en ligne n’est plus possible."
+          : "You already used your one-time date change. Online cancellation is no longer available."
+      );
+      return;
+    }
     const h = (new Date(b.startDate).getTime() - Date.now()) / 3600000;
     const cal = calendarDaysUntilPickupDay(b.startDate);
     const canRefundCancel = h >= 48 || cal >= CALENDAR_DAYS_REFUND_CANCEL_MIN;
@@ -207,12 +215,12 @@ export default function MyBookings() {
           const h = hoursUntilStart(b.startDate);
           const calDays = calendarDaysUntilPickupDay(b.startDate);
           const bookingLocked =
-            b.status === "confirmed" && h > 0 && b.customerDateChangeUsed && (calDays <= 1 || h <= 24);
+            b.customerDateChangeUsed && ["pending", "confirmed"].includes(b.status) && h > 0;
           const canCancel =
-            b.status === "pending" ||
-            (b.status === "confirmed" &&
-              !bookingLocked &&
-              (h >= 48 || calDays >= CALENDAR_DAYS_REFUND_CANCEL_MIN));
+            !bookingLocked &&
+            (b.status === "pending" ||
+              (b.status === "confirmed" &&
+                (h >= 48 || calDays >= CALENDAR_DAYS_REFUND_CANCEL_MIN)));
           const canOpenReschedule =
             (b.status === "pending" || b.status === "confirmed") &&
             !b.customerDateChangeUsed &&
@@ -253,11 +261,11 @@ export default function MyBookings() {
                       {t.total}: {Number(b.totalAmount).toLocaleString(numLocale)} MAD
                     </p>
                   )}
-                  {b.status === "confirmed" && h > 0 && bookingLocked && (
+                  {bookingLocked && (
                     <p className="mt-2 text-[12px] text-slate-600 dark:text-slate-300 font-semibold m-0 leading-snug rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/60 px-3 py-2.5 text-center">
                       {lang === "fr"
-                        ? "Plus d’actions possibles : vous avez déjà modifié les dates une fois. Annulation en ligne indisponible (y compris dans les 24h avant le départ). La réservation est figée jusqu’au départ."
-                        : "No further changes: you already updated your dates once. Online cancellation is not available (including within 24h before pickup). Your booking is set until pickup."}
+                        ? "Vous avez utilisé votre unique changement de dates. L’annulation en ligne n’est plus disponible ; la réservation reste ferme jusqu’au départ."
+                        : "You used your one-time date change. Online cancellation is no longer available; the booking stands until pickup."}
                     </p>
                   )}
                   {b.status === "confirmed" && h > 0 && !bookingLocked && !(h >= 48 || calDays >= CALENDAR_DAYS_REFUND_CANCEL_MIN) && (
