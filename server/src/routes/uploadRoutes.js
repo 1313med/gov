@@ -24,7 +24,7 @@ const upload = multer({
   fileFilter: imageFilter,
 });
 
-const ALLOWED_SIGNATURE_TYPES = new Set(["jpeg", "png", "webp", "gif", "avif"]);
+const ALLOWED_SIGNATURE_TYPES = new Set(["jpeg", "png", "webp", "gif", "avif", "heic"]);
 
 function detectImageType(buffer) {
   if (!buffer || buffer.length < 12) return null;
@@ -81,6 +81,7 @@ function detectImageType(buffer) {
   ) {
     const brand = buffer.subarray(8, 12).toString("ascii");
     if (brand === "avif" || brand === "avis") return "avif";
+    if (["heic", "heis", "mif1", "msf1", "hevc"].includes(brand)) return "heic";
   }
 
   return null;

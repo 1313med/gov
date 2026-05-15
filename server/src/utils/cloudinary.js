@@ -38,7 +38,7 @@ function uploadBuffer(buffer, options = {}) {
       {
         folder:          options.folder || "goovoiture",
         resource_type:   "image",
-        allowed_formats: ["jpg", "jpeg", "png", "webp", "avif"],
+        allowed_formats: ["jpg", "jpeg", "png", "webp", "avif", "heic", "heif"],
         transformation:  [{ quality: "auto:good", fetch_format: "auto" }],
         ...options,
       },

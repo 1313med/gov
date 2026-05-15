@@ -10,18 +10,18 @@ const {
 // PUBLIC
 router.get("/", getApprovedSaleListings);
 
-// SELLER
-router.get("/mine", protect, role("seller", "admin"), getMySaleListings);
-router.post("/", protect, role("seller", "admin"), createSaleListing);
+// ANY authenticated user can list and manage their own sales
+router.get("/mine",   protect, getMySaleListings);
+router.post("/",      protect, createSaleListing);
 
 // ADMIN (must come before :id)
 router.get("/admin", protect, role("admin"), getAllSaleListingsAdmin);
 router.put("/admin/:id/status", protect, role("admin"), updateSaleStatusAdmin);
 
-// SELLER ACTIONS
-router.put("/:id/sold", protect, role("seller", "admin"), markAsSold);
-router.put("/:id", protect, role("seller", "admin"), updateSaleListing);
-router.delete("/:id", protect, role("seller", "admin"), deleteSaleListing);
+// OWNER or ADMIN actions on a specific listing
+router.put("/:id/sold", protect, markAsSold);
+router.put("/:id",      protect, updateSaleListing);
+router.delete("/:id",   protect, deleteSaleListing);
 
 // PUBLIC (must be last)
 router.get("/:id", getSaleById);

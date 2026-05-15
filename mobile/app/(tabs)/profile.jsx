@@ -721,20 +721,16 @@ export default function ProfileScreen() {
             labelColor={titleColor}
           />
         )}
-        {auth.role === "seller" && (
-          <>
-            <QuickActionCard icon="list-outline" label={fr ? "Mes annonces" : "My Sales"} onPress={() => router.push("/my-sales")} C={C} isDark={isDark} labelColor={titleColor} />
-            <QuickActionCard
-              icon="add-circle-outline"
-              label={fr ? "Nouvelle annonce" : "New Listing"}
-              onPress={() => router.push("/new-sale")}
-              C={C}
-              isDark={isDark}
-              labelColor={titleColor}
-              color={C.accent}
-            />
-          </>
-        )}
+        <QuickActionCard icon="list-outline" label={fr ? "Mes annonces" : "My Sales"} onPress={() => router.push("/my-sales")} C={C} isDark={isDark} labelColor={titleColor} />
+        <QuickActionCard
+          icon="add-circle-outline"
+          label={fr ? "Vendre une voiture" : "Sell a car"}
+          onPress={() => router.push("/new-sale")}
+          C={C}
+          isDark={isDark}
+          labelColor={titleColor}
+          color={C.accent}
+        />
         {auth.role === "rental_owner" && (
           <>
             <QuickActionCard

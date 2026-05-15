@@ -2,45 +2,48 @@
 
 const CURRENT_YEAR = new Date().getFullYear();
 
-// Median new-car price in Morocco (MAD) per brand, standard trim
+// Median new-car price in Morocco (MAD) — official or grey-market import prices,
+// calibrated against Avito.ma / Moteur.ma real listings + import duty structure.
+// Moroccan new-car prices are 30-50% above Europe due to 40-60% import duties.
 const BRAND_BASES = {
-  // Economy
-  dacia:        { base: 115000, tier: "economy" },
-  renault:      { base: 158000, tier: "economy" },
-  peugeot:      { base: 172000, tier: "economy" },
-  citroen:      { base: 160000, tier: "economy" },
-  fiat:         { base: 118000, tier: "economy" },
-  seat:         { base: 168000, tier: "economy" },
-  suzuki:       { base: 148000, tier: "economy" },
-  lada:         { base:  95000, tier: "economy" },
-  // Mid
-  volkswagen:   { base: 268000, tier: "mid" },
-  vw:           { base: 268000, tier: "mid" },
-  toyota:       { base: 218000, tier: "mid" },
-  honda:        { base: 228000, tier: "mid" },
-  hyundai:      { base: 198000, tier: "mid" },
-  kia:          { base: 208000, tier: "mid" },
-  nissan:       { base: 208000, tier: "mid" },
-  ford:         { base: 218000, tier: "mid" },
-  mazda:        { base: 228000, tier: "mid" },
-  mitsubishi:   { base: 212000, tier: "mid" },
-  skoda:        { base: 198000, tier: "mid" },
-  chevrolet:    { base: 188000, tier: "mid" },
-  opel:         { base: 178000, tier: "mid" },
+  // Economy — officially sold via Moroccan dealers
+  dacia:        { base: 120000, tier: "economy" },
+  renault:      { base: 175000, tier: "economy" },
+  peugeot:      { base: 185000, tier: "economy" },
+  citroen:      { base: 178000, tier: "economy" },
+  fiat:         { base: 138000, tier: "economy" },
+  // European imports (no official dealer → grey market premium)
+  seat:         { base: 200000, tier: "economy" },
+  opel:         { base: 195000, tier: "mid" },
+  suzuki:       { base: 165000, tier: "economy" },
+  lada:         { base:  98000, tier: "economy" },
+  // Mid — officially sold
+  volkswagen:   { base: 295000, tier: "mid" },
+  vw:           { base: 295000, tier: "mid" },
+  toyota:       { base: 235000, tier: "mid" },
+  honda:        { base: 255000, tier: "mid" },
+  hyundai:      { base: 215000, tier: "mid" },
+  kia:          { base: 228000, tier: "mid" },
+  nissan:       { base: 228000, tier: "mid" },
+  ford:         { base: 238000, tier: "mid" },
+  mazda:        { base: 248000, tier: "mid" },
+  mitsubishi:   { base: 235000, tier: "mid" },
+  skoda:        { base: 228000, tier: "mid" },
+  chevrolet:    { base: 208000, tier: "mid" },
   // Premium
-  bmw:          { base: 478000, tier: "premium" },
-  mercedes:     { base: 528000, tier: "premium" },
-  "mercedes-benz": { base: 528000, tier: "premium" },
-  audi:         { base: 448000, tier: "premium" },
-  volvo:        { base: 418000, tier: "premium" },
-  lexus:        { base: 528000, tier: "premium" },
-  infiniti:     { base: 438000, tier: "premium" },
+  bmw:          { base: 520000, tier: "premium" },
+  mercedes:     { base: 575000, tier: "premium" },
+  "mercedes-benz": { base: 575000, tier: "premium" },
+  audi:         { base: 490000, tier: "premium" },
+  volvo:        { base: 460000, tier: "premium" },
+  lexus:        { base: 575000, tier: "premium" },
+  infiniti:     { base: 478000, tier: "premium" },
   // Luxury
-  porsche:      { base: 908000, tier: "luxury" },
-  "land rover": { base: 758000, tier: "luxury" },
-  jaguar:       { base: 658000, tier: "luxury" },
+  porsche:      { base: 980000, tier: "luxury" },
+  "land rover": { base: 820000, tier: "luxury" },
+  jaguar:       { base: 715000, tier: "luxury" },
   // Default fallback
-  default:      { base: 158000, tier: "economy" },
+  default:      { base: 178000, tier: "economy" },
 };
 
 const FUEL_FACTORS = {
@@ -51,16 +54,21 @@ const FUEL_FACTORS = {
   essence: 1.0, gasoline: 1.0,
 };
 
+// Moroccan depreciation is significantly slower than Europe:
+// - Import duties make new cars expensive → used cars hold value longer
+// - Limited supply of quality used cars → buyers pay a premium
+// Calibrated against real Moroccan listings (Avito.ma / Moteur.ma).
 function getDepreciation(age) {
   if (age <= 0) return 1.0;
   let m = 1.0;
   for (let i = 1; i <= Math.min(age, 25); i++) {
-    if (i <= 2) m *= 0.84;
-    else if (i <= 5) m *= 0.90;
-    else if (i <= 10) m *= 0.92;
-    else m *= 0.95;
+    if (i === 1)      m *= 0.88; // Year 1: -12% (first-owner penalty)
+    else if (i <= 3)  m *= 0.91; // Years 2-3: -9%/year
+    else if (i <= 7)  m *= 0.93; // Years 4-7: -7%/year
+    else if (i <= 12) m *= 0.95; // Years 8-12: -5%/year
+    else              m *= 0.97; // Years 13+: -3%/year
   }
-  return Math.max(m, 0.06);
+  return Math.max(m, 0.10); // floor at 10% of new price
 }
 
 function estimate({ brand, model, year, mileage, fuel, gearbox }) {
