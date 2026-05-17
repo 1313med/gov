@@ -2,6 +2,7 @@ import * as SecureStore from "expo-secure-store";
 
 const KEY = "goovoiture_auth";
 const LOGIN_FORM_KEY = "goovoiture_login_form";
+const ONBOARDING_PREFIX = "goovoiture_onboarded_";
 
 export async function saveAuth(data) {
   await SecureStore.setItemAsync(KEY, JSON.stringify(data));
@@ -32,4 +33,13 @@ export async function loadLoginForm() {
 
 export async function clearLoginForm() {
   await SecureStore.deleteItemAsync(LOGIN_FORM_KEY);
+}
+
+export async function markOnboarded(userId) {
+  await SecureStore.setItemAsync(`${ONBOARDING_PREFIX}${userId}`, "1");
+}
+
+export async function getOnboardingStatus(userId) {
+  const val = await SecureStore.getItemAsync(`${ONBOARDING_PREFIX}${userId}`);
+  return !!val;
 }
