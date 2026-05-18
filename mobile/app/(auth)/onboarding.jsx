@@ -137,7 +137,7 @@ function Dots({ total, current, activeColor }) {
 
 export default function OnboardingScreen() {
   const { auth } = useAuth();
-  const { ensureCarOwnerLanding } = useActiveMode();
+  const { ensureCarOwnerLanding, ensureRentalOwnerLanding } = useActiveMode();
   const { colors: C, isDark } = useTheme();
   const { lang } = useAppLang();
   const router = useRouter();
@@ -177,10 +177,13 @@ export default function OnboardingScreen() {
     if (role === "car_owner" || role === "seller") {
       await ensureCarOwnerLanding();
       router.replace("/(car-owner)");
+    } else if (role === "rental_owner") {
+      await ensureRentalOwnerLanding();
+      router.replace("/(rental-owner)");
     } else {
       router.replace(homeShellForUser({ role, roles: auth?.roles }));
     }
-  }, [auth, role, ensureCarOwnerLanding, router]);
+  }, [auth, role, ensureCarOwnerLanding, ensureRentalOwnerLanding, router]);
 
   const next = () => {
     if (isLast) {

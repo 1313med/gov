@@ -9,7 +9,7 @@ import { AppLangProvider, useAppLang } from "../src/context/AppLangContext";
 import { ThemeProvider, useTheme } from "../src/context/ThemeContext";
 import { ActiveModeProvider, useActiveMode } from "../src/context/ActiveModeContext";
 import { getOnboardingStatus } from "../src/utils/authStorage";
-import { homeShellForUser } from "../src/utils/userRoles";
+import { resolveHomeHref, shellGroupFromHref, isRoleShellGroup } from "../src/utils/userRoles";
 function useStackTitles() {
   const { copy } = useAppLang();
   return copy.screenTitles || {};
@@ -18,8 +18,11 @@ function useStackTitles() {
 function RootNavigator() {
   const { auth, loading } = useAuth();
   const { colors: C } = useTheme();
-  const { ready: modeReady } = useActiveMode();
-  const homeHref = useMemo(() => (auth ? homeShellForUser(auth) : null), [auth]);
+  const { ready: modeReady, activeMode } = useActiveMode();
+  const homeHref = useMemo(
+    () => resolveHomeHref(auth, activeMode, modeReady),
+    [auth, activeMode, modeReady]
+  );
   const titles = useStackTitles();
   const segments = useSegments();
   const router = useRouter();
@@ -92,10 +95,15 @@ function RootNavigator() {
           router.replace("/(auth)/onboarding");
         }
       });
-    } else if (!needsOnboarding && homeHref && (inAuth || inLegacyTabs)) {
-      router.replace(homeHref);
+    } else if (!needsOnboarding && homeHref) {
+      const targetGroup = shellGroupFromHref(homeHref);
+      const wrongShell =
+        isRoleShellGroup(group) && targetGroup && group !== targetGroup;
+      if (inAuth || inLegacyTabs || wrongShell) {
+        router.replace(homeHref);
+      }
     }
-  }, [auth, loading, onboardingChecked, needsOnboarding, segments, homeHref, modeReady]);
+  }, [auth, loading, onboardingChecked, needsOnboarding, segments, homeHref, modeReady, router]);
 
   if (loading || (auth && !onboardingChecked) || (auth && !modeReady)) {
     return (

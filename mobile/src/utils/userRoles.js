@@ -62,3 +62,33 @@ export function homeShellForUser(user) {
 export function isCarOwnerUser(user) {
   return getUserRoles(user).includes("car_owner");
 }
+
+export function isRentalOwnerUser(user) {
+  return getUserRoles(user).includes("rental_owner");
+}
+
+/** Expo Router group name for a shell href, e.g. `/(rental-owner)` → `(rental-owner)`. */
+export function shellGroupFromHref(href) {
+  if (!href) return null;
+  if (href.includes("rental-owner")) return "(rental-owner)";
+  if (href.includes("car-owner")) return "(car-owner)";
+  if (href.includes("admin")) return "(admin)";
+  return "(customer)";
+}
+
+const ROLE_SHELL_GROUPS = ["(customer)", "(car-owner)", "(rental-owner)", "(admin)", "(tabs)"];
+
+export function isRoleShellGroup(group) {
+  return ROLE_SHELL_GROUPS.includes(group);
+}
+
+/** Resolved home route after login / reload — respects saved mode unless it wrongly says admin. */
+export function resolveHomeHref(auth, activeMode, modeReady) {
+  if (!auth) return null;
+  const canonical = homeShellForUser(auth);
+  if (!modeReady || !activeMode) return canonical;
+  const mode = normalizeRoleSlug(activeMode);
+  if (mode === "admin" && !isAdminOnlyUser(auth)) return canonical;
+  if (getUserRoles(auth).includes(mode)) return shellForMode(mode);
+  return canonical;
+}

@@ -7,6 +7,7 @@ import {
   shellForMode,
   isAdminOnlyUser,
   isCarOwnerUser,
+  isRentalOwnerUser,
 } from "../utils/userRoles";
 
 const STORAGE_KEY = "goovoiture-active-mode";
@@ -26,6 +27,12 @@ function resolveStoredMode(saved, userRoles) {
   if (userRoles.includes("car_owner")) {
     if (!saved || normalized === "customer" || normalized === "admin") {
       return "car_owner";
+    }
+  }
+
+  if (userRoles.includes("rental_owner") && !userRoles.includes("car_owner")) {
+    if (!saved || normalized === "customer" || normalized === "admin") {
+      return "rental_owner";
     }
   }
 
@@ -81,6 +88,12 @@ export function ActiveModeProvider({ children }) {
     setActiveModeState("car_owner");
   }, [auth]);
 
+  const ensureRentalOwnerLanding = useCallback(async () => {
+    if (!isRentalOwnerUser(auth) || !auth?._id) return;
+    await AsyncStorage.setItem(`${STORAGE_KEY}:${auth._id}`, "rental_owner");
+    setActiveModeState("rental_owner");
+  }, [auth]);
+
   const shellHref = useMemo(() => shellForMode(activeMode), [activeMode]);
 
   const value = useMemo(
@@ -91,13 +104,14 @@ export function ActiveModeProvider({ children }) {
       shellHref,
       setActiveMode,
       ensureCarOwnerLanding,
+      ensureRentalOwnerLanding,
       canAccess: (mode) => {
         const m = normalizeRoleSlug(mode);
         if (m === "admin") return isAdminOnlyUser(auth);
         return roles.includes(m);
       },
     }),
-    [activeMode, roles, ready, shellHref, setActiveMode, ensureCarOwnerLanding, auth]
+    [activeMode, roles, ready, shellHref, setActiveMode, ensureCarOwnerLanding, ensureRentalOwnerLanding, auth]
   );
 
   return <ActiveModeContext.Provider value={value}>{children}</ActiveModeContext.Provider>;
