@@ -40,17 +40,17 @@ export default function RentalOwnerLayout() {
         }}
       />
       <Tabs.Screen
-        name="fleet"
-        options={{
-          title: fr ? "Flotte" : "Fleet",
-          tabBarIcon: ({ color, size }) => <Ionicons name="car-sport-outline" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
         name="analytics"
         options={{
           title: fr ? "Analytique" : "Analytics",
           tabBarIcon: ({ color, size }) => <Ionicons name="analytics-outline" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="fleet"
+        options={{
+          title: fr ? "Flotte" : "Fleet",
+          tabBarIcon: ({ color, size }) => <Ionicons name="car-sport-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen

@@ -597,7 +597,7 @@ export default function RentalOwnerDashboard() {
 
   const kpiAnims = useStaggeredEntrance(6, !loading, 280);
   const pipelineAnims = useStaggeredEntrance(Math.max(pending.length, 1), !loading && pending.length > 0, 520);
-  const quickAnims = useStaggeredEntrance(8, !loading, 640);
+  const quickAnims = useStaggeredEntrance(4, !loading, 640);
 
   const titleColor = isDark ? "#f8fafc" : "#0f172a";
   const subColor = isDark ? "#94a3b8" : "#475569";
@@ -870,37 +870,26 @@ export default function RentalOwnerDashboard() {
               ))
             )}
 
-            <Text style={[s.sectionEyebrow, { color: violet, marginTop: 28 }]}>{fr ? "Cockpit" : "Cockpit"}</Text>
-            <Text style={[s.sectionTitle, { color: titleColor }]}>{fr ? "Actions rapides" : "Quick actions"}</Text>
+            <Text style={[s.sectionEyebrow, { color: violet, marginTop: 28 }]}>{fr ? "Outils" : "Toolbox"}</Text>
+            <Text style={[s.sectionTitle, { color: titleColor }]}>{fr ? "Boîte à outils" : "Fleet toolbox"}</Text>
             <Text style={{ color: subColor, fontSize: 13, marginBottom: 14, lineHeight: 20 }}>
-              {fr ? "Tout ce dont vous avez besoin pour gérer une flotte d'exception." : "Everything you need to run a world-class fleet."}
+              {fr
+                ? "Calendrier, visibilité, entretien et nouvelles annonces — en un geste."
+                : "Calendar, visibility, maintenance, and new listings — one tap away."}
             </Text>
 
             <View style={s.quickStack}>
               {[
                 {
-                  key: "notif",
-                  node: (
-                    <QuickActionCard
-                      icon="notifications-outline"
-                      label={fr ? "Notifications" : "Notifications"}
-                      onPress={() => router.push("/notifications")}
-                      C={C}
-                      isDark={isDark}
-                      labelColor={titleColor}
-                    />
-                  ),
-                },
-                {
-                  key: "analytics",
+                  key: "cal",
                   node: (
                     <QuickActionCard
                       featured
-                      featuredKicker={fr ? "APERÇU" : "INSIGHTS"}
-                      featuredSubtitle={fr ? "Performance & tendances" : "Performance & trends"}
-                      icon="analytics-outline"
-                      label={fr ? "Analytiques" : "Analytics"}
-                      onPress={() => router.push("/owner-analytics")}
+                      featuredKicker={fr ? "PLANNING" : "SCHEDULE"}
+                      featuredSubtitle={fr ? "Disponibilités & réservations" : "Availability & bookings"}
+                      icon="calendar-outline"
+                      label={fr ? "Calendrier" : "Calendar"}
+                      onPress={() => router.push("/owner-booking-calendar")}
                       C={C}
                       isDark={isDark}
                       labelColor={titleColor}
@@ -909,52 +898,12 @@ export default function RentalOwnerDashboard() {
                   ),
                 },
                 {
-                  key: "cal",
-                  node: (
-                    <QuickActionCard
-                      icon="calendar-outline"
-                      label={fr ? "Calendrier" : "Calendar"}
-                      onPress={() => router.push("/owner-booking-calendar")}
-                      C={C}
-                      isDark={isDark}
-                      labelColor={titleColor}
-                    />
-                  ),
-                },
-                {
-                  key: "book",
-                  node: (
-                    <QuickActionCard
-                      elevated
-                      elevatedKicker={fr ? "À SUIVRE" : "PIPELINE"}
-                      elevatedSubtitle={fr ? "Demandes & statuts" : "Requests & status"}
-                      icon="clipboard-outline"
-                      label={fr ? "Réservations" : "Bookings"}
-                      onPress={() => router.push("/owner-bookings")}
-                      C={C}
-                      isDark={isDark}
-                      labelColor={titleColor}
-                      attentionCount={bookingAttentionCount}
-                    />
-                  ),
-                },
-                {
-                  key: "fleet",
-                  node: (
-                    <QuickActionCard
-                      icon="car-sport-outline"
-                      label={fr ? "Ma flotte" : "Fleet"}
-                      onPress={() => router.push("/(rental-owner)/fleet")}
-                      C={C}
-                      isDark={isDark}
-                      labelColor={titleColor}
-                    />
-                  ),
-                },
-                {
                   key: "views",
                   node: (
                     <QuickActionCard
+                      elevated
+                      elevatedKicker={fr ? "SIGNAL" : "SIGNAL"}
+                      elevatedSubtitle={fr ? "Intérêt sur vos annonces" : "Interest on your listings"}
                       icon="pulse-outline"
                       label={fr ? "Vues des annonces" : "Listing views"}
                       onPress={() => router.push("/owner-listing-views")}
