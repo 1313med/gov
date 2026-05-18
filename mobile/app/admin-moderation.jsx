@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { PageLoader } from '../src/components/AppLoadingScreen';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, Image, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -84,7 +85,7 @@ export default function AdminModerationScreen() {
     );
   }
 
-  if (loading) return <View style={s.center}><ActivityIndicator size="large" color={C.primary} /></View>;
+  if (loading) return <PageLoader />;
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>

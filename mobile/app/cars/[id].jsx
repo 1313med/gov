@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { PageLoader } from '../../src/components/AppLoadingScreen';
 import { View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, Linking, Dimensions, StyleSheet, LayoutAnimation, Platform, UIManager } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -372,7 +373,7 @@ export default function CarDetailsScreen() {
     setContacting(false);
   };
 
-  if (loading) return <View style={s.center}><ActivityIndicator color={C.primary} size="large" /></View>;
+  if (loading) return <PageLoader />;
   if (!car) return (
     <View style={s.center}>
       <Ionicons name="car-outline" size={56} color={C.muted} />

@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from "react";
+import { PageLoader, InlineLogoLoader } from '../../src/components/AppLoadingScreen';
 import {
   View,
   Text,
@@ -259,11 +260,7 @@ export default function AdminUsersScreen() {
       </LinearGradient>
 
       {/* List */}
-      {loading ? (
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <ActivityIndicator color={accent} size="large" />
-        </View>
-      ) : users.length === 0 ? (
+      {loading ? <PageLoader /> : users.length === 0 ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
           <Ionicons name="people-outline" size={48} color={C.muted} />
           <Text style={{ color: isDark ? "#f1f5f9" : "#0f172a", fontWeight: "700", fontSize: 16, marginTop: 14 }}>
@@ -284,7 +281,7 @@ export default function AdminUsersScreen() {
           onEndReachedThreshold={0.4}
           showsVerticalScrollIndicator={false}
           ListFooterComponent={
-            loadingMore ? <ActivityIndicator color={accent} style={{ paddingVertical: 16 }} /> : null
+            loadingMore ? <InlineLogoLoader /> : null
           }
         />
       )}

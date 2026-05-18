@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { InlineLogoLoader } from '../../src/components/AppLoadingScreen';
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import StarRating from "./StarRating";
@@ -142,7 +143,7 @@ export default function ReviewSection({ targetModel, targetId }) {
         )}
       </View>
       {auth && targetModel === "RentalListing" && rentalWriteElig === undefined ? (
-        <ActivityIndicator color={C.primary} style={{ marginBottom: 16 }} />
+        <InlineLogoLoader />
       ) : null}
       {auth && targetModel === "RentalListing" && rentalWriteElig && !rentalWriteElig.eligible ? (
         <Text style={s.hint}>{rentalWriteHint()}</Text>
@@ -167,7 +168,7 @@ export default function ReviewSection({ targetModel, targetId }) {
         </View>
       ) : null}
       {loading ? (
-        <ActivityIndicator color={C.primary} style={{ marginVertical: 24 }} />
+        <InlineLogoLoader />
       ) : reviews.length === 0 ? (
         <Text style={s.empty}>No reviews yet.</Text>
       ) : (

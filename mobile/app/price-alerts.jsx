@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { PageLoader } from '../src/components/AppLoadingScreen';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
   ActivityIndicator, Modal, Alert, Platform, StyleSheet,
@@ -132,11 +133,7 @@ export default function PriceAlertsScreen() {
         </View>
       </LinearGradient>
 
-      {loading ? (
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <ActivityIndicator size="large" color={C.primary} />
-        </View>
-      ) : alerts.length === 0 ? (
+      {loading ? <PageLoader /> : alerts.length === 0 ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
           <LinearGradient colors={[`${C.primary}20`, `${C.primary}06`]} style={{ width: 80, height: 80, borderRadius: 40, alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
             <Ionicons name="notifications-outline" size={36} color={C.primary} />

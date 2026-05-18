@@ -25,6 +25,8 @@ const notificationSchema = new mongoose.Schema(
         "refund_done",
         "rental_ended_feedback",
         "customer_rental_review",
+        "garage_expiry",
+        "garage_maintenance",
       ],
       required: true,
     },

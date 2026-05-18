@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { PageLoader, InlineLogoLoader } from '../src/components/AppLoadingScreen';
 import {
   View,
   Text,
@@ -397,10 +398,7 @@ export default function MyBookingsScreen() {
 
   if (loading) {
     return (
-      <View style={s.center}>
-        <ActivityIndicator color={C.primary} size="large" />
-        <Text style={{ color: C.muted, marginTop: 14, fontSize: 13 }}>{fr ? "Chargement…" : "Loading…"}</Text>
-      </View>
+      <PageLoader />
     );
   }
 
@@ -723,7 +721,7 @@ export default function MyBookingsScreen() {
                 : "Same owner, same dates. Tap a row to move your booking to that car."}
             </Text>
             {swapLoading ? (
-              <ActivityIndicator color={C.primary} style={{ marginVertical: 24 }} />
+              <InlineLogoLoader />
             ) : (
               <ScrollView style={{ maxHeight: 360 }} keyboardShouldPersistTaps="handled">
                 {swapAlternatives.length === 0 ? (

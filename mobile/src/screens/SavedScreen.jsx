@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { PageLoader } from '../../src/components/AppLoadingScreen';
 import {
   View,
   Text,
@@ -192,10 +193,7 @@ export default function SavedScreen() {
       </View>
 
       {loading && list.length === 0 ? (
-        <View style={s.center}>
-          <ActivityIndicator color={C.primary} size="large" />
-          <Text style={s.loadingText}>{fr ? "Chargement…" : "Loading…"}</Text>
-        </View>
+        <PageLoader />
       ) : (
         <FlatList
           key={segment}

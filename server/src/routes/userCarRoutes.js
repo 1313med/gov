@@ -1,13 +1,30 @@
 const express = require("express");
 const router = express.Router();
 const { protect } = require("../middlewares/authMiddleware");
-const { getMyCar, createCar, updateCar, deleteCar } = require("../controllers/userCarController");
+const {
+  getMyCar,
+  createCar,
+  updateCar,
+  deleteCar,
+  patchMileage,
+  patchGarageSettings,
+} = require("../controllers/userCarController");
+const {
+  listServiceLogs,
+  createServiceLog,
+  deleteServiceLog,
+} = require("../controllers/userCarServiceLogController");
 
 router.use(protect);
 
-router.get("/mine",  getMyCar);
-router.post("/",     createCar);
-router.put("/:id",   updateCar);
+router.get("/mine", getMyCar);
+router.get("/mine/services", listServiceLogs);
+router.post("/mine/services", createServiceLog);
+router.post("/", createCar);
+router.patch("/:id/mileage", patchMileage);
+router.patch("/:id/reminders", patchGarageSettings);
+router.put("/:id", updateCar);
+router.delete("/services/:logId", deleteServiceLog);
 router.delete("/:id", deleteCar);
 
 module.exports = router;

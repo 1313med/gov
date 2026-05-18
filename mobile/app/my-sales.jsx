@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { PageLoader } from '../src/components/AppLoadingScreen';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert, RefreshControl, Image, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -55,7 +56,7 @@ export default function MySalesScreen() {
     ]
   );
 
-  if (loading) return <View style={s.center}><ActivityIndicator color={C.primary} size="large" /></View>;
+  if (loading) return <PageLoader />;
 
   return (
     <View style={{ flex:1, backgroundColor: C.bg }}>

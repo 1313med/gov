@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { PageLoader } from '../../src/components/AppLoadingScreen';
 import { View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, Dimensions, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -302,7 +303,7 @@ export default function RentalDetailsScreen() {
     setContacting(false);
   };
 
-  if (loading) return <View style={s.center}><ActivityIndicator color={C.primary} size="large" /></View>;
+  if (loading) return <PageLoader />;
   if (!rental) return <View style={s.center}><Text style={s.white}>{t.notFound}</Text></View>;
 
   const images = rental.images || [];

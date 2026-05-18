@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { PageLoader } from '../../src/components/AppLoadingScreen';
 import {
   View,
   Text,
@@ -568,7 +569,6 @@ function DashboardSkeleton({ isDark, accent }) {
           />
         ))}
       </View>
-      <ActivityIndicator color={accent} style={{ marginTop: 28 }} />
     </View>
   );
 }
@@ -689,6 +689,8 @@ export default function RentalOwnerDashboard() {
   const formatMad = (n) =>
     `${Math.round(n).toLocaleString(fr ? "fr-FR" : "en-US")} MAD`;
 
+  if (loading && !stats) return <PageLoader />;
+
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
       <Animated.ScrollView
@@ -794,10 +796,7 @@ export default function RentalOwnerDashboard() {
           </LinearGradient>
         </Animated.View>
 
-        {loading ? (
-          <DashboardSkeleton isDark={isDark} accent={accent} />
-        ) : (
-          <Animated.View style={{ opacity: contentFade, paddingHorizontal: 20, paddingTop: 4 }}>
+        <Animated.View style={{ opacity: contentFade, paddingHorizontal: 20, paddingTop: 4 }}>
             <Text style={[s.sectionEyebrow, { color: accent }]}>{fr ? "Indicateurs" : "Metrics"}</Text>
             <Text style={[s.sectionTitle, { color: titleColor, marginBottom: 12 }]}>
               {fr ? "Vue d'ensemble" : "At a glance"}
@@ -965,7 +964,6 @@ export default function RentalOwnerDashboard() {
               </Text>
             </LinearGradient>
           </Animated.View>
-        )}
       </Animated.ScrollView>
     </View>
   );

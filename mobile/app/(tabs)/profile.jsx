@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
+import { PageLoader } from '../../src/components/AppLoadingScreen';
 import {
   View,
   Text,
@@ -407,16 +408,7 @@ export default function ProfileScreen() {
     );
   }
 
-  if (loading) {
-    return (
-      <View style={[s.center, { backgroundColor: C.bg }]}>
-        <View style={s.loaderRing}>
-          <ActivityIndicator color={C.primary} size="large" />
-        </View>
-        <Text style={[s.loaderText, { color: subColor }]}>{fr ? "Chargement du profil…" : "Loading profile…"}</Text>
-      </View>
-    );
-  }
+  if (loading) return <PageLoader />;
 
   const avatarUri = resolveMediaUrl(profile?.avatar);
   const avatarUrl = avatarUri ? { uri: avatarUri } : null;

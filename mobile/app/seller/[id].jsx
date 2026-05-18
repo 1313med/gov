@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { PageLoader } from '../../src/components/AppLoadingScreen';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, StyleSheet, Image } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -41,7 +42,7 @@ export default function SellerProfileScreen() {
     setContacting(false);
   };
 
-  if (loading) return <View style={s.center}><ActivityIndicator color={C.primary} size="large" /></View>;
+  if (loading) return <PageLoader />;
   const profile = payload?.seller;
   if (!payload || !profile) return <View style={s.center}><Text style={s.white}>Seller not found</Text></View>;
 

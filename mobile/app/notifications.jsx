@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
+import { PageLoader, AppLogoLoader } from '../src/components/AppLoadingScreen';
 import {
   View,
   Text,
@@ -182,22 +183,7 @@ export default function NotificationsScreen() {
 
   const s = useMemo(() => createNotificationsStyles(C, isDark), [C, isDark]);
 
-  if (loading) {
-    return (
-      <View style={[s.loaderScreen, { backgroundColor: C.bg }]}>
-        <LinearGradient
-          colors={isDark ? ["rgba(124,107,255,0.2)", "transparent"] : ["rgba(98,72,232,0.12)", "transparent"]}
-          style={s.loaderGlow}
-        />
-        <View style={s.loaderRing}>
-          <ActivityIndicator color={C.primary} size="large" />
-        </View>
-        <Text style={[s.loaderText, { color: subColor }]}>
-          {fr ? "Synchronisation…" : "Syncing your inbox…"}
-        </Text>
-      </View>
-    );
-  }
+  if (loading) return <PageLoader message={fr ? "Synchronisation…" : "Syncing your inbox…"} />;
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
@@ -288,8 +274,8 @@ export default function NotificationsScreen() {
               </View>
             </LinearGradient>
             {tabLoading ? (
-              <View style={s.tabLoading}>
-                <ActivityIndicator color={C.primary} size="small" />
+              <View style={[s.tabLoading, { paddingVertical: 16 }]}>
+                <AppLogoLoader variant="compact" />
               </View>
             ) : null}
           </Animated.View>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { PageLoader, InlineLogoLoader } from '../src/components/AppLoadingScreen';
 import {
   View,
   Text,
@@ -228,14 +229,7 @@ export default function OwnerListingViewsScreen() {
   }, [data]);
 
   if (fetching && data === null) {
-    return (
-      <View style={[s.center, { backgroundColor: C.bg }]}>
-        <ActivityIndicator color={C.primary} size="large" />
-        <Text style={{ color: C.muted, marginTop: 12, fontSize: 14 }}>
-          {fr ? "Chargement des statistiques…" : "Loading visibility stats…"}
-        </Text>
-      </View>
-    );
+    return <PageLoader message={fr ? "Chargement des statistiques…" : "Loading visibility stats…"} />;
   }
 
   const total = data?.totalViews ?? 0;
@@ -296,7 +290,7 @@ export default function OwnerListingViewsScreen() {
                 <Text style={s.kicker}>{fr ? "INSIGHT" : "INSIGHT"}</Text>
                 <Text style={s.h1}>{fr ? "Portée de vos annonces" : "Listing reach"}</Text>
               </View>
-              {fetching && data ? <ActivityIndicator color={C.primary} /> : null}
+              {fetching && data ? <InlineLogoLoader /> : null}
             </View>
             <Text style={s.sub}>
               {fr

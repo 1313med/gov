@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { PageLoader } from '../src/components/AppLoadingScreen';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
   ActivityIndicator, Alert, Platform, StyleSheet, Image,
@@ -93,9 +94,7 @@ export default function VerifyCinScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: C.bg, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator size="large" color={C.primary} />
-      </View>
+      <PageLoader />
     );
   }
 

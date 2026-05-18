@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { PageLoader } from "../components/AppLoadingScreen";
 import {
   View,
   Text,
@@ -382,9 +383,7 @@ export default function MessagesScreen() {
     );
   }
 
-  if (loading) {
-    return <MessagesEliteLoader fr={fr} C={C} isDark={isDark} heroGrad={heroGrad} orbPulse={orbPulse} orbA={orbA} orbB={orbB} ctaGrad={ctaGrad} shimmerTrack={shimmerTrack} titleColor={titleColor} subColor={subColor} />;
-  }
+  if (loading) return <PageLoader />;
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: C.bg }}>

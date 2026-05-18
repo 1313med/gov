@@ -2,7 +2,8 @@ import "react-native-gesture-handler";
 import { useEffect, useMemo, useState } from "react";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { View, ActivityIndicator } from "react-native";
+import { View } from "react-native";
+import AppLoadingScreen from "../src/components/AppLoadingScreen";
 import { AuthProvider, useAuth } from "../src/context/AuthContext";
 import { SocketProvider } from "../src/context/SocketContext";
 import { AppLangProvider, useAppLang } from "../src/context/AppLangContext";
@@ -106,11 +107,7 @@ function RootNavigator() {
   }, [auth, loading, onboardingChecked, needsOnboarding, segments, homeHref, modeReady, router]);
 
   if (loading || (auth && !onboardingChecked) || (auth && !modeReady)) {
-    return (
-      <View style={{ flex: 1, backgroundColor: C.bg, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator color={C.primary} size="large" />
-      </View>
-    );
+    return <AppLoadingScreen />;
   }
 
   return (
@@ -133,6 +130,7 @@ function RootNavigator() {
           }}
         />
       ))}
+      <Stack.Screen name="edit-garage-item" options={{ headerShown: false }} />
     </Stack>
   );
 }

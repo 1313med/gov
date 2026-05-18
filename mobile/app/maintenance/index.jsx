@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from "react";
+import { PageLoader } from '../../src/components/AppLoadingScreen';
 import {
   View,
   Text,
@@ -235,16 +236,7 @@ export default function MaintenanceScreen() {
     );
   }
 
-  if (loading) {
-    return (
-      <View style={[s.center, { backgroundColor: C.bg }]}>
-        <View style={s.loaderRing}>
-          <ActivityIndicator color={C.primary} size="large" />
-        </View>
-        <Text style={[s.loadingText, { color: subColor }]}>{t.loading}</Text>
-      </View>
-    );
-  }
+  if (loading) return <PageLoader />;
 
   const statPills = [
     [cars.length, t.summary.cars, C.primary],

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { PageLoader, InlineLogoLoader } from '../../src/components/AppLoadingScreen';
 import {
   View,
   Text,
@@ -376,14 +377,7 @@ export default function RentalsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-      {!hydrated && loading ? (
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: C.bg }}>
-          <LinearGradient colors={ctaGrad} style={{ width: 72, height: 72, borderRadius: 36, alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
-            <ActivityIndicator color="#fff" size="large" />
-          </LinearGradient>
-          <Text style={{ color: subColor, fontSize: 14, fontWeight: "600" }}>{fr ? "Chargement des locations…" : "Loading rentals…"}</Text>
-        </View>
-      ) : (
+      {!hydrated && loading ? <PageLoader /> : (
         <FlatList
           data={rentals}
           keyExtractor={(i) => i._id}

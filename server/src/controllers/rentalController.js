@@ -7,7 +7,14 @@ const emailService    = require("../utils/emailService");
 const whatsappService = require("../utils/whatsappService");
 const { computeBookingTotalForRental } = require("../utils/bookingPricing");
 const { emitNotification } = require("../utils/socketManager");
-const { safeRegex, safeNumber } = require("../utils/sanitize");
+const { safeNumber } = require("../utils/sanitize");
+const {
+  applySearchFilter,
+  applyCityFilter,
+  applyBrandFilter,
+  applyFuelFilter,
+  applyGearboxFilter,
+} = require("../utils/listingFilters");
 
 /** Dedupe POST /record-view for same listing + visitor (double fetch / React Strict Mode). */
 const rentalViewDedupe = new Map();
@@ -231,22 +238,11 @@ exports.getRentals = async (req, res, next) => {
 
     const query = { status: "approved", deletedAt: null };
 
-    if (search) {
-      const rx = safeRegex(search);
-      if (rx) {
-        query.$or = [
-          { title: rx },
-          { brand: rx },
-          { model: rx },
-          { city: rx },
-        ];
-      }
-    }
-
-    if (city)    { const rx = safeRegex(city);    if (rx) query.city    = rx; }
-    if (brand)   { const rx = safeRegex(brand);   if (rx) query.brand   = rx; }
-    if (fuel)    { const rx = safeRegex(fuel);    if (rx) query.fuel    = rx; }
-    if (gearbox) { const rx = safeRegex(gearbox); if (rx) query.gearbox = rx; }
+    applySearchFilter(query, search);
+    applyBrandFilter(query, brand);
+    applyCityFilter(query, city);
+    applyFuelFilter(query, fuel);
+    applyGearboxFilter(query, gearbox);
 
     const airportFlag = String(req.query.airport || "").toLowerCase();
     if (["1", "true", "yes"].includes(airportFlag)) {

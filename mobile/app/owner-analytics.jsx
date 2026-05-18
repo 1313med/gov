@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { PageLoader } from '../src/components/AppLoadingScreen';
 import {
   View,
   Text,
@@ -351,14 +352,7 @@ export default function OwnerAnalyticsScreen() {
   const maxMonthly = Math.max(1, ...monthly.map((m) => m.revenue));
   const maxTrend = Math.max(1, ...trends.map((m) => m.bookings));
 
-  if (loading && !data) {
-    return (
-      <View style={[styles.center, { backgroundColor: C.bg }]}>
-        <ActivityIndicator color={C.primary} size="large" />
-        <Text style={{ color: C.muted, marginTop: 14 }}>{fr ? "Chargement du tableau de bord…" : "Loading your dashboard…"}</Text>
-      </View>
-    );
-  }
+  if (loading && !data) return <PageLoader />;
 
   if (!data) {
     return (

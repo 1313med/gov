@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { PageLoader } from '../src/components/AppLoadingScreen';
 import {
   View,
   Text,
@@ -212,9 +213,7 @@ export default function MyFleetScreen() {
 
   if (loading) {
     return (
-      <View style={s.center}>
-        <ActivityIndicator color={C.primary} size="large" />
-      </View>
+      <PageLoader />
     );
   }
 

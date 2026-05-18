@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { PageLoader } from '../../src/components/AppLoadingScreen';
 import {
   View,
   Text,
@@ -95,6 +96,8 @@ export default function AdminDashboard() {
 
   const pendingCount = pendingSales.length + pendingRentals.length;
 
+  if (loading && !stats) return <PageLoader />;
+
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: C.bg }}
@@ -125,11 +128,6 @@ export default function AdminDashboard() {
       </LinearGradient>
 
       <View style={{ paddingHorizontal: 20, paddingTop: 20 }}>
-        {loading ? (
-          <View style={{ alignItems: "center", paddingVertical: 40 }}>
-            <ActivityIndicator color={accent} size="large" />
-          </View>
-        ) : (
           <>
             {/* Platform KPIs */}
             <Text style={[s.sectionTitle, { color: isDark ? "#94a3b8" : "#475569" }]}>
@@ -230,7 +228,6 @@ export default function AdminDashboard() {
               />
             </View>
           </>
-        )}
       </View>
     </ScrollView>
   );

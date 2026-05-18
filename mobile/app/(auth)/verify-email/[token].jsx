@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { InlineLogoLoader } from '../../../src/components/AppLoadingScreen';
 import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -41,7 +42,7 @@ export default function VerifyEmailScreen() {
     <View style={s.screen}>
       <View style={s.card}>
         {state.loading ? (
-          <ActivityIndicator color={C.primary} size="large" />
+          <InlineLogoLoader />
         ) : (
           <Ionicons
             name={state.ok ? "checkmark-circle" : "close-circle"}

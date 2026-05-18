@@ -28,7 +28,7 @@ export default function CarOwnerLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: fr ? "Ma voiture" : "My car",
+          title: fr ? "Mon garage" : "My garage",
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name={focused ? "car-sport" : "car-sport-outline"} size={size} color={color} />
           ),

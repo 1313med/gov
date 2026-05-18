@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { PageLoader, InlineLogoLoader } from '../src/components/AppLoadingScreen';
 import {
   View,
   Text,
@@ -766,7 +767,7 @@ function FeedbackModal({ visible, booking, fr, onClose, onSaved }) {
           <Text style={f.title}>{fr ? "Avis client" : "Rate customer"}</Text>
           <Text style={f.sub}>{booking.customerId?.name || "—"}</Text>
           {loading ? (
-            <ActivityIndicator color={C.primary} style={{ marginVertical: 24 }} />
+            <InlineLogoLoader />
           ) : (
             <ScrollView style={{ maxHeight: 420 }} keyboardShouldPersistTaps="handled">
               <Text style={f.lbl}>{fr ? "Impression globale" : "Overall"}</Text>
@@ -954,7 +955,7 @@ function CustomerProfileModal({ visible, booking, fr, ownerId, onClose }) {
               {fr ? "Avis d'autres propriétaires" : "Feedback from other owners"}
             </Text>
             {loadingFb ? (
-              <ActivityIndicator color={C.primary} style={{ marginVertical: 16 }} />
+              <InlineLogoLoader />
             ) : fbErr ? (
               <Text style={cp.err}>{fbErr}</Text>
             ) : otherSummary.total === 0 ? (
@@ -1513,12 +1514,7 @@ export default function OwnerBookingsScreen() {
 
   if (loading && bookings.length === 0) {
     return (
-      <View style={s.center}>
-        <ActivityIndicator color={C.primary} size="large" />
-        <Text style={{ color: C.muted, marginTop: 14, fontSize: 13 }}>
-          {fr ? "Chargement des réservations…" : "Loading bookings…"}
-        </Text>
-      </View>
+      <PageLoader />
     );
   }
 

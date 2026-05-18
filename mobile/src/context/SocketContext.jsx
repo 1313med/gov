@@ -34,6 +34,12 @@ export function SocketProvider({ children }) {
       vibrationPattern: [0, 250, 250, 250],
       lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
     }).catch(() => {});
+    Notifications.setNotificationChannelAsync("garage", {
+      name: "Mon Garage",
+      importance: Notifications.AndroidImportance.HIGH,
+      sound: "default",
+      vibrationPattern: [0, 200, 120, 200],
+    }).catch(() => {});
   }, [auth?._id]);
 
   useEffect(() => {
@@ -66,14 +72,16 @@ export function SocketProvider({ children }) {
             : t === "pending"
               ? "Goovoiture"
               : "Goovoiture";
+      const garageChannel = ["garage_expiry", "garage_maintenance"].includes(t);
       const bookingChannel = ["approved", "rejected", "pending"].includes(t);
       Notifications.scheduleNotificationAsync({
         content: {
-          title,
+          title: garageChannel ? "Mon Garage · Goovoiture" : title,
           body,
           sound: "default",
-          data: { type: t || "notification" },
+          data: { type: t || "notification", screen: garageChannel ? "garage" : undefined },
           ...(Platform.OS === "android" && bookingChannel ? { android: { channelId: "bookings" } } : {}),
+          ...(Platform.OS === "android" && garageChannel ? { android: { channelId: "garage" } } : {}),
         },
         trigger: null,
       }).catch(() => {});

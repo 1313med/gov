@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { PageLoader } from '../src/components/AppLoadingScreen';
 import {
   View,
   Text,
@@ -338,13 +339,7 @@ export default function AddCarScreen() {
     color: isDark ? "#f1f5f9" : "#0f172a",
   }), [isDark]);
 
-  if (loading) {
-    return (
-      <View style={{ flex: 1, backgroundColor: bgColor, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator size="large" color={C.primary} />
-      </View>
-    );
-  }
+  if (loading) return <PageLoader />;
 
   const stepColor = STEPS[step].color;
 

@@ -4,7 +4,14 @@ const Notification = require("../models/Notification");
 const emailService = require("../utils/emailService");
 const User = require("../models/User");
 const { emitNotification } = require("../utils/socketManager");
-const { safeRegex, safeNumber, safePage, safeLimit } = require("../utils/sanitize");
+const { safeNumber, safePage, safeLimit } = require("../utils/sanitize");
+const {
+  applySearchFilter,
+  applyCityFilter,
+  applyBrandFilter,
+  applyFuelFilter,
+  applyGearboxFilter,
+} = require("../utils/listingFilters");
 const { computeListingScore } = require("../utils/listingScore");
 const { userCanListForSale } = require("../utils/userRoles");
 
@@ -58,22 +65,11 @@ exports.getApprovedSaleListings = asyncHandler(async (req, res) => {
 
   const filter = { status: "approved", deletedAt: null };
 
-  if (search) {
-    const rx = safeRegex(search);
-    if (rx) {
-      filter.$or = [
-        { title: rx },
-        { brand: rx },
-        { model: rx },
-        { city: rx },
-      ];
-    }
-  }
-
-  if (brand) { const rx = safeRegex(brand); if (rx) filter.brand = rx; }
-  if (city)  { const rx = safeRegex(city);  if (rx) filter.city  = rx; }
-  if (fuel)  { const rx = safeRegex(fuel);  if (rx) filter.fuel  = rx; }
-  if (gearbox) { const rx = safeRegex(gearbox); if (rx) filter.gearbox = rx; }
+  applySearchFilter(filter, search);
+  applyBrandFilter(filter, brand);
+  applyCityFilter(filter, city);
+  applyFuelFilter(filter, fuel);
+  applyGearboxFilter(filter, gearbox);
 
   if (minPrice !== undefined || maxPrice !== undefined) {
     filter.price = {};

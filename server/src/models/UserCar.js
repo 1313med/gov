@@ -24,8 +24,14 @@ const userCarSchema = new mongoose.Schema(
     fuelType:       { type: String, enum: ["essence", "diesel", "hybride", "electrique"] },
     gearbox:        { type: String, enum: ["manuelle", "automatique"] },
     currentMileage: { type: Number },
+    lastMileageAt:  { type: Date, default: null },
     color:          { type: String, trim: true },
     image:          { type: String, trim: true },   // Cloudinary URL
+
+    /** Reminder preferences for Mon Garage */
+    garageSettings: {
+      remindersEnabled: { type: Boolean, default: true },
+    },
 
     // ── Administrative papers ──────────────────────────────────────────────────
     assurance: {

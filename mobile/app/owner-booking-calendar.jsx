@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { PageLoader } from '../src/components/AppLoadingScreen';
 import {
   View,
   ScrollView,
@@ -98,16 +99,7 @@ export default function OwnerBookingCalendarScreen() {
     [router]
   );
 
-  if (loading) {
-    return (
-      <View style={[styles.center, { backgroundColor: C.bg }]}>
-        <ActivityIndicator color={accent} size="large" />
-        <Text style={{ color: C.muted, marginTop: 12, fontSize: 14, fontWeight: "600" }}>
-          {fr ? "Chargement du calendrier…" : "Loading calendar…"}
-        </Text>
-      </View>
-    );
-  }
+  if (loading) return <PageLoader />;
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>

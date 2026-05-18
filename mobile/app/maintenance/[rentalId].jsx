@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState, useRef } from "react";
+import { PageLoader } from '../../src/components/AppLoadingScreen';
 import {
   View,
   Text,
@@ -203,15 +204,7 @@ export default function MaintenanceDetailScreen() {
     );
   }
 
-  if (loading) {
-    return (
-      <View style={[s.center, { backgroundColor: C.bg }]}>
-        <View style={s.loaderRing}>
-          <ActivityIndicator color={C.primary} size="large" />
-        </View>
-      </View>
-    );
-  }
+  if (loading) return <PageLoader />;
 
   if (!car) {
     return (
