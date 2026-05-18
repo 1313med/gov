@@ -542,6 +542,54 @@ const maintenanceFr = {
   },
 };
 
+const screenTitlesEn = {
+  back: "Back",
+  carDetails: "Car details",
+  rentalDetails: "Rental details",
+  sellerProfile: "Car owner profile",
+  myBookings: "My bookings",
+  myListings: "My listings",
+  newListing: "New listing",
+  myFleet: "My fleet",
+  addRental: "Add rental",
+  ownerBookings: "Bookings",
+  analytics: "Analytics",
+  calendar: "Calendar",
+  listingViews: "Listing views",
+  maintenance: "Maintenance",
+  notifications: "Notifications",
+  moderation: "Moderation",
+  myGarage: "My garage",
+  addCar: "Add car",
+  estimate: "Estimate my car",
+  priceAlerts: "Price alerts",
+  verifyCin: "Identity verification",
+};
+
+const screenTitlesFr = {
+  back: "Retour",
+  carDetails: "Détails voiture",
+  rentalDetails: "Détails location",
+  sellerProfile: "Profil propriétaire",
+  myBookings: "Mes réservations",
+  myListings: "Mes annonces",
+  newListing: "Nouvelle annonce",
+  myFleet: "Ma flotte",
+  addRental: "Ajouter location",
+  ownerBookings: "Réservations",
+  analytics: "Analytique",
+  calendar: "Calendrier",
+  listingViews: "Vues annonces",
+  maintenance: "Entretien",
+  notifications: "Notifications",
+  moderation: "Modération",
+  myGarage: "Mon garage",
+  addCar: "Ajouter voiture",
+  estimate: "Estimer ma voiture",
+  priceAlerts: "Alertes prix",
+  verifyCin: "Vérification identité",
+};
+
 export const appLocales = {
   en: {
     home: home2Dict.en,
@@ -553,6 +601,7 @@ export const appLocales = {
     carDetails: carDetailsEn,
     rentalDetails: rentalDetailsEn,
     maintenance: maintenanceEn,
+    screenTitles: screenTitlesEn,
   },
   fr: {
     home: home2Dict.fr,
@@ -564,5 +613,6 @@ export const appLocales = {
     carDetails: carDetailsFr,
     rentalDetails: rentalDetailsFr,
     maintenance: maintenanceFr,
+    screenTitles: screenTitlesFr,
   },
 };

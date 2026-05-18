@@ -496,7 +496,7 @@ export default function MonGarageScreen() {
           {/* Marketplace bridge */}
           <TouchableOpacity
             activeOpacity={0.82}
-            onPress={() => router.push("/(tabs)/cars")}
+            onPress={() => router.push("/(customer)")}
             style={{ marginTop: 12 }}
           >
             <LinearGradient
@@ -512,7 +512,7 @@ export default function MonGarageScreen() {
                   {fr ? `Voir les ${car.brand} sur Goovoiture` : `Browse ${car.brand} cars on Goovoiture`}
                 </Text>
                 <Text style={{ fontSize: 12, color: subColor }}>
-                  {fr ? "Achat, vente, location disponibles" : "Buy, sell, rent — all available"}
+                  {fr ? "Achat, vente et location sur la marketplace" : "Buy, sell, and rent on the marketplace"}
                 </Text>
               </View>
               <Ionicons name="arrow-forward" size={18} color={C.primary} />

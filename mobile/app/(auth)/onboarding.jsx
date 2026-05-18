@@ -17,15 +17,11 @@ import { useAuth } from "../../src/context/AuthContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import { useAppLang } from "../../src/context/AppLangContext";
 import { markOnboarded } from "../../src/utils/authStorage";
+import { useActiveMode } from "../../src/context/ActiveModeContext";
 
 const { width: W } = Dimensions.get("window");
 
-function getRoleShell(role) {
-  if (role === "rental_owner") return "/(rental-owner)";
-  if (role === "seller") return "/(car-owner)";
-  if (role === "admin") return "/(admin)";
-  return "/(customer)";
-}
+import { homeShellForUser, normalizeRoleSlug } from "../../src/utils/userRoles";
 
 const SLIDES = {
   customer: [
@@ -51,7 +47,7 @@ const SLIDES = {
       fr: { title: "Vérifiez une fois, réservez toujours", body: "Ajoutez permis et CIN une seule fois. Après ça, chaque réservation est instantanée." },
     },
   ],
-  seller: [
+  car_owner: [
     {
       icon: "car-sport-outline",
       iconColor: "#38bdf8",
@@ -70,8 +66,8 @@ const SLIDES = {
       icon: "storefront-outline",
       iconColor: "#7c6bff",
       gradColors: ["rgba(124,107,255,0.18)", "rgba(124,107,255,0.04)"],
-      en: { title: "The marketplace is right here", body: "Whenever you're ready — sell your car or list it for rent. Thousands of buyers and renters are already here." },
-      fr: { title: "La marketplace est là pour vous", body: "Quand vous êtes prêt — vendez votre voiture ou mettez-la en location. Des milliers d'acheteurs vous attendent." },
+      en: { title: "The marketplace is right here", body: "Whenever you're ready — list your car for sale. Thousands of buyers are already browsing Goovoiture." },
+      fr: { title: "La marketplace est là pour vous", body: "Quand vous êtes prêt — mettez votre voiture en vente. Des milliers d'acheteurs parcourent déjà Goovoiture." },
     },
   ],
   rental_owner: [
@@ -141,13 +137,14 @@ function Dots({ total, current, activeColor }) {
 
 export default function OnboardingScreen() {
   const { auth } = useAuth();
+  const { ensureCarOwnerLanding } = useActiveMode();
   const { colors: C, isDark } = useTheme();
   const { lang } = useAppLang();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const fr = lang === "fr";
 
-  const role = auth?.role || "customer";
+  const role = normalizeRoleSlug(auth?.role);
   const slides = SLIDES[role] || SLIDES.customer;
   const [index, setIndex] = useState(0);
   const flatRef = useRef(null);
@@ -161,12 +158,12 @@ export default function OnboardingScreen() {
 
   const getRoleColors = () => {
     if (role === "rental_owner") return isDark ? ["#34d399", "#10b981"] : ["#059669", "#047857"];
-    if (role === "seller") return isDark ? ["#38bdf8", "#0ea5e9"] : ["#0284c7", "#0369a1"];
+    if (role === "car_owner") return isDark ? ["#38bdf8", "#0ea5e9"] : ["#0284c7", "#0369a1"];
     return isDark ? ["#7c6bff", "#5b4ddb"] : ["#6248e8", "#4f46e5"];
   };
   const getRoleAccent = () => {
     if (role === "rental_owner") return isDark ? "#34d399" : "#059669";
-    if (role === "seller") return isDark ? "#38bdf8" : "#0284c7";
+    if (role === "car_owner") return isDark ? "#38bdf8" : "#0284c7";
     return isDark ? "#7c6bff" : "#6248e8";
   };
 
@@ -177,8 +174,13 @@ export default function OnboardingScreen() {
 
   const finish = useCallback(async () => {
     if (auth?._id) await markOnboarded(auth._id);
-    router.replace(getRoleShell(role));
-  }, [auth, role]);
+    if (role === "car_owner" || role === "seller") {
+      await ensureCarOwnerLanding();
+      router.replace("/(car-owner)");
+    } else {
+      router.replace(homeShellForUser({ role, roles: auth?.roles }));
+    }
+  }, [auth, role, ensureCarOwnerLanding, router]);
 
   const next = () => {
     if (isLast) {

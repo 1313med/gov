@@ -420,7 +420,7 @@ export default function MyBookingsScreen() {
             </View>
             <Text style={s.emptyTitle}>{fr ? "Aucune réservation" : "No bookings yet"}</Text>
             <Text style={s.emptyHint}>{fr ? "Explorez le catalogue et réservez votre prochaine voiture." : "Browse the fleet and book your next drive."}</Text>
-            <TouchableOpacity onPress={() => router.push("/(tabs)/rentals")} activeOpacity={0.9} style={s.cta}>
+            <TouchableOpacity onPress={() => router.push("/(customer)")} activeOpacity={0.9} style={s.cta}>
               <LinearGradient colors={[C.primary, "#6366f1"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.ctaGrad}>
                 <Text style={s.ctaText}>{fr ? "Voir les locations" : "Browse rentals"}</Text>
                 <Ionicons name="arrow-forward" size={18} color="#fff" />

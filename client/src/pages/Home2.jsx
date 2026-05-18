@@ -5,6 +5,7 @@ import { useAppLang } from "../context/AppLangContext";
 import { useTheme } from "../context/ThemeContext";
 import { getApprovedSales } from "../api/sale";
 import { getApprovedRentals } from "../api/rental";
+import { hasUserRole, isAdminOnlyUser } from "../utils/userRoles";
 
 /* ──────────────────────────────────────────────
    Scroll reveal — IntersectionObserver, no lib
@@ -1419,8 +1420,8 @@ function HomeInner() {
   const role    = (auth?.role || "").toLowerCase();
   const isCust  = role === "customer";
   const isOwner = role === "rental_owner";
-  const isSell  = role === "seller";
-  const isAdmin = role === "admin";
+  const isSell  = hasUserRole(auth, "car_owner", "seller");
+  const isAdmin = auth && isAdminOnlyUser(auth);
 
   return (
     <div className={`hx${dark ? " dark" : ""}`}>
@@ -1477,7 +1478,7 @@ function HomeInner() {
                     <div style={{ minWidth: 0 }}>
                       <div className="hx-drop-name">{auth.name}</div>
                       <div className="hx-drop-role">
-                        {{ customer: "Customer", rental_owner: "Rental Owner", seller: "Seller", admin: "Admin" }[auth.role] || auth.role}
+                        {{ customer: "Customer", rental_owner: "Rental Owner", car_owner: "Car owner", seller: "Car owner", admin: "Admin" }[auth.role] || auth.role}
                       </div>
                     </div>
                   </div>
@@ -1502,14 +1503,21 @@ function HomeInner() {
                       </Link>
                     )}
 
-                    {auth.role === "seller" && (
+                    {hasUserRole(auth, "car_owner") && (
                       <Link to="/dashboard" className="hx-drop-item" onClick={() => setProfileOpen(false)}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h13l4 4v4a2 2 0 0 1-2 2h-2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+                        My garage
+                      </Link>
+                    )}
+                    {hasUserRole(auth, "customer", "car_owner", "rental_owner", "admin") && (
+                      <Link to="/my-sales" className="hx-drop-item" onClick={() => setProfileOpen(false)}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-                        Dashboard
+                        My listings
                       </Link>
                     )}
 
-                    {auth.role === "admin" && (
+                    {hasUserRole(auth, "admin") &&
+                      !hasUserRole(auth, "car_owner", "rental_owner") && (
                       <Link to="/admin" className="hx-drop-item" onClick={() => setProfileOpen(false)}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
                         Admin Panel
@@ -1552,10 +1560,16 @@ function HomeInner() {
         {auth ? (
           <>
             <Link to="/profile"    className="hx-dlink" onClick={() => setMenu(false)}>My Profile</Link>
-            {auth.role === "customer"     && <Link to="/my-bookings" className="hx-dlink" onClick={() => setMenu(false)}>My Bookings</Link>}
-            {auth.role === "rental_owner" && <Link to="/my-fleet"    className="hx-dlink" onClick={() => setMenu(false)}>My Fleet</Link>}
-            {auth.role === "seller"       && <Link to="/dashboard"   className="hx-dlink" onClick={() => setMenu(false)}>Dashboard</Link>}
-            {auth.role === "admin"        && <Link to="/admin"       className="hx-dlink" onClick={() => setMenu(false)}>Admin Panel</Link>}
+            {hasUserRole(auth, "customer") && <Link to="/my-bookings" className="hx-dlink" onClick={() => setMenu(false)}>My Bookings</Link>}
+            {hasUserRole(auth, "rental_owner") && <Link to="/my-fleet" className="hx-dlink" onClick={() => setMenu(false)}>My Fleet</Link>}
+            {hasUserRole(auth, "car_owner") && <Link to="/dashboard" className="hx-dlink" onClick={() => setMenu(false)}>My garage</Link>}
+            {hasUserRole(auth, "customer", "car_owner", "rental_owner", "admin") && <Link to="/my-sales" className="hx-dlink" onClick={() => setMenu(false)}>My listings</Link>}
+            {hasUserRole(auth, "admin") &&
+              !hasUserRole(auth, "car_owner", "rental_owner") && (
+                <Link to="/admin" className="hx-dlink" onClick={() => setMenu(false)}>
+                  Admin Panel
+                </Link>
+              )}
             <button onClick={() => { logout(); setMenu(false); }} className="hx-dlink" style={{ background:"none", border:"none", cursor:"pointer", textAlign:"left", width:"100%", color:"#ef4444" }}>
               {copy.home.drawer.logout}
             </button>

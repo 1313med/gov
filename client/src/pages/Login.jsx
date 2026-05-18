@@ -643,11 +643,20 @@ export default function Login() {
     try {
       const res = await api.post("/auth/login", { phone, password });
       saveAuth(res.data);
-      const role = res.data.role;
-      if      (role === "admin")        navigate("/admin");
-      else if (role === "seller")       navigate("/dashboard");
-      else if (role === "rental_owner") navigate("/owner/analytics");
-      else                              navigate("/");
+      const roles = res.data.roles || [];
+      if (roles.includes("car_owner") || res.data.role === "car_owner" || res.data.role === "seller") {
+        navigate("/dashboard");
+      } else if (roles.includes("rental_owner") || res.data.role === "rental_owner") {
+        navigate("/owner/analytics");
+      } else if (
+        (roles.includes("admin") || res.data.role === "admin") &&
+        !roles.includes("car_owner") &&
+        !roles.includes("rental_owner")
+      ) {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
     } catch (err) {
       setError(err?.response?.data?.message || copy.login.invalidCreds);
     } finally {

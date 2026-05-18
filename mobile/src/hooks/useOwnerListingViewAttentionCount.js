@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import { getOwnerListingViewAttentionCount } from "../api/rental";
+import { hasUserRole } from "../utils/userRoles";
 
 /**
  * Refetches when the current screen gains focus (home / profile).
@@ -12,7 +13,7 @@ export function useOwnerListingViewAttentionCount() {
   const [count, setCount] = useState(0);
 
   const load = useCallback(async () => {
-    if (auth?.role !== "rental_owner") {
+    if (!hasUserRole(auth, "rental_owner")) {
       setCount(0);
       return;
     }
@@ -22,7 +23,7 @@ export function useOwnerListingViewAttentionCount() {
     } catch {
       setCount(0);
     }
-  }, [auth?.role]);
+  }, [auth]);
 
   useFocusEffect(
     useCallback(() => {

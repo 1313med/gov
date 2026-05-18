@@ -92,6 +92,8 @@ function listingViewPeriodBounds(period) {
   return null;
 }
 
+const { userCanListForSale, hasUserRole } = require("../utils/userRoles");
+
 const notify = async (userId, message, type, bookingId = null) => {
   const n = await Notification.create({ user: userId, message, type, bookingId: bookingId || undefined });
   emitNotification(userId.toString(), n);
@@ -110,6 +112,21 @@ exports.createRental = async (req, res, next) => {
 
     if (!title || !pricePerDay || !city || !brand || !model || !year) {
       return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    if (!hasUserRole(req.user, "rental_owner")) {
+      return res.status(403).json({
+        message: "Only rental owners can list cars for rent. Enable the rental owner mode in your profile.",
+        code: "RENTAL_OWNER_REQUIRED",
+      });
+    }
+
+    const owner = await User.findById(req.user._id).select("nationalId");
+    if (!userCanListForSale(owner)) {
+      return res.status(403).json({
+        message: "Please upload your national ID (CIN) in your profile before listing a car for rent.",
+        code: "CIN_REQUIRED",
+      });
     }
 
     const adOffered = !!airportDeliveryOffered;

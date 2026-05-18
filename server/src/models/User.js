@@ -8,10 +8,18 @@ const userSchema = new mongoose.Schema(
     email: { type: String },
     password: { type: String, required: true },
 
+    /** @deprecated Legacy single role — kept in sync with `roles` for older clients */
     role: {
       type: String,
-      enum: ["customer", "seller", "rental_owner", "admin"],
+      enum: ["customer", "seller", "car_owner", "rental_owner", "admin"],
       default: "customer",
+    },
+
+    /** Account capabilities — users can hold multiple roles */
+    roles: {
+      type: [String],
+      enum: ["customer", "car_owner", "rental_owner", "admin"],
+      default: undefined,
     },
 
     city: { type: String },
@@ -63,9 +71,28 @@ userSchema.index({ phone: 1 }, { unique: true });
 userSchema.index({ email: 1 });
 userSchema.index({ deletedAt: 1 });
 
+const {
+  getUserRoles,
+  getPrimaryRole,
+  normalizeRoleSlug,
+  rolesFromRegistrationIntent,
+} = require("../utils/userRoles");
+
 userSchema.pre("save", async function () {
-  if (!this.isModified("password")) return;
-  this.password = await bcrypt.hash(this.password, 10);
+  if (this.isModified("role") && !this.isModified("roles")) {
+    const intent = normalizeRoleSlug(this.role);
+    this.roles = rolesFromRegistrationIntent(intent === "customer" ? "customer" : intent);
+  }
+  if (!this.roles?.length) {
+    this.roles = getUserRoles(this);
+  } else {
+    this.roles = getUserRoles({ roles: this.roles, role: this.role });
+  }
+  this.role = getPrimaryRole(this);
+
+  if (this.isModified("password")) {
+    this.password = await bcrypt.hash(this.password, 10);
+  }
 });
 
 userSchema.methods.matchPassword = function (enteredPassword) {

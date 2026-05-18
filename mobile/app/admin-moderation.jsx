@@ -77,7 +77,7 @@ export default function AdminModerationScreen() {
       <View style={s.center}>
         <Ionicons name="shield-outline" size={56} color={C.muted} />
         <Text style={s.emptyTitle}>Admin access required</Text>
-        <TouchableOpacity onPress={() => router.replace("/(tabs)/profile")} style={s.backBtn}>
+        <TouchableOpacity onPress={() => router.replace("/(admin)/profile")} style={s.backBtn}>
           <Text style={s.backBtnText}>Back to profile</Text>
         </TouchableOpacity>
       </View>

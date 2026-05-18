@@ -22,6 +22,9 @@ import { useAppLang } from "../../src/context/AppLangContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import ThemeToggle from "../../src/components/ThemeToggle";
 import { resolveMediaUrl } from "../../src/utils/mediaUrl";
+import RoleModeSwitcher from "../../src/components/RoleModeSwitcher";
+import { VERIFY_CIN_PATH, messagesHref } from "../../src/utils/appNavigation";
+import { useActiveMode } from "../../src/context/ActiveModeContext";
 
 export default function CustomerProfileScreen() {
   const { auth, logout } = useAuth();
@@ -31,6 +34,7 @@ export default function CustomerProfileScreen() {
   const { colors: C, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { activeMode } = useActiveMode();
   const s = useMemo(() => createStyles(C, isDark), [C, isDark]);
 
   const [profile, setProfile] = useState(null);
@@ -111,7 +115,13 @@ export default function CustomerProfileScreen() {
             <View style={s.roleBadge}>
               <LinearGradient colors={ctaGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.roleBadgeInner}>
                 <Ionicons name="search-outline" size={11} color="#fff" />
-                <Text style={s.roleBadgeText}>{fr ? "CLIENT" : "CUSTOMER"}</Text>
+                <Text style={s.roleBadgeText}>
+                  {activeMode === "car_owner"
+                    ? fr ? "PROPRIÉTAIRE" : "CAR OWNER"
+                    : activeMode === "rental_owner"
+                      ? fr ? "LOUEUR" : "RENTAL OWNER"
+                      : fr ? "CLIENT" : "CUSTOMER"}
+                </Text>
               </LinearGradient>
             </View>
           </View>
@@ -121,10 +131,12 @@ export default function CustomerProfileScreen() {
       </LinearGradient>
 
       <View style={{ paddingHorizontal: 20, paddingTop: 20 }}>
+        <RoleModeSwitcher fr={fr} />
+
         {/* Verification Banner */}
         {!isVerified && (
           <TouchableOpacity
-            onPress={() => router.push("/verification")}
+            onPress={() => router.push(VERIFY_CIN_PATH)}
             activeOpacity={0.88}
             style={[s.verifyBanner, { borderColor: isDark ? "rgba(245,158,11,0.5)" : "rgba(245,158,11,0.4)", backgroundColor: isDark ? "rgba(245,158,11,0.1)" : "rgba(245,158,11,0.07)" }]}
           >
@@ -161,14 +173,15 @@ export default function CustomerProfileScreen() {
         {/* Quick Actions */}
         <Text style={s.sectionTitle}>{fr ? "Mon compte" : "My account"}</Text>
         <View style={s.card}>
-          <Row icon="person-outline" label={fr ? "Modifier le profil" : "Edit profile"} onPress={() => router.push("/verify-seller")} C={C} />
-          <Row icon="card-outline" label={fr ? "Permis de conduire" : "Driver's license"} onPress={() => router.push("/verify-seller")} C={C} badge={hasLicense ? "ok" : "warn"} />
-          <Row icon="id-card-outline" label={fr ? "Carte nationale" : "National ID"} onPress={() => router.push("/verify-seller")} C={C} badge={hasNationalId ? "ok" : "warn"} last />
+          <Row icon="person-outline" label={fr ? "Modifier le profil" : "Edit profile"} onPress={() => router.push(VERIFY_CIN_PATH)} C={C} />
+          <Row icon="card-outline" label={fr ? "Permis de conduire" : "Driver's license"} onPress={() => router.push(VERIFY_CIN_PATH)} C={C} badge={hasLicense ? "ok" : "warn"} />
+          <Row icon="id-card-outline" label={fr ? "Carte nationale (CIN)" : "National ID (CIN)"} onPress={() => router.push(VERIFY_CIN_PATH)} C={C} badge={hasNationalId ? "ok" : "warn"} last />
         </View>
 
         <Text style={s.sectionTitle}>{fr ? "Réservations" : "Bookings"}</Text>
         <View style={s.card}>
-          <Row icon="calendar-outline" label={fr ? "Mes réservations" : "My bookings"} onPress={() => {}} C={C} last />
+          <Row icon="calendar-outline" label={fr ? "Mes réservations" : "My bookings"} onPress={() => router.push("/(customer)/bookings")} C={C} />
+          <Row icon="chatbubble-outline" label={fr ? "Messages" : "Messages"} onPress={() => router.push(messagesHref(activeMode))} C={C} last />
         </View>
 
         <Text style={s.sectionTitle}>{fr ? "Préférences" : "Preferences"}</Text>

@@ -25,6 +25,8 @@ import { useTheme } from "../src/context/ThemeContext";
 import { useAppLang } from "../src/context/AppLangContext";
 import { getMyCar, createCar, updateCar } from "../src/api/userCar";
 import { uploadListingImages } from "../src/api/upload";
+import { useAuth } from "../src/context/AuthContext";
+import { deferGarageSetup, clearGarageSetupDefer } from "../src/utils/garageSetupStorage";
 
 const STEPS = [
   { key: "identity",     icon: "car-sport-outline",   color: "#a78bfa" },
@@ -121,8 +123,11 @@ export default function AddCarScreen() {
   const fr = lang === "fr";
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { id } = useLocalSearchParams();
+  const params = useLocalSearchParams();
+  const { id } = params;
   const isEdit = !!id;
+  const isRequired = params.required === "1" || params.required === 1;
+  const { auth } = useAuth();
 
   const [step, setStep]       = useState(0);
   const [saving, setSaving]   = useState(false);
@@ -212,11 +217,23 @@ export default function AddCarScreen() {
     setStep((s) => s + 1);
   }, [step, identity, fr, animateNext]);
 
+  const goLater = useCallback(async () => {
+    if (auth?._id) await deferGarageSetup(auth._id);
+    router.replace("/(car-owner)");
+  }, [auth?._id, router]);
+
   const goBack = useCallback(() => {
-    if (step === 0) { router.back(); return; }
+    if (step === 0) {
+      if (isRequired && !isEdit) {
+        goLater();
+        return;
+      }
+      router.back();
+      return;
+    }
     animateNext(-1);
     setStep((s) => s - 1);
-  }, [step, router, animateNext]);
+  }, [step, router, animateNext, isRequired, isEdit, goLater]);
 
   const pickImage = useCallback(async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -294,7 +311,8 @@ export default function AddCarScreen() {
       } else {
         await createCar(payload);
       }
-      router.replace("/mon-garage");
+      if (auth?._id) await clearGarageSetupDefer(auth._id);
+      router.replace("/(car-owner)");
     } catch (e) {
       Alert.alert(fr ? "Erreur" : "Error", e?.response?.data?.message || (fr ? "Impossible de sauvegarder." : "Could not save."));
     } finally {
@@ -374,6 +392,38 @@ export default function AddCarScreen() {
         style={{ transform: [{ translateY: slideAnim }] }}
         contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 8, paddingBottom: insets.bottom + 80 }}
       >
+        {isRequired && !isEdit && step === 0 ? (
+          <View
+            style={{
+              marginBottom: 20,
+              padding: 16,
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: isDark ? "rgba(56,189,248,0.35)" : "rgba(2,132,199,0.25)",
+              backgroundColor: isDark ? "rgba(56,189,248,0.1)" : "rgba(2,132,199,0.06)",
+            }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
+              <Ionicons name="car-sport" size={28} color={isDark ? "#38bdf8" : "#0284c7"} />
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 16, fontWeight: "800", color: titleColor, marginBottom: 6 }}>
+                  {fr ? "Ajoutez votre voiture pour commencer" : "Add your car to get started"}
+                </Text>
+                <Text style={{ fontSize: 13, color: subColor, lineHeight: 20 }}>
+                  {fr
+                    ? "C'est la fonction principale de GooVoiture pour vous : suivi des papiers, alertes et entretien. Seule la marque est obligatoire pour démarrer."
+                    : "This is your main GooVoiture feature: track papers, get alerts, and manage maintenance. Only the brand is required to start."}
+                </Text>
+              </View>
+            </View>
+            <TouchableOpacity onPress={goLater} activeOpacity={0.85} style={{ marginTop: 14, alignSelf: "flex-start" }}>
+              <Text style={{ fontSize: 13, fontWeight: "700", color: isDark ? "#94a3b8" : "#64748b" }}>
+                {fr ? "Plus tard" : "I'll do this later"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
         {/* ── Step 0: Identity ───────────────────────────────────────────────── */}
         {step === 0 && (
           <View>

@@ -367,7 +367,7 @@ export default function CarDetailsScreen() {
     setContacting(true);
     try {
       await startConversation({ recipientId: sid, listingId: id, listingModel: "SaleListing" });
-      router.push("/(tabs)/messages");
+      router.push("/(customer)/messages");
     } catch { Alert.alert("Failed to open conversation"); }
     setContacting(false);
   };

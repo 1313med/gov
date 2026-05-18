@@ -138,6 +138,17 @@ export default function BookingsScreen() {
 
   const rawHighlight = params.highlight;
   const highlightParam = rawHighlight ? String(Array.isArray(rawHighlight) ? rawHighlight[0] : rawHighlight) : null;
+  const bookedSuccess = params.booked === "1" || params.booked === 1;
+  const [showBookedBanner, setShowBookedBanner] = useState(false);
+
+  useEffect(() => {
+    if (bookedSuccess) {
+      setShowBookedBanner(true);
+      const t = setTimeout(() => setShowBookedBanner(false), 8000);
+      try { router.setParams({ booked: undefined }); } catch {}
+      return () => clearTimeout(t);
+    }
+  }, [bookedSuccess, router]);
 
   useEffect(() => {
     if (!highlightParam || !bookings.length) return;
@@ -361,6 +372,21 @@ export default function BookingsScreen() {
   const listHeader = useCallback(
     () => (
       <View style={[s.listHead, { paddingTop: insets.top + 10 }]}>
+        {showBookedBanner ? (
+          <View style={[s.successBanner, { borderColor: "rgba(52,211,153,0.45)", backgroundColor: isDark ? "rgba(52,211,153,0.12)" : "rgba(52,211,153,0.08)" }]}>
+            <Ionicons name="checkmark-circle" size={22} color="#34d399" />
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: "#34d399", fontWeight: "800", fontSize: 14 }}>
+                {fr ? "Demande envoyée" : "Request submitted"}
+              </Text>
+              <Text style={{ color: C.muted, fontSize: 12, marginTop: 4, lineHeight: 17 }}>
+                {fr
+                  ? "Le propriétaire va confirmer votre réservation. Vous serez notifié."
+                  : "The owner will confirm your booking. We'll notify you when it's updated."}
+              </Text>
+            </View>
+          </View>
+        ) : null}
         <View style={s.listHeadAccent} />
         <Text style={s.listHeadTitle}>{fr ? "Mes réservations" : "My bookings"}</Text>
         <Text style={s.listHeadSub}>
@@ -368,7 +394,7 @@ export default function BookingsScreen() {
         </Text>
       </View>
     ),
-    [s, insets.top, fr]
+    [s, insets.top, fr, showBookedBanner, isDark, C.muted]
   );
 
   if (loading) {
@@ -761,6 +787,15 @@ export default function BookingsScreen() {
 function createBookingsStyles(C, isDark) {
   return StyleSheet.create({
     center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24, backgroundColor: C.bg },
+    successBanner: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 12,
+      padding: 14,
+      borderRadius: 14,
+      borderWidth: 1,
+      marginBottom: 14,
+    },
     listHead: {
       marginHorizontal: -16,
       paddingHorizontal: 16,

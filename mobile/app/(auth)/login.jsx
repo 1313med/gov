@@ -4,6 +4,9 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { login as loginApi } from "../../src/api/auth";
 import { useAuth } from "../../src/context/AuthContext";
+import { useActiveMode } from "../../src/context/ActiveModeContext";
+import { isCarOwnerUser } from "../../src/utils/userRoles";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAppLang } from "../../src/context/AppLangContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import ThemeToggle from "../../src/components/ThemeToggle";
@@ -13,6 +16,7 @@ import { clearLoginForm, loadLoginForm, saveLoginForm } from "../../src/utils/au
 
 export default function LoginScreen() {
   const { login } = useAuth();
+  const { ensureCarOwnerLanding } = useActiveMode();
   const { colors: C } = useTheme();
   const { copy, lang, setLang } = useAppLang();
   const c = copy.login;
@@ -45,7 +49,13 @@ export default function LoginScreen() {
       } else {
         await clearLoginForm();
       }
+      if (isCarOwnerUser(data) && data._id) {
+        await AsyncStorage.setItem(`goovoiture-active-mode:${data._id}`, "car_owner");
+      }
       await login(data, { remember: rememberMe });
+      if (isCarOwnerUser(data)) {
+        await ensureCarOwnerLanding();
+      }
     } catch (e) {
       Alert.alert("Error", getApiErrorMessage(e, c.invalidCreds));
     } finally {

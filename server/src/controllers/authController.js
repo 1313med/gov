@@ -2,6 +2,12 @@ const asyncHandler = require("express-async-handler");
 const crypto = require("crypto");
 const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
+const {
+  rolesFromRegistrationIntent,
+  getUserRoles,
+  getPrimaryRole,
+  normalizeRoleSlug,
+} = require("../utils/userRoles");
 const emailService    = require("../utils/emailService");
 const whatsappService = require("../utils/whatsappService");
 
@@ -53,9 +59,14 @@ exports.register = asyncHandler(async (req, res) => {
     throw new Error("User already exists with this email");
   }
 
+  const intent = normalizeRoleSlug(role || "customer");
+  const roles = rolesFromRegistrationIntent(intent);
   const user = await User.create({
-    name, phone, password, email: normalizedEmail,
-    role: role || "customer",
+    name,
+    phone,
+    password,
+    email: normalizedEmail,
+    roles,
     city,
   });
 
@@ -113,7 +124,15 @@ exports.login = asyncHandler(async (req, res) => {
   const token = generateToken(user);
   res.cookie("token", token, COOKIE_OPTIONS);
 
-  res.json({ _id: user._id, name: user.name, role: user.role, token });
+  const roles = getUserRoles(user);
+  const primaryRole = getPrimaryRole(user);
+  res.json({
+    _id: user._id,
+    name: user.name,
+    role: primaryRole,
+    roles,
+    token,
+  });
 });
 
 // ── POST /api/auth/logout ────────────────────────────────────────────────────

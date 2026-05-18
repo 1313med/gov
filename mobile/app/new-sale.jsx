@@ -108,7 +108,15 @@ export default function NewSaleScreen() {
       await createSale(payload);
       Alert.alert(fr ? "Succès" : "Success", fr ? "Annonce soumise pour approbation." : "Listing submitted for approval.", [{ text:"OK", onPress:() => router.back() }]);
     } catch (e) {
-      Alert.alert("Error", e?.response?.data?.message || "Failed to create listing");
+      const msg = e?.response?.data?.message || "Failed to create listing";
+      if (String(msg).toLowerCase().includes("national id") || String(msg).toLowerCase().includes("cin")) {
+        Alert.alert(fr ? "CIN requis" : "CIN required", msg, [
+          { text: fr ? "Plus tard" : "Later", style: "cancel" },
+          { text: fr ? "Vérifier" : "Verify", onPress: () => router.push("/verify-cin") },
+        ]);
+      } else {
+        Alert.alert("Error", msg);
+      }
     }
     setLoading(false);
   };

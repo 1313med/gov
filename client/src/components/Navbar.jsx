@@ -5,6 +5,7 @@ import { useAppLang } from "../context/AppLangContext";
 import { useSocket } from "../context/SocketContext";
 import { useTheme } from "../context/ThemeContext";
 import LangSwitch from "./LangSwitch";
+import { hasUserRole } from "../utils/userRoles";
 
 /* ─────────────────────────────────────────────────────────
    GooVoiture Global Navbar
@@ -394,7 +395,8 @@ const STYLES = `
 const ROLE_LABELS = {
   customer:     "Customer",
   rental_owner: "Rental Owner",
-  seller:       "Seller",
+  car_owner:    "Car owner",
+  seller:       "Car owner",
   admin:        "Admin",
 };
 
@@ -546,17 +548,27 @@ export default function Navbar() {
                           </Link>
                         )}
 
-                        {auth.role === "seller" && (
+                        {hasUserRole(auth, "car_owner") && (
                           <Link
                             to="/dashboard"
                             className="gn-drop-item"
                             onClick={() => setProfileOpen(false)}
                           >
-                            {ICO_DASH} Dashboard
+                            {ICO_CAR} My garage
+                          </Link>
+                        )}
+                        {hasUserRole(auth, "customer", "car_owner", "rental_owner", "admin") && (
+                          <Link
+                            to="/my-sales"
+                            className="gn-drop-item"
+                            onClick={() => setProfileOpen(false)}
+                          >
+                            {ICO_DASH} My listings
                           </Link>
                         )}
 
-                        {auth.role === "admin" && (
+                        {hasUserRole(auth, "admin") &&
+                          !hasUserRole(auth, "car_owner", "rental_owner") && (
                           <Link
                             to="/admin"
                             className="gn-drop-item"

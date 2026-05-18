@@ -3,6 +3,8 @@ import { View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator, Ale
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { getRentalById, bookRental, getRentalBookings, recordRentalView } from "../../src/api/rental";
+import { VERIFY_CIN_PATH, messagesHref } from "../../src/utils/appNavigation";
+import { isOwnRentalListing } from "../../src/utils/listingOwnership";
 import RentalBookingCalendar from "../../src/components/RentalBookingCalendar";
 import { startConversation } from "../../src/api/message";
 import { addRentalFavorite, removeRentalFavorite, getRentalFavorites } from "../../src/api/user";
@@ -10,8 +12,8 @@ import ReviewSection from "../../src/components/ReviewSection";
 import FavoriteHeartButton from "../../src/components/FavoriteHeartButton";
 import { useAuth } from "../../src/context/AuthContext";
 import { useAppLang } from "../../src/context/AppLangContext";
-import { resolveMediaUrl } from "../../src/utils/mediaUrl";
 import { useTheme } from "../../src/context/ThemeContext";
+import { resolveMediaUrl } from "../../src/utils/mediaUrl";
 
 const { width } = Dimensions.get("window");
 
@@ -181,6 +183,7 @@ export default function RentalDetailsScreen() {
   const { auth } = useAuth();
   const { lang } = useAppLang();
   const { C, s } = useRentalDetailSheets();
+  const { isDark } = useTheme();
   const router = useRouter();
   const t = lang === "fr" ? fr : en;
 
@@ -239,9 +242,21 @@ export default function RentalDetailsScreen() {
   const days = rentalBillableDays(startDate, endDate);
   const pricing = useMemo(() => computeRentalOfferPricing(rental, days), [rental, days]);
   const activeOffersList = useMemo(() => listActiveOffers(rental), [rental]);
+  const isOwnListing = useMemo(
+    () => isOwnRentalListing(rental, auth?._id),
+    [rental, auth?._id]
+  );
 
   const handleBook = async () => {
     if (!auth) return Alert.alert(t.needAuth);
+    if (isOwnListing) {
+      return Alert.alert(
+        lang === "fr" ? "Votre annonce" : "Your listing",
+        lang === "fr"
+          ? "Vous ne pouvez pas louer votre propre véhicule. Gérez-la depuis Ma flotte."
+          : "You cannot rent your own car. Manage it from My fleet."
+      );
+    }
     if (!startDate || !endDate) return Alert.alert(t.selectDatesError);
     if (days <= 0) return Alert.alert("End date must be on or after start date");
     if (rangeIncludesBlockedDay(startDate, endDate, blockedDaySet)) {
@@ -249,16 +264,23 @@ export default function RentalDetailsScreen() {
     }
     setBooking(true);
     try {
-      await bookRental(id, { startDate, endDate });
-      Alert.alert("Success", t.bookSuccess);
-      setStartDate(""); setEndDate("");
+      const { data: booking } = await bookRental(id, { startDate, endDate });
+      setStartDate("");
+      setEndDate("");
+      router.replace({
+        pathname: "/(customer)/bookings",
+        params: {
+          highlight: String(booking?._id || ""),
+          booked: "1",
+        },
+      });
     } catch (e) {
       const code = e?.response?.data?.code;
       const msg = e?.response?.data?.message || t.datesFail;
-      if (code === "BOOKING_DOCUMENTS_REQUIRED" || code === "DRIVER_LICENSE_REQUIRED") {
+      if (code === "BOOKING_DOCUMENTS_REQUIRED" || code === "DRIVER_LICENSE_REQUIRED" || code === "CIN_REQUIRED") {
         Alert.alert(t.documentsTitle, msg, [
           { text: t.documentsLater, style: "cancel" },
-          { text: t.documentsProfile, onPress: () => router.push("/(tabs)/profile") },
+          { text: t.documentsProfile, onPress: () => router.push(VERIFY_CIN_PATH) },
         ]);
       } else {
         Alert.alert(t.errorTitle || "Error", msg);
@@ -275,7 +297,7 @@ export default function RentalDetailsScreen() {
     setContacting(true);
     try {
       await startConversation({ recipientId: oid, listingId: id, listingModel: "RentalListing" });
-      router.push("/(tabs)/messages");
+      router.push(messagesHref("customer"));
     } catch { Alert.alert("Failed to open conversation"); }
     setContacting(false);
   };
@@ -400,7 +422,29 @@ export default function RentalDetailsScreen() {
           </View>
         )}
 
-        {/* Booking card */}
+        {isOwnListing ? (
+          <View style={[s.card, { borderColor: "rgba(245,158,11,0.35)", backgroundColor: isDark ? "rgba(245,158,11,0.1)" : "rgba(245,158,11,0.06)" }]}>
+            <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
+              <Ionicons name="information-circle-outline" size={26} color="#f59e0b" />
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: isDark ? "#fcd34d" : "#92400e", fontWeight: "800", fontSize: 15, marginBottom: 6 }}>
+                  {lang === "fr" ? "C'est votre annonce" : "This is your listing"}
+                </Text>
+                <Text style={{ color: C.muted, fontSize: 13, lineHeight: 20 }}>
+                  {lang === "fr"
+                    ? "Vous ne pouvez pas réserver votre propre voiture. Modifiez-la dans Ma flotte ou via vos annonces."
+                    : "You cannot book your own rental. Edit it from My fleet or your listings."}
+                </Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              onPress={() => router.push("/my-fleet")}
+              style={[s.bookBtn, { marginTop: 16, backgroundColor: isDark ? "#38bdf8" : "#0284c7" }]}
+            >
+              <Text style={s.bookBtnText}>{lang === "fr" ? "Gérer ma flotte" : "Manage my fleet"}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
         <View style={s.card}>
           <Text style={s.cardTitle}>{t.selectDates}</Text>
           <RentalBookingCalendar
@@ -471,8 +515,9 @@ export default function RentalDetailsScreen() {
             </TouchableOpacity>
           )}
         </View>
+        )}
 
-        {auth && (
+        {auth && !isOwnListing && (
           <TouchableOpacity onPress={contactOwner} disabled={contacting} style={[s.contactBtn, contacting && { opacity:0.7 }]}>
             <Ionicons name="chatbubble-outline" size={18} color={C.primary} />
             <Text style={s.contactBtnText}>{contacting ? "Opening…" : lang === "fr" ? "Contacter le propriétaire" : "Contact Owner"}</Text>

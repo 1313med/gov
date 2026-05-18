@@ -53,7 +53,10 @@ npm run build:ios
 mobile/
 ├── app/                    # Expo Router screens
 │   ├── (auth)/             # Login, Register
-│   ├── (tabs)/             # Home, Cars, Rentals, Messages, Profile
+│   ├── (customer)/         # Explore, bookings, messages, saved, profile
+│   ├── (car-owner)/        # Garage + marketplace
+│   ├── (rental-owner)/     # Fleet operations (5 tabs)
+│   ├── (tabs)/             # Legacy redirect → customer
 │   ├── cars/[id].jsx       # Car details
 │   ├── rentals/[id].jsx    # Rental details + booking
 │   ├── seller/[id].jsx     # Seller profile

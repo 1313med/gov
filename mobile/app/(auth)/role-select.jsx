@@ -40,7 +40,7 @@ const ROLES = [
     },
   },
   {
-    key: "seller",
+    key: "car_owner",
     icon: "car-sport-outline",
     activeIcon: "car-sport",
     colorLight: "#0284c7",

@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { api } from "../../api/axios";
 import AdminLayout from "../../components/admin/AdminLayout";
 
-const ROLES = ["", "customer", "seller", "rental_owner", "admin"];
+const ROLES = ["", "customer", "car_owner", "rental_owner", "admin"];
 
 const ROLE_COLORS = {
   admin:        { bg: "rgba(124,108,252,.14)", color: "#7c6cfc", border: "rgba(124,108,252,.28)" },
+  car_owner:    { bg: "rgba(96,165,250,.12)",  color: "#60a5fa", border: "rgba(96,165,250,.25)" },
   seller:       { bg: "rgba(96,165,250,.12)",  color: "#60a5fa", border: "rgba(96,165,250,.25)" },
   rental_owner: { bg: "rgba(42,245,192,.12)",  color: "#2af5c0", border: "rgba(42,245,192,.25)" },
   customer:     { bg: "rgba(255,255,255,.06)", color: "#8a8a9e", border: "rgba(255,255,255,.1)" },

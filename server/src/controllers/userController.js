@@ -2,6 +2,11 @@ const asyncHandler = require("express-async-handler");
 const User = require("../models/User");
 const SaleListing = require("../models/SaleListing");
 const RentalListing = require("../models/RentalListing");
+const {
+  getUserRoles,
+  getPrimaryRole,
+  normalizeRoleSlug,
+} = require("../utils/userRoles");
 
 // ── SALE FAVORITES ─────────────────────────────────────────────────────────
 
@@ -49,7 +54,34 @@ exports.getRentalFavorites = asyncHandler(async (req, res) => {
 
 exports.getMyProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id).select("-password");
-  res.json(user);
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+  const json = user.toObject();
+  json.roles = getUserRoles(user);
+  json.role = getPrimaryRole(user);
+  res.json(json);
+});
+
+/** Add a capability role (customer is always present). Body: { role: "car_owner" | "rental_owner" } */
+exports.addMyRole = asyncHandler(async (req, res) => {
+  const slug = normalizeRoleSlug(req.body.role);
+  if (!["car_owner", "rental_owner"].includes(slug)) {
+    res.status(400);
+    throw new Error("Only car_owner or rental_owner can be added");
+  }
+  const user = await User.findById(req.user._id);
+  const next = new Set(getUserRoles(user));
+  next.add(slug);
+  user.roles = [...next];
+  user.role = getPrimaryRole(user);
+  await user.save();
+  const updated = await User.findById(user._id).select("-password");
+  const json = updated.toObject();
+  json.roles = getUserRoles(updated);
+  json.role = getPrimaryRole(updated);
+  res.json(json);
 });
 
 exports.updateMyProfile = asyncHandler(async (req, res) => {

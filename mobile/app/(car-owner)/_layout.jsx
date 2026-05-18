@@ -2,7 +2,6 @@ import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../src/context/ThemeContext";
 import { useAppLang } from "../../src/context/AppLangContext";
-
 export default function CarOwnerLayout() {
   const { colors: C, isDark } = useTheme();
   const { lang } = useAppLang();
@@ -10,6 +9,7 @@ export default function CarOwnerLayout() {
 
   return (
     <Tabs
+      initialRouteName="index"
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
@@ -28,8 +28,10 @@ export default function CarOwnerLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: fr ? "Garage" : "Garage",
-          tabBarIcon: ({ color, size }) => <Ionicons name="car-sport-outline" size={size} color={color} />,
+          title: fr ? "Ma voiture" : "My car",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "car-sport" : "car-sport-outline"} size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen

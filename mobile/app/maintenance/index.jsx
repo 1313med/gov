@@ -226,7 +226,7 @@ export default function MaintenanceScreen() {
           <Ionicons name="construct-outline" size={52} color={C.primary} />
         </View>
         <Text style={[s.deniedTitle, { color: titleColor }]}>{t.accessDenied}</Text>
-        <TouchableOpacity onPress={() => router.replace("/(tabs)/profile")} activeOpacity={0.9}>
+        <TouchableOpacity onPress={() => router.replace("/(rental-owner)/profile")} activeOpacity={0.9}>
           <LinearGradient colors={ctaGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.backBtn}>
             <Text style={s.backBtnText}>{t.backProfile}</Text>
           </LinearGradient>

@@ -27,11 +27,11 @@ const ROLE_META = {
     en: { label: "Customer", desc: "Rent or buy cars" },
     fr: { label: "Client", desc: "Louer ou acheter" },
   },
-  seller: {
+  car_owner: {
     icon: "car-sport-outline",
     gradLight: ["#0284c7", "#0369a1"],
     gradDark: ["#38bdf8", "#0ea5e9"],
-    en: { label: "Car Owner", desc: "Track my car" },
+    en: { label: "Car owner", desc: "Track my car" },
     fr: { label: "Propriétaire", desc: "Suivre ma voiture" },
   },
   rental_owner: {

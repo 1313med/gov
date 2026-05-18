@@ -31,7 +31,7 @@ router.put("/admin/:id/status", protect, role("admin"), updateRentalStatus);
 router.post(
   "/:id/book",
   protect,
-  role("customer", "seller", "rental_owner", "admin"),
+  role("customer", "car_owner", "rental_owner", "admin"),
   createBooking
 );
 

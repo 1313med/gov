@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback, useState, useMemo } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -20,6 +21,8 @@ import { useTheme } from "../../src/context/ThemeContext";
 import { useAppLang } from "../../src/context/AppLangContext";
 import { getMyCar, deleteCar } from "../../src/api/userCar";
 import { getRecommendations } from "../../src/utils/garageRecommendations";
+import { useAuth } from "../../src/context/AuthContext";
+import { isGarageSetupDeferred, clearGarageSetupDefer } from "../../src/utils/garageSetupStorage";
 
 function daysLeft(dateStr) {
   if (!dateStr) return null;
@@ -123,11 +126,13 @@ const rowStyles = StyleSheet.create({
 });
 
 export default function CarOwnerGarageScreen() {
+  const { auth } = useAuth();
   const { colors: C, isDark } = useTheme();
   const { lang } = useAppLang();
   const fr = lang === "fr";
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const setupPrompted = useRef(false);
 
   const [car, setCar]         = useState(null);
   const [loading, setLoading] = useState(true);
@@ -149,6 +154,26 @@ export default function CarOwnerGarageScreen() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (loading || car || !auth?._id) return;
+      let active = true;
+      (async () => {
+        const deferred = await isGarageSetupDeferred(auth._id);
+        if (!active || deferred || setupPrompted.current) return;
+        setupPrompted.current = true;
+        router.push("/add-car?required=1");
+      })();
+      return () => {
+        active = false;
+      };
+    }, [loading, car, auth?._id, router])
+  );
+
+  useEffect(() => {
+    if (car) setupPrompted.current = false;
+  }, [car]);
 
   useEffect(() => {
     if (loading) return;
@@ -172,6 +197,8 @@ export default function CarOwnerGarageScreen() {
             try {
               await deleteCar(car._id);
               setCar(null);
+              setupPrompted.current = false;
+              if (auth?._id) await clearGarageSetupDefer(auth._id);
             } catch {
               Alert.alert(fr ? "Erreur" : "Error", fr ? "Impossible de supprimer." : "Could not delete.");
             }
@@ -225,10 +252,7 @@ export default function CarOwnerGarageScreen() {
     pathname: "/estimate",
     params: { brand: car?.brand || "", model: car?.model || "", year: String(car?.year || ""), mileage: String(car?.currentMileage || ""), fuel: car?.fuelType || "" },
   }), [car, router]);
-  const goSell     = useCallback(() => router.push({
-    pathname: "/verify-seller",
-    params: { brand: car?.brand || "", model: car?.model || "", year: String(car?.year || ""), mileage: String(car?.currentMileage || ""), fuel: car?.fuelType || "" },
-  }), [car, router]);
+  const goSell     = useCallback(() => router.push("/new-sale"), [router]);
   const goAlerts   = useCallback(() => router.push("/price-alerts"), [router]);
 
   if (loading) {
@@ -306,17 +330,17 @@ export default function CarOwnerGarageScreen() {
             <Ionicons name="car-outline" size={40} color={isDark ? "#38bdf8" : "#0284c7"} />
           </LinearGradient>
           <Text style={{ fontSize: 22, fontWeight: "800", color: titleColor, textAlign: "center", marginBottom: 10, letterSpacing: -0.3 }}>
-            {fr ? "Ajoutez votre voiture" : "Add your car"}
+            {fr ? "Votre voiture, au centre" : "Your car comes first"}
           </Text>
           <Text style={{ fontSize: 14, color: subColor, textAlign: "center", lineHeight: 22, marginBottom: 12 }}>
             {fr
-              ? "Vous avez une voiture ? Suivez vos papiers, votre mécanique et recevez des alertes avant chaque expiration."
-              : "Got a car? Track your papers, maintenance and get notified before anything expires."}
+              ? "Ajoutez votre véhicule pour activer le suivi assurance, visite technique, vidange et alertes — c'est la fonction principale de votre compte."
+              : "Add your vehicle to unlock insurance, inspection, oil-change tracking and alerts — the core of your account."}
           </Text>
           <Text style={{ fontSize: 13, color: isDark ? "#38bdf8" : "#0284c7", textAlign: "center", lineHeight: 20, marginBottom: 28, fontWeight: "600" }}>
             {fr
-              ? "Et si vous souhaitez vendre ou louer, notre marketplace vous attend."
-              : "If you ever want to sell or rent it out, our marketplace is right here."}
+              ? "Pour vendre votre voiture, la marketplace est à portée de main."
+              : "When you're ready to sell, the marketplace is right here."}
           </Text>
           <TouchableOpacity onPress={goAdd} activeOpacity={0.85} style={{ width: "100%" }}>
             <LinearGradient
@@ -481,7 +505,7 @@ export default function CarOwnerGarageScreen() {
                   {fr ? "Découvrir la marketplace" : "Discover the marketplace"}
                 </Text>
                 <Text style={{ fontSize: 12, color: subColor }}>
-                  {fr ? "Achetez, vendez ou louez — tout est disponible." : "Buy, sell, rent out — all available."}
+                  {fr ? "Achetez, vendez ou louez sur la marketplace." : "Buy, sell, or rent on the marketplace."}
                 </Text>
               </View>
               <Ionicons name="arrow-forward" size={18} color={C.primary} />

@@ -19,6 +19,9 @@ import { getOwnerBookings } from "../../src/api/booking";
 import { useAuth } from "../../src/context/AuthContext";
 import { useAppLang } from "../../src/context/AppLangContext";
 import { useTheme } from "../../src/context/ThemeContext";
+import QuickActionCard from "../../src/components/QuickActionCard";
+import { useOwnerBookingAttentionCount } from "../../src/hooks/useOwnerBookingAttentionCount";
+import { useOwnerListingViewAttentionCount } from "../../src/hooks/useOwnerListingViewAttentionCount";
 
 export default function RentalOwnerDashboard() {
   const { auth } = useAuth();
@@ -27,6 +30,9 @@ export default function RentalOwnerDashboard() {
   const { colors: C, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const bookingAttentionCount = useOwnerBookingAttentionCount();
+  const listingViewAttentionCount = useOwnerListingViewAttentionCount();
+  const titleColor = isDark ? "#f8fafc" : "#0f172a";
 
   const [stats, setStats]         = useState(null);
   const [pending, setPending]     = useState([]);
@@ -209,24 +215,81 @@ export default function RentalOwnerDashboard() {
             <Text style={[s.sectionTitle, { color: isDark ? "#94a3b8" : "#475569", marginTop: 8 }]}>
               {fr ? "ACTIONS RAPIDES" : "QUICK ACTIONS"}
             </Text>
-            <View style={{ flexDirection: "row", gap: 12 }}>
-              <QuickAction
-                icon="add-circle-outline"
-                label={fr ? "Ajouter location" : "Add rental"}
-                onPress={() => router.push("/add-rental")}
-                gradient={ctaGrad}
+            <View style={s.quickActionsStack}>
+              <QuickActionCard
+                icon="notifications-outline"
+                label={fr ? "Notifications" : "Notifications"}
+                onPress={() => router.push("/notifications")}
+                C={C}
+                isDark={isDark}
+                labelColor={titleColor}
               />
-              <QuickAction
-                icon="bar-chart-outline"
+              <QuickActionCard
+                featured
+                featuredKicker={fr ? "APERÇU" : "INSIGHTS"}
+                featuredSubtitle={fr ? "Performance & tendances" : "Performance & trends"}
+                icon="analytics-outline"
                 label={fr ? "Analytiques" : "Analytics"}
-                onPress={() => router.push("/(rental-owner)/analytics")}
-                gradient={isDark ? ["#7c6bff", "#5b4ddb"] : ["#6248e8", "#4f46e5"]}
+                onPress={() => router.push("/owner-analytics")}
+                C={C}
+                isDark={isDark}
+                labelColor={titleColor}
+                color={accent}
               />
-              <QuickAction
+              <QuickActionCard
+                icon="calendar-outline"
+                label={fr ? "Calendrier" : "Calendar"}
+                onPress={() => router.push("/owner-booking-calendar")}
+                C={C}
+                isDark={isDark}
+                labelColor={titleColor}
+              />
+              <QuickActionCard
+                elevated
+                elevatedKicker={fr ? "À SUIVRE" : "PIPELINE"}
+                elevatedSubtitle={fr ? "Demandes, statuts et planning" : "Requests, status & schedule"}
+                icon="clipboard-outline"
+                label={fr ? "Réservations" : "Bookings"}
+                onPress={() => router.push("/owner-bookings")}
+                C={C}
+                isDark={isDark}
+                labelColor={titleColor}
+                attentionCount={bookingAttentionCount}
+              />
+              <QuickActionCard
                 icon="car-sport-outline"
                 label={fr ? "Ma flotte" : "Fleet"}
                 onPress={() => router.push("/(rental-owner)/fleet")}
-                gradient={isDark ? ["#38bdf8", "#0ea5e9"] : ["#0284c7", "#0369a1"]}
+                C={C}
+                isDark={isDark}
+                labelColor={titleColor}
+              />
+              <QuickActionCard
+                icon="pulse-outline"
+                label={fr ? "Vues des annonces" : "Listing views"}
+                onPress={() => router.push("/owner-listing-views")}
+                C={C}
+                isDark={isDark}
+                labelColor={titleColor}
+                attentionCount={listingViewAttentionCount}
+                attentionWeight="soft"
+              />
+              <QuickActionCard
+                icon="construct-outline"
+                label={fr ? "Maintenance" : "Maintenance"}
+                onPress={() => router.push("/maintenance")}
+                C={C}
+                isDark={isDark}
+                labelColor={titleColor}
+              />
+              <QuickActionCard
+                icon="add-circle-outline"
+                label={fr ? "Ajouter location" : "Add rental"}
+                onPress={() => router.push("/add-rental")}
+                C={C}
+                isDark={isDark}
+                labelColor={titleColor}
+                color={accent}
               />
             </View>
           </>
@@ -253,21 +316,6 @@ function StatCard({ icon, label, value, gradient, isDark, C }) {
   );
 }
 
-function QuickAction({ icon, label, onPress, gradient }) {
-  return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.85} style={{ flex: 1 }}>
-      <LinearGradient
-        colors={gradient}
-        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-        style={s.quickActionBtn}
-      >
-        <Ionicons name={icon} size={22} color="#fff" />
-        <Text style={{ color: "#fff", fontWeight: "700", fontSize: 11, marginTop: 6, textAlign: "center" }}>{label}</Text>
-      </LinearGradient>
-    </TouchableOpacity>
-  );
-}
-
 const s = StyleSheet.create({
   sectionTitle: {
     fontSize: 10, fontWeight: "800", letterSpacing: 1.4, textTransform: "uppercase",
@@ -291,8 +339,5 @@ const s = StyleSheet.create({
   emptyCard: {
     borderRadius: 18, borderWidth: 1, padding: 24, alignItems: "center", marginBottom: 20,
   },
-  quickActionBtn: {
-    borderRadius: 16, paddingVertical: 16, alignItems: "center", justifyContent: "center",
-    shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
-  },
+  quickActionsStack: { marginTop: 4 },
 });

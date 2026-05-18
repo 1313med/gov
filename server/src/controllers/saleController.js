@@ -6,6 +6,7 @@ const User = require("../models/User");
 const { emitNotification } = require("../utils/socketManager");
 const { safeRegex, safeNumber, safePage, safeLimit } = require("../utils/sanitize");
 const { computeListingScore } = require("../utils/listingScore");
+const { userCanListForSale } = require("../utils/userRoles");
 
 const notify = async (userId, message, type) => {
   const n = await Notification.create({ user: userId, message, type });
@@ -18,6 +19,12 @@ exports.createSaleListing = asyncHandler(async (req, res) => {
 
   if (!title || !price || !city || !brand || !model || !year) {
     res.status(400); throw new Error("Missing required fields");
+  }
+
+  const owner = await User.findById(req.user._id).select("nationalId");
+  if (!userCanListForSale(owner)) {
+    res.status(403);
+    throw new Error("Please upload your national ID (CIN) in your profile before listing a car for sale.");
   }
 
   const listing = await SaleListing.create({

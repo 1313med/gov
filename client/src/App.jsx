@@ -83,10 +83,10 @@ export default function App() {
         <Route path="/owner/maintenance"   element={<ProtectedRoute roles={["rental_owner"]}><MaintenancePage /></ProtectedRoute>} />
 
         {/* Seller */}
-        <Route path="/dashboard"      element={<ProtectedRoute roles={["seller","admin"]}><Dashboard /></ProtectedRoute>} />
-        <Route path="/my-sales"       element={<ProtectedRoute roles={["seller","admin"]}><MySales /></ProtectedRoute>} />
-        <Route path="/my-sales/new"   element={<ProtectedRoute roles={["seller","admin"]}><NewSale /></ProtectedRoute>} />
-        <Route path="/my-sales/edit/:id" element={<ProtectedRoute roles={["seller","admin"]}><EditSale /></ProtectedRoute>} />
+        <Route path="/dashboard"      element={<ProtectedRoute roles={["car_owner","admin"]}><Dashboard /></ProtectedRoute>} />
+        <Route path="/my-sales"       element={<ProtectedRoute roles={["customer","car_owner","rental_owner","admin"]}><MySales /></ProtectedRoute>} />
+        <Route path="/my-sales/new"   element={<ProtectedRoute roles={["customer","car_owner","rental_owner","admin"]}><NewSale /></ProtectedRoute>} />
+        <Route path="/my-sales/edit/:id" element={<ProtectedRoute roles={["customer","car_owner","rental_owner","admin"]}><EditSale /></ProtectedRoute>} />
 
         {/* Admin */}
         <Route path="/admin"         element={<ProtectedRoute roles={["admin"]}><AdminDashboard /></ProtectedRoute>} />

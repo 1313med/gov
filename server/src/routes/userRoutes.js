@@ -5,13 +5,14 @@ const {
   addFavorite, removeFavorite, getFavorites,
   addRentalFavorite, removeRentalFavorite, getRentalFavorites,
   getSellerProfile,
-  getMyProfile, updateMyProfile,
+  getMyProfile, updateMyProfile, addMyRole,
   updateDriverLicense, updateNationalId,
 } = require("../controllers/userController");
 
 // Profile
 router.get("/me", protect, getMyProfile);
 router.put("/me", protect, updateMyProfile);
+router.post("/me/roles", protect, addMyRole);
 router.put("/me/license", protect, updateDriverLicense);
 router.put("/me/national-id", protect, updateNationalId);
 

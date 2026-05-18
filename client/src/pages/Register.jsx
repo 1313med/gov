@@ -116,7 +116,7 @@ export default function Register() {
                 className="mt-2 w-full rounded-2xl border border-gray-200 dark:border-slate-600 bg-white/80 dark:bg-slate-800/90 text-slate-900 dark:text-slate-100 px-4 py-4 focus:outline-none focus:ring-2 focus:ring-black/20 dark:focus:ring-violet-500/40 transition"
               >
                 <option value="customer">{copy.register.roleCustomer}</option>
-                <option value="seller">{copy.register.roleSeller}</option>
+                <option value="car_owner">{copy.register.roleCarOwner}</option>
                 <option value="rental_owner">{copy.register.roleRental}</option>
               </select>
             </div>

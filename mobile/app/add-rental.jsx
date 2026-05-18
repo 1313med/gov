@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   View,
   Text,
@@ -24,6 +24,8 @@ import { createRental } from "../src/api/rental";
 import { uploadListingImages } from "../src/api/upload";
 import { useAppLang } from "../src/context/AppLangContext";
 import { useTheme } from "../src/context/ThemeContext";
+import { useAuth } from "../src/context/AuthContext";
+import { hasUserRole } from "../src/utils/userRoles";
 
 const { width: W } = Dimensions.get("window");
 
@@ -61,12 +63,26 @@ const FIELD_GROUPS = [
 ];
 
 export default function AddRentalScreen() {
+  const { auth } = useAuth();
   const { lang } = useAppLang();
   const { colors: C, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const s = useMemo(() => createAddRentalStyles(C, isDark), [C, isDark]);
   const router = useRouter();
   const fr = lang === "fr";
+
+  useEffect(() => {
+    if (!auth) return;
+    if (!hasUserRole(auth, "rental_owner")) {
+      Alert.alert(
+        fr ? "Réservé aux loueurs" : "Rental owners only",
+        fr
+          ? "Seuls les propriétaires de flotte peuvent proposer une location. Activez le mode « Ma flotte » dans votre profil."
+          : "Only rental owners can list cars for rent. Enable “My fleet” mode from your profile.",
+        [{ text: "OK", onPress: () => router.back() }]
+      );
+    }
+  }, [auth, fr, router]);
 
   const [form, setForm] = useState({
     title: "",
@@ -175,7 +191,16 @@ export default function AddRentalScreen() {
         { text: "OK", onPress: () => router.back() },
       ]);
     } catch (e) {
-      Alert.alert("Error", e?.response?.data?.message || "Failed to create rental");
+      const msg = e?.response?.data?.message || "Failed to create rental";
+      const code = e?.response?.data?.code;
+      if (code === "CIN_REQUIRED" || String(msg).toLowerCase().includes("cin")) {
+        Alert.alert(fr ? "CIN requis" : "CIN required", msg, [
+          { text: fr ? "Plus tard" : "Later", style: "cancel" },
+          { text: fr ? "Vérifier" : "Verify", onPress: () => router.push("/verify-cin") },
+        ]);
+      } else {
+        Alert.alert("Error", msg);
+      }
     }
     setLoading(false);
   };

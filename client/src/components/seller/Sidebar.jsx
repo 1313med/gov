@@ -20,7 +20,7 @@ const Item = ({ to, label }) => {
 
 export default function Sidebar() {
   const { copy } = useAppLang();
-  const t = copy.sellerSidebar;
+  const t = copy.carOwnerSidebar || copy.sellerSidebar;
   return (
     <aside className="w-64 shrink-0 bg-white border-r border-slate-200 p-6 dark:bg-gray-950 dark:border-gray-800 transition-colors duration-300">
       <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-8">{t.panel}</h2>

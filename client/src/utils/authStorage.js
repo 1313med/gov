@@ -5,9 +5,12 @@
  */
 const KEY = "goovoiture_auth";
 
-export function saveAuth({ _id, name, role, phone, city, avatar }) {
+export function saveAuth({ _id, name, role, roles, phone, city, avatar }) {
   // Accept the full server response but strip the token before persisting
-  localStorage.setItem(KEY, JSON.stringify({ _id, name, role, phone, city, avatar }));
+  localStorage.setItem(
+    KEY,
+    JSON.stringify({ _id, name, role, roles, phone, city, avatar })
+  );
 }
 
 export function loadAuth() {

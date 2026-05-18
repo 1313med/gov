@@ -5,20 +5,22 @@ import { StatusBar } from "expo-status-bar";
 import { View, ActivityIndicator } from "react-native";
 import { AuthProvider, useAuth } from "../src/context/AuthContext";
 import { SocketProvider } from "../src/context/SocketContext";
-import { AppLangProvider } from "../src/context/AppLangContext";
+import { AppLangProvider, useAppLang } from "../src/context/AppLangContext";
 import { ThemeProvider, useTheme } from "../src/context/ThemeContext";
+import { ActiveModeProvider, useActiveMode } from "../src/context/ActiveModeContext";
 import { getOnboardingStatus } from "../src/utils/authStorage";
-
-function getRoleShell(role) {
-  if (role === "rental_owner") return "/(rental-owner)";
-  if (role === "seller") return "/(car-owner)";
-  if (role === "admin") return "/(admin)";
-  return "/(customer)";
+import { homeShellForUser } from "../src/utils/userRoles";
+function useStackTitles() {
+  const { copy } = useAppLang();
+  return copy.screenTitles || {};
 }
 
 function RootNavigator() {
   const { auth, loading } = useAuth();
   const { colors: C } = useTheme();
+  const { ready: modeReady } = useActiveMode();
+  const homeHref = useMemo(() => (auth ? homeShellForUser(auth) : null), [auth]);
+  const titles = useStackTitles();
   const segments = useSegments();
   const router = useRouter();
   const [onboardingChecked, setOnboardingChecked] = useState(false);
@@ -27,6 +29,34 @@ function RootNavigator() {
   const hdr = useMemo(
     () => ({ backgroundColor: C.surface, headerTintColor: C.white }),
     [C.surface, C.white]
+  );
+
+  const stackScreens = useMemo(
+    () => [
+      ["cars/[id]", titles.carDetails],
+      ["rentals/[id]", titles.rentalDetails],
+      ["seller/[id]", titles.sellerProfile],
+      ["my-bookings", titles.myBookings],
+      ["my-sales", titles.myListings],
+      ["new-sale", titles.newListing],
+      ["my-fleet", titles.myFleet],
+      ["add-rental", titles.addRental],
+      ["owner-bookings", titles.ownerBookings],
+      ["owner-analytics", titles.analytics],
+      ["owner-booking-calendar", titles.calendar],
+      ["owner-listing-views", titles.listingViews],
+      ["maintenance", titles.maintenance],
+      ["maintenance/[rentalId]", titles.maintenance],
+      ["notifications", titles.notifications],
+      ["admin-moderation", titles.moderation],
+      ["mon-garage", titles.myGarage],
+      ["add-car", titles.addCar],
+      ["estimate", titles.estimate],
+      ["price-alerts", titles.priceAlerts],
+      ["verify-cin", titles.verifyCin],
+      ["verify-seller", titles.verifyCin],
+    ],
+    [titles]
   );
 
   useEffect(() => {
@@ -43,10 +73,11 @@ function RootNavigator() {
   }, [auth, loading]);
 
   useEffect(() => {
-    if (loading || !onboardingChecked) return;
+    if (loading || !onboardingChecked || !modeReady) return;
     const group = segments[0];
     const inAuth = group === "(auth)";
     const inOnboarding = inAuth && segments[1] === "onboarding";
+    const inLegacyTabs = group === "(tabs)";
 
     if (!auth) {
       if (!inAuth) router.replace("/(auth)/role-select");
@@ -54,22 +85,19 @@ function RootNavigator() {
     }
 
     if (needsOnboarding && !inOnboarding) {
-      // Always re-read SecureStore before redirecting so stale in-memory state
-      // (e.g. after onboarding.jsx calls markOnboarded + router.replace) never
-      // sends the user back to onboarding mid-navigation.
       getOnboardingStatus(auth._id).then((done) => {
         if (done) {
-          setNeedsOnboarding(false);   // heal stale state, no redirect
+          setNeedsOnboarding(false);
         } else {
           router.replace("/(auth)/onboarding");
         }
       });
-    } else if (!needsOnboarding && inAuth) {
-      router.replace(getRoleShell(auth.role));
+    } else if (!needsOnboarding && homeHref && (inAuth || inLegacyTabs)) {
+      router.replace(homeHref);
     }
-  }, [auth, loading, onboardingChecked, needsOnboarding, segments]);
+  }, [auth, loading, onboardingChecked, needsOnboarding, segments, homeHref, modeReady]);
 
-  if (loading || (auth && !onboardingChecked)) {
+  if (loading || (auth && !onboardingChecked) || (auth && !modeReady)) {
     return (
       <View style={{ flex: 1, backgroundColor: C.bg, alignItems: "center", justifyContent: "center" }}>
         <ActivityIndicator color={C.primary} size="large" />
@@ -84,28 +112,19 @@ function RootNavigator() {
       <Stack.Screen name="(car-owner)" />
       <Stack.Screen name="(rental-owner)" />
       <Stack.Screen name="(admin)" />
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="cars/[id]" options={{ headerShown: true, headerTitle: "Car Details", headerStyle: hdr }} />
-      <Stack.Screen name="rentals/[id]" options={{ headerShown: true, headerTitle: "Rental Details", headerStyle: hdr }} />
-      <Stack.Screen name="seller/[id]" options={{ headerShown: true, headerTitle: "Seller Profile", headerStyle: hdr }} />
-      <Stack.Screen name="my-bookings" options={{ headerShown: true, headerTitle: "My Bookings", headerStyle: hdr }} />
-      <Stack.Screen name="my-sales" options={{ headerShown: true, headerTitle: "My Listings", headerStyle: hdr }} />
-      <Stack.Screen name="new-sale" options={{ headerShown: true, headerTitle: "New Listing", headerStyle: hdr }} />
-      <Stack.Screen name="my-fleet" options={{ headerShown: true, headerTitle: "My Fleet", headerStyle: hdr }} />
-      <Stack.Screen name="add-rental" options={{ headerShown: true, headerTitle: "Add Rental", headerStyle: hdr }} />
-      <Stack.Screen name="owner-bookings" options={{ headerShown: true, headerTitle: "Bookings", headerStyle: hdr }} />
-      <Stack.Screen name="owner-analytics" options={{ headerShown: true, headerTitle: "Analytics", headerStyle: hdr }} />
-      <Stack.Screen name="owner-booking-calendar" options={{ headerShown: true, headerTitle: "Calendar", headerStyle: hdr }} />
-      <Stack.Screen name="owner-listing-views" options={{ headerShown: true, headerTitle: "Listing Views", headerStyle: hdr, headerBackTitle: "Back" }} />
-      <Stack.Screen name="maintenance" options={{ headerShown: true, headerTitle: "Maintenance", headerStyle: hdr, headerBackTitle: "Back" }} />
-      <Stack.Screen name="maintenance/[rentalId]" options={{ headerShown: true, headerTitle: "Maintenance", headerStyle: hdr, headerBackTitle: "Back" }} />
-      <Stack.Screen name="notifications" options={{ headerShown: true, headerTitle: "Notifications", headerStyle: hdr }} />
-      <Stack.Screen name="admin-moderation" options={{ headerShown: true, headerTitle: "Moderation", headerStyle: hdr }} />
-      <Stack.Screen name="mon-garage" options={{ headerShown: true, headerTitle: "My Garage", headerStyle: hdr }} />
-      <Stack.Screen name="add-car" options={{ headerShown: true, headerTitle: "Add Car", headerStyle: hdr }} />
-      <Stack.Screen name="estimate" options={{ headerShown: true, headerTitle: "Estimate My Car", headerStyle: hdr }} />
-      <Stack.Screen name="price-alerts" options={{ headerShown: true, headerTitle: "Price Alerts", headerStyle: hdr }} />
-      <Stack.Screen name="verify-seller" options={{ headerShown: true, headerTitle: "Verify Account", headerStyle: hdr }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      {stackScreens.map(([name, title]) => (
+        <Stack.Screen
+          key={name}
+          name={name}
+          options={{
+            headerShown: true,
+            headerTitle: title || "",
+            headerStyle: hdr,
+            headerBackTitle: titles.back ?? "Back",
+          }}
+        />
+      ))}
     </Stack>
   );
 }
@@ -125,9 +144,11 @@ export default function RootLayout() {
     <ThemeProvider>
       <AuthProvider>
         <AppLangProvider>
-          <SocketProvider>
-            <ThemedShell />
-          </SocketProvider>
+          <ActiveModeProvider>
+            <SocketProvider>
+              <ThemedShell />
+            </SocketProvider>
+          </ActiveModeProvider>
         </AppLangProvider>
       </AuthProvider>
     </ThemeProvider>

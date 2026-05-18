@@ -56,8 +56,7 @@ export default function RentalOwnerLayout() {
       <Tabs.Screen
         name="messages"
         options={{
-          title: fr ? "Messages" : "Messages",
-          tabBarIcon: ({ color, size }) => <Ionicons name="chatbubble-outline" size={size} color={color} />,
+          href: null,
         }}
       />
       <Tabs.Screen

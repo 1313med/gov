@@ -11,6 +11,7 @@ import {
   Animated,
   Easing,
   Dimensions,
+  ScrollView,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -31,9 +32,15 @@ import {
 import { useAuth } from "../../src/context/AuthContext";
 import { useAppLang } from "../../src/context/AppLangContext";
 import { useTheme } from "../../src/context/ThemeContext";
+import { filterOutOwnListings } from "../../src/utils/listingOwnership";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width: W } = Dimensions.get("window");
 const DEBOUNCE_MS = 720;
+
+function customerExploreKey(userId) {
+  return `goovoiture-customer-explore:${userId}`;
+}
 
 export default function CustomerExploreScreen() {
   const { auth } = useAuth();
@@ -50,6 +57,9 @@ export default function CustomerExploreScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [favIds, setFavIds] = useState(new Set());
+  const [cityFilter, setCityFilter] = useState("");
+  const [allCities, setAllCities] = useState([]);
+  const [modeBarWidth, setModeBarWidth] = useState((W - 40) / 2);
 
   const debounceRef = useRef(null);
   const tabAnim = useRef(new Animated.Value(0)).current;
@@ -70,7 +80,11 @@ export default function CustomerExploreScreen() {
     setMode(newMode);
     setQuery("");
     setDebouncedQuery("");
+    setCityFilter("");
     setItems([]);
+    if (auth?._id) {
+      AsyncStorage.setItem(customerExploreKey(auth._id), newMode).catch(() => {});
+    }
     Animated.spring(tabAnim, {
       toValue: newMode === "rent" ? 0 : 1,
       friction: 8,
@@ -78,6 +92,15 @@ export default function CustomerExploreScreen() {
       useNativeDriver: true,
     }).start();
   };
+
+  useEffect(() => {
+    if (!auth?._id) return;
+    AsyncStorage.getItem(customerExploreKey(auth._id)).then((saved) => {
+      if (saved !== "buy" && saved !== "rent") return;
+      setMode(saved);
+      tabAnim.setValue(saved === "rent" ? 0 : 1);
+    });
+  }, [auth?._id]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -103,16 +126,19 @@ export default function CustomerExploreScreen() {
   const loadItems = useCallback(async () => {
     setLoading(true);
     try {
-      const params = debouncedQuery ? { search: debouncedQuery } : {};
+      const params = {};
+      if (debouncedQuery) params.search = debouncedQuery;
+      if (cityFilter) params.city = cityFilter;
       if (mode === "rent") {
         const { data } = await getApprovedRentals(params);
-        setItems(Array.isArray(data) ? data : (data?.rentals ?? []));
+        const raw = Array.isArray(data) ? data : (data?.rentals ?? []);
+        setItems(filterOutOwnListings(raw, auth?._id, "rent"));
       } else {
         const { data } = await getApprovedSales(params);
-        const list = Array.isArray(data?.items) ? data.items
+        const raw = Array.isArray(data?.items) ? data.items
           : Array.isArray(data?.cars) ? data.cars
           : Array.isArray(data) ? data : [];
-        setItems(list);
+        setItems(filterOutOwnListings(raw, auth?._id, "sale"));
       }
     } catch {
       setItems([]);
@@ -120,7 +146,16 @@ export default function CustomerExploreScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [mode, debouncedQuery]);
+  }, [mode, debouncedQuery, cityFilter, auth?._id]);
+
+  useEffect(() => {
+    if (cityFilter || !items.length) return;
+    const set = new Set();
+    items.forEach((it) => {
+      if (it?.city) set.add(String(it.city).trim());
+    });
+    setAllCities([...set].sort((a, b) => a.localeCompare(b, fr ? "fr" : "en")));
+  }, [items, cityFilter, fr]);
 
   useEffect(() => {
     loadFavs();
@@ -157,7 +192,10 @@ export default function CustomerExploreScreen() {
     }
   };
 
-  const tabSlide = tabAnim.interpolate({ inputRange: [0, 1], outputRange: [0, W / 2 - 24] });
+  const tabSlide = tabAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, Math.max(0, modeBarWidth - 8)],
+  });
 
   const accentRent = isDark ? "#7c6bff" : "#6248e8";
   const accentBuy = isDark ? "#0ea5e9" : "#0284c7";
@@ -181,15 +219,22 @@ export default function CustomerExploreScreen() {
           {fr ? "Explorez" : "Explore"}
         </Text>
         <Text style={{ fontSize: 13, color: isDark ? "#94a3b8" : "#475569", fontWeight: "500", marginBottom: 16 }}>
-          {fr ? "Louez ou achetez la voiture parfaite" : "Rent or buy the perfect car"}
+          {fr ? "Louez d'abord, achetez ensuite — pas vos propres annonces" : "Rent first, then buy — your own listings are hidden"}
         </Text>
 
-        {/* Rent / Buy toggle */}
-        <View style={[styles.modeBar, { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(15,23,42,0.05)" }]}>
+        {/* For rent (default) / For sale */}
+        <View
+          style={[styles.modeBar, { backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(15,23,42,0.05)" }]}
+          onLayout={(e) => {
+            const w = e.nativeEvent.layout.width;
+            if (w > 0) setModeBarWidth((w - 8) / 2);
+          }}
+        >
           <Animated.View
             style={[
               styles.modeIndicator,
               {
+                width: modeBarWidth,
                 backgroundColor: accent,
                 transform: [{ translateX: tabSlide }],
                 shadowColor: accent,
@@ -203,13 +248,13 @@ export default function CustomerExploreScreen() {
           <TouchableOpacity style={styles.modeBtn} onPress={() => switchMode("rent")} activeOpacity={0.8}>
             <Ionicons name="car-sport-outline" size={16} color={mode === "rent" ? "#fff" : C.muted} />
             <Text style={[styles.modeTxt, { color: mode === "rent" ? "#fff" : C.muted }]}>
-              {fr ? "À louer" : "Rent"}
+              {fr ? "À louer" : "For rent"}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.modeBtn} onPress={() => switchMode("buy")} activeOpacity={0.8}>
             <Ionicons name="pricetag-outline" size={16} color={mode === "buy" ? "#fff" : C.muted} />
             <Text style={[styles.modeTxt, { color: mode === "buy" ? "#fff" : C.muted }]}>
-              {fr ? "À vendre" : "Buy"}
+              {fr ? "À vendre" : "For sale"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -235,6 +280,47 @@ export default function CustomerExploreScreen() {
             </TouchableOpacity>
           )}
         </View>
+
+        {allCities.length > 0 ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 8, paddingTop: 4 }}
+            style={{ maxHeight: 40 }}
+          >
+            <TouchableOpacity
+              onPress={() => setCityFilter("")}
+              style={[
+                styles.cityChip,
+                {
+                  borderColor: !cityFilter ? accent : C.border,
+                  backgroundColor: !cityFilter ? `${accent}22` : C.inputBg,
+                },
+              ]}
+            >
+              <Text style={{ color: !cityFilter ? accent : C.muted, fontSize: 12, fontWeight: "700" }}>
+                {fr ? "Toutes villes" : "All cities"}
+              </Text>
+            </TouchableOpacity>
+            {allCities.map((city) => (
+              <TouchableOpacity
+                key={city}
+                onPress={() => setCityFilter(cityFilter === city ? "" : city)}
+                style={[
+                  styles.cityChip,
+                  {
+                    borderColor: cityFilter === city ? accent : C.border,
+                    backgroundColor: cityFilter === city ? `${accent}22` : C.inputBg,
+                  },
+                ]}
+              >
+                <Text style={{ color: cityFilter === city ? accent : C.muted, fontSize: 12, fontWeight: "700" }}>
+                  {city}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        ) : null}
       </LinearGradient>
 
       {loading && items.length === 0 ? (
@@ -305,9 +391,14 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 4,
     left: 4,
-    width: "50%",
     height: 40,
     borderRadius: 11,
+  },
+  cityChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
   },
   modeBtn: {
     flex: 1,

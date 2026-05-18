@@ -36,7 +36,7 @@ export default function SellerProfileScreen() {
     setContacting(true);
     try {
       await startConversation({ recipientId: id });
-      router.push("/(tabs)/messages");
+      router.push("/(customer)/messages");
     } catch { Alert.alert("Failed to start conversation"); }
     setContacting(false);
   };

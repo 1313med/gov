@@ -15,3 +15,4 @@ export const getMyProfile = () => api.get("/user/me");
 export const updateMyProfile = (data) => api.put("/user/me", data);
 export const updateDriverLicense = (data) => api.put("/user/me/license", data);
 export const updateNationalId = (data) => api.put("/user/me/national-id", data);
+export const addMyRole = (role) => api.post("/user/me/roles", { role });
