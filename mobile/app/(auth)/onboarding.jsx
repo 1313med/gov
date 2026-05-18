@@ -16,6 +16,7 @@ import { useRouter } from "expo-router";
 import { useAuth } from "../../src/context/AuthContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import { useAppLang } from "../../src/context/AppLangContext";
+import AppBrandMark from "../../src/components/AppBrandMark";
 import { markOnboarded } from "../../src/utils/authStorage";
 import { useActiveMode } from "../../src/context/ActiveModeContext";
 
@@ -208,9 +209,7 @@ export default function OnboardingScreen() {
     <View style={{ flex: 1, backgroundColor: C.bg }}>
       <LinearGradient colors={heroGrad} style={{ paddingTop: insets.top + 16, paddingBottom: 20, paddingHorizontal: 24, overflow: "hidden" }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <LinearGradient colors={ctaGrad} style={styles.logoBox}>
-            <Ionicons name="car-sport" size={18} color="#fff" />
-          </LinearGradient>
+          <AppBrandMark size={42} radius={13} gradientColors={ctaGrad} halo />
           <TouchableOpacity onPress={finish} activeOpacity={0.8} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
             <Text style={[styles.skipText, { color: subColor }]}>{fr ? "Passer" : "Skip"}</Text>
           </TouchableOpacity>
@@ -257,18 +256,6 @@ export default function OnboardingScreen() {
 }
 
 const styles = StyleSheet.create({
-  logoBox: {
-    width: 42,
-    height: 42,
-    borderRadius: 13,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#7c6bff",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    elevation: 8,
-  },
   skipText: { fontSize: 14, fontWeight: "700" },
   iconCircle: {
     width: 120,

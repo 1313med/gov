@@ -22,6 +22,7 @@ import { useTheme } from "../../src/context/ThemeContext";
 import { useSocket } from "../../src/context/SocketContext";
 import QuickActionCard from "../../src/components/QuickActionCard";
 import BrandFooterLogo from "../../src/components/BrandFooterLogo";
+import AppBrandMark from "../../src/components/AppBrandMark";
 import { useOwnerBookingAttentionCount } from "../../src/hooks/useOwnerBookingAttentionCount";
 import { useOwnerListingViewAttentionCount } from "../../src/hooks/useOwnerListingViewAttentionCount";
 import { getMyCar } from "../../src/api/userCar";
@@ -375,9 +376,7 @@ function GarageWidget({ car, alertCount, C, isDark, fr, router }) {
             resizeMode="cover"
           />
         ) : (
-          <LinearGradient colors={primaryGrad} style={{ width: 46, height: 46, borderRadius: 14, alignItems: "center", justifyContent: "center", shadowColor: "#7c6bff", shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.35, shadowRadius: 10, elevation: 8 }}>
-            <Ionicons name="car-sport" size={22} color="#fff" />
-          </LinearGradient>
+          <AppBrandMark size={46} radius={14} gradientColors={primaryGrad} iconSize={22} halo />
         )}
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: 11, fontWeight: "800", letterSpacing: 1.6, textTransform: "uppercase", color: C.primary, marginBottom: 3 }}>
@@ -534,9 +533,7 @@ export default function HomeScreen() {
             <Animated.View style={{ opacity: heroOpacity, transform: [{ translateY: heroSlide }] }}>
               <View style={s.heroTop}>
                 <View style={s.logoRow}>
-                  <LinearGradient colors={ctaPrimaryGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.logoBox}>
-                    <Ionicons name="car-sport" size={20} color="#fff" />
-                  </LinearGradient>
+                  <AppBrandMark size={44} radius={14} halo gradientColors={ctaPrimaryGrad} iconSize={20} />
                   <View>
                     <Text style={[s.logoText, { color: titleColor }]}>
                       Goo<Text style={s.logoItalic}>voiture</Text>
@@ -813,18 +810,6 @@ function createHomeStyles(C, isDark) {
     heroTop: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28 },
     topActions: { flexDirection: "row", alignItems: "center", gap: 10 },
     logoRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-    logoBox: {
-      width: 44,
-      height: 44,
-      borderRadius: 14,
-      alignItems: "center",
-      justifyContent: "center",
-      shadowColor: "#7c6bff",
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.4,
-      shadowRadius: 12,
-      elevation: 10,
-    },
     logoText: { fontWeight: "800", fontSize: 22, letterSpacing: -0.8 },
     logoItalic: { fontStyle: "italic", color: C.primary, fontWeight: "800" },
     logoTagline: { fontSize: 11, fontWeight: "600", marginTop: 2, letterSpacing: 0.2 },

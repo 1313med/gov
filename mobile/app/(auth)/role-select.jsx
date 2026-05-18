@@ -17,6 +17,7 @@ import { useRouter } from "expo-router";
 import { useTheme } from "../../src/context/ThemeContext";
 import { useAppLang } from "../../src/context/AppLangContext";
 import ThemeToggle from "../../src/components/ThemeToggle";
+import AppBrandMark from "../../src/components/AppBrandMark";
 
 const { width: W } = Dimensions.get("window");
 
@@ -376,14 +377,7 @@ export default function RoleSelectScreen() {
           style={[styles.compactHero, { opacity: heroOpacity, transform: [{ translateY: heroSlide }] }]}
         >
           <View style={styles.heroRow}>
-            <View style={styles.logoHalo}>
-              <LinearGradient
-                colors={isDark ? ["#a78bfa", "#7c6bff", "#5b4ddb"] : ["#6248e8", "#4f46e5", "#4338ca"]}
-                style={styles.logoBox}
-              >
-                <Ionicons name="car-sport" size={22} color="#fff" />
-              </LinearGradient>
-            </View>
+            <AppBrandMark size={52} radius={16} halo />
 
             <View style={styles.heroCopy}>
               <Text style={[styles.kicker, { color: primary }]}>{fr ? "BIENVENUE" : "WELCOME"}</Text>
@@ -509,22 +503,6 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     backgroundColor: "rgba(255,255,255,0.04)",
-  },
-  logoHalo: {
-    shadowColor: "#7c6bff",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 8,
-  },
-  logoBox: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.25)",
   },
   kicker: {
     fontSize: 9,

@@ -25,6 +25,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAppLang } from "../../src/context/AppLangContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import ThemeToggle from "../../src/components/ThemeToggle";
+import AppBrandMark from "../../src/components/AppBrandMark";
 import { getApiErrorMessage } from "../../src/utils/apiErrorMessage";
 import { clearLoginForm, loadLoginForm, saveLoginForm } from "../../src/utils/authStorage";
 
@@ -309,11 +310,7 @@ export default function LoginScreen() {
         >
           <View style={styles.topBar}>
             <View style={styles.brandRow}>
-              <View style={styles.logoHalo}>
-                <LinearGradient colors={ctaGrad} style={styles.logoBox}>
-                  <Ionicons name="car-sport" size={22} color="#fff" />
-                </LinearGradient>
-              </View>
+              <AppBrandMark size={48} radius={16} halo gradientColors={ctaGrad} />
               <View style={styles.brandTextWrap}>
                 <View style={{ overflow: "hidden" }}>
                   <Text style={[styles.logoText, { color: titleColor }]}>
@@ -530,22 +527,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
     flex: 1,
-  },
-  logoHalo: {
-    shadowColor: "#7c6bff",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.45,
-    shadowRadius: 16,
-    elevation: 8,
-  },
-  logoBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.25)",
   },
   brandTextWrap: { flex: 1, minWidth: 0 },
   logoText: {

@@ -20,6 +20,7 @@ import { useTheme } from "../src/context/ThemeContext";
 import { useAppLang } from "../src/context/AppLangContext";
 import { getMyCar, deleteCar } from "../src/api/userCar";
 import { getRecommendations } from "../src/utils/garageRecommendations";
+import AppBrandMark from "../src/components/AppBrandMark";
 
 // ── helpers ────────────────────────────────────────────────────────────────────
 function daysLeft(dateStr) {
@@ -293,9 +294,7 @@ export default function MonGarageScreen() {
                 resizeMode="cover"
               />
             ) : (
-              <LinearGradient colors={primaryGrad} style={{ width: 52, height: 52, borderRadius: 16, alignItems: "center", justifyContent: "center", shadowColor: "#7c6bff", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 12, elevation: 10 }}>
-                <Ionicons name="car-sport" size={24} color="#fff" />
-              </LinearGradient>
+              <AppBrandMark size={52} radius={16} gradientColors={primaryGrad} iconSize={24} halo />
             )}
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 11, fontWeight: "800", letterSpacing: 2, textTransform: "uppercase", color: C.primary, marginBottom: 4 }}>
