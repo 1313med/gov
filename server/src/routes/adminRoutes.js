@@ -8,6 +8,7 @@ const {
   unbanUser,
   deleteUser,
   getStats,
+  verifyUserNationalId,
 } = require("../controllers/adminController");
 
 const admin = [protect, role("admin")];
@@ -15,6 +16,7 @@ const admin = [protect, role("admin")];
 router.get("/stats", ...admin, getStats);
 router.get("/users", ...admin, getUsers);
 router.get("/users/:id", ...admin, getUserById);
+router.put("/users/:id/national-id/verify", ...admin, verifyUserNationalId);
 router.put("/users/:id/ban", ...admin, banUser);
 router.put("/users/:id/unban", ...admin, unbanUser);
 router.delete("/users/:id", ...admin, deleteUser);

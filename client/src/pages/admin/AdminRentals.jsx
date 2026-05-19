@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import AdminLayout from "../../components/admin/AdminLayout";
+import ListingModerationReview from "../../components/admin/ListingModerationReview";
 import { getAdminRentals, updateRentalStatus } from "../../api/rental";
 
 function formatMoney(n) {
   if (n == null || Number.isNaN(Number(n))) return "—";
-  return `${Number(n).toLocaleString()} MAD`;
+  return `${Number(n).toLocaleString()} MAD/day`;
 }
 
 function statusBadge(status) {
@@ -38,6 +39,22 @@ export default function AdminRentals() {
     fetchRentals();
   }, []);
 
+  const patchOwnerCinVerified = useCallback((ownerId) => {
+    setRentals((prev) =>
+      prev.map((r) => {
+        const oid = r.rentalOwnerId?._id || r.rentalOwnerId;
+        if (String(oid) !== String(ownerId)) return r;
+        return {
+          ...r,
+          rentalOwnerId: {
+            ...r.rentalOwnerId,
+            nationalId: { ...r.rentalOwnerId?.nationalId, verified: true },
+          },
+        };
+      })
+    );
+  }, []);
+
   const updateStatus = async (id, status) => {
     const confirmMsg =
       status === "approved"
@@ -50,10 +67,14 @@ export default function AdminRentals() {
       setActionLoading(id);
       await updateRentalStatus(id, status);
       fetchRentals();
+    } catch (err) {
+      window.alert(err?.response?.data?.message || "Could not update status");
     } finally {
       setActionLoading(null);
     }
   };
+
+  const pending = rentals.filter((r) => r.status === "pending");
 
   return (
     <AdminLayout>
@@ -63,10 +84,10 @@ export default function AdminRentals() {
             <p className="adm-label">Moderation</p>
             <h1 className="adm-title">Rental listings</h1>
             <p className="adm-sub">
-              Review cars offered for rent. Only approved listings appear on the public rentals page.
+              Review each car and the owner's CIN before approving. Verify the CIN document first, then approve the listing.
             </p>
           </div>
-          <span className="adm-meta">{rentals.length} total</span>
+          <span className="adm-meta">{pending.length} pending · {rentals.length} total</span>
         </header>
 
         {loading ? (
@@ -76,72 +97,24 @@ export default function AdminRentals() {
               Loading rentals…
             </div>
           </div>
-        ) : (
+        ) : rentals.length === 0 ? (
           <div className="adm-card adm-card-pad">
-            <div className="adm-sh" style={{ position: "relative", zIndex: 1 }}>
-              <p className="adm-label">Queue</p>
-              <h2 className="adm-sh-title">All rental cars</h2>
-            </div>
-            <div className="adm-table-wrap">
-              <table className="adm-table" style={{ minWidth: 720 }}>
-                <thead>
-                  <tr>
-                    <th>Title</th>
-                    <th>Owner</th>
-                    <th>City</th>
-                    <th>Price / day</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rentals.map((r) => (
-                    <tr key={r._id}>
-                      <td style={{ fontWeight: 600 }}>{r.title}</td>
-                      <td style={{ color: "#9a9ab0" }}>
-                        {r.rentalOwnerId?.name || "—"}
-                      </td>
-                      <td style={{ color: "#9a9ab0" }}>{r.city || "—"}</td>
-                      <td style={{ fontFamily: "'DM Mono', monospace", fontSize: 12 }}>
-                        {formatMoney(r.pricePerDay)}
-                      </td>
-                      <td>{statusBadge(r.status)}</td>
-                      <td>
-                        <div className="adm-action-btns">
-                          {r.status === "pending" && (
-                            <>
-                              <button
-                                type="button"
-                                disabled={actionLoading === r._id}
-                                onClick={() => updateStatus(r._id, "approved")}
-                                className="adm-btn-sm adm-btn-ok"
-                              >
-                                Approve
-                              </button>
-                              <button
-                                type="button"
-                                disabled={actionLoading === r._id}
-                                onClick={() => updateStatus(r._id, "rejected")}
-                                className="adm-btn-sm adm-btn-danger"
-                              >
-                                Reject
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {rentals.length === 0 && (
-                    <tr>
-                      <td colSpan={6} className="adm-empty">
-                        No rental listings found
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <p className="adm-empty">No rental listings found</p>
+          </div>
+        ) : (
+          <div>
+            {rentals.map((r) => (
+              <ListingModerationReview
+                key={r._id}
+                listing={r}
+                ownerField="rentalOwnerId"
+                priceLabel={formatMoney(r.pricePerDay)}
+                statusBadge={statusBadge}
+                onStatusChange={updateStatus}
+                actionLoading={actionLoading}
+                onOwnerVerified={patchOwnerCinVerified}
+              />
+            ))}
           </div>
         )}
       </div>

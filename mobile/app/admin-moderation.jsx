@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { getAdminSales, updateSaleStatus } from "../src/api/sale";
 import { getAdminRentals, updateRentalStatus } from "../src/api/rental";
+import { verifyUserNationalId } from "../src/api/admin";
 import { useAuth } from "../src/context/AuthContext";
 import { useTheme } from "../src/context/ThemeContext";
 import { resolveMediaUrl } from "../src/utils/mediaUrl";
@@ -20,6 +21,22 @@ function normalizeList(data) {
   return [];
 }
 
+function getOwner(item, tab) {
+  return tab === "sales" ? item?.sellerId : item?.rentalOwnerId;
+}
+
+function cinCanApprove(owner) {
+  const nid = owner?.nationalId;
+  return !!(nid?.imageUrl || nid?.number) && nid?.verified === true;
+}
+
+function cinStatusLabel(owner) {
+  const nid = owner?.nationalId;
+  if (!nid?.imageUrl && !nid?.number) return "CIN not submitted";
+  if (nid?.verified) return "CIN verified";
+  return "CIN pending review";
+}
+
 export default function AdminModerationScreen() {
   const { auth } = useAuth();
   const { colors: C } = useTheme();
@@ -32,6 +49,7 @@ export default function AdminModerationScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [busyKey, setBusyKey] = useState(null);
+  const [verifyBusyId, setVerifyBusyId] = useState(null);
 
   const load = useCallback(async () => {
     try {
@@ -53,9 +71,45 @@ export default function AdminModerationScreen() {
   const list = tab === "sales" ? sales : rentals;
   const pendingCount = list.filter((item) => item?.status === "pending").length;
 
+  const patchOwnerVerified = (ownerId) => {
+    const patch = (prev) =>
+      prev.map((x) => {
+        const o = getOwner(x, tab);
+        const oid = o?._id || o;
+        if (String(oid) !== String(ownerId)) return x;
+        const field = tab === "sales" ? "sellerId" : "rentalOwnerId";
+        return {
+          ...x,
+          [field]: { ...o, nationalId: { ...o?.nationalId, verified: true } },
+        };
+      });
+    if (tab === "sales") setSales(patch);
+    else setRentals(patch);
+  };
+
+  const verifyOwnerCin = async (ownerId) => {
+    if (!ownerId) return;
+    setVerifyBusyId(String(ownerId));
+    try {
+      await verifyUserNationalId(ownerId, true);
+      patchOwnerVerified(ownerId);
+    } catch (e) {
+      Alert.alert("Error", e?.response?.data?.message || "Could not verify CIN");
+    } finally {
+      setVerifyBusyId(null);
+    }
+  };
+
   const applyStatus = async (item, status) => {
     const itemId = String(item?._id || "");
     if (!itemId) return;
+    if (status === "approved" && !cinCanApprove(getOwner(item, tab))) {
+      Alert.alert(
+        "CIN required",
+        "Verify the owner's national ID (CIN) before approving this listing."
+      );
+      return;
+    }
     const key = `${tab}:${itemId}:${status}`;
     setBusyKey(key);
     try {
@@ -91,7 +145,7 @@ export default function AdminModerationScreen() {
     <View style={{ flex: 1, backgroundColor: C.bg }}>
       <View style={s.header}>
         <Text style={s.title}>Admin Moderation</Text>
-        <Text style={s.subtitle}>Review and approve or reject listings</Text>
+        <Text style={s.subtitle}>Review the car and owner CIN before approving</Text>
         <View style={s.tabsRow}>
           {TABS.map((k) => (
             <TouchableOpacity key={k} onPress={() => setTab(k)} style={[s.tabBtn, tab === k && s.tabBtnActive]}>
@@ -120,6 +174,11 @@ export default function AdminModerationScreen() {
           const isBusyApprove = busyKey === `${tab}:${id}:approved`;
           const isBusyReject = busyKey === `${tab}:${id}:rejected`;
           const img = resolveMediaUrl(item?.images?.[0]);
+          const owner = getOwner(item, tab);
+          const ownerId = owner?._id || owner;
+          const canApprove = cinCanApprove(owner);
+          const cinImg = resolveMediaUrl(owner?.nationalId?.imageUrl);
+          const isVerifyBusy = verifyBusyId === String(ownerId);
           return (
             <View style={s.card}>
               {img ? (
@@ -136,29 +195,55 @@ export default function AdminModerationScreen() {
                     {item?.status || "pending"}
                   </Text>
                 </View>
-                <Text style={s.meta}>{item?.city || "Unknown city"} · {item?.year || "N/A"}</Text>
+                <Text style={s.meta}>{item?.city || "Unknown city"} · {item?.year || "N/A"} · {owner?.name || "—"}</Text>
                 <Text style={s.price}>
                   {tab === "sales"
                     ? `${Number(item?.price || 0).toLocaleString()} MAD`
                     : `${Number(item?.pricePerDay || 0).toLocaleString()} MAD/day`}
                 </Text>
 
-                <View style={s.actions}>
-                  <TouchableOpacity
-                    disabled={isBusyApprove}
-                    onPress={() => applyStatus(item, "approved")}
-                    style={[s.actionBtn, s.approveBtn, isBusyApprove && { opacity: 0.6 }]}
-                  >
-                    <Text style={s.approveText}>{isBusyApprove ? "..." : "Approve"}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    disabled={isBusyReject}
-                    onPress={() => applyStatus(item, "rejected")}
-                    style={[s.actionBtn, s.rejectBtn, isBusyReject && { opacity: 0.6 }]}
-                  >
-                    <Text style={s.rejectText}>{isBusyReject ? "..." : "Reject"}</Text>
-                  </TouchableOpacity>
+                <View style={s.cinBlock}>
+                  <Text style={s.cinTitle}>Owner CIN · {cinStatusLabel(owner)}</Text>
+                  {owner?.nationalId?.number ? (
+                    <Text style={s.cinMeta}>CIN: {owner.nationalId.number}</Text>
+                  ) : null}
+                  {cinImg ? (
+                    <Image source={{ uri: cinImg }} style={s.cinImg} resizeMode="contain" />
+                  ) : (
+                    <Text style={s.cinMeta}>No CIN document uploaded</Text>
+                  )}
+                  {!owner?.nationalId?.verified && cinImg && ownerId ? (
+                    <TouchableOpacity
+                      disabled={isVerifyBusy}
+                      onPress={() => verifyOwnerCin(ownerId)}
+                      style={s.verifyCinBtn}
+                    >
+                      <Text style={s.verifyCinText}>{isVerifyBusy ? "Verifying…" : "Verify owner CIN"}</Text>
+                    </TouchableOpacity>
+                  ) : null}
                 </View>
+
+                {item?.status === "pending" && (
+                  <View style={s.actions}>
+                    <TouchableOpacity
+                      disabled={isBusyApprove || !canApprove}
+                      onPress={() => applyStatus(item, "approved")}
+                      style={[s.actionBtn, s.approveBtn, (isBusyApprove || !canApprove) && { opacity: 0.45 }]}
+                    >
+                      <Text style={s.approveText}>{isBusyApprove ? "..." : "Approve"}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      disabled={isBusyReject}
+                      onPress={() => applyStatus(item, "rejected")}
+                      style={[s.actionBtn, s.rejectBtn, isBusyReject && { opacity: 0.6 }]}
+                    >
+                      <Text style={s.rejectText}>{isBusyReject ? "..." : "Reject"}</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+                {item?.status === "pending" && !canApprove && (
+                  <Text style={s.cinHint}>Verify CIN before approving this listing.</Text>
+                )}
               </View>
             </View>
           );
@@ -197,6 +282,27 @@ function createAdminModerationStyles(C) {
     statusBad: { color: C.red },
     meta: { color: C.muted, fontSize: 12 },
     price: { color: C.primary, fontWeight: "700", marginTop: 6, marginBottom: 10 },
+    cinBlock: {
+      marginBottom: 12,
+      padding: 12,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: C.border,
+      backgroundColor: C.surface,
+    },
+    cinTitle: { color: C.white, fontWeight: "700", fontSize: 12, marginBottom: 6 },
+    cinMeta: { color: C.muted, fontSize: 11, marginBottom: 8 },
+    cinImg: { width: "100%", height: 120, borderRadius: 8, backgroundColor: C.card },
+    verifyCinBtn: {
+      marginTop: 10,
+      alignSelf: "flex-start",
+      backgroundColor: C.primary,
+      borderRadius: 8,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+    },
+    verifyCinText: { color: "#fff", fontWeight: "700", fontSize: 12 },
+    cinHint: { color: C.amber, fontSize: 11, marginBottom: 8 },
     actions: { flexDirection: "row", gap: 8 },
     actionBtn: { flex: 1, borderWidth: 1, borderRadius: 10, paddingVertical: 10, alignItems: "center" },
     approveBtn: { backgroundColor: "rgba(16,185,129,0.12)", borderColor: "rgba(16,185,129,0.45)" },

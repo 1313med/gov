@@ -1,6 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import AdminLayout from "../../components/admin/AdminLayout";
+import ListingModerationReview from "../../components/admin/ListingModerationReview";
 import { api } from "../../api/axios";
+
+function formatMoney(n) {
+  if (n == null || Number.isNaN(Number(n))) return "—";
+  return `${Number(n).toLocaleString()} MAD`;
+}
 
 function statusBadge(status) {
   const map = {
@@ -21,13 +27,32 @@ export default function AdminSales() {
 
   const fetchSales = async () => {
     setLoading(true);
-    const res = await api.get("/sale/admin");
-    setSales(res.data || []);
-    setLoading(false);
+    try {
+      const res = await api.get("/sale/admin");
+      setSales(res.data || []);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     fetchSales();
+  }, []);
+
+  const patchSellerCinVerified = useCallback((sellerId) => {
+    setSales((prev) =>
+      prev.map((s) => {
+        const sid = s.sellerId?._id || s.sellerId;
+        if (String(sid) !== String(sellerId)) return s;
+        return {
+          ...s,
+          sellerId: {
+            ...s.sellerId,
+            nationalId: { ...s.sellerId?.nationalId, verified: true },
+          },
+        };
+      })
+    );
   }, []);
 
   const updateStatus = async (id, status) => {
@@ -42,10 +67,14 @@ export default function AdminSales() {
       setActionLoading(id);
       await api.put(`/sale/admin/${id}/status`, { status });
       fetchSales();
+    } catch (err) {
+      window.alert(err?.response?.data?.message || "Could not update status");
     } finally {
       setActionLoading(null);
     }
   };
+
+  const pending = sales.filter((s) => s.status === "pending");
 
   return (
     <AdminLayout>
@@ -53,12 +82,12 @@ export default function AdminSales() {
         <header className="adm-header">
           <div>
             <p className="adm-label">Moderation</p>
-            <h1 className="adm-title">Listings</h1>
+            <h1 className="adm-title">Sale listings</h1>
             <p className="adm-sub">
-              Approve or reject seller submissions. Changes apply immediately.
+              Review each car and the seller's CIN before approving. Verify the CIN document first, then approve the listing.
             </p>
           </div>
-          <span className="adm-meta">{sales.length} total</span>
+          <span className="adm-meta">{pending.length} pending · {sales.length} total</span>
         </header>
 
         {loading ? (
@@ -68,64 +97,24 @@ export default function AdminSales() {
               Loading listings…
             </div>
           </div>
-        ) : (
+        ) : sales.length === 0 ? (
           <div className="adm-card adm-card-pad">
-            <div className="adm-sh" style={{ position: "relative", zIndex: 1 }}>
-              <p className="adm-label">Queue</p>
-              <h2 className="adm-sh-title">All submissions</h2>
-            </div>
-            <div className="adm-table-wrap">
-              <table className="adm-table">
-                <thead>
-                  <tr>
-                    <th>Title</th>
-                    <th>Seller</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sales.map((s) => (
-                    <tr key={s._id}>
-                      <td style={{ fontWeight: 600 }}>{s.title}</td>
-                      <td style={{ color: "#9a9ab0" }}>{s.sellerId?.name || "—"}</td>
-                      <td>{statusBadge(s.status)}</td>
-                      <td>
-                        <div className="adm-action-btns">
-                          {s.status === "pending" && (
-                            <>
-                              <button
-                                type="button"
-                                disabled={actionLoading === s._id}
-                                onClick={() => updateStatus(s._id, "approved")}
-                                className="adm-btn-sm adm-btn-ok"
-                              >
-                                Approve
-                              </button>
-                              <button
-                                type="button"
-                                disabled={actionLoading === s._id}
-                                onClick={() => updateStatus(s._id, "rejected")}
-                                className="adm-btn-sm adm-btn-danger"
-                              >
-                                Reject
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {sales.length === 0 && (
-                    <tr>
-                      <td colSpan={4} className="adm-empty">
-                        No listings found
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <p className="adm-empty">No listings found</p>
+          </div>
+        ) : (
+          <div>
+            {sales.map((s) => (
+              <ListingModerationReview
+                key={s._id}
+                listing={s}
+                ownerField="sellerId"
+                priceLabel={formatMoney(s.price)}
+                statusBadge={statusBadge}
+                onStatusChange={updateStatus}
+                actionLoading={actionLoading}
+                onOwnerVerified={patchSellerCinVerified}
+              />
+            ))}
           </div>
         )}
       </div>

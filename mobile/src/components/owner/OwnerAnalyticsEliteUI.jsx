@@ -480,12 +480,7 @@ export function AnalyticsMetricsRail({ data, fr, isDark, titleColor, glassBorder
 export function AnalyticsTrendFusion({ monthly, trends, fr, isDark, titleColor, subColor, accent, fmtMoney }) {
   const [tab, setTab] = useState("revenue");
   const merged = useMemo(() => mergeMonthlySeries(monthly, trends), [monthly, trends]);
-
-  if (!merged.length) return null;
-
   const isRevenue = tab === "revenue";
-  const chartColor = isRevenue ? accent : "#818cf8";
-  const valueKey = isRevenue ? "revenue" : "bookings";
 
   const formatPeak = useCallback(
     (row) =>
@@ -494,6 +489,11 @@ export function AnalyticsTrendFusion({ monthly, trends, fr, isDark, titleColor, 
         : `${fr ? "Pic réservations" : "Booking peak"} · ${row.month} · ${row.bookings} ${fr ? "résa." : "bk."}`,
     [fr, fmtMoney, isRevenue],
   );
+
+  if (!merged.length) return null;
+
+  const chartColor = isRevenue ? accent : "#818cf8";
+  const valueKey = isRevenue ? "revenue" : "bookings";
 
   const panelBg = isDark ? "#0c1018" : "#f8fafc";
   const panelBorder = isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.08)";

@@ -26,6 +26,12 @@ import { useAppLang } from "../src/context/AppLangContext";
 import { useTheme } from "../src/context/ThemeContext";
 import { useAuth } from "../src/context/AuthContext";
 import { hasUserRole } from "../src/utils/userRoles";
+import { getMyProfile } from "../src/api/user";
+
+function userHasCinOnFile(profile) {
+  const nid = profile?.nationalId;
+  return !!(nid?.imageUrl || nid?.number);
+}
 
 const { width: W } = Dimensions.get("window");
 
@@ -81,7 +87,27 @@ export default function AddRentalScreen() {
           : "Only rental owners can list cars for rent. Enable “My fleet” mode from your profile.",
         [{ text: "OK", onPress: () => router.back() }]
       );
+      return;
     }
+    getMyProfile()
+      .then((r) => {
+        if (!userHasCinOnFile(r.data)) {
+          Alert.alert(
+            fr ? "CIN requis" : "CIN required",
+            fr
+              ? "Vous devez soumettre votre carte d'identité (CIN) avant de proposer une voiture à la location."
+              : "You must submit your national ID (CIN) before listing a car for rent.",
+            [
+              {
+                text: fr ? "Vérifier mon CIN" : "Verify CIN",
+                onPress: () => router.replace({ pathname: "/profile-documents", params: { return: "add-rental" } }),
+              },
+              { text: fr ? "Annuler" : "Cancel", style: "cancel", onPress: () => router.back() },
+            ]
+          );
+        }
+      })
+      .catch(() => {});
   }, [auth, fr, router]);
 
   const [form, setForm] = useState({
@@ -196,7 +222,7 @@ export default function AddRentalScreen() {
       if (code === "CIN_REQUIRED" || String(msg).toLowerCase().includes("cin")) {
         Alert.alert(fr ? "CIN requis" : "CIN required", msg, [
           { text: fr ? "Plus tard" : "Later", style: "cancel" },
-          { text: fr ? "Vérifier" : "Verify", onPress: () => router.push("/verify-cin") },
+          { text: fr ? "Documents" : "Documents", onPress: () => router.push("/profile-documents") },
         ]);
       } else {
         Alert.alert("Error", msg);

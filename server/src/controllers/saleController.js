@@ -13,7 +13,7 @@ const {
   applyGearboxFilter,
 } = require("../utils/listingFilters");
 const { computeListingScore } = require("../utils/listingScore");
-const { userCanListForSale } = require("../utils/userRoles");
+const { userCanListForSale, userHasCinOnFile, userCinVerified } = require("../utils/userRoles");
 
 const notify = async (userId, message, type) => {
   const n = await Notification.create({ user: userId, message, type });
@@ -171,7 +171,7 @@ exports.deleteSaleListing = asyncHandler(async (req, res) => {
 // ADMIN: GET ALL SALES
 exports.getAllSaleListingsAdmin = asyncHandler(async (req, res) => {
   const listings = await SaleListing.find({ deletedAt: null })
-    .populate("sellerId", "name phone")
+    .populate("sellerId", "name phone email nationalId")
     .sort({ createdAt: -1 });
   res.json(listings);
 });
@@ -185,6 +185,18 @@ exports.updateSaleStatusAdmin = asyncHandler(async (req, res) => {
 
   const sale = await SaleListing.findOne({ _id: req.params.id, deletedAt: null });
   if (!sale) { res.status(404); throw new Error("Listing not found"); }
+
+  if (status === "approved") {
+    const seller = await User.findById(sale.sellerId).select("nationalId name");
+    if (!userHasCinOnFile(seller)) {
+      res.status(400);
+      throw new Error("Seller has not submitted a national ID (CIN).");
+    }
+    if (!userCinVerified(seller)) {
+      res.status(400);
+      throw new Error("Verify the seller's national ID (CIN) before approving this listing.");
+    }
+  }
 
   const previousStatus = sale.status;
   sale.status = status;

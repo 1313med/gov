@@ -1,12 +1,30 @@
-import { Tabs } from "expo-router";
+import { useCallback, useState } from "react";
+import { Tabs, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../src/context/ThemeContext";
 import { useAppLang } from "../../src/context/AppLangContext";
+import { useAuth } from "../../src/context/AuthContext";
+import { getMySales } from "../../src/api/sale";
+import { userHasApprovedSale } from "../../src/utils/profileDocuments";
 
 export default function CustomerLayout() {
   const { colors: C, isDark } = useTheme();
   const { lang } = useAppLang();
   const fr = lang === "fr";
+  const { auth } = useAuth();
+  const [showSellTab, setShowSellTab] = useState(false);
+
+  const refreshSellTab = useCallback(() => {
+    if (!auth) {
+      setShowSellTab(false);
+      return;
+    }
+    getMySales()
+      .then((r) => setShowSellTab(userHasApprovedSale(r.data)))
+      .catch(() => setShowSellTab(false));
+  }, [auth?._id]);
+
+  useFocusEffect(refreshSellTab);
 
   return (
     <Tabs
@@ -51,6 +69,14 @@ export default function CustomerLayout() {
         options={{
           title: fr ? "Favoris" : "Saved",
           tabBarIcon: ({ color, size }) => <Ionicons name="heart-outline" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="my-cars"
+        options={{
+          href: showSellTab ? undefined : null,
+          title: fr ? "Mes ventes" : "My cars",
+          tabBarIcon: ({ color, size }) => <Ionicons name="pricetag-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen

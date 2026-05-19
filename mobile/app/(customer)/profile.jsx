@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   View,
   Text,
@@ -14,17 +14,24 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { getMyProfile } from "../../src/api/user";
+import { getMySales } from "../../src/api/sale";
 import { uploadAvatarFile } from "../../src/api/upload";
 import { useAuth } from "../../src/context/AuthContext";
 import { useAppLang } from "../../src/context/AppLangContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import ThemeToggle from "../../src/components/ThemeToggle";
+import ProfileDocumentsSection from "../../src/components/ProfileDocumentsSection";
 import { resolveMediaUrl } from "../../src/utils/mediaUrl";
 import RoleModeSwitcher from "../../src/components/RoleModeSwitcher";
-import { VERIFY_CIN_PATH, messagesHref } from "../../src/utils/appNavigation";
+import { profileDocumentsHref, messagesHref } from "../../src/utils/appNavigation";
 import { useActiveMode } from "../../src/context/ActiveModeContext";
+import {
+  userCanRentWithDocuments,
+  userHasCinOnFile,
+  userHasApprovedSale,
+} from "../../src/utils/profileDocuments";
 
 export default function CustomerProfileScreen() {
   const { auth, logout } = useAuth();
@@ -38,7 +45,21 @@ export default function CustomerProfileScreen() {
   const s = useMemo(() => createStyles(C, isDark), [C, isDark]);
 
   const [profile, setProfile] = useState(null);
+  const [sales, setSales] = useState([]);
   const orbPulse = useRef(new Animated.Value(1)).current;
+
+  const load = () => {
+    getMyProfile()
+      .then((r) => setProfile(r.data))
+      .catch(() => {});
+    getMySales()
+      .then((r) => setSales(Array.isArray(r.data) ? r.data : []))
+      .catch(() => setSales([]));
+  };
+
+  useFocusEffect(useCallback(() => {
+    load();
+  }, []));
 
   useEffect(() => {
     const loop = Animated.loop(
@@ -49,17 +70,12 @@ export default function CustomerProfileScreen() {
     );
     loop.start();
     return () => loop.stop();
-  }, []);
+  }, [orbPulse]);
 
-  useEffect(() => {
-    getMyProfile()
-      .then((r) => setProfile(r.data))
-      .catch(() => {});
-  }, []);
-
-  const hasLicense = !!(profile?.driverLicense?.fileUrl || profile?.driverLicenseVerified);
-  const hasNationalId = !!(profile?.nationalId?.fileUrl || profile?.nationalIdVerified);
-  const isVerified = hasLicense && hasNationalId;
+  const canRent = userCanRentWithDocuments(profile);
+  const hasApprovedSale = userHasApprovedSale(sales);
+  const hasPendingSale = sales.some((x) => x?.status === "pending");
+  const hasAnySale = sales.length > 0;
 
   const pickAvatar = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -68,12 +84,19 @@ export default function CustomerProfileScreen() {
     if (!result.canceled && result.assets?.[0]) {
       try {
         await uploadAvatarFile(result.assets[0]);
-        const r = await getMyProfile();
-        setProfile(r.data);
+        load();
       } catch {
         Alert.alert(fr ? "Échec du téléchargement" : "Upload failed");
       }
     }
+  };
+
+  const startSellFlow = () => {
+    if (!userHasCinOnFile(profile)) {
+      router.push({ pathname: "/verify-cin", params: { purpose: "sell", return: "new-sale" } });
+      return;
+    }
+    router.push("/new-sale");
   };
 
   const avatarUrl = resolveMediaUrl(profile?.avatar);
@@ -88,7 +111,8 @@ export default function CustomerProfileScreen() {
         <Animated.View style={{ position: "absolute", width: 200, height: 200, top: -60, right: -60, borderRadius: 999, opacity: 0.4, transform: [{ scale: orbPulse }] }}>
           <LinearGradient
             colors={isDark ? ["rgba(124,107,255,0.5)", "rgba(124,107,255,0)"] : ["rgba(98,72,232,0.25)", "rgba(98,72,232,0)"]}
-            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
             style={StyleSheet.absoluteFill}
           />
         </Animated.View>
@@ -99,9 +123,7 @@ export default function CustomerProfileScreen() {
               <Image source={{ uri: avatarUrl }} style={s.avatar} />
             ) : (
               <LinearGradient colors={ctaGrad} style={s.avatar}>
-                <Text style={s.avatarInitial}>
-                  {(profile?.name || auth?.name || "?")[0].toUpperCase()}
-                </Text>
+                <Text style={s.avatarInitial}>{(profile?.name || auth?.name || "?")[0].toUpperCase()}</Text>
               </LinearGradient>
             )}
             <View style={[s.avatarEditBadge, { backgroundColor: C.primary }]}>
@@ -114,14 +136,8 @@ export default function CustomerProfileScreen() {
             <Text style={s.email} numberOfLines={1}>{profile?.email || auth?.email || "—"}</Text>
             <View style={s.roleBadge}>
               <LinearGradient colors={ctaGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.roleBadgeInner}>
-                <Ionicons name="search-outline" size={11} color="#fff" />
-                <Text style={s.roleBadgeText}>
-                  {activeMode === "car_owner"
-                    ? fr ? "PROPRIÉTAIRE" : "CAR OWNER"
-                    : activeMode === "rental_owner"
-                      ? fr ? "LOUEUR" : "RENTAL OWNER"
-                      : fr ? "CLIENT" : "CUSTOMER"}
-                </Text>
+                <Ionicons name="person-outline" size={11} color="#fff" />
+                <Text style={s.roleBadgeText}>{fr ? "CLIENT" : "CUSTOMER"}</Text>
               </LinearGradient>
             </View>
           </View>
@@ -133,50 +149,91 @@ export default function CustomerProfileScreen() {
       <View style={{ paddingHorizontal: 20, paddingTop: 20 }}>
         <RoleModeSwitcher fr={fr} />
 
-        {/* Verification Banner */}
-        {!isVerified && (
+        {!canRent && (
           <TouchableOpacity
-            onPress={() => router.push(VERIFY_CIN_PATH)}
+            onPress={() => router.push(profileDocumentsHref())}
             activeOpacity={0.88}
             style={[s.verifyBanner, { borderColor: isDark ? "rgba(245,158,11,0.5)" : "rgba(245,158,11,0.4)", backgroundColor: isDark ? "rgba(245,158,11,0.1)" : "rgba(245,158,11,0.07)" }]}
           >
-            <Ionicons name="shield-outline" size={24} color="#f59e0b" />
+            <Ionicons name="car-outline" size={24} color="#f59e0b" />
             <View style={{ flex: 1 }}>
               <Text style={[s.verifyTitle, { color: "#f59e0b" }]}>
-                {fr ? "Vérification requise" : "Verification required"}
+                {fr ? "Pour louer une voiture" : "To rent a car"}
               </Text>
               <Text style={[s.verifySub, { color: isDark ? "#fcd34d" : "#92400e" }]}>
                 {fr
-                  ? "Ajoutez votre permis et CIN une seule fois pour des réservations instantanées."
-                  : "Add your license and national ID once for instant bookings."}
+                  ? "Ajoutez votre permis de conduire et votre CIN (carte d'identité)."
+                  : "Add your driving license and national ID (CIN)."}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color="#f59e0b" />
           </TouchableOpacity>
         )}
 
-        {isVerified && (
+        {canRent && (
           <View style={[s.verifyBanner, { borderColor: isDark ? "rgba(52,211,153,0.4)" : "rgba(52,211,153,0.3)", backgroundColor: isDark ? "rgba(52,211,153,0.1)" : "rgba(52,211,153,0.06)" }]}>
-            <Ionicons name="shield-checkmark-outline" size={24} color="#34d399" />
+            <Ionicons name="checkmark-circle-outline" size={24} color="#34d399" />
             <View style={{ flex: 1 }}>
               <Text style={[s.verifyTitle, { color: "#34d399" }]}>
-                {fr ? "Identité vérifiée" : "Identity verified"}
+                {fr ? "Prêt à louer" : "Ready to rent"}
               </Text>
               <Text style={[s.verifySub, { color: isDark ? "#6ee7b7" : "#065f46" }]}>
-                {fr ? "Vos réservations sont instantanées." : "Your bookings are instant."}
+                {fr ? "Permis et CIN enregistrés." : "License and ID on file."}
               </Text>
             </View>
-            <Ionicons name="checkmark-circle" size={20} color="#34d399" />
           </View>
         )}
 
-        {/* Quick Actions */}
-        <Text style={s.sectionTitle}>{fr ? "Mon compte" : "My account"}</Text>
-        <View style={s.card}>
-          <Row icon="person-outline" label={fr ? "Modifier le profil" : "Edit profile"} onPress={() => router.push(VERIFY_CIN_PATH)} C={C} />
-          <Row icon="card-outline" label={fr ? "Permis de conduire" : "Driver's license"} onPress={() => router.push(VERIFY_CIN_PATH)} C={C} badge={hasLicense ? "ok" : "warn"} />
-          <Row icon="id-card-outline" label={fr ? "Carte nationale (CIN)" : "National ID (CIN)"} onPress={() => router.push(VERIFY_CIN_PATH)} C={C} badge={hasNationalId ? "ok" : "warn"} last />
-        </View>
+        <Text style={s.sectionTitle}>{fr ? "Mes documents" : "My documents"}</Text>
+        <Text style={[s.sectionHint, { color: isDark ? "#94a3b8" : "#64748b" }]}>
+          {fr
+            ? "Vous pouvez les remplir maintenant, avant de louer ou de vendre."
+            : "You can upload them anytime, before renting or selling."}
+        </Text>
+        <ProfileDocumentsSection
+          profile={profile}
+          onProfileChange={(data) => {
+            setProfile(data);
+            load();
+          }}
+          fr={fr}
+          C={C}
+          isDark={isDark}
+        />
+
+        <Text style={[s.sectionTitle, { marginTop: 8 }]}>{fr ? "Vendre ma voiture" : "Sell my car"}</Text>
+        <TouchableOpacity onPress={startSellFlow} activeOpacity={0.9} style={{ marginBottom: 12 }}>
+          <LinearGradient colors={ctaGrad} style={s.sellCta}>
+            <Ionicons name="pricetag-outline" size={22} color="#fff" />
+            <View style={{ flex: 1 }}>
+              <Text style={s.sellCtaTitle}>{fr ? "Publier une annonce de vente" : "Post a car for sale"}</Text>
+              <Text style={s.sellCtaSub}>
+                {fr ? "CIN uniquement · validation admin sous 24–48h" : "CIN only · admin approval within 24–48h"}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#fff" />
+          </LinearGradient>
+        </TouchableOpacity>
+
+        {hasPendingSale && !hasApprovedSale && (
+          <Text style={[s.pendingHint, { color: C.amber || "#f59e0b" }]}>
+            {fr
+              ? "Votre annonce est en attente d'approbation. L'onglet « Mes ventes » apparaîtra une fois validée."
+              : "Your listing is pending approval. The « My cars » tab will appear once approved."}
+          </Text>
+        )}
+
+        {hasAnySale && (
+          <View style={s.card}>
+            <Row
+              icon="list-outline"
+              label={fr ? "Mes voitures en vente" : "My cars for sale"}
+              onPress={() => (hasApprovedSale ? router.push("/(customer)/my-cars") : router.push("/my-sales"))}
+              C={C}
+              badge={hasApprovedSale ? "ok" : "warn"}
+            />
+          </View>
+        )}
 
         <Text style={s.sectionTitle}>{fr ? "Réservations" : "Bookings"}</Text>
         <View style={s.card}>
@@ -193,11 +250,7 @@ export default function CustomerProfileScreen() {
             <Text style={s.rowLabel}>{fr ? "Thème sombre" : "Dark mode"}</Text>
             <ThemeToggle />
           </View>
-          <TouchableOpacity
-            onPress={toggleLang}
-            style={[s.row, s.rowLast]}
-            activeOpacity={0.8}
-          >
+          <TouchableOpacity onPress={toggleLang} style={[s.row, s.rowLast]} activeOpacity={0.8}>
             <View style={[s.rowIcon, { backgroundColor: isDark ? "rgba(56,189,248,0.15)" : "rgba(2,132,199,0.1)" }]}>
               <Ionicons name="language-outline" size={18} color={isDark ? "#38bdf8" : "#0284c7"} />
             </View>
@@ -208,10 +261,12 @@ export default function CustomerProfileScreen() {
         </View>
 
         <TouchableOpacity
-          onPress={() => Alert.alert(fr ? "Déconnexion" : "Log out", fr ? "Voulez-vous vous déconnecter ?" : "Are you sure you want to log out?", [
-            { text: fr ? "Annuler" : "Cancel", style: "cancel" },
-            { text: fr ? "Déconnecter" : "Log out", style: "destructive", onPress: logout },
-          ])}
+          onPress={() =>
+            Alert.alert(fr ? "Déconnexion" : "Log out", fr ? "Voulez-vous vous déconnecter ?" : "Are you sure you want to log out?", [
+              { text: fr ? "Annuler" : "Cancel", style: "cancel" },
+              { text: fr ? "Déconnecter" : "Log out", style: "destructive", onPress: logout },
+            ])
+          }
           activeOpacity={0.85}
           style={s.logoutBtn}
         >
@@ -224,65 +279,103 @@ export default function CustomerProfileScreen() {
 }
 
 function Row({ icon, label, onPress, C, badge, last }) {
-  const { colors: colors } = useTheme();
   const { isDark } = useTheme();
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={[{
-      flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 14, paddingHorizontal: 16,
-      borderBottomWidth: last ? 0 : StyleSheet.hairlineWidth, borderBottomColor: colors.border,
-    }]}>
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.8}
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        borderBottomWidth: last ? 0 : StyleSheet.hairlineWidth,
+        borderBottomColor: C.border,
+      }}
+    >
       <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: isDark ? "rgba(124,107,255,0.12)" : "rgba(99,102,241,0.08)" }}>
-        <Ionicons name={icon} size={18} color={colors.primary} />
+        <Ionicons name={icon} size={18} color={C.primary} />
       </View>
       <Text style={{ flex: 1, color: isDark ? "#f1f5f9" : "#0f172a", fontSize: 15, fontWeight: "600" }}>{label}</Text>
       {badge === "ok" && <Ionicons name="checkmark-circle" size={18} color="#34d399" />}
-      {badge === "warn" && <Ionicons name="alert-circle-outline" size={18} color="#f59e0b" />}
-      <Ionicons name="chevron-forward" size={16} color={colors.muted} />
+      {badge === "warn" && <Ionicons name="time-outline" size={18} color="#f59e0b" />}
+      <Ionicons name="chevron-forward" size={16} color={C.muted} />
     </TouchableOpacity>
   );
 }
 
 function createStyles(C, isDark) {
   return StyleSheet.create({
-    hero: {
-      paddingBottom: 24,
-      paddingHorizontal: 20,
-      overflow: "hidden",
-    },
+    hero: { paddingBottom: 24, paddingHorizontal: 20, overflow: "hidden" },
     heroRow: { flexDirection: "row", alignItems: "center", gap: 14 },
     avatarWrap: { position: "relative" },
     avatar: {
-      width: 72, height: 72, borderRadius: 36,
-      alignItems: "center", justifyContent: "center",
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      alignItems: "center",
+      justifyContent: "center",
       backgroundColor: C.surface,
-      borderWidth: 2, borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)",
+      borderWidth: 2,
+      borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)",
     },
     avatarInitial: { color: "#fff", fontSize: 28, fontWeight: "800" },
     avatarEditBadge: {
-      position: "absolute", bottom: 0, right: 0,
-      width: 22, height: 22, borderRadius: 11,
-      alignItems: "center", justifyContent: "center",
-      borderWidth: 2, borderColor: isDark ? "#0a0a0a" : "#fff",
+      position: "absolute",
+      bottom: 0,
+      right: 0,
+      width: 22,
+      height: 22,
+      borderRadius: 11,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 2,
+      borderColor: isDark ? "#0a0a0a" : "#fff",
     },
     name: { color: isDark ? "#f8fafc" : "#0f172a", fontSize: 18, fontWeight: "800", letterSpacing: -0.3, marginBottom: 2 },
     email: { color: isDark ? "#94a3b8" : "#64748b", fontSize: 13, fontWeight: "500", marginBottom: 8 },
     roleBadge: {},
     roleBadgeInner: {
-      flexDirection: "row", alignItems: "center", gap: 5,
-      alignSelf: "flex-start", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 5,
+      alignSelf: "flex-start",
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 999,
     },
     roleBadgeText: { color: "#fff", fontSize: 10, fontWeight: "800", letterSpacing: 0.5 },
     verifyBanner: {
-      flexDirection: "row", alignItems: "center", gap: 12,
-      padding: 16, borderRadius: 16, borderWidth: 1, marginBottom: 20,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      padding: 16,
+      borderRadius: 16,
+      borderWidth: 1,
+      marginBottom: 20,
     },
     verifyTitle: { fontSize: 14, fontWeight: "800", marginBottom: 2 },
     verifySub: { fontSize: 12, lineHeight: 17, fontWeight: "500" },
     sectionTitle: {
       color: isDark ? "#94a3b8" : "#475569",
-      fontSize: 11, fontWeight: "800", letterSpacing: 1.2,
-      textTransform: "uppercase", marginBottom: 8, marginTop: 4,
+      fontSize: 11,
+      fontWeight: "800",
+      letterSpacing: 1.2,
+      textTransform: "uppercase",
+      marginBottom: 8,
     },
+    sectionHint: { fontSize: 13, marginBottom: 12, lineHeight: 18 },
+    sellCta: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 14,
+      padding: 18,
+      borderRadius: 16,
+    },
+    sellCtaTitle: { color: "#fff", fontWeight: "800", fontSize: 16 },
+    sellCtaSub: { color: "rgba(255,255,255,0.85)", fontSize: 12, marginTop: 4 },
+    pendingHint: { fontSize: 12, marginBottom: 16, lineHeight: 17 },
     card: {
       backgroundColor: C.card,
       borderRadius: 18,
@@ -290,24 +383,28 @@ function createStyles(C, isDark) {
       borderColor: C.border,
       marginBottom: 20,
       overflow: "hidden",
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: isDark ? 0.2 : 0.05,
-      shadowRadius: 10,
-      elevation: 3,
     },
     row: {
-      flexDirection: "row", alignItems: "center", gap: 12,
-      paddingVertical: 14, paddingHorizontal: 16,
-      borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: C.border,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: C.border,
     },
     rowLast: { borderBottomWidth: 0 },
     rowIcon: { width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center" },
     rowLabel: { flex: 1, color: isDark ? "#f1f5f9" : "#0f172a", fontSize: 15, fontWeight: "600" },
     rowValue: { fontSize: 14, fontWeight: "600" },
     logoutBtn: {
-      flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10,
-      paddingVertical: 16, borderRadius: 16, borderWidth: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 10,
+      paddingVertical: 16,
+      borderRadius: 16,
+      borderWidth: 1,
       borderColor: "rgba(248,113,113,0.3)",
       backgroundColor: isDark ? "rgba(248,113,113,0.08)" : "rgba(248,113,113,0.05)",
     },

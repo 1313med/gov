@@ -24,6 +24,7 @@ import { getOwnerRentals, deleteRental, updateRental } from "../src/api/rental";
 import { useAppLang } from "../src/context/AppLangContext";
 import { resolveMediaUrl } from "../src/utils/mediaUrl";
 import { useTheme } from "../src/context/ThemeContext";
+import { DatePickerField } from "../src/components/garage/DatePickerField";
 
 const STATUS = {
   pending: { bg: "rgba(245,158,11,0.1)", border: "rgba(245,158,11,0.3)", text: "#f59e0b" },
@@ -55,6 +56,27 @@ function offerSummary(o, fr) {
   return o.description?.trim() || (fr ? "Offre personnalisée" : "Custom offer");
 }
 
+function toDateOnly(v) {
+  if (!v) return "";
+  const s = String(v);
+  return s.includes("T") ? s.slice(0, 10) : s.slice(0, 10);
+}
+
+function availabilityForApi(ranges) {
+  return ranges.map((r) => ({
+    startDate: toDateOnly(r.startDate),
+    endDate: toDateOnly(r.endDate),
+  }));
+}
+
+function formatBlockedRange(start, end, fr) {
+  const loc = fr ? "fr-FR" : "en-GB";
+  const a = toDateOnly(start);
+  const b = toDateOnly(end);
+  if (!a || !b) return "";
+  return `${new Date(a).toLocaleDateString(loc)} → ${new Date(b).toLocaleDateString(loc)}`;
+}
+
 function normalizeOffersForApi(offers) {
   return offers.map((o) => {
     const exp = o.expiresAt && String(o.expiresAt).trim();
@@ -73,7 +95,7 @@ function normalizeOffersForApi(offers) {
 
 export default function MyFleetScreen() {
   const { lang } = useAppLang();
-  const { colors: C } = useTheme();
+  const { colors: C, isDark } = useTheme();
   const s = useMemo(() => createMyFleetStyles(C), [C]);
   const router = useRouter();
   const fr = lang === "fr";
@@ -92,6 +114,15 @@ export default function MyFleetScreen() {
   const [airportFee, setAirportFee] = useState("");
   const [savingAirport, setSavingAirport] = useState(false);
 
+  const [editRental, setEditRental] = useState(null);
+  const [editPrice, setEditPrice] = useState("");
+  const [availability, setAvailability] = useState([]);
+  const [blockStart, setBlockStart] = useState("");
+  const [blockEnd, setBlockEnd] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const todayYmd = new Date().toISOString().slice(0, 10);
+
   const load = async () => {
     try {
       const { data } = await getOwnerRentals();
@@ -106,6 +137,67 @@ export default function MyFleetScreen() {
   useEffect(() => {
     load();
   }, []);
+
+  const openEdit = (car) => {
+    setEditRental(car);
+    setEditPrice(String(car.pricePerDay ?? ""));
+    setAvailability(
+      (car.availability || []).map((r) => ({
+        startDate: toDateOnly(r.startDate),
+        endDate: toDateOnly(r.endDate),
+      })),
+    );
+    setBlockStart("");
+    setBlockEnd("");
+  };
+
+  const closeEdit = () => {
+    setEditRental(null);
+    setEditPrice("");
+    setAvailability([]);
+    setBlockStart("");
+    setBlockEnd("");
+  };
+
+  const addBlockedRange = () => {
+    const start = toDateOnly(blockStart);
+    const end = toDateOnly(blockEnd);
+    if (!start || !end || end <= start) {
+      Alert.alert(
+        fr ? "Dates invalides" : "Invalid dates",
+        fr ? "La date de fin doit être après la date de début." : "End date must be after start date.",
+      );
+      return;
+    }
+    setAvailability((p) => [...p, { startDate: start, endDate: end }]);
+    setBlockStart("");
+    setBlockEnd("");
+  };
+
+  const removeBlockedRange = (idx) => setAvailability((p) => p.filter((_, i) => i !== idx));
+
+  const saveEdit = async () => {
+    if (!editRental) return;
+    const priceNum = parseFloat(String(editPrice).replace(",", "."));
+    if (!Number.isFinite(priceNum) || priceNum <= 0) {
+      Alert.alert(fr ? "Prix" : "Price", fr ? "Entrez un prix par jour valide." : "Enter a valid price per day.");
+      return;
+    }
+    setSavingEdit(true);
+    try {
+      const { data } = await updateRental(editRental._id, {
+        pricePerDay: priceNum,
+        availability: availabilityForApi(availability),
+      });
+      setRentals((p) => p.map((c) => (c._id === data._id ? data : c)));
+      Alert.alert("", fr ? "Annonce mise à jour." : "Listing updated.");
+      closeEdit();
+    } catch (e) {
+      Alert.alert("Error", e?.response?.data?.message || (fr ? "Échec" : "Save failed"));
+    } finally {
+      setSavingEdit(false);
+    }
+  };
 
   const openPromos = (car) => {
     setPromoRental(car);
@@ -276,6 +368,17 @@ export default function MyFleetScreen() {
                       <Text style={s.airBadgeText}>{item.airportDeliveryFeeMad} MAD</Text>
                     </View>
                   )}
+                  {(item.availability || []).length > 0 && (
+                    <View style={s.blockedBadge}>
+                      <Ionicons name="calendar-outline" size={11} color="#f87171" />
+                      <Text style={s.blockedBadgeText}>
+                        {(item.availability || []).length}{" "}
+                        {fr
+                          ? (item.availability.length > 1 ? "périodes bloquées" : "période bloquée")
+                          : (item.availability.length > 1 ? "blocked periods" : "blocked period")}
+                      </Text>
+                    </View>
+                  )}
                   {item.city && (
                     <View style={s.cityRow}>
                       <Ionicons name="location-outline" size={12} color={C.muted} />
@@ -284,6 +387,10 @@ export default function MyFleetScreen() {
                   )}
                 </View>
                 <View style={s.actionsRow}>
+                  <TouchableOpacity onPress={() => openEdit(item)} style={[s.actionBtn, s.actionEdit]}>
+                    <Ionicons name="create-outline" size={15} color={C.primary} />
+                    <Text style={[s.actionBtnText, { color: C.primary }]}>{fr ? "Modifier" : "Edit"}</Text>
+                  </TouchableOpacity>
                   <TouchableOpacity onPress={() => openPromos(item)} style={[s.actionBtn, s.actionPromo]}>
                     <Ionicons name="pricetag-outline" size={15} color="#fbbf24" />
                     <Text style={[s.actionBtnText, { color: "#fbbf24" }]}>{fr ? "Promos" : "Deals"}</Text>
@@ -312,6 +419,108 @@ export default function MyFleetScreen() {
           );
         }}
       />
+
+      <Modal visible={!!editRental} animationType="slide" transparent onRequestClose={closeEdit}>
+        <View style={s.modalOverlay}>
+          <Pressable style={s.modalBackdrop} onPress={closeEdit} />
+          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={s.modalSheetWrap}>
+            <View style={s.modalBox}>
+              <View style={s.modalHead}>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={s.modalTitle}>{fr ? "Modifier l'annonce" : "Edit listing"}</Text>
+                  <Text style={s.modalSub} numberOfLines={1}>
+                    {editRental?.title}
+                  </Text>
+                </View>
+                <TouchableOpacity onPress={closeEdit} hitSlop={12} style={s.modalClose}>
+                  <Ionicons name="close" size={22} color={C.muted} />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView style={s.modalScroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                <Text style={s.sectionLabel}>{fr ? "PRIX" : "PRICE"}</Text>
+                <Text style={s.formLabel}>{fr ? "Prix par jour (MAD)" : "Price per day (MAD)"}</Text>
+                <TextInput
+                  value={editPrice}
+                  onChangeText={setEditPrice}
+                  keyboardType="decimal-pad"
+                  placeholder="500"
+                  placeholderTextColor={C.muted}
+                  style={s.input}
+                />
+
+                <Text style={[s.sectionLabel, { marginTop: 20 }]}>{fr ? "INDISPONIBILITÉS" : "UNAVAILABLE"}</Text>
+                <Text style={s.modalHint}>
+                  {fr
+                    ? "Bloquez des dates (entretien, usage personnel…) — les clients ne pourront pas réserver sur ces jours."
+                    : "Block dates (maintenance, personal use…) — customers cannot book on those days."}
+                </Text>
+
+                {availability.map((r, i) => (
+                  <View key={`${r.startDate}-${r.endDate}-${i}`} style={s.blockedRow}>
+                    <Ionicons name="calendar-outline" size={16} color="#f87171" />
+                    <Text style={s.blockedRowText}>{formatBlockedRange(r.startDate, r.endDate, fr)}</Text>
+                    <TouchableOpacity onPress={() => removeBlockedRange(i)} hitSlop={8}>
+                      <Ionicons name="close-circle" size={20} color={C.red} />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+
+                <DatePickerField
+                  label={fr ? "Du" : "From"}
+                  value={blockStart ? `${blockStart}T12:00:00.000Z` : ""}
+                  onChange={(v) => setBlockStart(toDateOnly(v))}
+                  isDark={isDark}
+                  fr={fr}
+                  accent={C.primary}
+                  minimumDate={new Date(todayYmd)}
+                  emptyLabel={fr ? "Choisir" : "Pick date"}
+                />
+                <DatePickerField
+                  label={fr ? "Au" : "To"}
+                  value={blockEnd ? `${blockEnd}T12:00:00.000Z` : ""}
+                  onChange={(v) => setBlockEnd(toDateOnly(v))}
+                  isDark={isDark}
+                  fr={fr}
+                  accent={C.primary}
+                  minimumDate={blockStart ? new Date(blockStart) : new Date(todayYmd)}
+                  emptyLabel={fr ? "Choisir" : "Pick date"}
+                />
+                <TouchableOpacity onPress={addBlockedRange} style={s.addBlockBtn}>
+                  <Ionicons name="add-circle-outline" size={18} color={C.primary} />
+                  <Text style={s.addBlockBtnText}>{fr ? "Ajouter la période" : "Add blocked period"}</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    const car = editRental;
+                    closeEdit();
+                    if (car) openPromos(car);
+                  }}
+                  style={s.linkPromos}
+                >
+                  <Ionicons name="pricetag-outline" size={18} color="#fbbf24" />
+                  <Text style={s.linkPromosText}>
+                    {fr ? "Gérer les promotions →" : "Manage promotions →"}
+                  </Text>
+                </TouchableOpacity>
+              </ScrollView>
+
+              <TouchableOpacity
+                onPress={saveEdit}
+                disabled={savingEdit}
+                style={[s.saveBtn, savingEdit && { opacity: 0.7 }]}
+              >
+                {savingEdit ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={s.saveBtnText}>{fr ? "Enregistrer" : "Save changes"}</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
+      </Modal>
 
       <Modal visible={!!promoRental} animationType="slide" transparent onRequestClose={closePromos}>
         <View style={s.modalOverlay}>
@@ -620,7 +829,62 @@ function createMyFleetStyles(C) {
       justifyContent: "center",
       gap: 4,
     },
+    actionEdit: { backgroundColor: "rgba(124,107,255,0.1)", borderColor: "rgba(124,107,255,0.35)" },
     actionPromo: { backgroundColor: "rgba(251,191,36,0.1)", borderColor: "rgba(251,191,36,0.35)" },
+    blockedBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 999,
+      backgroundColor: "rgba(248,113,113,0.12)",
+      borderWidth: 1,
+      borderColor: "rgba(248,113,113,0.28)",
+    },
+    blockedBadgeText: { color: "#f87171", fontSize: 10, fontWeight: "800" },
+    sectionLabel: {
+      color: C.muted,
+      fontSize: 10,
+      fontWeight: "800",
+      letterSpacing: 1.2,
+      marginBottom: 8,
+      marginTop: 4,
+    },
+    blockedRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      padding: 12,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: C.border,
+      backgroundColor: C.inputBg,
+      marginBottom: 8,
+    },
+    blockedRowText: { flex: 1, color: C.white, fontSize: 12, fontWeight: "600" },
+    addBlockBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      paddingVertical: 12,
+      marginTop: 4,
+      marginBottom: 16,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: C.primary + "55",
+      borderStyle: "dashed",
+    },
+    addBlockBtnText: { color: C.primary, fontWeight: "700", fontSize: 13 },
+    linkPromos: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      paddingVertical: 12,
+      marginBottom: 8,
+    },
+    linkPromosText: { color: "#fbbf24", fontWeight: "700", fontSize: 14 },
     actionAirport: { backgroundColor: "rgba(56,189,248,0.1)", borderColor: "rgba(56,189,248,0.35)" },
     actionBtnText: { fontSize: 12, fontWeight: "600" },
     modalOverlay: {

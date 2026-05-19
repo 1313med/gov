@@ -90,6 +90,10 @@ function userCanListForSale(user) {
   return userHasCinOnFile(user);
 }
 
+function userCinVerified(user) {
+  return userHasCinOnFile(user) && user?.nationalId?.verified === true;
+}
+
 module.exports = {
   ROLE_ENUM,
   normalizeRoleSlug,
@@ -102,4 +106,5 @@ module.exports = {
   userHasLicenseOnFile,
   userCanBookRentals,
   userCanListForSale,
+  userCinVerified,
 };

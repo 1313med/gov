@@ -1,5 +1,7 @@
-import { Redirect } from "expo-router";
+import { Redirect, useLocalSearchParams } from "expo-router";
 
+/** Legacy route — selling only needs CIN, not seller badge flow. */
 export default function VerifySellerRedirect() {
-  return <Redirect href="/verify-cin" />;
+  const params = useLocalSearchParams();
+  return <Redirect href={{ pathname: "/verify-cin", params: { ...params, purpose: "sell" } }} />;
 }

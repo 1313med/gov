@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator, Image, KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -8,6 +8,8 @@ import { createSale } from "../src/api/sale";
 import { uploadListingImages } from "../src/api/upload";
 import { useAppLang } from "../src/context/AppLangContext";
 import { useTheme } from "../src/context/ThemeContext";
+import { getMyProfile } from "../src/api/user";
+import { userHasCinOnFile } from "../src/utils/profileDocuments";
 
 const FIELDS = [
   { key:"title",       label:{ en:"Title", fr:"Titre" },                 ph:{ en:"e.g. Toyota Corolla 2020", fr:"ex. Toyota Corolla 2020" } },
@@ -39,6 +41,29 @@ export default function NewSaleScreen() {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [locating, setLocating] = useState(false);
+
+  useEffect(() => {
+    getMyProfile()
+      .then((r) => {
+        if (!userHasCinOnFile(r.data)) {
+          Alert.alert(
+            fr ? "CIN requis" : "CIN required",
+            fr
+              ? "Ajoutez votre carte d'identité (CIN) avant de vendre une voiture."
+              : "Add your national ID (CIN) before selling a car.",
+            [
+              {
+                text: fr ? "Ajouter mon CIN" : "Add my CIN",
+                onPress: () =>
+                  router.replace({ pathname: "/verify-cin", params: { purpose: "sell", return: "new-sale" } }),
+              },
+              { text: fr ? "Annuler" : "Cancel", style: "cancel", onPress: () => router.back() },
+            ]
+          );
+        }
+      })
+      .catch(() => {});
+  }, [fr, router]);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -112,7 +137,10 @@ export default function NewSaleScreen() {
       if (String(msg).toLowerCase().includes("national id") || String(msg).toLowerCase().includes("cin")) {
         Alert.alert(fr ? "CIN requis" : "CIN required", msg, [
           { text: fr ? "Plus tard" : "Later", style: "cancel" },
-          { text: fr ? "Vérifier" : "Verify", onPress: () => router.push("/verify-cin") },
+          {
+            text: fr ? "Ajouter CIN" : "Add CIN",
+            onPress: () => router.push({ pathname: "/verify-cin", params: { purpose: "sell" } }),
+          },
         ]);
       } else {
         Alert.alert("Error", msg);

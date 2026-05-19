@@ -99,7 +99,7 @@ function listingViewPeriodBounds(period) {
   return null;
 }
 
-const { userCanListForSale, hasUserRole } = require("../utils/userRoles");
+const { userCanListForSale, userHasCinOnFile, userCinVerified, hasUserRole } = require("../utils/userRoles");
 
 const notify = async (userId, message, type, bookingId = null) => {
   const n = await Notification.create({ user: userId, message, type, bookingId: bookingId || undefined });
@@ -521,7 +521,7 @@ exports.getOwnerBookings = async (req, res, next) => {
 exports.getAdminRentals = async (req, res, next) => {
   try {
     const rentals = await RentalListing.find({ deletedAt: null })
-      .populate("rentalOwnerId", "name email")
+      .populate("rentalOwnerId", "name email phone nationalId")
       .sort({ createdAt: -1 });
     res.json(rentals);
   } catch (error) { next(error); }
@@ -536,6 +536,22 @@ exports.updateRentalStatus = async (req, res, next) => {
 
     const rental = await RentalListing.findOne({ _id: req.params.id, deletedAt: null });
     if (!rental) return res.status(404).json({ message: "Not found" });
+
+    if (status === "approved") {
+      const owner = await User.findById(rental.rentalOwnerId).select("nationalId name");
+      if (!userHasCinOnFile(owner)) {
+        return res.status(400).json({
+          message: "Owner has not submitted a national ID (CIN).",
+          code: "OWNER_CIN_MISSING",
+        });
+      }
+      if (!userCinVerified(owner)) {
+        return res.status(400).json({
+          message: "Verify the owner's national ID (CIN) before approving this rental listing.",
+          code: "OWNER_CIN_NOT_VERIFIED",
+        });
+      }
+    }
 
     const previousStatus = rental.status;
     rental.status = status;

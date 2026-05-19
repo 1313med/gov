@@ -21,6 +21,22 @@ export default function VerifyCinScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams();
+  const purpose = params?.purpose === "rent" ? "rent" : "sell";
+  const returnPath =
+    params?.return === "add-rental"
+      ? "/add-rental"
+      : params?.return === "new-sale" || params?.return === "sell"
+        ? "/new-sale"
+        : "/new-sale";
+
+  useEffect(() => {
+    if (purpose === "rent") {
+      router.replace({
+        pathname: "/profile-documents",
+        params: params?.return ? { return: String(params.return) } : {},
+      });
+    }
+  }, [purpose, params?.return, router]);
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -74,11 +90,11 @@ export default function VerifyCinScreen() {
       Alert.alert(
         fr ? "Demande envoyée ✓" : "Request sent ✓",
         fr
-          ? "Votre CIN a été soumis. Notre équipe le vérifiera sous 24–48h. Vous pourrez vendre dès validation."
-          : "Your CIN has been submitted. Our team will verify it within 24–48h.",
+          ? "CIN enregistré. Vous pouvez remplir le formulaire de vente ; l'annonce sera validée par l'équipe."
+          : "ID saved. You can fill in the sale form; your listing will be reviewed by our team.",
         [{
           text: fr ? "Créer l'annonce quand même" : "Post listing anyway",
-          onPress: () => router.push({ pathname: "/new-sale", params }),
+          onPress: () => router.push({ pathname: returnPath, params }),
         }, { text: "OK" }]
       );
     } catch (e) {
@@ -86,16 +102,14 @@ export default function VerifyCinScreen() {
     } finally {
       setSaving(false);
     }
-  }, [cinNumber, cinImage, fr, router, params]);
+  }, [cinNumber, cinImage, fr, router, params, returnPath]);
 
   const goToSell = useCallback(() => {
-    router.push({ pathname: "/new-sale", params });
-  }, [router, params]);
+    router.push({ pathname: returnPath, params });
+  }, [router, params, returnPath]);
 
-  if (loading) {
-    return (
-      <PageLoader />
-    );
+  if (purpose === "rent" || loading) {
+    return <PageLoader />;
   }
 
   const isVerified  = profile?.nationalId?.verified === true;
@@ -118,7 +132,7 @@ export default function VerifyCinScreen() {
               {fr ? "Confiance & sécurité" : "Trust & safety"}
             </Text>
             <Text style={{ fontSize: 20, fontWeight: "800", color: titleColor, letterSpacing: -0.4 }}>
-              {fr ? "Vendeur vérifié" : "Verified seller"}
+              {fr ? "Vendre ma voiture" : "Sell my car"}
             </Text>
           </View>
         </View>
@@ -136,27 +150,27 @@ export default function VerifyCinScreen() {
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 16, fontWeight: "800", color: titleColor }}>
                 {isVerified
-                  ? (fr ? "Vous êtes vérifié ✓" : "You are verified ✓")
+                  ? (fr ? "CIN vérifié ✓" : "ID verified ✓")
                   : isSubmitted
-                    ? (fr ? "Vérification en cours…" : "Verification in progress…")
-                    : (fr ? "Badge Vendeur Vérifié" : "Verified Seller Badge")}
+                    ? (fr ? "CIN en cours de validation…" : "ID under review…")
+                    : (fr ? "CIN pour vendre" : "ID to sell your car")}
               </Text>
               <Text style={{ fontSize: 13, color: subColor, marginTop: 3, lineHeight: 19 }}>
                 {isVerified
-                  ? (fr ? "Votre badge apparaît sur toutes vos annonces. Les acheteurs vous font davantage confiance." : "Your badge appears on all your listings. Buyers trust you more.")
+                  ? (fr ? "Vous pouvez publier une annonce de vente." : "You can post a car for sale.")
                   : isSubmitted
-                    ? (fr ? "Notre équipe vérifie votre CIN sous 24–48h." : "Our team is reviewing your CIN within 24–48h.")
-                    : (fr ? "Augmentez vos chances de vente de 40% avec un badge CIN vérifié." : "Increase your sale chances by 40% with a verified CIN badge.")}
+                    ? (fr ? "Notre équipe vérifie votre CIN sous 24–48h. Vous pouvez déjà soumettre une annonce." : "Our team reviews your ID within 24–48h. You can still submit a listing.")
+                    : (fr ? "Seul le CIN est requis pour vendre (pas le permis)." : "Only your national ID is required to sell (not your license).")}
               </Text>
             </View>
           </View>
 
-          {!isVerified && (
+          {!isVerified && !isSubmitted && (
             <View style={{ gap: 8 }}>
               {[
-                { icon: "eye-outline", text: fr ? "Votre annonce remonte en haut des résultats" : "Your listing ranks higher in results" },
-                { icon: "chatbubble-outline", text: fr ? "Les acheteurs contactent plus les vendeurs vérifiés" : "Buyers contact verified sellers more" },
-                { icon: "lock-closed-outline", text: fr ? "Votre numéro CIN reste confidentiel" : "Your CIN number stays private" },
+                { icon: "document-text-outline", text: fr ? "Une seule pièce : votre CIN" : "One document: your national ID" },
+                { icon: "time-outline", text: fr ? "Annonce en attente d'approbation admin" : "Listing waits for admin approval" },
+                { icon: "lock-closed-outline", text: fr ? "Votre CIN reste confidentiel" : "Your ID stays private" },
               ].map((item, i) => (
                 <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
                   <Ionicons name={item.icon} size={16} color={C.primary} />

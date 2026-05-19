@@ -59,6 +59,7 @@ function RootNavigator() {
       ["price-alerts", titles.priceAlerts],
       ["verify-cin", titles.verifyCin],
       ["verify-seller", titles.verifyCin],
+      ["profile-documents", titles.profileDocuments || titles.verifyCin],
     ],
     [titles]
   );

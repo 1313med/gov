@@ -21,3 +21,9 @@ export function bookingsHref(params = {}) {
 }
 
 export const VERIFY_CIN_PATH = "/verify-cin";
+export const PROFILE_DOCUMENTS_PATH = "/profile-documents";
+
+export function profileDocumentsHref(returnPath) {
+  if (!returnPath) return PROFILE_DOCUMENTS_PATH;
+  return `${PROFILE_DOCUMENTS_PATH}?return=${encodeURIComponent(returnPath)}`;
+}

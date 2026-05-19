@@ -4,7 +4,7 @@ import { View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator, Ale
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { getRentalById, bookRental, getRentalBookings, recordRentalView } from "../../src/api/rental";
-import { VERIFY_CIN_PATH, messagesHref } from "../../src/utils/appNavigation";
+import { profileDocumentsHref, messagesHref } from "../../src/utils/appNavigation";
 import { isOwnRentalListing } from "../../src/utils/listingOwnership";
 import RentalBookingCalendar from "../../src/components/RentalBookingCalendar";
 import { startConversation } from "../../src/api/message";
@@ -281,7 +281,10 @@ export default function RentalDetailsScreen() {
       if (code === "BOOKING_DOCUMENTS_REQUIRED" || code === "DRIVER_LICENSE_REQUIRED" || code === "CIN_REQUIRED") {
         Alert.alert(t.documentsTitle, msg, [
           { text: t.documentsLater, style: "cancel" },
-          { text: t.documentsProfile, onPress: () => router.push(VERIFY_CIN_PATH) },
+          {
+            text: t.documentsProfile,
+            onPress: () => router.push(profileDocumentsHref(`/rentals/${id}`)),
+          },
         ]);
       } else {
         Alert.alert(t.errorTitle || "Error", msg);
@@ -338,6 +341,11 @@ export default function RentalDetailsScreen() {
         <FavoriteHeartButton active={isFav} onPress={toggleFav} size="lg" variant="overlay" style={s.favBtn} />
         <View style={s.priceBadge}>
           <Text style={s.priceBadgeText}>{rental.pricePerDay} MAD/day</Text>
+          {activeOffersList.length > 0 && (
+            <Text style={{ color: "#fde68a", fontSize: 10, fontWeight: "800", marginTop: 2 }}>
+              {lang === "fr" ? `${activeOffersList.length} promo(s)` : `${activeOffersList.length} deal(s)`}
+            </Text>
+          )}
         </View>
       </View>
 

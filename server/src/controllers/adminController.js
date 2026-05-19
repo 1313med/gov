@@ -3,6 +3,7 @@ const User = require("../models/User");
 const SaleListing = require("../models/SaleListing");
 const RentalListing = require("../models/RentalListing");
 const Booking = require("../models/Booking");
+const { userHasCinOnFile } = require("../utils/userRoles");
 
 // GET /api/admin/users
 exports.getUsers = asyncHandler(async (req, res) => {
@@ -17,6 +18,10 @@ exports.getUsers = asyncHandler(async (req, res) => {
     ];
   }
   if (role) filter.role = role;
+  if (req.query.cinPending === "true") {
+    filter["nationalId.imageUrl"] = { $exists: true, $nin: [null, ""] };
+    filter["nationalId.verified"] = { $ne: true };
+  }
 
   const skip = (Number(page) - 1) * Number(limit);
   const [users, total] = await Promise.all([
@@ -35,6 +40,35 @@ exports.getUserById = asyncHandler(async (req, res) => {
     throw new Error("User not found");
   }
   res.json(user);
+});
+
+// PUT /api/admin/users/:id/national-id/verify
+exports.verifyUserNationalId = asyncHandler(async (req, res) => {
+  const { verified } = req.body;
+  if (typeof verified !== "boolean") {
+    res.status(400);
+    throw new Error("verified must be a boolean");
+  }
+
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+  if (!userHasCinOnFile(user)) {
+    res.status(400);
+    throw new Error("User has not submitted a national ID document");
+  }
+
+  user.nationalId.verified = verified;
+  await user.save();
+
+  res.json({
+    message: verified
+      ? `National ID verified for ${user.name}.`
+      : `National ID verification revoked for ${user.name}.`,
+    nationalId: user.nationalId,
+  });
 });
 
 // PUT /api/admin/users/:id/ban
