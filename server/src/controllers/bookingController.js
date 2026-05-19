@@ -249,7 +249,7 @@ exports.getBookingsForOwner = async (req, res, next) => {
     const bookings = await Booking.find(filter)
       .populate(
         "rentalId",
-        "title pricePerDay city images airportDeliveryOffered airportDeliveryFeeMad"
+        "title brand model year fuel gearbox mileage color seats pricePerDay city images airportDeliveryOffered airportDeliveryFeeMad"
       )
       .populate(
         "customerId",
@@ -282,7 +282,7 @@ exports.getOwnerBookingOne = async (req, res, next) => {
     })
       .populate(
         "rentalId",
-        "title pricePerDay city images airportDeliveryOffered airportDeliveryFeeMad"
+        "title brand model year fuel gearbox mileage color seats pricePerDay city images airportDeliveryOffered airportDeliveryFeeMad"
       )
       .populate(
         "customerId",

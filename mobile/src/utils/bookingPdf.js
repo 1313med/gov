@@ -1,19 +1,56 @@
+import { Asset } from "expo-asset";
+import * as FileSystem from "expo-file-system/legacy";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 
-function fmtFull(d, fr) {
+const RECEIPT_LOGO = require("../../assets/images/goovoiture-receipt-logo-transparent.png");
+
+let logoDataUriCache = null;
+
+async function getReceiptLogoDataUri() {
+  if (logoDataUriCache) return logoDataUriCache;
+  try {
+    const asset = Asset.fromModule(RECEIPT_LOGO);
+    await asset.downloadAsync();
+    const uri = asset.localUri || asset.uri;
+    if (!uri) return null;
+    const base64 = await FileSystem.readAsStringAsync(uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    logoDataUriCache = `data:image/png;base64,${base64}`;
+    return logoDataUriCache;
+  } catch {
+    return null;
+  }
+}
+
+function fmtFull(d) {
   if (!d) return "—";
-  const loc = fr ? "fr-FR" : "en-GB";
-  return new Date(d).toLocaleDateString(loc, { day: "2-digit", month: "long", year: "numeric" });
+  return new Date(d).toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function fmtShortId(id) {
+  if (!id) return "—";
+  const s = String(id);
+  return s.length > 8 ? s.slice(-8).toUpperCase() : s.toUpperCase();
 }
 
 function daysDiff(a, b) {
-  return Math.max(1, Math.ceil((new Date(b) - new Date(a)) / 86400000));
+  const start = new Date(a);
+  const end = new Date(b);
+  const startUTC = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate());
+  const endUTC = Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate());
+  return Math.max(1, Math.floor((endUTC - startUTC) / 86400000) + 1);
 }
 
-function mad(n, fr) {
-  const loc = fr ? "fr-FR" : "en-US";
-  return n != null ? `${Number(n).toLocaleString(loc)} MAD` : "—";
+function mad(n) {
+  return n != null && !Number.isNaN(Number(n))
+    ? `${Number(n).toLocaleString("fr-FR")} MAD`
+    : "—";
 }
 
 function esc(s) {
@@ -25,217 +62,508 @@ function esc(s) {
     .replace(/"/g, "&quot;");
 }
 
-const STATUS_COLOR = {
-  pending: "#f59e0b",
-  confirmed: "#34d399",
-  completed: "#60a5fa",
-  rejected: "#f87171",
-  cancelled: "#94a3b8",
+/** Permis / CIN peuvent être une chaîne ou { number, verified, ... }. */
+function idNumber(doc) {
+  if (doc == null) return null;
+  if (typeof doc === "string" && doc.trim()) return doc.trim();
+  if (typeof doc === "object" && doc.number != null && String(doc.number).trim()) {
+    return String(doc.number).trim();
+  }
+  return null;
+}
+
+const STATUS = {
+  pending: { color: "#f59e0b", bg: "rgba(245,158,11,0.15)", label: "En attente" },
+  confirmed: { color: "#10b981", bg: "rgba(16,185,129,0.15)", label: "Confirmée" },
+  completed: { color: "#6366f1", bg: "rgba(99,102,241,0.15)", label: "Terminée" },
+  rejected: { color: "#ef4444", bg: "rgba(239,68,68,0.15)", label: "Refusée" },
+  cancelled: { color: "#94a3b8", bg: "rgba(148,163,184,0.12)", label: "Annulée" },
+  expired: { color: "#64748b", bg: "rgba(100,116,139,0.12)", label: "Expirée" },
 };
 
-function buildBookingHtml(b, fr) {
+function row(label, value, highlight = false) {
+  if (!label && !value) return "";
+  return `<tr class="${highlight ? "row-hi" : ""}"><td class="lbl">${esc(label)}</td><td class="val">${esc(value ?? "—")}</td></tr>`;
+}
+
+const PDF_STYLES = `
+  @page { size: A4; margin: 10mm 11mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #0f172a;
+    background: #eef1f8;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .hero {
+    background: linear-gradient(135deg, #05060f 0%, #151b38 50%, #1a1040 100%);
+    color: #fff;
+    padding: 22px;
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0; width: 5px;
+    background: linear-gradient(180deg, #7c6bff, #38bdf8);
+  }
+  .hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; position: relative; z-index: 1; }
+  .brand-row {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: flex-end;
+    flex-wrap: nowrap;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.05em;
+    white-space: nowrap;
+  }
+  .brand-mark {
+    width: 1.45em;
+    height: 1.45em;
+    flex-shrink: 0;
+    display: block;
+    object-fit: contain;
+    object-position: left bottom;
+    margin: 0 -0.34em 0 0;
+    padding: 0;
+    transform: translate(0.05em, 0.23em);
+    background: none !important;
+  }
+  .brand-text {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: baseline;
+    line-height: 1;
+    padding: 0;
+    margin: 0;
+  }
+  .brand-oo,
+  .brand-voiture {
+    font-size: 1em;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    line-height: 1;
+    padding: 0;
+    margin: 0;
+  }
+  .brand-voiture {
+    color: #a78bfa;
+    font-style: italic;
+  }
+  .brand { font-size: 28px; font-weight: 800; letter-spacing: -0.04em; }
+  .brand em { color: #a78bfa; font-style: italic; }
+  .hero-tag { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #94a3b8; margin-top: 6px; font-weight: 600; }
+  .hero-logo-wrap {
+    flex-shrink: 0;
+    z-index: 2;
+    line-height: 0;
+    background: none;
+    border: none;
+    padding: 0;
+  }
+  .hero-logo {
+    width: 72px;
+    height: 72px;
+    object-fit: contain;
+    display: block;
+    background: none !important;
+    border: none;
+    box-shadow: none;
+  }
+  .status-pill {
+    display: inline-block;
+    margin-top: 14px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .hero-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; position: relative; z-index: 1; }
+  .meta-card {
+    flex: 1; min-width: 110px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 10px 12px;
+  }
+  .meta-lbl { font-size: 8px; text-transform: uppercase; letter-spacing: 0.1em; color: #8891b8; font-weight: 600; }
+  .meta-val { font-size: 11px; font-weight: 700; margin-top: 4px; color: #f8fafc; word-break: break-all; }
+  .meta-val.ref { font-size: 17px; letter-spacing: 0.06em; color: #c4b5fd; }
+  .body { padding-top: 14px; }
+  .card {
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(15,23,42,0.06);
+  }
+  .card-head {
+    background: linear-gradient(90deg, #0f172a, #1e293b);
+    color: #e2e8f0;
+    padding: 10px 14px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-left: 4px solid #7c6bff;
+  }
+  table.data { width: 100%; border-collapse: collapse; }
+  table.data tr { border-bottom: 1px solid #f1f5f9; }
+  table.data tr:last-child { border-bottom: none; }
+  table.data tr.row-hi { background: #f8fafc; }
+  table.data td { padding: 9px 14px; font-size: 11px; vertical-align: top; }
+  table.data .lbl { color: #64748b; width: 42%; font-weight: 500; }
+  table.data .val { color: #0f172a; font-weight: 600; text-align: right; }
+  .specs { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 12px 12px; }
+  .spec {
+    flex: 1 1 calc(33% - 6px);
+    min-width: 88px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 8px 10px;
+  }
+  .spec-lbl { font-size: 8px; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; font-weight: 600; }
+  .spec-val { font-size: 11px; font-weight: 700; color: #0f172a; margin-top: 3px; }
+  .note {
+    margin: 0 12px 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    font-size: 10px;
+    color: #1e40af;
+    font-weight: 600;
+  }
+  .timeline {
+    display: flex;
+    margin: 10px 12px 12px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+  }
+  .tl-block { flex: 1; padding: 12px 8px; text-align: center; background: #f8fafc; }
+  .tl-block.mid {
+    flex: 0 0 auto;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, #7c6bff, #6366f1);
+    color: #fff;
+  }
+  .tl-lbl { font-size: 8px; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.8; font-weight: 600; }
+  .tl-val { font-size: 11px; font-weight: 700; margin-top: 4px; }
+  .tl-mid-val { font-size: 13px; font-weight: 800; }
+  .pay-hero {
+    margin: 10px 12px 12px;
+    padding: 16px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #0a0e1a, #1a1f3d);
+    border: 1px solid rgba(124,107,255,0.35);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .pay-total-lbl { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: #94a3b8; font-weight: 700; }
+  .pay-total-amt { font-size: 26px; font-weight: 800; color: #c4b5fd; margin-top: 4px; }
+  .pay-badge {
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+  }
+  .doc-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 14px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .doc-item:last-child { border-bottom: none; }
+  .doc-num {
+    width: 22px; height: 22px; border-radius: 6px;
+    background: #ede9fe; color: #6d28d9;
+    font-size: 10px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .doc-name { flex: 1; font-size: 11px; font-weight: 600; }
+  .doc-type { font-size: 9px; font-weight: 700; color: #64748b; }
+  .muted { font-size: 11px; color: #94a3b8; padding: 12px 14px; }
+  .footer {
+    margin-top: 4px;
+    padding: 16px;
+    text-align: center;
+    background: #0f172a;
+    color: #94a3b8;
+    border-radius: 14px;
+    border-top: 3px solid #7c6bff;
+  }
+  .footer-brand {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+  .footer p { font-size: 9px; line-height: 1.55; margin-top: 4px; }
+  .footer .legal { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 8px; color: #64748b; }
+`;
+
+const T = {
+  tag: "Reçu officiel de location",
+  ref: "Référence",
+  fullId: "N° complet",
+  issued: "Émis le",
+  vehicle: "Véhicule",
+  listing: "Annonce",
+  vehicleLine: "Désignation",
+  brand: "Marque",
+  model: "Modèle",
+  year: "Année",
+  fuel: "Carburant",
+  gearbox: "Boîte",
+  color: "Couleur",
+  mileage: "Kilométrage",
+  seats: "Places",
+  city: "Ville",
+  rate: "Tarif / jour",
+  airport: "Livraison aéroport",
+  customer: "Locataire",
+  name: "Nom",
+  phone: "Téléphone",
+  email: "E-mail",
+  custCity: "Ville",
+  license: "N° permis de conduire",
+  cin: "N° CIN",
+  period: "Période de location",
+  checkIn: "Début",
+  checkOut: "Fin",
+  duration: "Durée",
+  day: "jour",
+  days: "jours",
+  booked: "Réservation créée",
+  dateChange: "Dates modifiées (1×)",
+  payment: "Paiement",
+  subtotal: "Sous-total",
+  discount: "Réduction",
+  offer: "Offre appliquée",
+  airportFee: "Frais aéroport",
+  total: "Total",
+  paid: "PAYÉ",
+  unpaid: "NON PAYÉ",
+  paidOn: "Payé le",
+  docs: "Documents joints",
+  noDocs: "Aucun document joint",
+  footer: "GooVoiture · Location au Maroc",
+  legal: "Reçu pour votre comptabilité. Conservez ce document.",
+};
+
+function buildBookingHtml(b, logoDataUri) {
   const days = daysDiff(b.startDate, b.endDate);
-  const status = (b.status || "").toLowerCase();
-  const statusColor = STATUS_COLOR[status] || STATUS_COLOR.cancelled;
+  const status = (b.status || "pending").toLowerCase();
+  const st = STATUS[status] || STATUS.pending;
   const paid = !!b.isPaid;
-  const badgePaidBg = paid ? "rgba(52,211,153,0.2)" : "rgba(248,113,113,0.2)";
-  const badgePaidBorder = paid ? "#34d399" : "#f87171";
-  const badgePaidText = paid ? "#34d399" : "#f87171";
-  const paidLabel = paid ? (fr ? "PAYÉ" : "PAID") : fr ? "NON PAYÉ" : "UNPAID";
+  const rental = b.rentalId || {};
+  const customer = b.customerId || {};
 
-  const T = fr
-    ? {
-        tag: "REÇU DE LOCATION",
-        bookingId: "N° RÉSERVATION",
-        issued: "ÉMIS LE",
-        vehicle: "Véhicule",
-        carModel: "Modèle",
-        city: "Ville",
-        priceDay: "Prix / jour",
-        customer: "Client",
-        fullName: "Nom",
-        phone: "Téléphone",
-        email: "E-mail",
-        period: "Période",
-        checkIn: "Début",
-        checkOut: "Fin",
-        duration: "Durée",
-        day: "jour",
-        days: "jours",
-        bookedOn: "Réservé le",
-        payment: "Paiement",
-        offer: "Offre appliquée",
-        total: "MONTANT TOTAL",
-        paidOn: "Payé le",
-        docs: "Documents joints",
-        footer: "Plateforme de location de véhicules",
-        generated: "Généré le",
-      }
-    : {
-        tag: "RENTAL BOOKING RECEIPT",
-        bookingId: "BOOKING ID",
-        issued: "ISSUED",
-        vehicle: "Vehicle",
-        carModel: "Car model",
-        city: "City",
-        priceDay: "Price / day",
-        customer: "Customer",
-        fullName: "Full name",
-        phone: "Phone",
-        email: "Email",
-        period: "Rental period",
-        checkIn: "Check-in",
-        checkOut: "Check-out",
-        duration: "Duration",
-        day: "day",
-        days: "days",
-        bookedOn: "Booked on",
-        payment: "Payment summary",
-        offer: "Offer applied",
-        total: "TOTAL AMOUNT",
-        paidOn: "Paid on",
-        docs: "Attached documents",
-        footer: "Car rental platform",
-        generated: "Generated on",
-      };
+  const licenseNo = idNumber(customer.driverLicense);
+  const cinNo = idNumber(customer.nationalId);
 
-  const rentalTitle =
-    b.rentalId?.title ||
-    `${b.rentalId?.brand || ""} ${b.rentalId?.model || ""}`.trim() ||
-    "—";
-  const docsRows =
-    Array.isArray(b.documents) && b.documents.length
-      ? b.documents
-          .map(
-            (d, i) => `
-          <tr><td class="lbl">${i + 1}. ${esc(d.name)}</td><td class="val">${esc((d.fileType || "FILE").toUpperCase())}</td></tr>`,
-          )
-          .join("")
-      : "";
+  const listingTitle =
+    rental.title || `${rental.brand || ""} ${rental.model || ""}`.trim() || "—";
+  const vehicleLine =
+    [rental.brand, rental.model, rental.year].filter(Boolean).join(" · ") || listingTitle;
 
-  const offerRow = b.appliedOfferTitle
-    ? `<tr><td class="lbl">${esc(T.offer)}</td><td class="val">${esc(b.appliedOfferTitle)}</td></tr>`
-    : "";
+  const ppd = rental.pricePerDay != null ? Number(rental.pricePerDay) : null;
+  const subtotal = ppd != null ? days * ppd : null;
+  const total = b.totalAmount != null ? Number(b.totalAmount) : null;
+  const discount =
+    subtotal != null && total != null && subtotal > total ? subtotal - total : null;
 
-  const paidRow =
-    paid && b.paidAt
-      ? `<tr><td class="lbl">${esc(T.paidOn)}</td><td class="val">${esc(fmtFull(b.paidAt, fr))}</td></tr>`
-      : "";
+  const airportLine =
+    rental.airportDeliveryOffered && Number(rental.airportDeliveryFeeMad) > 0
+      ? mad(rental.airportDeliveryFeeMad)
+      : null;
 
   const durationStr = `${days} ${days !== 1 ? T.days : T.day}`;
 
-  return `<!DOCTYPE html>
-<html><head><meta charset="utf-8" />
-<style>
-  * { box-sizing: border-box; }
-  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #0f172a; background: #f5f7ff; }
-  .page { padding: 0; max-width: 800px; margin: 0 auto; }
-  .header { background: linear-gradient(135deg, #05060f 0%, #12182e 100%); color: #fff; padding: 28px 24px 24px; position: relative; }
-  .header::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: #7c6bff; }
-  .brand { font-size: 26px; font-weight: 800; letter-spacing: -0.03em; }
-  .brand span { color: #9b8cff; font-style: italic; font-weight: 800; }
-  .tag { font-size: 10px; letter-spacing: 0.12em; color: #8891b8; margin-top: 6px; }
-  .header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 18px; flex-wrap: wrap; gap: 12px; }
-  .meta-lbl { font-size: 9px; color: #8891b8; text-transform: uppercase; letter-spacing: 0.08em; }
-  .meta-val { font-size: 11px; font-weight: 700; margin-top: 4px; word-break: break-all; }
-  .pill { display: inline-block; padding: 6px 12px; border-radius: 8px; font-size: 9px; font-weight: 800; letter-spacing: 0.06em;
-    border: 1px solid ${statusColor}; color: ${statusColor}; background: rgba(124,107,255,0.08); }
-  .body { padding: 20px 24px 32px; }
-  .section { background: #0c1224; color: #c4baff; font-size: 9px; font-weight: 800; letter-spacing: 0.1em; padding: 10px 12px; margin: 18px 0 0; border-radius: 8px 8px 0 0; border-left: 4px solid #7c6bff; }
-  .section:first-of-type { margin-top: 0; }
-  table { width: 100%; border-collapse: collapse; background: #eef1fc; border-radius: 0 0 10px 10px; overflow: hidden; }
-  tr:nth-child(even) { background: #e4e8f8; }
-  td { padding: 10px 14px; font-size: 11px; vertical-align: top; }
-  .lbl { color: #64748b; width: 38%; }
-  .val { color: #0f172a; font-weight: 600; }
-  .total-wrap { margin-top: 14px; background: linear-gradient(135deg, #0a0e1a, #151b33); border-radius: 12px; padding: 16px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-left: 5px solid #7c6bff; }
-  .total-lbl { font-size: 9px; color: #8891b8; letter-spacing: 0.1em; font-weight: 700; }
-  .total-amt { font-size: 22px; font-weight: 800; color: #9b8cff; margin-top: 4px; }
-  .paid-badge { padding: 8px 14px; border-radius: 8px; font-size: 10px; font-weight: 800; background: ${badgePaidBg}; border: 1px solid ${badgePaidBorder}; color: ${badgePaidText}; }
-  .footer { margin-top: 28px; padding: 18px; text-align: center; background: #0a0e1a; color: #8891b8; font-size: 9px; border-top: 3px solid #7c6bff; }
-  .footer .logo { color: #fff; font-weight: 800; font-size: 13px; margin-bottom: 6px; }
-  .footer .logo span { color: #9b8cff; font-style: italic; }
-</style></head><body>
-<div class="page">
-  <div class="header">
-    <div class="brand">Goo<span>voiture</span></div>
-    <div class="tag">${esc(T.tag)}</div>
-    <div style="display:flex;justify-content:flex-end;margin-bottom:8px;"><span class="pill">${esc((b.status || "").toUpperCase())}</span></div>
-    <div class="header-row">
-      <div>
-        <div class="meta-lbl">${esc(T.bookingId)}</div>
-        <div class="meta-val">${esc(b._id)}</div>
-      </div>
-      <div style="text-align:right;">
-        <div class="meta-lbl">${esc(T.issued)}</div>
-        <div class="meta-val">${esc(fmtFull(new Date(), fr))}</div>
-      </div>
-    </div>
-  </div>
-  <div class="body">
-    <div class="section">${esc(T.vehicle.toUpperCase())}</div>
-    <table>
-      <tr><td class="lbl">${esc(T.carModel)}</td><td class="val">${esc(rentalTitle)}</td></tr>
-      <tr><td class="lbl">${esc(T.city)}</td><td class="val">${esc(b.rentalId?.city || "—")}</td></tr>
-      <tr><td class="lbl">${esc(T.priceDay)}</td><td class="val">${esc(b.rentalId?.pricePerDay != null ? mad(b.rentalId.pricePerDay, fr) : "—")}</td></tr>
-    </table>
-    <div class="section">${esc(T.customer.toUpperCase())}</div>
-    <table>
-      <tr><td class="lbl">${esc(T.fullName)}</td><td class="val">${esc(b.customerId?.name || "—")}</td></tr>
-      <tr><td class="lbl">${esc(T.phone)}</td><td class="val">${esc(b.customerId?.phone || "—")}</td></tr>
-      <tr><td class="lbl">${esc(T.email)}</td><td class="val">${esc(b.customerId?.email || "—")}</td></tr>
-    </table>
-    <div class="section">${esc(T.period.toUpperCase())}</div>
-    <table>
-      <tr><td class="lbl">${esc(T.checkIn)}</td><td class="val">${esc(fmtFull(b.startDate, fr))}</td></tr>
-      <tr><td class="lbl">${esc(T.checkOut)}</td><td class="val">${esc(fmtFull(b.endDate, fr))}</td></tr>
-      <tr><td class="lbl">${esc(T.duration)}</td><td class="val">${esc(durationStr)}</td></tr>
-      <tr><td class="lbl">${esc(T.bookedOn)}</td><td class="val">${esc(fmtFull(b.createdAt, fr))}</td></tr>
-    </table>
-    <div class="section">${esc(T.payment.toUpperCase())}</div>
-    ${offerRow ? `<table>${offerRow}</table>` : ""}
-    <div class="total-wrap">
-      <div>
-        <div class="total-lbl">${esc(T.total)}</div>
-        <div class="total-amt">${esc(mad(b.totalAmount, fr))}</div>
-      </div>
-      <div class="paid-badge">${esc(paidLabel)}</div>
-    </div>
-    ${paidRow ? `<table style="margin-top:12px;border-radius:10px;">${paidRow}</table>` : ""}
-    ${
-      docsRows
-        ? `<div class="section">${esc(T.docs.toUpperCase())}</div><table>${docsRows}</table>`
-        : ""
-    }
-  </div>
-  <div class="footer">
-    <div class="logo">Goo<span>voiture</span></div>
-    ${esc(T.generated)} ${esc(fmtFull(new Date(), fr))} · ${esc(T.footer)}
-  </div>
-</div>
-</body></html>`;
+  const specItems = [
+    rental.brand && { l: T.brand, v: rental.brand },
+    rental.model && { l: T.model, v: rental.model },
+    rental.year && { l: T.year, v: String(rental.year) },
+    rental.fuel && { l: T.fuel, v: rental.fuel },
+    rental.gearbox && { l: T.gearbox, v: rental.gearbox },
+    rental.color && { l: T.color, v: rental.color },
+    rental.mileage != null && {
+      l: T.mileage,
+      v: `${Number(rental.mileage).toLocaleString("fr-FR")} km`,
+    },
+    rental.seats && { l: T.seats, v: String(rental.seats) },
+    rental.city && { l: T.city, v: rental.city },
+    ppd != null && { l: T.rate, v: mad(ppd) },
+  ].filter(Boolean);
+
+  const specsHtml = specItems
+    .map(
+      (s) =>
+        `<div class="spec"><div class="spec-lbl">${esc(s.l)}</div><div class="spec-val">${esc(s.v)}</div></div>`,
+    )
+    .join("");
+
+  const docsHtml =
+    Array.isArray(b.documents) && b.documents.length
+      ? b.documents
+          .map(
+            (d, i) =>
+              `<div class="doc-item"><span class="doc-num">${i + 1}</span><span class="doc-name">${esc(d.name)}</span><span class="doc-type">${esc((d.fileType || "fichier").toUpperCase())}</span></div>`,
+          )
+          .join("")
+      : `<p class="muted">${esc(T.noDocs)}</p>`;
+
+  const statusStyle = `color:${st.color};background:${st.bg};border:1px solid ${st.color}`;
+  const payStyle = paid
+    ? "color:#34d399;background:rgba(52,211,153,0.15);border:1px solid #34d399"
+    : "color:#f87171;background:rgba(248,113,113,0.12);border:1px solid #f87171";
+
+  const logoImg = logoDataUri
+    ? `<div class="hero-logo-wrap"><img class="hero-logo" src="${logoDataUri}" alt="GooVoiture" /></div>`
+    : "";
+
+  const brandHtml = logoDataUri
+    ? `<div class="brand-row"><img class="brand-mark" src="${logoDataUri}" alt="" /><span class="brand-text"><span class="brand-oo">oo</span><span class="brand-voiture">voiture</span></span></div>`
+    : '<div class="brand">Goo<em>voiture</em></div>';
+
+  return [
+    "<!DOCTYPE html>",
+    '<html lang="fr">',
+    "<head>",
+    '<meta charset="utf-8" />',
+    '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />',
+    "<style>",
+    PDF_STYLES,
+    "</style>",
+    "</head>",
+    "<body>",
+    '<div class="hero">',
+    '<div class="hero-top">',
+    "<div>",
+    brandHtml,
+    `<div class="hero-tag">${esc(T.tag)}</div>`,
+    "</div>",
+    logoImg,
+    "</div>",
+    `<span class="status-pill" style="${statusStyle}">${esc(st.label)}</span>`,
+    '<div class="hero-meta">',
+    '<div class="meta-card">',
+    `<div class="meta-lbl">${esc(T.ref)}</div>`,
+    `<div class="meta-val ref">#${esc(fmtShortId(b._id))}</div>`,
+    "</div>",
+    '<div class="meta-card">',
+    `<div class="meta-lbl">${esc(T.issued)}</div>`,
+    `<div class="meta-val">${esc(fmtFull(new Date()))}</div>`,
+    "</div>",
+    '<div class="meta-card" style="flex:2;min-width:200px;">',
+    `<div class="meta-lbl">${esc(T.fullId)}</div>`,
+    `<div class="meta-val" style="font-size:9px;">${esc(b._id)}</div>`,
+    "</div>",
+    "</div>",
+    "</div>",
+    '<div class="body">',
+    '<div class="card">',
+    `<div class="card-head">${esc(T.vehicle)}</div>`,
+    '<table class="data">',
+    row(T.listing, listingTitle, true),
+    row(T.vehicleLine, vehicleLine),
+    "</table>",
+    `<div class="specs">${specsHtml}</div>`,
+    airportLine ? `<div class="note">${esc(T.airport)} : ${esc(airportLine)}</div>` : "",
+    "</div>",
+    '<div class="card">',
+    `<div class="card-head">${esc(T.customer)}</div>`,
+    '<table class="data">',
+    row(T.name, customer.name, true),
+    row(T.phone, customer.phone),
+    row(T.email, customer.email),
+    customer.city ? row(T.custCity, customer.city) : "",
+    licenseNo ? row(T.license, licenseNo) : "",
+    cinNo ? row(T.cin, cinNo) : "",
+    "</table>",
+    "</div>",
+    '<div class="card">',
+    `<div class="card-head">${esc(T.period)}</div>`,
+    '<div class="timeline">',
+    '<div class="tl-block">',
+    `<div class="tl-lbl">${esc(T.checkIn)}</div>`,
+    `<div class="tl-val">${esc(fmtFull(b.startDate))}</div>`,
+    "</div>",
+    '<div class="tl-block mid">',
+    `<div class="tl-lbl">${esc(T.duration)}</div>`,
+    `<div class="tl-mid-val">${esc(durationStr)}</div>`,
+    "</div>",
+    '<div class="tl-block">',
+    `<div class="tl-lbl">${esc(T.checkOut)}</div>`,
+    `<div class="tl-val">${esc(fmtFull(b.endDate))}</div>`,
+    "</div>",
+    "</div>",
+    '<table class="data">',
+    row(T.booked, fmtFull(b.createdAt)),
+    b.customerDateChangeUsed ? row(T.dateChange, "Oui") : "",
+    "</table>",
+    "</div>",
+    '<div class="card">',
+    `<div class="card-head">${esc(T.payment)}</div>`,
+    '<table class="data">',
+    subtotal != null ? row(T.subtotal, `${mad(subtotal)} (${days} × ${mad(ppd)})`) : "",
+    b.appliedOfferTitle ? row(T.offer, b.appliedOfferTitle) : "",
+    discount != null && discount > 0 ? row(T.discount, `− ${mad(discount)}`) : "",
+    airportLine ? row(T.airportFee, airportLine) : "",
+    "</table>",
+    '<div class="pay-hero">',
+    "<div>",
+    `<div class="pay-total-lbl">${esc(T.total)}</div>`,
+    `<div class="pay-total-amt">${esc(mad(total))}</div>`,
+    "</div>",
+    `<span class="pay-badge" style="${payStyle}">${esc(paid ? T.paid : T.unpaid)}</span>`,
+    "</div>",
+    paid && b.paidAt ? `<table class="data">${row(T.paidOn, fmtFull(b.paidAt), true)}</table>` : "",
+    "</div>",
+    '<div class="card">',
+    `<div class="card-head">${esc(T.docs)}</div>`,
+    docsHtml,
+    "</div>",
+    '<div class="footer">',
+    logoDataUri
+      ? `<div class="footer-brand">${brandHtml}</div>`
+      : '<div class="brand">Goo<em>voiture</em></div>',
+    `<p>${esc(T.footer)} · ${esc(fmtFull(new Date()))}</p>`,
+    `<p class="legal">${esc(T.legal)}</p>`,
+    "</div>",
+    "</div>",
+    "</body>",
+    "</html>",
+  ].join("");
 }
 
-/**
- * Renders booking receipt HTML to a PDF file and opens the system share sheet.
- * @param {object} booking — same shape as owner booking from API
- * @param {{ fr?: boolean }} opts
- * @returns {Promise<{ uri: string }>}
- */
-export async function shareBookingPdf(booking, opts = {}) {
-  const fr = !!opts.fr;
-  const html = buildBookingHtml(booking, fr);
-  const { uri } = await Print.printToFileAsync({ html, base64: false });
-  const canShare = await Sharing.isAvailableAsync();
-  if (!canShare) {
-    const e = new Error(fr ? "Le partage de fichiers n'est pas disponible sur cet appareil." : "Sharing is not available on this device.");
-    e.code = "NO_SHARE";
-    throw e;
-  }
-  await Sharing.shareAsync(uri, {
-    mimeType: "application/pdf",
-    dialogTitle: fr ? "Enregistrer ou partager le PDF" : "Save or share PDF",
-    UTI: "com.adobe.pdf",
+export async function shareBookingPdf(booking, _opts = {}) {
+  const logoDataUri = await getReceiptLogoDataUri();
+  const html = buildBookingHtml(booking, logoDataUri);
+  const ref = fmtShortId(booking._id);
+  const { uri } = await Print.printToFileAsync({
+    html,
+    base64: false,
   });
-  return { uri };
+  const canShare = await Sharing.isAvailableAsync();
+  if (canShare) {
+    await Sharing.shareAsync(uri, {
+      mimeType: "application/pdf",
+      dialogTitle: `Reçu #${ref}`,
+      UTI: "com.adobe.pdf",
+    });
+  }
+  return uri;
 }
