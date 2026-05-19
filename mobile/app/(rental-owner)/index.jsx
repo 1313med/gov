@@ -129,44 +129,95 @@ function AnimatedNumber({ value, formatter, textColor, duration = 900 }) {
   return <Text style={[s.heroRevenueValue, { color: textColor }]}>{formatter(display)}</Text>;
 }
 
-function OccupancyRing({ percent, accent, isDark, fr }) {
-  const spin = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(0.85)).current;
+const OCC_SEGMENTS = 36;
+const OCC_SIZE = 96;
+
+/** Radial tick ring — fills sequentially, no spinning halo */
+function OccupancyGauge({ percent, accent, isDark, fr }) {
+  const p = Math.min(100, Math.max(0, percent));
+  const litCount = Math.round((p / 100) * OCC_SEGMENTS);
+  const segAnims = useRef(Array.from({ length: OCC_SEGMENTS }, () => new Animated.Value(0))).current;
+  const displayAnim = useRef(new Animated.Value(0)).current;
+  const enterScale = useRef(new Animated.Value(0.92)).current;
+  const [displayPct, setDisplayPct] = useState(0);
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.spring(scale, { toValue: 1, friction: 6, tension: 40, useNativeDriver: true }),
-      Animated.loop(
-        Animated.timing(spin, {
-          toValue: 1,
-          duration: 12000,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        })
-      ),
-    ]).start();
-  }, []);
+    segAnims.forEach((a) => a.setValue(0));
+    displayAnim.setValue(0);
+    enterScale.setValue(0.92);
 
-  const rotate = spin.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "360deg"] });
-  const p = Math.min(100, Math.max(0, percent));
+    const segmentRuns = segAnims.map((anim, i) =>
+      Animated.timing(anim, {
+        toValue: i < litCount ? 1 : 0,
+        duration: 380,
+        delay: 120 + i * 18,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    );
+
+    const listener = displayAnim.addListener(({ value }) => setDisplayPct(value));
+
+    Animated.parallel([
+      Animated.spring(enterScale, { toValue: 1, friction: 7, tension: 48, useNativeDriver: true }),
+      Animated.sequence([
+        Animated.delay(80),
+        Animated.parallel([
+          ...segmentRuns,
+          Animated.timing(displayAnim, {
+            toValue: p,
+            duration: 820,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: false,
+          }),
+        ]),
+      ]),
+    ]).start();
+
+    return () => displayAnim.removeListener(listener);
+  }, [p, litCount, segAnims, displayAnim, enterScale]);
+
+  const radius = OCC_SIZE / 2 - 10;
+  const trackColor = isDark ? "rgba(255,255,255,0.12)" : "rgba(15,23,42,0.1)";
 
   return (
-    <Animated.View style={[s.ringOuter, { transform: [{ scale }] }]}>
-      <Animated.View style={[s.ringGlow, { transform: [{ rotate }] }]}>
-        <LinearGradient
-          colors={[`${accent}00`, accent, "#a78bfa", `${accent}00`]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-      </Animated.View>
-      <View style={[s.ringInner, { backgroundColor: isDark ? "#0c1210" : "#f8fafc" }]}>
-        <Text style={[s.ringPercent, { color: isDark ? "#f8fafc" : "#0f172a" }]}>{Math.round(p)}%</Text>
-        <Text style={[s.ringLabel, { color: isDark ? "#64748b" : "#94a3b8" }]}>
+    <Animated.View style={[s.occWrap, { transform: [{ scale: enterScale }] }]}>
+      <View
+        style={[
+          s.occTrack,
+          {
+            borderColor: trackColor,
+            backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.6)",
+          },
+        ]}
+      />
+      {Array.from({ length: OCC_SEGMENTS }).map((_, i) => {
+        const angle = (i / OCC_SEGMENTS) * 2 * Math.PI - Math.PI / 2;
+        const x = radius * Math.cos(angle);
+        const y = radius * Math.sin(angle);
+        const rot = (angle * 180) / Math.PI + 90;
+        const scale = segAnims[i].interpolate({ inputRange: [0, 1], outputRange: [0.35, 1] });
+        const opacity = segAnims[i].interpolate({ inputRange: [0, 1], outputRange: [0.25, 1] });
+        return (
+          <Animated.View
+            key={`occ-seg-${i}`}
+            style={[
+              s.occTick,
+              {
+                backgroundColor: accent,
+                opacity,
+                transform: [{ translateX: x }, { translateY: y }, { rotate: `${rot}deg` }, { scale }],
+              },
+            ]}
+          />
+        );
+      })}
+      <View style={[s.occCore, { backgroundColor: isDark ? "#0c1210" : "#f8fafc", borderColor: `${accent}35` }]}>
+        <Text style={[s.occPercent, { color: isDark ? "#f8fafc" : "#0f172a" }]}>{Math.round(displayPct)}%</Text>
+        <Text style={[s.occLabel, { color: isDark ? "#64748b" : "#94a3b8" }]}>
           {fr ? "Occupation" : "Occupancy"}
         </Text>
       </View>
-      <View style={[s.ringArc, { width: `${p}%`, backgroundColor: accent }]} />
     </Animated.View>
   );
 }
@@ -777,7 +828,7 @@ export default function RentalOwnerDashboard() {
                         </Text>
                       </View>
                     </View>
-                    <OccupancyRing percent={occupancy} accent={accent} isDark={isDark} fr={fr} />
+                    <OccupancyGauge percent={occupancy} accent={accent} isDark={isDark} fr={fr} />
                   </View>
                   <TouchableOpacity
                     onPress={() => router.push("/owner-analytics")}
@@ -1030,31 +1081,34 @@ const s = StyleSheet.create({
     borderRadius: 14,
   },
   analyticsCtaText: { color: "#fff", fontWeight: "800", fontSize: 14, flex: 1, textAlign: "center" },
-  ringOuter: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+  occWrap: {
+    width: OCC_SIZE,
+    height: OCC_SIZE,
     alignItems: "center",
     justifyContent: "center",
-    position: "relative",
   },
-  ringGlow: {
+  occTrack: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 48,
-    opacity: 0.85,
-    padding: 3,
+    borderRadius: OCC_SIZE / 2,
+    borderWidth: 2,
   },
-  ringInner: {
-    width: 78,
-    height: 78,
-    borderRadius: 39,
+  occTick: {
+    position: "absolute",
+    width: 3,
+    height: 9,
+    borderRadius: 2,
+  },
+  occCore: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
     zIndex: 2,
   },
-  ringPercent: { fontSize: 22, fontWeight: "900", letterSpacing: -0.5 },
-  ringLabel: { fontSize: 9, fontWeight: "700", marginTop: 2, textTransform: "uppercase", letterSpacing: 0.6 },
-  ringArc: { position: "absolute", bottom: 0, left: 0, height: 3, borderRadius: 2, zIndex: 3 },
+  occPercent: { fontSize: 22, fontWeight: "900", letterSpacing: -0.5 },
+  occLabel: { fontSize: 9, fontWeight: "700", marginTop: 2, textTransform: "uppercase", letterSpacing: 0.6 },
   sectionEyebrow: { fontSize: 10, fontWeight: "800", letterSpacing: 1.6, textTransform: "uppercase" },
   sectionTitle: { fontSize: 22, fontWeight: "800", letterSpacing: -0.5, marginBottom: 16 },
   sectionHead: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 14, marginTop: 8 },
