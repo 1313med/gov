@@ -11,7 +11,7 @@ import {
   Platform,
   StyleSheet,
 } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import { DatePickerField } from "../src/components/garage/DatePickerField";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -31,42 +31,6 @@ import { syncGarageLocalReminders } from "../src/utils/garageLocalReminders";
 function FieldLabel({ text, isDark }) {
   return (
     <Text style={[st.label, { color: isDark ? "#64748b" : "#94a3b8" }]}>{text}</Text>
-  );
-}
-
-function DateField({ label, value, onChange, isDark, fr }) {
-  const [show, setShow] = useState(false);
-  const formatted = value
-    ? new Date(value).toLocaleDateString(fr ? "fr-FR" : "en-GB", { day: "2-digit", month: "short", year: "numeric" })
-    : fr
-      ? "Appuyez pour choisir"
-      : "Tap to choose";
-
-  return (
-    <View>
-      <FieldLabel text={label} isDark={isDark} />
-      <TouchableOpacity
-        onPress={() => setShow(true)}
-        activeOpacity={0.75}
-        style={[st.inputBtn, { borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(15,23,42,0.1)", backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "#fff" }]}
-      >
-        <Text style={{ fontSize: 14, fontWeight: "600", color: value ? (isDark ? "#f1f5f9" : "#0f172a") : isDark ? "#475569" : "#94a3b8" }}>
-          {formatted}
-        </Text>
-        <Ionicons name="calendar-outline" size={18} color={isDark ? "#475569" : "#94a3b8"} />
-      </TouchableOpacity>
-      {show && (
-        <DateTimePicker
-          value={value ? new Date(value) : new Date()}
-          mode="date"
-          display={Platform.OS === "ios" ? "spinner" : "default"}
-          onChange={(_, d) => {
-            setShow(Platform.OS === "ios");
-            if (d) onChange(d.toISOString());
-          }}
-        />
-      )}
-    </View>
   );
 }
 
@@ -207,13 +171,16 @@ export default function EditGarageItemScreen() {
             const label = fr ? f.labelFr : f.labelEn;
             if (f.type === "date") {
               return (
-                <DateField
+                <DatePickerField
                   key={f.formKey}
                   label={label}
                   value={form[f.formKey]}
                   onChange={(v) => setField(f.formKey, v)}
                   isDark={isDark}
                   fr={fr}
+                  accent={isDark ? "#38bdf8" : "#0284c7"}
+                  emptyLabel={fr ? "Appuyez pour choisir" : "Tap to choose"}
+                  maximumDate={new Date()}
                 />
               );
             }

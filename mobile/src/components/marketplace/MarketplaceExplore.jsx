@@ -46,6 +46,7 @@ import {
   clearFilterKey,
   itemMatchesFilters,
 } from "../../utils/marketplaceFilters";
+import NotificationHeaderButton from "../NotificationHeaderButton";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 
@@ -400,18 +401,28 @@ export default function MarketplaceExplore({
         />
 
         <View style={{ paddingHorizontal: 20 }}>
-          <Text style={{ color: accent, fontSize: 10, fontWeight: "800", letterSpacing: 2.4, textTransform: "uppercase", marginBottom: 6 }}>
-            {fr ? "Collection premium" : "Premium collection"}
-          </Text>
-          <Text style={{ color: titleColor, fontWeight: "900", fontSize: 30, letterSpacing: -0.8, lineHeight: 36 }}>
-            {variant === "carOwner"
-              ? fr
-                ? "Le marché GooVoiture"
-                : "The GooVoiture market"
-              : fr
-                ? "Explorez"
-                : "Explore"}
-          </Text>
+          <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: accent, fontSize: 10, fontWeight: "800", letterSpacing: 2.4, textTransform: "uppercase", marginBottom: 6 }}>
+                {fr ? "Collection premium" : "Premium collection"}
+              </Text>
+              <Text style={{ color: titleColor, fontWeight: "900", fontSize: 30, letterSpacing: -0.8, lineHeight: 36 }}>
+                {variant === "carOwner"
+                  ? fr
+                    ? "Le marché GooVoiture"
+                    : "The GooVoiture market"
+                  : fr
+                    ? "Explorez"
+                    : "Explore"}
+              </Text>
+            </View>
+            <NotificationHeaderButton
+              size={44}
+              iconColor={titleColor}
+              borderColor={isDark ? "rgba(255,255,255,0.12)" : "rgba(15,23,42,0.1)"}
+              backgroundColor={isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.75)"}
+            />
+          </View>
           <Text style={{ color: subColor, fontSize: 14, lineHeight: 21, marginTop: 8, fontWeight: "500", maxWidth: 340 }}>
             {mode === "rent"
               ? fr

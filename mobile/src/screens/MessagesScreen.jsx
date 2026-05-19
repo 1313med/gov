@@ -28,6 +28,7 @@ import { useAppLang } from "../context/AppLangContext";
 import { useRouter } from "expo-router";
 import { useTheme } from "../context/ThemeContext";
 import { resolveMediaUrl } from "../utils/mediaUrl";
+import NotificationHeaderButton from "../components/NotificationHeaderButton";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 
@@ -276,8 +277,18 @@ export default function MessagesScreen() {
       <GlowOrb scaleAnim={orbPulse} colors={orbA} style={{ width: 200, height: 200, top: -70, right: -60 }} />
       <GlowOrb scaleAnim={orbPulse} colors={orbB} style={{ width: 170, height: 170, bottom: -40, left: -70 }} />
       <View style={{ paddingHorizontal: 20 }}>
-        <Text style={{ color: C.primary, fontSize: 10, fontWeight: "800", letterSpacing: 2.2, textTransform: "uppercase", marginBottom: 8 }}>{fr ? "Boîte de réception" : "Inbox"}</Text>
-        <Text style={{ color: titleColor, fontWeight: "900", fontSize: 28, letterSpacing: -0.8, lineHeight: 34 }}>Messages</Text>
+        <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: C.primary, fontSize: 10, fontWeight: "800", letterSpacing: 2.2, textTransform: "uppercase", marginBottom: 8 }}>{fr ? "Boîte de réception" : "Inbox"}</Text>
+            <Text style={{ color: titleColor, fontWeight: "900", fontSize: 28, letterSpacing: -0.8, lineHeight: 34 }}>Messages</Text>
+          </View>
+          <NotificationHeaderButton
+            size={44}
+            iconColor={titleColor}
+            borderColor={isDark ? "rgba(255,255,255,0.12)" : "rgba(15,23,42,0.1)"}
+            backgroundColor={isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.75)"}
+          />
+        </View>
         <Text style={{ color: subColor, fontSize: 14, lineHeight: 21, marginTop: 10, fontWeight: "500", maxWidth: 340 }}>
           {fr ? "Touchez une conversation pour reprendre où vous vous êtes arrêté." : "Tap a thread to pick up where you left off — fast, clear, and calm."}
         </Text>

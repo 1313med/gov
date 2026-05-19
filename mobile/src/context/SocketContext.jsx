@@ -1,9 +1,10 @@
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState, useCallback } from "react";
 import { Platform } from "react-native";
 import { io } from "socket.io-client";
 import * as Notifications from "expo-notifications";
 import { SERVER_URL } from "../config";
 import { useAuth } from "./AuthContext";
+import { getNotifications } from "../api/notification";
 
 const SocketContext = createContext(null);
 
@@ -97,6 +98,24 @@ export function SocketProvider({ children }) {
   const clearNotificationBadge = () => setUnreadNotifications(0);
   const clearMessageBadge = () => setUnreadMessages(0);
 
+  const refreshUnreadCount = useCallback(async () => {
+    if (!auth?.token) {
+      setUnreadNotifications(0);
+      return;
+    }
+    try {
+      const { data } = await getNotifications();
+      const list = Array.isArray(data) ? data : [];
+      setUnreadNotifications(list.filter((n) => !n.read).length);
+    } catch {
+      /* keep last count */
+    }
+  }, [auth?.token]);
+
+  useEffect(() => {
+    refreshUnreadCount();
+  }, [refreshUnreadCount]);
+
   return (
     <SocketContext.Provider
       value={{
@@ -106,6 +125,7 @@ export function SocketProvider({ children }) {
         liveNotification,
         clearNotificationBadge,
         clearMessageBadge,
+        refreshUnreadCount,
       }}
     >
       {children}

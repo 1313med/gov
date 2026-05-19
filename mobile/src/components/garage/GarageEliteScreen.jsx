@@ -49,6 +49,7 @@ import {
 import { computeStatuses, buildTrackItems, countAlerts, soonestDeadline } from "../../utils/garageStatus";
 import { PageLoader } from "../AppLoadingScreen";
 import AppBrandMark from "../AppBrandMark";
+import NotificationHeaderButton from "../NotificationHeaderButton";
 
 const { width: SW } = Dimensions.get("window");
 
@@ -379,18 +380,24 @@ export default function GarageEliteScreen({
                 </Text>
               ) : null}
             </View>
-            {car ? (
-              <View style={{ flexDirection: "row", gap: 6 }}>
-                <TouchableOpacity onPress={goEdit} activeOpacity={0.8} style={[s.iconBtn, { borderColor: `${accent}44` }]}>
-                  <Ionicons name="create-outline" size={18} color={accent} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={handleDelete} activeOpacity={0.8} style={[s.iconBtn, { borderColor: "rgba(239,68,68,0.35)" }]}>
-                  <Ionicons name="trash-outline" size={17} color="#ef4444" />
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <View style={{ width: 40 }} />
-            )}
+            <View style={{ flexDirection: "row", gap: 6, alignItems: "center" }}>
+              <NotificationHeaderButton
+                size={40}
+                iconColor={titleColor}
+                borderColor={isDark ? "rgba(255,255,255,0.12)" : "rgba(15,23,42,0.1)"}
+                backgroundColor={isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.75)"}
+              />
+              {car ? (
+                <>
+                  <TouchableOpacity onPress={goEdit} activeOpacity={0.8} style={[s.iconBtn, { borderColor: `${accent}44` }]}>
+                    <Ionicons name="create-outline" size={18} color={accent} />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={handleDelete} activeOpacity={0.8} style={[s.iconBtn, { borderColor: "rgba(239,68,68,0.35)" }]}>
+                    <Ionicons name="trash-outline" size={17} color="#ef4444" />
+                  </TouchableOpacity>
+                </>
+              ) : null}
+            </View>
           </View>
 
         </Animated.View>

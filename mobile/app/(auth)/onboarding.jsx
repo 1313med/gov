@@ -1,13 +1,13 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
   FlatList,
-  TouchableOpacity,
+  Pressable,
   StyleSheet,
   Animated,
   Dimensions,
-  Pressable,
+  Easing,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -15,181 +15,178 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../src/context/AuthContext";
 import { useTheme } from "../../src/context/ThemeContext";
-import { useAppLang } from "../../src/context/AppLangContext";
 import AppBrandMark from "../../src/components/AppBrandMark";
 import { markOnboarded } from "../../src/utils/authStorage";
 import { useActiveMode } from "../../src/context/ActiveModeContext";
+import {
+  getOnboardingMeta,
+  getOnboardingSlides,
+} from "../../src/content/roleOnboarding.fr";
+import {
+  getUserRoles,
+  homeShellForUser,
+  normalizeRoleSlug,
+} from "../../src/utils/userRoles";
 
 const { width: W } = Dimensions.get("window");
 
-import { homeShellForUser, normalizeRoleSlug } from "../../src/utils/userRoles";
+function resolveOnboardingRole(auth, activeMode) {
+  const roles = getUserRoles(auth);
+  if (activeMode && roles.includes(normalizeRoleSlug(activeMode))) {
+    return normalizeRoleSlug(activeMode);
+  }
+  return normalizeRoleSlug(auth?.role);
+}
 
-const SLIDES = {
-  customer: [
-    {
-      icon: "search-outline",
-      iconColor: "#7c6bff",
-      gradColors: ["rgba(124,107,255,0.18)", "rgba(124,107,255,0.04)"],
-      en: { title: "Explore the best cars in Morocco", body: "Browse thousands of verified rentals and cars for sale — all in one place, beautifully organised." },
-      fr: { title: "Explorez les meilleures voitures", body: "Des milliers de locations et voitures vérifiées — tout en un endroit, parfaitement organisé." },
-    },
-    {
-      icon: "calendar-outline",
-      iconColor: "#38bdf8",
-      gradColors: ["rgba(56,189,248,0.18)", "rgba(56,189,248,0.04)"],
-      en: { title: "Book a rental in seconds", body: "Pick your dates, see the exact price, confirm — and your car is ready for pickup." },
-      fr: { title: "Réservez en quelques secondes", body: "Choisissez vos dates, voyez le prix exact, confirmez — et votre voiture est prête." },
-    },
-    {
-      icon: "shield-checkmark-outline",
-      iconColor: "#34d399",
-      gradColors: ["rgba(52,211,153,0.18)", "rgba(52,211,153,0.04)"],
-      en: { title: "Verify once, book forever", body: "Add your driver's license and national ID once. After that, every booking is instant." },
-      fr: { title: "Vérifiez une fois, réservez toujours", body: "Ajoutez permis et CIN une seule fois. Après ça, chaque réservation est instantanée." },
-    },
-  ],
-  car_owner: [
-    {
-      icon: "car-sport-outline",
-      iconColor: "#38bdf8",
-      gradColors: ["rgba(56,189,248,0.18)", "rgba(56,189,248,0.04)"],
-      en: { title: "Your car, always under control", body: "Track insurance, oil changes, technical visits, and vignette — every document, every date, in one place." },
-      fr: { title: "Votre voiture, toujours sous contrôle", body: "Suivez assurance, vidange, visite technique et vignette — chaque document, chaque date, en un seul endroit." },
-    },
-    {
-      icon: "notifications-outline",
-      iconColor: "#f59e0b",
-      gradColors: ["rgba(245,158,11,0.18)", "rgba(245,158,11,0.04)"],
-      en: { title: "Get notified before anything expires", body: "We alert you 30 days before your insurance, license, or registration expires. Never get caught off guard." },
-      fr: { title: "Alertes avant toute expiration", body: "Nous vous alertons 30 jours avant l'expiration de votre assurance, permis ou carte grise. Plus jamais de surprise." },
-    },
-    {
-      icon: "storefront-outline",
-      iconColor: "#7c6bff",
-      gradColors: ["rgba(124,107,255,0.18)", "rgba(124,107,255,0.04)"],
-      en: { title: "The marketplace is right here", body: "Whenever you're ready — list your car for sale. Thousands of buyers are already browsing Goovoiture." },
-      fr: { title: "La marketplace est là pour vous", body: "Quand vous êtes prêt — mettez votre voiture en vente. Des milliers d'acheteurs parcourent déjà Goovoiture." },
-    },
-  ],
-  rental_owner: [
-    {
-      icon: "analytics-outline",
-      iconColor: "#34d399",
-      gradColors: ["rgba(52,211,153,0.18)", "rgba(52,211,153,0.04)"],
-      en: { title: "Your fleet dashboard, live", body: "Revenue, active bookings, and fleet health — visible at a glance the moment you open the app." },
-      fr: { title: "Votre tableau de bord, en direct", body: "Revenus, réservations actives et santé de flotte — visibles dès l'ouverture de l'application." },
-    },
-    {
-      icon: "clipboard-outline",
-      iconColor: "#7c6bff",
-      gradColors: ["rgba(124,107,255,0.18)", "rgba(124,107,255,0.04)"],
-      en: { title: "Accept bookings in one tap", body: "Review requests, approve or decline — fast, simple, and always in your control." },
-      fr: { title: "Acceptez des réservations en un tap", body: "Examinez les demandes, approuvez ou refusez — rapide, simple et toujours sous votre contrôle." },
-    },
-    {
-      icon: "trophy-outline",
-      iconColor: "#f59e0b",
-      gradColors: ["rgba(245,158,11,0.18)", "rgba(245,158,11,0.04)"],
-      en: { title: "Track what's working", body: "Views per listing, occupancy rate, and monthly revenue — know exactly which cars perform best." },
-      fr: { title: "Suivez ce qui fonctionne", body: "Vues par annonce, taux d'occupation et revenus mensuels — sachez exactement quelles voitures performent." },
-    },
-  ],
-};
-
-function Slide({ slide, fr, C, isDark }) {
-  const titleColor = isDark ? "#f8fafc" : "#0f172a";
-  const subColor = isDark ? "#94a3b8" : "#475569";
-  const copy = fr ? slide.fr : slide.en;
-
+function GlowOrb({ style, colors, pulse }) {
   return (
-    <View style={{ width: W, paddingHorizontal: 32, alignItems: "center", justifyContent: "center" }}>
-      <LinearGradient
-        colors={slide.gradColors}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.iconCircle, { borderColor: `${slide.iconColor}35` }]}
-      >
-        <Ionicons name={slide.icon} size={52} color={slide.iconColor} />
-      </LinearGradient>
-      <Text style={[styles.slideTitle, { color: titleColor }]}>{copy.title}</Text>
-      <Text style={[styles.slideBody, { color: subColor }]}>{copy.body}</Text>
-    </View>
+    <Animated.View pointerEvents="none" style={[styles.orb, style, { opacity: pulse }]}>
+      <LinearGradient colors={colors} style={StyleSheet.absoluteFill} />
+    </Animated.View>
   );
 }
 
-function Dots({ total, current, activeColor }) {
+function SlideCard({ slide, meta, isDark, index, scrollX }) {
+  const inputRange = [(index - 1) * W, index * W, (index + 1) * W];
+  const scale = scrollX.interpolate({
+    inputRange,
+    outputRange: [0.88, 1, 0.88],
+    extrapolate: "clamp",
+  });
+  const opacity = scrollX.interpolate({
+    inputRange,
+    outputRange: [0.35, 1, 0.35],
+    extrapolate: "clamp",
+  });
+  const translateY = scrollX.interpolate({
+    inputRange,
+    outputRange: [24, 0, 24],
+    extrapolate: "clamp",
+  });
+
+  const titleColor = isDark ? "#f8fafc" : "#0f172a";
+  const subColor = isDark ? "#94a3b8" : "#64748b";
+  const chipBg = isDark ? "rgba(255,255,255,0.07)" : "rgba(15,23,42,0.05)";
+  const chipBorder = isDark ? "rgba(255,255,255,0.1)" : "rgba(15,23,42,0.08)";
+  const isWelcome = slide.kind === "welcome";
+
   return (
-    <View style={styles.dotsRow}>
-      {Array.from({ length: total }).map((_, i) => (
-        <View
-          key={i}
-          style={[
-            styles.dot,
-            {
-              backgroundColor: i === current ? activeColor : `${activeColor}35`,
-              width: i === current ? 20 : 7,
-            },
-          ]}
-        />
-      ))}
-    </View>
+    <Animated.View
+      style={[
+        styles.slideWrap,
+        { width: W, opacity, transform: [{ scale }, { translateY }] },
+      ]}
+    >
+      {isWelcome ? (
+        <View style={[styles.welcomeBadge, { borderColor: `${meta.accent}55` }]}>
+          <LinearGradient
+            colors={[`${meta.accent}33`, `${meta.accent}12`]}
+            style={StyleSheet.absoluteFill}
+          />
+          <Ionicons name="ribbon-outline" size={14} color={meta.accent} />
+          <Text style={[styles.welcomeBadgeTxt, { color: meta.accent }]}>
+            {meta.label} · {meta.tagline}
+          </Text>
+        </View>
+      ) : null}
+
+      <LinearGradient
+        colors={meta.heroGrad}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.iconRing, { borderColor: `${meta.accent}40` }]}
+      >
+        <View style={[styles.iconInner, { backgroundColor: `${meta.accent}18` }]}>
+          <Ionicons name={slide.icon} size={isWelcome ? 56 : 48} color={meta.accent} />
+        </View>
+      </LinearGradient>
+
+      <Text style={[styles.slideTitle, { color: titleColor }]}>{slide.title}</Text>
+      <Text style={[styles.slideBody, { color: subColor }]}>{slide.body}</Text>
+
+      <View style={styles.tipsWrap}>
+        {slide.tips.map((tip) => (
+          <View
+            key={tip}
+            style={[styles.tipChip, { backgroundColor: chipBg, borderColor: chipBorder }]}
+          >
+            <Ionicons name="checkmark-circle" size={16} color={meta.accent} />
+            <Text style={[styles.tipTxt, { color: isDark ? "#e2e8f0" : "#334155" }]}>{tip}</Text>
+          </View>
+        ))}
+      </View>
+    </Animated.View>
   );
 }
 
 export default function OnboardingScreen() {
   const { auth } = useAuth();
-  const { ensureCarOwnerLanding, ensureRentalOwnerLanding } = useActiveMode();
+  const { activeMode, ready: modeReady, ensureCarOwnerLanding, ensureRentalOwnerLanding } =
+    useActiveMode();
   const { colors: C, isDark } = useTheme();
-  const { lang } = useAppLang();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const fr = lang === "fr";
 
-  const role = normalizeRoleSlug(auth?.role);
-  const slides = SLIDES[role] || SLIDES.customer;
+  const role = resolveOnboardingRole(auth, modeReady ? activeMode : null);
+  const roles = getUserRoles(auth);
+  const multiRole =
+    [roles.includes("car_owner"), roles.includes("rental_owner"), roles.includes("admin")].filter(
+      Boolean,
+    ).length > 1;
+  const meta = getOnboardingMeta(role);
+  const slides = getOnboardingSlides(role, { multiRole });
   const [index, setIndex] = useState(0);
   const flatRef = useRef(null);
+  const scrollX = useRef(new Animated.Value(0)).current;
   const btnScale = useRef(new Animated.Value(1)).current;
+  const orbPulse = useRef(new Animated.Value(0.45)).current;
 
   const isLast = index === slides.length - 1;
+  const progress = (index + 1) / slides.length;
 
-  const heroGrad = isDark
-    ? ["#03040a", "#120a24", "#0a1628", "#05060f"]
-    : ["#faf5ff", "#e0f2fe", "#f0f9ff", "#f8fafc"];
+  const bgGrad = isDark
+    ? ["#03040a", "#0c0a18", "#05060f"]
+    : ["#faf5ff", "#f0f9ff", "#f8fafc"];
 
-  const getRoleColors = () => {
-    if (role === "rental_owner") return isDark ? ["#34d399", "#10b981"] : ["#059669", "#047857"];
-    if (role === "car_owner") return isDark ? ["#38bdf8", "#0ea5e9"] : ["#0284c7", "#0369a1"];
-    return isDark ? ["#7c6bff", "#5b4ddb"] : ["#6248e8", "#4f46e5"];
-  };
-  const getRoleAccent = () => {
-    if (role === "rental_owner") return isDark ? "#34d399" : "#059669";
-    if (role === "car_owner") return isDark ? "#38bdf8" : "#0284c7";
-    return isDark ? "#7c6bff" : "#6248e8";
-  };
-
-  const ctaGrad = getRoleColors();
-  const accent = getRoleAccent();
-  const titleColor = isDark ? "#f8fafc" : "#0f172a";
-  const subColor = isDark ? "#94a3b8" : "#475569";
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(orbPulse, {
+          toValue: 0.75,
+          duration: 2800,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(orbPulse, {
+          toValue: 0.4,
+          duration: 2800,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [orbPulse]);
 
   const finish = useCallback(async () => {
     if (auth?._id) await markOnboarded(auth._id);
-    if (role === "car_owner" || role === "seller") {
+    const r = normalizeRoleSlug(role);
+    if (r === "car_owner") {
       await ensureCarOwnerLanding();
       router.replace("/(car-owner)");
-    } else if (role === "rental_owner") {
+    } else if (r === "rental_owner") {
       await ensureRentalOwnerLanding();
       router.replace("/(rental-owner)");
     } else {
-      router.replace(homeShellForUser({ role, roles: auth?.roles }));
+      router.replace(homeShellForUser({ role: r, roles: auth?.roles }));
     }
   }, [auth, role, ensureCarOwnerLanding, ensureRentalOwnerLanding, router]);
 
   const next = () => {
     if (isLast) {
       Animated.sequence([
-        Animated.spring(btnScale, { toValue: 0.95, friction: 6, useNativeDriver: true }),
+        Animated.spring(btnScale, { toValue: 0.96, friction: 6, useNativeDriver: true }),
         Animated.spring(btnScale, { toValue: 1, friction: 5, useNativeDriver: true }),
       ]).start(finish);
     } else {
@@ -199,54 +196,98 @@ export default function OnboardingScreen() {
     }
   };
 
-  const onViewableChanged = useCallback(({ viewableItems }) => {
-    if (viewableItems[0]) setIndex(viewableItems[0].index);
-  }, []);
+  const onViewableChanged = useRef(({ viewableItems }) => {
+    if (viewableItems[0]?.index != null) setIndex(viewableItems[0].index);
+  }).current;
 
-  const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
+  const onScroll = Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
+    useNativeDriver: false,
+  });
 
   return (
-    <View style={{ flex: 1, backgroundColor: C.bg }}>
-      <LinearGradient colors={heroGrad} style={{ paddingTop: insets.top + 16, paddingBottom: 20, paddingHorizontal: 24, overflow: "hidden" }}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <AppBrandMark size={42} radius={13} gradientColors={ctaGrad} halo />
-          <TouchableOpacity onPress={finish} activeOpacity={0.8} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-            <Text style={[styles.skipText, { color: subColor }]}>{fr ? "Passer" : "Skip"}</Text>
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
+    <View style={[styles.root, { backgroundColor: C.bg }]}>
+      <LinearGradient colors={bgGrad} style={StyleSheet.absoluteFill} />
 
-      <View style={{ flex: 1, justifyContent: "center" }}>
-        <FlatList
-          ref={flatRef}
-          data={slides}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          keyExtractor={(_, i) => String(i)}
-          renderItem={({ item }) => <Slide slide={item} fr={fr} C={C} isDark={isDark} />}
-          onViewableItemsChanged={onViewableChanged}
-          viewabilityConfig={viewConfig}
-          scrollEnabled={true}
-          getItemLayout={(_, i) => ({ length: W, offset: W * i, index: i })}
-        />
+      <GlowOrb
+        style={{ width: 220, height: 220, top: -40, right: -60 }}
+        colors={[`${meta.accent}55`, "transparent"]}
+        pulse={orbPulse}
+      />
+      <GlowOrb
+        style={{ width: 180, height: 180, bottom: 120, left: -70 }}
+        colors={[`${meta.accent}33`, "transparent"]}
+        pulse={orbPulse}
+      />
+
+      <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
+        <View style={styles.topRow}>
+          <AppBrandMark size={40} radius={12} gradientColors={meta.grad} halo />
+          <Pressable onPress={finish} hitSlop={14} style={styles.skipBtn}>
+            <Text style={[styles.skipTxt, { color: C.muted }]}>Passer</Text>
+          </Pressable>
+        </View>
+        <View style={[styles.progressTrack, { backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.08)" }]}>
+          <LinearGradient
+            colors={meta.grad}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={[styles.progressFill, { width: `${Math.round(progress * 100)}%` }]}
+          />
+        </View>
+        <Text style={[styles.stepLbl, { color: C.muted }]}>
+          Étape {index + 1} sur {slides.length}
+        </Text>
       </View>
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 24, paddingHorizontal: 28 }]}>
-        <Dots total={slides.length} current={index} activeColor={accent} />
+      <Animated.FlatList
+        ref={flatRef}
+        data={slides}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        keyExtractor={(_, i) => String(i)}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        renderItem={({ item, index: i }) => (
+          <SlideCard slide={item} meta={meta} isDark={isDark} index={i} scrollX={scrollX} />
+        )}
+        onViewableItemsChanged={onViewableChanged}
+        viewabilityConfig={{ viewAreaCoveragePercentThreshold: 55 }}
+        getItemLayout={(_, i) => ({ length: W, offset: W * i, index: i })}
+      />
 
-        <Animated.View style={{ transform: [{ scale: btnScale }], width: "100%", marginTop: 24 }}>
-          <Pressable onPress={next} activeOpacity={0.9}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
+        <View style={styles.dotsRow}>
+          {slides.map((_, i) => (
+            <View
+              key={i}
+              style={[
+                styles.dot,
+                {
+                  width: i === index ? 22 : 7,
+                  backgroundColor: i === index ? meta.accent : `${meta.accent}35`,
+                },
+              ]}
+            />
+          ))}
+        </View>
+
+        <Animated.View style={{ transform: [{ scale: btnScale }], width: "100%" }}>
+          <Pressable onPress={next}>
             <LinearGradient
-              colors={ctaGrad}
+              colors={meta.grad}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={styles.nextBtn}
+              style={[styles.cta, { shadowColor: meta.accent }]}
             >
-              <Text style={styles.nextBtnText}>
-                {isLast ? (fr ? "Commencer" : "Get Started") : (fr ? "Suivant" : "Next")}
+              <Text style={styles.ctaTxt}>
+                {isLast ? "C'est parti !" : "Continuer"}
               </Text>
-              <Ionicons name={isLast ? "checkmark-circle-outline" : "arrow-forward"} size={20} color="#fff" />
+              <Ionicons
+                name={isLast ? "rocket-outline" : "arrow-forward"}
+                size={22}
+                color="#fff"
+              />
             </LinearGradient>
           </Pressable>
         </Animated.View>
@@ -256,51 +297,106 @@ export default function OnboardingScreen() {
 }
 
 const styles = StyleSheet.create({
-  skipText: { fontSize: 14, fontWeight: "700" },
-  iconCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+  root: { flex: 1 },
+  orb: { position: "absolute", borderRadius: 999 },
+  topBar: { paddingHorizontal: 22, zIndex: 2 },
+  topRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
+  skipBtn: { paddingVertical: 8, paddingHorizontal: 4 },
+  skipTxt: { fontSize: 14, fontWeight: "700" },
+  progressTrack: {
+    height: 5,
+    borderRadius: 999,
+    overflow: "hidden",
+    marginBottom: 8,
+  },
+  progressFill: { height: "100%", borderRadius: 999 },
+  stepLbl: { fontSize: 12, fontWeight: "600", marginBottom: 4 },
+  slideWrap: {
+    paddingHorizontal: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 8,
+  },
+  welcomeBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    overflow: "hidden",
+    marginBottom: 20,
+  },
+  welcomeBadgeTxt: { fontSize: 12, fontWeight: "800", letterSpacing: 0.3 },
+  iconRing: {
+    width: 132,
+    height: 132,
+    borderRadius: 66,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1.5,
-    marginBottom: 32,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
+    marginBottom: 28,
+  },
+  iconInner: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    alignItems: "center",
+    justifyContent: "center",
   },
   slideTitle: {
     fontSize: 26,
     fontWeight: "800",
     textAlign: "center",
-    letterSpacing: -0.5,
-    lineHeight: 33,
-    marginBottom: 16,
+    letterSpacing: -0.6,
+    lineHeight: 32,
+    marginBottom: 12,
+    maxWidth: 340,
   },
   slideBody: {
     fontSize: 15,
-    lineHeight: 24,
+    lineHeight: 23,
     textAlign: "center",
     fontWeight: "500",
     maxWidth: 320,
+    marginBottom: 22,
   },
-  dotsRow: { flexDirection: "row", gap: 6, justifyContent: "center" },
+  tipsWrap: { width: "100%", maxWidth: 320, gap: 10 },
+  tipChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 11,
+    paddingHorizontal: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  tipTxt: { flex: 1, fontSize: 13, fontWeight: "600", lineHeight: 18 },
+  footer: { paddingHorizontal: 28, paddingTop: 8, zIndex: 2 },
+  dotsRow: {
+    flexDirection: "row",
+    gap: 6,
+    justifyContent: "center",
+    marginBottom: 18,
+  },
   dot: { height: 7, borderRadius: 4 },
-  footer: { alignItems: "center" },
-  nextBtn: {
+  cta: {
     borderRadius: 18,
-    paddingVertical: 17,
+    paddingVertical: 18,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
-    shadowColor: "#7c6bff",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.4,
-    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
     elevation: 10,
   },
-  nextBtnText: { color: "#fff", fontWeight: "800", fontSize: 16 },
+  ctaTxt: { color: "#fff", fontWeight: "800", fontSize: 17, letterSpacing: 0.2 },
 });
