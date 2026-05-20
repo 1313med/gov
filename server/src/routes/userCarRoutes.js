@@ -8,6 +8,7 @@ const {
   deleteCar,
   patchMileage,
   patchGarageSettings,
+  patchDocuments,
 } = require("../controllers/userCarController");
 const {
   listServiceLogs,
@@ -23,6 +24,7 @@ router.post("/mine/services", createServiceLog);
 router.post("/", createCar);
 router.patch("/:id/mileage", patchMileage);
 router.patch("/:id/reminders", patchGarageSettings);
+router.patch("/:id/documents", patchDocuments);
 router.put("/:id", updateCar);
 router.delete("/services/:logId", deleteServiceLog);
 router.delete("/:id", deleteCar);

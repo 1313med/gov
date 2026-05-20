@@ -28,9 +28,9 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-    <!-- Register service worker -->
+    <!-- Register service worker (production only — dev HMR breaks with SW caching) -->
     <script>
-      if ('serviceWorker' in navigator) {
+      if ('serviceWorker' in navigator && location.hostname !== 'localhost' && !location.hostname.startsWith('192.168.')) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js').catch(() => {});
         });

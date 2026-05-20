@@ -61,8 +61,22 @@ const userSchema = new mongoose.Schema(
     favorites:       [{ type: mongoose.Schema.Types.ObjectId, ref: "SaleListing" }],
     rentalFavorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "RentalListing" }],
 
-    /** Rental owner: last time they opened listing-views; used to badge “new” views on home. */
+    /** Rental owner: last time they opened listing-views; used to badge "new" views on home. */
     rentalListingViewsSeenAt: { type: Date, default: null },
+
+    /** Referral system */
+    referralCode:    { type: String, unique: true, sparse: true },
+    referredBy:      { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    referralCredits: { type: Number, default: 0 },  // MAD credits earned
+
+    /** Staff role: which rental owner account this user is staff for (null = not staff) */
+    staffForOwnerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    staffPermissions: {
+      manageBookings:  { type: Boolean, default: true },
+      manageMessages:  { type: Boolean, default: true },
+      viewAnalytics:   { type: Boolean, default: false },
+      managePricing:   { type: Boolean, default: false },
+    },
   },
   { timestamps: true }
 );

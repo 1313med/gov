@@ -3,6 +3,7 @@ import { getMyBookings, confirmReturn, rescheduleMyBooking, submitBookingCustome
 import { api } from "../api/axios";
 import { Link } from "react-router-dom";
 import { useAppLang } from "../context/AppLangContext";
+import BookingExtensionModal from "../components/BookingExtensionModal";
 
 function localYMD(d) {
   const x = new Date(d);
@@ -69,6 +70,7 @@ export default function MyBookings() {
   const [fbOverall, setFbOverall] = useState(null);
   const [fbNote, setFbNote] = useState("");
   const [fbSubmitting, setFbSubmitting] = useState(false);
+  const [extensionBooking, setExtensionBooking] = useState(null);
 
   const load = () =>
     getMyBookings()
@@ -236,6 +238,10 @@ export default function MyBookings() {
             !b.customerDateChangeUsed &&
             h > 0 &&
             calDays === 1;
+          const canExtend =
+            b.status === "confirmed" &&
+            new Date() < new Date(b.endDate) &&
+            (!b.extensionRequest?.status || b.extensionRequest.status === "rejected");
           const isPastEndDate  = b.endDate && new Date() > new Date(b.endDate);
           const showReturnBtn  =
             (b.status === "confirmed" || b.status === "expired") &&
@@ -371,6 +377,16 @@ export default function MyBookings() {
                   </button>
                 )}
 
+                {canExtend && (
+                  <button
+                    type="button"
+                    onClick={() => setExtensionBooking(b)}
+                    className="text-xs font-semibold text-blue-600 dark:text-sky-400 bg-transparent border border-blue-200 dark:border-sky-800 rounded-lg px-3 py-1 cursor-pointer hover:bg-blue-50 dark:hover:bg-sky-950/30"
+                  >
+                    {lang === "fr" ? "Prolonger" : "Extend"}
+                  </button>
+                )}
+
                 {showTripFeedback && (
                   <button
                     type="button"
@@ -476,6 +492,14 @@ export default function MyBookings() {
             </div>
           </div>
         </div>
+      )}
+
+      {extensionBooking && (
+        <BookingExtensionModal
+          booking={extensionBooking}
+          onClose={() => setExtensionBooking(null)}
+          onSuccess={() => { setExtensionBooking(null); load(); }}
+        />
       )}
 
       {feedbackBooking && (

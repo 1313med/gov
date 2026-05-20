@@ -786,6 +786,87 @@ export default function ProfileScreen() {
           />
         )}
 
+        {/* ── Outils & services ── */}
+        <Text style={[s.sectionEyebrow, { color: C.primary, marginTop: 10 }]}>{fr ? "Outils & services" : "Tools & services"}</Text>
+        <QuickActionCard
+          icon="shield-checkmark-outline"
+          label={fr ? "Vérification identité" : "Identity verification"}
+          onPress={() => router.push("/kyc")}
+          C={C}
+          isDark={isDark}
+          labelColor={titleColor}
+          color="#22c55e"
+        />
+        <QuickActionCard
+          icon="gift-outline"
+          label={fr ? "Mon parrainage" : "My referral"}
+          onPress={() => router.push("/referral")}
+          C={C}
+          isDark={isDark}
+          labelColor={titleColor}
+          color="#f59e0b"
+        />
+        <QuickActionCard
+          icon="book-outline"
+          label={fr ? "Guide d'achat Maroc" : "Buying guide Morocco"}
+          onPress={() => router.push("/buying-guide")}
+          C={C}
+          isDark={isDark}
+          labelColor={titleColor}
+          color="#6366f1"
+        />
+        <QuickActionCard
+          icon="search-outline"
+          label={fr ? "Vérification crédit voiture" : "Car credit check"}
+          onPress={() => router.push("/credit-check")}
+          C={C}
+          isDark={isDark}
+          labelColor={titleColor}
+          color="#0ea5e9"
+        />
+        <QuickActionCard
+          icon="warning-outline"
+          label={fr ? "Urgence & Accident" : "Emergency & Accident"}
+          onPress={() => router.push("/emergency")}
+          C={C}
+          isDark={isDark}
+          labelColor={titleColor}
+          color="#ef4444"
+        />
+        {(auth.role === "car_owner" || auth.role === "customer") && (
+          <>
+            <QuickActionCard
+              icon="speedometer-outline"
+              label={fr ? "Suivi carburant" : "Fuel tracker"}
+              onPress={() => router.push("/fuel-tracker")}
+              C={C}
+              isDark={isDark}
+              labelColor={titleColor}
+              color="#f97316"
+            />
+            <QuickActionCard
+              icon="car-outline"
+              label={fr ? "Assistant accident" : "Accident assistant"}
+              onPress={() => router.push("/accident-assistant")}
+              C={C}
+              isDark={isDark}
+              labelColor={titleColor}
+              color="#dc2626"
+            />
+          </>
+        )}
+        {auth.role === "rental_owner" && (
+          <QuickActionCard
+            icon="people-outline"
+            label={fr ? "Mon équipe" : "My staff"}
+            onPress={() => router.push("/staff-management")}
+            C={C}
+            isDark={isDark}
+            labelColor={titleColor}
+            color="#7c3aed"
+          />
+        )}
+
         <Text style={[s.sectionEyebrow, { color: C.primary, marginTop: 10 }]}>{fr ? "Langue & apparence" : "Language & appearance"}</Text>
         <ProfileGlassCard
           isDark={isDark}

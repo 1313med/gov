@@ -4,6 +4,7 @@ import { getOwnerBookings, updateBookingStatus, markBookingPaid, updateBookingMe
 import { submitCustomerFeedback, getFeedbackForBooking } from "../api/customerFeedback";
 import OwnerLayout from "../components/owner/OwnerLayout";
 import { useAppLang } from "../context/AppLangContext";
+import RenterTrustPassport from "../components/RenterTrustPassport";
 import {
   ChevronDown, ChevronUp, ImagePlus, Upload, X,
   FileDown, FileSpreadsheet, FileText, Search,
@@ -920,6 +921,9 @@ export default function OwnerBookingsList() {
   const [feedbackBooking, setFeedbackBooking] = useState(null);
   const [ratedBookings,   setRatedBookings]   = useState(new Set());
 
+  // Trust passport modal
+  const [trustUserId, setTrustUserId] = useState(null);
+
   useEffect(() => { load(page, filter); }, [page, filter]);
 
   async function load(p, f) {
@@ -1155,6 +1159,16 @@ export default function OwnerBookingsList() {
                           <td className="obl-td">
                             <p className="obl-customer-name">{b.customerId?.name || t.none}</p>
                             <p className="obl-customer-contact">{b.customerId?.phone || b.customerId?.email || t.none}</p>
+                            {b.customerId?._id && (
+                              <button
+                                type="button"
+                                className="obl-expand-btn"
+                                style={{ marginTop: 4, padding: "2px 7px", fontSize: 9 }}
+                                onClick={() => setTrustUserId(b.customerId._id)}
+                              >
+                                🛡 Confiance
+                              </button>
+                            )}
                           </td>
                           {/* booked on */}
                           <td className="obl-td" style={{ color: "#4a4a62", fontSize: 11 }}>{fmt(b.createdAt, lang)}</td>
@@ -1272,6 +1286,26 @@ export default function OwnerBookingsList() {
           </>
         )}
       </div>
+      {/* ── Renter trust passport modal ── */}
+      {trustUserId && (
+        <div className="fbk-overlay" onClick={(e) => e.target === e.currentTarget && setTrustUserId(null)}>
+          <div className="fbk-modal" style={{ maxWidth: 400 }}>
+            <div className="fbk-head">
+              <div>
+                <p className="fbk-title">Profil de confiance</p>
+                <p className="fbk-sub">Score de confiance du locataire</p>
+              </div>
+              <button className="fbk-close" onClick={() => setTrustUserId(null)}>
+                <span style={{ fontSize: 18 }}>✕</span>
+              </button>
+            </div>
+            <div style={{ padding: "20px 24px 24px" }}>
+              <RenterTrustPassport userId={trustUserId} />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Customer feedback modal ── */}
       {feedbackBooking && (
         <CustomerFeedbackModal

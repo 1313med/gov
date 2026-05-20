@@ -27,6 +27,27 @@ const bookingSchema = new mongoose.Schema(
     paidAt:            { type: Date },
     cancelledAt:       { type: Date },
 
+    /** Add-on extras chosen by the customer at booking time */
+    selectedExtras: [
+      {
+        label:       { type: String },
+        pricePerDay: { type: Number },
+      },
+    ],
+    extrasTotal: { type: Number, default: 0 },
+
+    /** Extension request: customer asks to extend an active booking */
+    extensionRequest: {
+      newEndDate:  { type: Date, default: null },
+      extraAmount: { type: Number, default: null },
+      status: {
+        type: String,
+        enum: ["pending", "approved", "rejected"],
+        default: null,
+      },
+      requestedAt: { type: Date, default: null },
+    },
+
     customerDateChangeUsed: { type: Boolean, default: false },
 
     /** Owner has not yet opened this pending request from the list (highlight + badge). */

@@ -21,7 +21,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { getMyBookings, cancelBooking, rescheduleMyBooking, getAlternativeRentalsForBooking, chooseVehicleResolution, submitBookingCustomerReview } from "../src/api/booking";
+import { getMyBookings, cancelBooking, rescheduleMyBooking, getAlternativeRentalsForBooking, chooseVehicleResolution, submitBookingCustomerReview, requestBookingExtension } from "../src/api/booking";
 import { useAppLang } from "../src/context/AppLangContext";
 import { useTheme } from "../src/context/ThemeContext";
 import { resolveMediaUrl } from "../src/utils/mediaUrl";
@@ -118,6 +118,10 @@ export default function MyBookingsScreen() {
   const [fbOverall, setFbOverall] = useState(null);
   const [fbNote, setFbNote] = useState("");
   const [fbSubmitting, setFbSubmitting] = useState(false);
+  const [extensionBooking, setExtensionBooking] = useState(null);
+  const [extNewEnd, setExtNewEnd] = useState("");
+  const [extActivePicker, setExtActivePicker] = useState(false);
+  const [extSubmitting, setExtSubmitting] = useState(false);
 
   const load = async () => {
     try {
@@ -313,6 +317,56 @@ export default function MyBookingsScreen() {
     );
   };
 
+  const openExtension = (item) => {
+    setExtensionBooking(item);
+    const d = new Date(item.endDate);
+    d.setDate(d.getDate() + 1);
+    setExtNewEnd(formatYMD(d));
+    setExtActivePicker(false);
+  };
+
+  const closeExtension = () => {
+    if (extSubmitting) return;
+    setExtensionBooking(null);
+    setExtActivePicker(false);
+  };
+
+  const onExtDateChange = (event, selectedDate) => {
+    if (Platform.OS === "android") {
+      if (event?.type === "dismissed") { setExtActivePicker(false); return; }
+      setExtActivePicker(false);
+    }
+    if (!selectedDate) return;
+    setExtNewEnd(formatYMD(selectedDate));
+  };
+
+  const submitExtension = async () => {
+    if (!extensionBooking) return;
+    const newEnd = parseYMDToLocalNoon(extNewEnd);
+    const currentEnd = new Date(extensionBooking.endDate);
+    if (!newEnd || newEnd <= currentEnd) {
+      Alert.alert(
+        fr ? "Date invalide" : "Invalid date",
+        fr ? "Choisissez une date après la fin actuelle." : "Pick a date after the current end date."
+      );
+      return;
+    }
+    setExtSubmitting(true);
+    try {
+      await requestBookingExtension(extensionBooking._id, { newEndDate: newEnd.toISOString() });
+      Alert.alert(
+        fr ? "Demande envoyée" : "Request sent",
+        fr ? "Le propriétaire recevra votre demande de prolongation." : "The owner will receive your extension request."
+      );
+      closeExtension();
+      await load();
+    } catch (e) {
+      Alert.alert(fr ? "Impossible" : "Could not send", e?.response?.data?.message || (fr ? "Réessayez." : "Try again."));
+    } finally {
+      setExtSubmitting(false);
+    }
+  };
+
   const closeFeedbackModal = () => {
     if (fbSubmitting) return;
     setFeedbackBooking(null);
@@ -445,6 +499,11 @@ export default function MyBookingsScreen() {
             !usedChange &&
             h > 0 &&
             calDays === 1;
+
+          const canExtend =
+            item.status === "confirmed" &&
+            new Date() < new Date(item.endDate) &&
+            (!item.extensionRequest?.status || item.extensionRequest.status === "rejected");
 
           const showTripFeedbackCta =
             !item.hasCustomerBookingReview &&
@@ -617,6 +676,20 @@ export default function MyBookingsScreen() {
                   </TouchableOpacity>
                 ) : null}
 
+                {canExtend ? (
+                  <TouchableOpacity onPress={() => openExtension(item)} style={s.secondaryBtn} activeOpacity={0.85}>
+                    <Text style={s.secondaryBtnText}>{fr ? "Prolonger la location" : "Extend rental"}</Text>
+                  </TouchableOpacity>
+                ) : item.extensionRequest?.status === "pending" ? (
+                  <Text style={[s.policyHint, { marginTop: 12 }]}>
+                    {fr ? "Demande de prolongation en attente du propriétaire." : "Extension request pending owner approval."}
+                  </Text>
+                ) : item.extensionRequest?.status === "approved" ? (
+                  <Text style={[s.policyHint, { marginTop: 12, color: "#34d399" }]}>
+                    {fr ? "Prolongation approuvée." : "Extension approved."}
+                  </Text>
+                ) : null}
+
                 {showTripFeedbackCta ? (
                   <TouchableOpacity
                     onPress={() => {
@@ -771,6 +844,63 @@ export default function MyBookingsScreen() {
             >
               <Text style={s.modalSecondaryTxt}>{fr ? "Fermer" : "Close"}</Text>
             </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={!!extensionBooking} transparent animationType="fade" onRequestClose={closeExtension}>
+        <View style={s.modalBackdrop}>
+          <View style={[s.modalCard, { alignSelf: "center", width: Math.min(SCREEN_W - 32, 400) }]}>
+            <Text style={s.modalTitle}>{fr ? "Prolonger la location" : "Extend rental"}</Text>
+            <Text style={s.modalSub}>
+              {fr
+                ? "Choisissez une nouvelle date de fin. Le propriétaire devra approuver la demande."
+                : "Pick a new end date. The owner will need to approve the request."}
+            </Text>
+            {extensionBooking ? (
+              <Text style={[s.policyHint, { marginBottom: 12 }]}>
+                {fr ? "Fin actuelle : " : "Current end: "}
+                {new Date(extensionBooking.endDate).toLocaleDateString(fr ? "fr-FR" : "en-GB")}
+              </Text>
+            ) : null}
+            <Text style={s.modalLabel}>{fr ? "Nouvelle date de fin" : "New end date"}</Text>
+            <TouchableOpacity style={s.modalDateBtn} onPress={() => setExtActivePicker(true)} activeOpacity={0.85}>
+              <Ionicons name="calendar-outline" size={20} color={C.primary} />
+              <Text style={s.modalDateBtnTxt}>
+                {extNewEnd ? new Date(parseYMDToLocalNoon(extNewEnd)).toLocaleDateString(fr ? "fr-FR" : "en-GB") : "—"}
+              </Text>
+              <Ionicons name="chevron-down" size={18} color={C.muted} />
+            </TouchableOpacity>
+            {extActivePicker ? (
+              <View style={s.modalPickerWrap}>
+                <DateTimePicker
+                  value={parseYMDToLocalNoon(extNewEnd) || new Date()}
+                  mode="date"
+                  display={Platform.OS === "ios" ? "inline" : "default"}
+                  themeVariant={isDark ? "dark" : "light"}
+                  locale={fr ? "fr-FR" : "en-GB"}
+                  minimumDate={extensionBooking ? (() => { const d = new Date(extensionBooking.endDate); d.setDate(d.getDate() + 1); return d; })() : startOfLocalTodayMidnight()}
+                  onChange={onExtDateChange}
+                />
+                {Platform.OS === "ios" ? (
+                  <TouchableOpacity style={s.modalPickerDone} onPress={() => setExtActivePicker(false)} activeOpacity={0.85}>
+                    <Text style={s.modalPickerDoneTxt}>OK</Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+            ) : null}
+            <View style={s.modalBtnRow}>
+              <TouchableOpacity onPress={closeExtension} style={s.modalSecondary} disabled={extSubmitting}>
+                <Text style={s.modalSecondaryTxt}>{fr ? "Annuler" : "Cancel"}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={submitExtension}
+                style={[s.modalPrimary, extSubmitting && { opacity: 0.6 }]}
+                disabled={extSubmitting}
+              >
+                <Text style={s.modalPrimaryTxt}>{extSubmitting ? "…" : fr ? "Envoyer" : "Send"}</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>

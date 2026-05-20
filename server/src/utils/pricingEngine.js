@@ -54,9 +54,38 @@ function suggestPrice(basePrice, factors = {}) {
     }
   }
 
+  // Seasonal pricing rule (owner-defined, highest matching rule wins)
+  if (Array.isArray(factors.seasonalPricing) && factors.date) {
+    const target = new Date(factors.date);
+    const active = factors.seasonalPricing
+      .filter((r) => r.isActive && new Date(r.startDate) <= target && new Date(r.endDate) >= target)
+      .sort((a, b) => b.multiplier - a.multiplier);
+
+    if (active.length) {
+      const rule = active[0];
+      const delta = Math.round((rule.multiplier - 1) * 100);
+      multiplier += (rule.multiplier - 1);
+      adjustments.push({ reason: `Saison : ${rule.label}`, delta });
+    }
+  }
+
   const suggestedPrice = Math.round(basePrice * multiplier);
 
   return { suggestedPrice, adjustments };
 }
 
-module.exports = { suggestPrice };
+/**
+ * Apply seasonal multiplier directly to a base price for a date range.
+ * Returns the effective daily price (highest matching seasonal rule wins).
+ */
+function applySeasonalPrice(basePrice, seasonalPricing = [], referenceDate = new Date()) {
+  if (!seasonalPricing?.length) return basePrice;
+  const target = new Date(referenceDate);
+  const active = seasonalPricing
+    .filter((r) => r.isActive && new Date(r.startDate) <= target && new Date(r.endDate) >= target)
+    .sort((a, b) => b.multiplier - a.multiplier);
+  if (!active.length) return basePrice;
+  return Math.round(basePrice * active[0].multiplier);
+}
+
+module.exports = { suggestPrice, applySeasonalPrice };

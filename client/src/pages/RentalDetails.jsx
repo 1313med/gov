@@ -8,6 +8,8 @@ import "react-day-picker/dist/style.css";
 import { loadAuth } from "../utils/authStorage";
 import ReviewSection from "../components/ReviewSection";
 import MapView from "../components/MapView";
+import SimilarListings from "../components/SimilarListings";
+import ReportListingModal from "../components/ReportListingModal";
 
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&family=DM+Mono:wght@400;500&display=swap');
@@ -167,6 +169,7 @@ export default function RentalDetails() {
 
   const [rental, setRental] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showReport, setShowReport] = useState(false);
 
   const [activeImage, setActiveImage] = useState(0);
 
@@ -559,6 +562,24 @@ export default function RentalDetails() {
                   ✉ Message owner
                 </button>
               )}
+
+              {/* Report listing */}
+              {auth?._id && (
+                <button
+                  type="button"
+                  onClick={() => setShowReport(true)}
+                  style={{
+                    width: "100%", marginTop: 10, padding: 14, border: "1px solid rgba(196,43,43,.2)",
+                    borderRadius: 12, background: "none", color: "var(--err)",
+                    fontFamily: "var(--mono)", fontSize: 11, letterSpacing: ".1em",
+                    textTransform: "uppercase", cursor: "pointer", transition: "all .2s",
+                  }}
+                  onMouseEnter={(e) => { e.target.style.background = "var(--err-bg)"; }}
+                  onMouseLeave={(e) => { e.target.style.background = "none"; }}
+                >
+                  ⚑ Signaler l'annonce
+                </button>
+              )}
             </div>
           </aside>
         </div>
@@ -567,9 +588,15 @@ export default function RentalDetails() {
         <div style={{ marginTop: 32 }}>
           <MapView city={rental.city} label={`${rental.title} — ${rental.city}`} />
           <ReviewSection targetModel="RentalListing" targetId={rental._id} />
+          <SimilarListings listing={rental} type="rental" />
         </div>
 
       </div>
+
+      {/* Report modal */}
+      {showReport && (
+        <ReportListingModal listingId={rental._id} listingModel="RentalListing" onClose={() => setShowReport(false)} />
+      )}
     </div>
   );
 }

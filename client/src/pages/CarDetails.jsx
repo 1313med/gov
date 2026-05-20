@@ -5,6 +5,10 @@ import { loadAuth } from "../utils/authStorage";
 import { useAppLang } from "../context/AppLangContext";
 import ReviewSection from "../components/ReviewSection";
 import MapView from "../components/MapView";
+import FairPriceIndicator from "../components/FairPriceIndicator";
+import SellerTrustBadges from "../components/SellerTrustBadges";
+import SimilarListings from "../components/SimilarListings";
+import ReportListingModal from "../components/ReportListingModal";
 
 const S = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap');
@@ -328,6 +332,7 @@ export default function CarDetails() {
   const [car,         setCar        ] = useState(null);
   const [loading,     setLoading    ] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
+  const [showReport,  setShowReport ] = useState(false);
   const auth = loadAuth();
 
   useEffect(() => {
@@ -445,6 +450,11 @@ export default function CarDetails() {
             </div>
           </div>
 
+          {/* Fair price indicator */}
+          <div className="cd-fade" style={{animationDelay:"80ms"}}>
+            <FairPriceIndicator listing={car} />
+          </div>
+
           {/* Seller + CTA */}
           <div className="cd-seller-card cd-fade" style={{animationDelay:"120ms"}}>
             <div className="cd-label">{copy.carDetails.seller}</div>
@@ -453,6 +463,11 @@ export default function CarDetails() {
               {seller?.name || copy.carDetails.unknownSeller}
             </Link>
             <p className="cd-seller-sub">{copy.carDetails.verifiedSeller}</p>
+
+            {/* Seller trust badges */}
+            <div style={{ marginBottom: 16 }}>
+              <SellerTrustBadges seller={seller} />
+            </div>
 
             {auth?._id ? (
               <>
@@ -474,6 +489,14 @@ export default function CarDetails() {
                 >
                   ✉ Message seller
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setShowReport(true)}
+                  className="cd-btn cd-btn-outline"
+                  style={{ color: "#c93030", borderColor: "rgba(201,48,48,.2)", marginTop: 8 }}
+                >
+                  ⚑ Signaler l'annonce
+                </button>
               </>
             ) : (
               <div className="cd-login-nudge">
@@ -492,7 +515,13 @@ export default function CarDetails() {
       <div style={{ maxWidth: 1240, margin: "0 auto", padding: "0 40px 80px" }}>
         <MapView city={car.city} label={`${car.title} — ${car.city}`} />
         <ReviewSection targetModel="SaleListing" targetId={car._id} />
+        <SimilarListings listing={car} type="sale" />
       </div>
+
+      {/* Report modal */}
+      {showReport && (
+        <ReportListingModal listingId={car._id} listingModel="SaleListing" onClose={() => setShowReport(false)} />
+      )}
 
     </div>
   );

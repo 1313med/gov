@@ -42,6 +42,7 @@ import { useTheme } from "../src/context/ThemeContext";
 import { resolveMediaUrl } from "../src/utils/mediaUrl";
 import { openExternalUrl } from "../src/utils/openExternalUrl";
 import { shareBookingPdf } from "../src/utils/bookingPdf";
+import TrustPassportCard from "../src/components/TrustPassportCard";
 
 const PAGE_SIZE = 15;
 
@@ -183,6 +184,8 @@ function createOwnerBookingsStyles(C, isDark) {
       docLink: { color: C.primary, fontSize: 12, fontWeight: "600" },
       save: { backgroundColor: C.primary, borderRadius: 12, paddingVertical: 14, alignItems: "center", marginTop: 14 },
       saveText: { color: "#fff", fontWeight: "700", fontSize: 14 },
+      checklistBtn: { flexDirection: "row", alignItems: "center", gap: 8, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 14, marginBottom: 12, backgroundColor: C.surface },
+      checklistBtnTxt: { color: C.primary, fontWeight: "700", fontSize: 13 },
     }),
     f: StyleSheet.create({
       overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.75)", justifyContent: "center", padding: 20 },
@@ -539,6 +542,7 @@ function ActionBtn({ label, variant, onPress, ionicon }) {
 
 function BookingMediaPanel({ booking, fr, onUpdated }) {
   const { C, m } = useOwnerBookingsStyles();
+  const router = useRouter();
   const [tab, setTab] = useState("before");
   const [before, setBefore] = useState(booking.conditionPhotos?.before || []);
   const [after, setAfter] = useState(booking.conditionPhotos?.after || []);
@@ -633,6 +637,24 @@ function BookingMediaPanel({ booking, fr, onUpdated }) {
           <Text style={[m.tabText, tab === "after" && m.tabTextOn]}>{fr ? "Après" : "After"} ({after.length})</Text>
         </TouchableOpacity>
       </View>
+      <TouchableOpacity
+        onPress={() => router.push({
+          pathname: "/condition-checklist",
+          params: {
+            bookingId: booking._id,
+            phase: tab,
+            existingBefore: JSON.stringify(before),
+            existingAfter: JSON.stringify(after),
+          },
+        })}
+        style={m.checklistBtn}
+        activeOpacity={0.85}
+      >
+        <Ionicons name="list-outline" size={16} color={C.primary} />
+        <Text style={m.checklistBtnTxt}>
+          {fr ? "Checklist guidée" : "Guided checklist"}
+        </Text>
+      </TouchableOpacity>
       <View style={m.grid}>
         {photos.map((url, i) => (
           <View key={`${url}-${i}`} style={m.thumb}>
@@ -902,6 +924,13 @@ function CustomerProfileModal({ visible, booking, fr, ownerId, onClose }) {
                   {[customer.phone, customer.email, customer.city].filter(Boolean).join(" · ")}
                 </Text>
 
+                {cid && (
+                  <View style={{ marginTop: 12, marginBottom: 4 }}>
+                    <Text style={cp.section}>{fr ? "Score de confiance" : "Trust score"}</Text>
+                    <TrustPassportCard userId={cid} />
+                  </View>
+                )}
+
                 <Text style={cp.section}>{fr ? "Permis de conduire" : "Driving license"}</Text>
                 {dl?.number || dl?.imageUrl ? (
                   <>
@@ -1122,6 +1151,8 @@ export default function OwnerBookingsScreen() {
   const [profileBooking, setProfileBooking] = useState(null);
   const [pdfForId, setPdfForId] = useState(null);
   const [ackingChangeId, setAckingChangeId] = useState(null);
+  /** Set when opening from a rating / feedback notification — list shows only this booking until dismissed. */
+  const [soloBookingId, setSoloBookingId] = useState(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -1156,6 +1187,7 @@ export default function OwnerBookingsScreen() {
   };
 
   useEffect(() => {
+    if (soloBookingId) return;
     let alive = true;
     setLoading(true);
     getOwnerBookings(buildOwnerBookingParams(1, PAGE_SIZE, filter, listScope))
@@ -1172,9 +1204,17 @@ export default function OwnerBookingsScreen() {
         if (alive) setLoading(false);
       });
     return () => { alive = false; };
-  }, [filter, fr, listScope]);
+  }, [filter, fr, listScope, soloBookingId]);
 
   const loadPage = (p) => {
+    if (soloBookingId) {
+      getOwnerBookingOne(soloBookingId)
+        .then(({ data }) => {
+          if (data) setBookings([data]);
+        })
+        .catch(() => {});
+      return;
+    }
     setLoading(true);
     getOwnerBookings(buildOwnerBookingParams(p, PAGE_SIZE, filter, listScope))
       .then(({ data }) => applyBookingsPayload(data, p))
@@ -1184,11 +1224,25 @@ export default function OwnerBookingsScreen() {
 
   const onRefresh = () => {
     setRefreshing(true);
+    if (soloBookingId) {
+      getOwnerBookingOne(soloBookingId)
+        .then(({ data }) => {
+          if (data) setBookings([data]);
+        })
+        .catch(() => {})
+        .finally(() => setRefreshing(false));
+      return;
+    }
     getOwnerBookings(buildOwnerBookingParams(page, PAGE_SIZE, filter, listScope))
       .then(({ data }) => applyBookingsPayload(data, page))
       .catch(() => {})
       .finally(() => setRefreshing(false));
   };
+
+  const exitSoloBookingView = useCallback(() => {
+    setSoloBookingId(null);
+    setExpanded(null);
+  }, []);
 
   const archivePress = (item, isRestore) => {
     Alert.alert(
@@ -1312,10 +1366,13 @@ export default function OwnerBookingsScreen() {
     const raw = params.openBookingId;
     if (!raw || loading) return;
     const id = String(Array.isArray(raw) ? raw[0] : raw);
+    const focusRaw = params.bookingFocus;
+    const focusVal = Array.isArray(focusRaw) ? focusRaw[0] : focusRaw;
+    const wantSolo = focusVal === "1" || focusVal === "true";
 
     const clearParam = () => {
       try {
-        router.setParams({ openBookingId: undefined });
+        router.setParams({ openBookingId: undefined, bookingFocus: undefined });
       } catch {
         /* noop */
       }
@@ -1329,6 +1386,12 @@ export default function OwnerBookingsScreen() {
         setFilter("all");
       }
       setExpanded(id);
+      if (wantSolo) {
+        setSoloBookingId(id);
+        setBookings([match]);
+      } else {
+        setSoloBookingId(null);
+      }
       clearParam();
       return;
     }
@@ -1341,11 +1404,21 @@ export default function OwnerBookingsScreen() {
           clearParam();
           return;
         }
-        if (data.ownerArchivedAt) {
-          setListScope("archived");
-          setFilter("all");
+        if (wantSolo) {
+          if (data.ownerArchivedAt) {
+            setListScope("archived");
+            setFilter("all");
+          }
+          setSoloBookingId(id);
+          setBookings([data]);
         } else {
-          setBookings((prev) => (prev.some((b) => String(b._id) === id) ? prev : [data, ...prev]));
+          setSoloBookingId(null);
+          if (data.ownerArchivedAt) {
+            setListScope("archived");
+            setFilter("all");
+          } else {
+            setBookings((prev) => (prev.some((b) => String(b._id) === id) ? prev : [data, ...prev]));
+          }
         }
         setExpanded(id);
       } catch {
@@ -1357,7 +1430,7 @@ export default function OwnerBookingsScreen() {
     return () => {
       alive = false;
     };
-  }, [params.openBookingId, loading, router]);
+  }, [params.openBookingId, params.bookingFocus, loading, router]);
 
   const acknowledgeBookingChange = async (id) => {
     setAckingChangeId(id);
@@ -1512,6 +1585,38 @@ export default function OwnerBookingsScreen() {
     [s, insets.top, fr, stats, archivedStats, filter, listScope, pulseAnim, C]
   );
 
+  const listData = useMemo(() => {
+    if (!soloBookingId) return bookings;
+    return bookings.filter((b) => String(b._id) === String(soloBookingId));
+  }, [bookings, soloBookingId]);
+
+  const soloListHeader = useCallback(
+    () => (
+      <View>
+        <View style={[s.listHead, { paddingTop: insets.top + 10 }]}>
+          <TouchableOpacity
+            onPress={exitSoloBookingView}
+            activeOpacity={0.85}
+            style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 10, alignSelf: "flex-start" }}
+          >
+            <Ionicons name="chevron-back" size={22} color={C.primary} />
+            <Text style={{ color: C.primary, fontWeight: "800", fontSize: 15 }}>
+              {fr ? "Toutes les réservations" : "All bookings"}
+            </Text>
+          </TouchableOpacity>
+          <View style={s.listHeadAccent} />
+          <Text style={s.listHeadTitle}>{fr ? "Évaluer le client" : "Rate your renter"}</Text>
+          <Text style={s.listHeadSub}>
+            {fr
+              ? "Vous ne voyez que la réservation liée à cette notification."
+              : "You're viewing only the booking from this notification."}
+          </Text>
+        </View>
+      </View>
+    ),
+    [s, insets.top, fr, C.primary, exitSoloBookingView]
+  );
+
   if (loading && bookings.length === 0) {
     return (
       <PageLoader />
@@ -1521,9 +1626,9 @@ export default function OwnerBookingsScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
       <FlatList
-        data={bookings}
+        data={listData}
         keyExtractor={(i) => i._id}
-        ListHeaderComponent={listHeader}
+        ListHeaderComponent={soloBookingId ? soloListHeader : listHeader}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 32 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.primary} />}
         ListEmptyComponent={
@@ -1557,7 +1662,7 @@ export default function OwnerBookingsScreen() {
           </View>
         }
         ListFooterComponent={
-          totalPages > 1 ? (
+          totalPages > 1 && !soloBookingId ? (
             <View style={s.pages}>
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
                 <TouchableOpacity key={p} onPress={() => loadPage(p)} style={[s.pageBtn, page === p && s.pageBtnOn]}>

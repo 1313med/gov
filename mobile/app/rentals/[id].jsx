@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { PageLoader } from '../../src/components/AppLoadingScreen';
-import { View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, Dimensions, StyleSheet } from "react-native";
+import { View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, Dimensions, StyleSheet, Modal, TextInput } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { getRentalById, bookRental, getRentalBookings, recordRentalView } from "../../src/api/rental";
+import { getRentalById, bookRental, getRentalBookings, recordRentalView, getSimilarRentals } from "../../src/api/rental";
+import { reportListing } from "../../src/api/report";
 import { profileDocumentsHref, messagesHref } from "../../src/utils/appNavigation";
 import { isOwnRentalListing } from "../../src/utils/listingOwnership";
 import RentalBookingCalendar from "../../src/components/RentalBookingCalendar";
@@ -165,6 +166,17 @@ function createRentalDetailScreenStyles(C) {
     offerItemDesc: { color: C.muted, fontSize: 12, marginTop: 6, marginLeft: 24, lineHeight: 18 },
     offerItemExp: { color: "#f87171", fontSize: 11, marginTop: 6, marginLeft: 24 },
     appliedOfferHint: { color: C.muted, fontSize: 11, marginTop: 4, fontStyle: "italic" },
+    reportBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 12, marginTop: 8, marginBottom: 24 },
+    reportBtnTxt: { color: "#f87171", fontSize: 12, fontWeight: "600" },
+    modalBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.55)", justifyContent: "center", padding: 20 },
+    modalCard: { backgroundColor: C.card, borderRadius: 20, padding: 20, borderWidth: 1, borderColor: C.border },
+    modalTitle: { color: C.white, fontSize: 17, fontWeight: "900", marginBottom: 6 },
+    modalSub: { color: C.muted, fontSize: 12, lineHeight: 17, marginBottom: 12 },
+    reportInput: { borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: C.white, fontSize: 14, backgroundColor: C.inputBg, minHeight: 80, textAlignVertical: "top" },
+    modalSecondary: { flex: 1, borderRadius: 12, paddingVertical: 13, alignItems: "center", borderWidth: 1, borderColor: C.border },
+    modalSecondaryTxt: { color: C.muted, fontWeight: "800" },
+    modalDanger: { flex: 1, borderRadius: 12, paddingVertical: 13, alignItems: "center", backgroundColor: "rgba(248,113,113,0.15)", borderWidth: 1, borderColor: "rgba(248,113,113,0.4)" },
+    modalDangerTxt: { color: "#f87171", fontWeight: "800" },
   });
 }
 
@@ -197,6 +209,10 @@ export default function RentalDetailsScreen() {
   const [confirmedBookings, setConfirmedBookings] = useState([]);
   const [booking, setBooking] = useState(false);
   const [contacting, setContacting] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [similar, setSimilar] = useState([]);
 
   const blockedDaySet = useMemo(
     () => buildBlockedDaySet(rental, confirmedBookings),
@@ -221,6 +237,16 @@ export default function RentalDetailsScreen() {
       });
     return () => { cancelled = true; };
   }, [id]);
+
+  useEffect(() => {
+    if (!rental?.brand) return;
+    getSimilarRentals({ brand: rental.brand, model: rental.model, excludeId: rental._id, limit: 4 })
+      .then(({ data }) => {
+        const items = data?.rentals || (Array.isArray(data) ? data : []);
+        setSimilar(items.filter((i) => String(i._id) !== String(id)).slice(0, 4));
+      })
+      .catch(() => {});
+  }, [rental?._id]);
 
   useEffect(() => {
     if (!auth) {
@@ -291,6 +317,24 @@ export default function RentalDetailsScreen() {
       }
     }
     setBooking(false);
+  };
+
+  const submitReport = async () => {
+    if (!reportReason.trim()) {
+      Alert.alert(lang === "fr" ? "Motif requis" : "Reason required");
+      return;
+    }
+    setReportSubmitting(true);
+    try {
+      await reportListing({ listingId: id, listingModel: "RentalListing", reason: reportReason.trim() });
+      setShowReport(false);
+      setReportReason("");
+      Alert.alert(lang === "fr" ? "Signalement envoyé" : "Report sent");
+    } catch (e) {
+      Alert.alert("Error", e?.response?.data?.message || (lang === "fr" ? "Échec." : "Failed."));
+    } finally {
+      setReportSubmitting(false);
+    }
   };
 
   const contactOwner = async () => {
@@ -534,6 +578,68 @@ export default function RentalDetailsScreen() {
         )}
 
         <ReviewSection targetModel="RentalListing" targetId={id} />
+
+        {/* Similar rentals */}
+        {similar.length > 0 && (
+          <View style={{ marginTop: 24 }}>
+            <Text style={[s.cardTitle, { marginBottom: 12 }]}>
+              {lang === "fr" ? "Locations similaires" : "Similar rentals"}
+            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+              {similar.map((item) => {
+                const img = resolveMediaUrl(item.images?.[0]);
+                return (
+                  <TouchableOpacity key={item._id} onPress={() => router.push(`/rentals/${item._id}`)} activeOpacity={0.85}
+                    style={{ width: 160, backgroundColor: C.card, borderRadius: 14, borderWidth: 1, borderColor: C.border, overflow: "hidden" }}>
+                    {img
+                      ? <Image source={{ uri: img }} style={{ width: 160, height: 100 }} resizeMode="cover" />
+                      : <View style={{ width: 160, height: 100, backgroundColor: C.surface, alignItems: "center", justifyContent: "center" }}><Ionicons name="car-outline" size={32} color={C.muted} /></View>}
+                    <View style={{ padding: 10 }}>
+                      <Text style={{ color: C.white, fontWeight: "700", fontSize: 13 }} numberOfLines={1}>{item.title || `${item.brand} ${item.model}`}</Text>
+                      <Text style={{ color: C.muted, fontSize: 11, marginTop: 2 }}>{item.city} · {item.year}</Text>
+                      <Text style={{ color: C.primary, fontWeight: "900", fontSize: 14, marginTop: 4 }}>{Number(item.pricePerDay).toLocaleString()} MAD/j</Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* Report listing */}
+        {auth && (
+          <TouchableOpacity onPress={() => setShowReport(true)} style={s.reportBtn} activeOpacity={0.85}>
+            <Ionicons name="flag-outline" size={14} color="#f87171" />
+            <Text style={s.reportBtnTxt}>{lang === "fr" ? "Signaler cette annonce" : "Report this listing"}</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Report modal */}
+        <Modal visible={showReport} transparent animationType="fade" onRequestClose={() => !reportSubmitting && setShowReport(false)}>
+          <View style={s.modalBackdrop}>
+            <View style={s.modalCard}>
+              <Text style={s.modalTitle}>{lang === "fr" ? "Signaler l'annonce" : "Report listing"}</Text>
+              <Text style={s.modalSub}>{lang === "fr" ? "Décrivez le problème." : "Describe the issue."}</Text>
+              <TextInput
+                value={reportReason}
+                onChangeText={setReportReason}
+                placeholder={lang === "fr" ? "Motif…" : "Reason…"}
+                placeholderTextColor={C.muted}
+                style={s.reportInput}
+                multiline
+                maxLength={500}
+              />
+              <View style={{ flexDirection: "row", gap: 10, marginTop: 8 }}>
+                <TouchableOpacity onPress={() => !reportSubmitting && setShowReport(false)} style={s.modalSecondary} disabled={reportSubmitting}>
+                  <Text style={s.modalSecondaryTxt}>{lang === "fr" ? "Annuler" : "Cancel"}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={submitReport} style={[s.modalDanger, reportSubmitting && { opacity: 0.6 }]} disabled={reportSubmitting}>
+                  <Text style={s.modalDangerTxt}>{reportSubmitting ? "…" : lang === "fr" ? "Envoyer" : "Send"}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </View>
     </ScrollView>
   );

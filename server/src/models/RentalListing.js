@@ -94,7 +94,27 @@ const rentalListingSchema = new mongoose.Schema(
         freeExtraDays:   { type: Number, default: 0 },
         discountPercent: { type: Number, default: 0 },
         isActive:        { type: Boolean, default: true },
-        expiresAt:       { type: Date, default: null },  // null = never expires
+        expiresAt:       { type: Date, default: null },
+      },
+    ],
+
+    /** Optional add-on extras customers can select at booking time */
+    extras: [
+      {
+        label:       { type: String, required: true },  // e.g. "GPS", "Siège bébé"
+        pricePerDay: { type: Number, required: true },
+        isActive:    { type: Boolean, default: true },
+      },
+    ],
+
+    /** Seasonal pricing multipliers (e.g. summer, Ramadan, World Cup 2030) */
+    seasonalPricing: [
+      {
+        label:      { type: String, required: true },   // e.g. "Été 2025", "Ramadan"
+        startDate:  { type: Date, required: true },
+        endDate:    { type: Date, required: true },
+        multiplier: { type: Number, required: true, min: 0.1, max: 5 }, // e.g. 1.3 = +30%
+        isActive:   { type: Boolean, default: true },
       },
     ],
 

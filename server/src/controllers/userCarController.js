@@ -135,6 +135,17 @@ exports.patchGarageSettings = asyncHandler(async (req, res) => {
   res.json(car);
 });
 
+// PATCH /api/user-car/:id/documents — replace scannedDocuments array
+exports.patchDocuments = asyncHandler(async (req, res) => {
+  const car = await UserCar.findOne({ _id: req.params.id, userId: req.user._id, deletedAt: null });
+  if (!car) { res.status(404); throw new Error("Car not found"); }
+  const docs = Array.isArray(req.body.scannedDocuments) ? req.body.scannedDocuments : [];
+  car.scannedDocuments = docs;
+  car.markModified("scannedDocuments");
+  await car.save();
+  res.json(car);
+});
+
 // DELETE /api/user-car/:id
 exports.deleteCar = asyncHandler(async (req, res) => {
   const car = await UserCar.findOne({ _id: req.params.id, userId: req.user._id, deletedAt: null });

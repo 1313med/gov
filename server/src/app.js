@@ -68,6 +68,18 @@ app.use("/api/customer-feedback", require("./routes/customerFeedbackRoutes"));
 app.use("/api/user-car",          require("./routes/userCarRoutes"));
 app.use("/api/price",             require("./routes/priceRoutes"));
 
+// ── NEW FEATURE ROUTES ────────────────────────────────────────────────────────
+app.use("/api/kyc",           require("./routes/kycRoutes"));
+app.use("/api/blacklist",     require("./routes/blacklistRoutes"));
+app.use("/api/staff",         require("./routes/staffRoutes"));
+app.use("/api/contracts",     require("./routes/contractRoutes"));
+app.use("/api/extensions",    require("./routes/extensionRoutes"));
+app.use("/api/referral",      require("./routes/referralRoutes"));
+app.use("/api/fair-price",    require("./routes/fairPriceRoutes"));
+app.use("/api/credit-check",  require("./routes/creditCheckRoutes"));
+app.use("/api/reports",       require("./routes/listingReportRoutes"));
+app.use("/api/fuel-logs",     require("./routes/fuelLogRoutes"));
+
 // ERROR HANDLING
 app.use(notFound);
 app.use(errorHandler);

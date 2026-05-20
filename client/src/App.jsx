@@ -31,6 +31,14 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import VerifyEmail from "./pages/VerifyEmail";
 import MaintenancePage from "./pages/MaintenancePage";
+import KycPage from "./pages/KycPage";
+import ReferralPage from "./pages/ReferralPage";
+import EmergencyPage from "./pages/EmergencyPage";
+import CreditCheckPage from "./pages/CreditCheckPage";
+import BuyingGuidePage from "./pages/BuyingGuidePage";
+import FuelTrackerPage from "./pages/FuelTrackerPage";
+import AccidentAssistantPage from "./pages/AccidentAssistantPage";
+import StaffManagementPage from "./pages/StaffManagementPage";
 
 /* Paths where Navbar should not render (they have their own full-page nav) */
 const NO_NAV_PREFIXES = [
@@ -93,6 +101,16 @@ export default function App() {
         <Route path="/admin/sales"   element={<ProtectedRoute roles={["admin"]}><AdminSales /></ProtectedRoute>} />
         <Route path="/admin/rentals" element={<ProtectedRoute roles={["admin"]}><AdminRentals /></ProtectedRoute>} />
         <Route path="/admin/users"   element={<ProtectedRoute roles={["admin"]}><AdminUsers /></ProtectedRoute>} />
+
+        {/* New feature pages */}
+        <Route path="/kyc"              element={<ProtectedRoute roles={["customer","car_owner","rental_owner","admin"]}><KycPage /></ProtectedRoute>} />
+        <Route path="/referral"         element={<ProtectedRoute roles={["customer","car_owner","rental_owner","admin"]}><ReferralPage /></ProtectedRoute>} />
+        <Route path="/emergency"        element={<EmergencyPage />} />
+        <Route path="/credit-check"     element={<ProtectedRoute roles={["customer","car_owner","rental_owner","admin"]}><CreditCheckPage /></ProtectedRoute>} />
+        <Route path="/buying-guide"     element={<BuyingGuidePage />} />
+        <Route path="/fuel-tracker"     element={<ProtectedRoute roles={["customer","car_owner","rental_owner","admin"]}><FuelTrackerPage /></ProtectedRoute>} />
+        <Route path="/accident"         element={<AccidentAssistantPage />} />
+        <Route path="/owner/staff"      element={<ProtectedRoute roles={["rental_owner"]}><StaffManagementPage /></ProtectedRoute>} />
       </Routes>
     </div>
   );

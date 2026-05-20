@@ -21,6 +21,7 @@ import { useSocket } from "../src/context/SocketContext";
 import { useAppLang } from "../src/context/AppLangContext";
 import { useTheme } from "../src/context/ThemeContext";
 import { useAuth } from "../src/context/AuthContext";
+import { hasUserRole } from "../src/utils/userRoles";
 
 function timeAgo(date, fr) {
   const mins = Math.floor((Date.now() - new Date(date)) / 60000);
@@ -143,8 +144,12 @@ export default function NotificationsScreen() {
     if (!n.read) await read(n);
     const bid = bookingIdStr(n);
     if (!bid) return;
-    if (auth?.role === "rental_owner") {
-      router.push(`/owner-bookings?openBookingId=${encodeURIComponent(bid)}`);
+    if (hasUserRole(auth, "rental_owner")) {
+      const feedbackFocus = n?.type === "feedback_request";
+      const q = feedbackFocus
+        ? `openBookingId=${encodeURIComponent(bid)}&bookingFocus=1`
+        : `openBookingId=${encodeURIComponent(bid)}`;
+      router.push(`/owner-bookings?${q}`);
       return;
     }
     if (auth?.role === "customer") {

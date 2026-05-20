@@ -20,3 +20,4 @@ export const markOwnerListingViewsSeen = () => api.post("/rental/owner/listing-v
 export const getAdminRentals = () => api.get("/rental/admin");
 export const updateRentalStatus = (id, status) =>
   api.put(`/rental/admin/${id}/status`, { status });
+export const getSimilarRentals = (params) => api.get("/rental", { params });

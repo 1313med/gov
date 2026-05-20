@@ -75,6 +75,15 @@ const userCarSchema = new mongoose.Schema(
       alertSentAt:     { type: Date, default: null },
     },
 
+    /** Cloud-stored scanned documents (carte grise, assurance paper, etc.) */
+    scannedDocuments: [
+      {
+        label:      { type: String, required: true },  // e.g. "Carte Grise", "Assurance"
+        url:        { type: String, required: true },
+        uploadedAt: { type: Date, default: Date.now },
+      },
+    ],
+
     // ── Soft delete ────────────────────────────────────────────────────────────
     deletedAt: { type: Date, default: null },
   },

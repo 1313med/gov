@@ -405,11 +405,16 @@ const MOON     = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" str
 const SUN      = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.8v2M12 19.2v2M21.2 12h-2M4.8 12h-2M18.6 5.4l-1.4 1.4M6.8 17.2l-1.4 1.4M18.6 18.6l-1.4-1.4M6.8 6.8 5.4 5.4"/></svg>;
 const MSG      = <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>;
 const BELL     = <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>;
-const ICO_USER = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
-const ICO_CAL  = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
-const ICO_CAR  = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h13l4 4v4a2 2 0 0 1-2 2h-2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>;
-const ICO_DASH = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>;
-const ICO_OUT  = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>;
+const ICO_USER  = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
+const ICO_CAL   = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
+const ICO_CAR   = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h13l4 4v4a2 2 0 0 1-2 2h-2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>;
+const ICO_DASH  = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>;
+const ICO_OUT   = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>;
+const ICO_KYC   = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
+const ICO_REF   = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>;
+const ICO_FUEL  = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 22V9a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v13"/><path d="M3 14h10"/><path d="M15 9l3-3 3 3"/><path d="M18 6v13"/></svg>;
+const ICO_TEAM  = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
+const ICO_GUIDE = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>;
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -452,8 +457,10 @@ export default function Navbar() {
 
           {/* Center nav links */}
           <nav className="gn-links">
-            <Link to="/cars"    className="gn-link">{copy.common.browseCars}</Link>
-            <Link to="/rentals" className="gn-link">{copy.common.rentCars}</Link>
+            <Link to="/cars"           className="gn-link">{copy.common.browseCars}</Link>
+            <Link to="/rentals"        className="gn-link">{copy.common.rentCars}</Link>
+            <Link to="/buying-guide"   className="gn-link">Guide achat</Link>
+            <Link to="/credit-check"   className="gn-link">Crédit vérif.</Link>
           </nav>
 
           {/* Right side */}
@@ -580,6 +587,32 @@ export default function Navbar() {
 
                         <div className="gn-drop-sep" />
 
+                        {/* ── Tools section ── */}
+                        <Link to="/kyc" className="gn-drop-item" onClick={() => setProfileOpen(false)}>
+                          {ICO_KYC} Vérification identité
+                        </Link>
+                        <Link to="/referral" className="gn-drop-item" onClick={() => setProfileOpen(false)}>
+                          {ICO_REF} Mon parrainage
+                        </Link>
+
+                        {hasUserRole(auth, "car_owner") && (
+                          <Link to="/fuel-tracker" className="gn-drop-item" onClick={() => setProfileOpen(false)}>
+                            {ICO_FUEL} Suivi carburant
+                          </Link>
+                        )}
+
+                        {auth.role === "rental_owner" && (
+                          <Link to="/owner/staff" className="gn-drop-item" onClick={() => setProfileOpen(false)}>
+                            {ICO_TEAM} Mon équipe
+                          </Link>
+                        )}
+
+                        <Link to="/emergency" className="gn-drop-item" onClick={() => setProfileOpen(false)}>
+                          🆘 Urgence / Accident
+                        </Link>
+
+                        <div className="gn-drop-sep" />
+
                         <button
                           onClick={() => { logout(); setProfileOpen(false); }}
                           className="gn-drop-item red"
@@ -611,14 +644,25 @@ export default function Navbar() {
 
       {/* Mobile drawer — sits outside header so it can overlay */}
       <div className={`gn-drawer${menuOpen ? " open" : ""}${dark ? " dark" : ""}`}>
-        <Link to="/cars"    className="gn-drawer-link" onClick={() => setMenuOpen(false)}>{copy.common.browseCars}</Link>
-        <Link to="/rentals" className="gn-drawer-link" onClick={() => setMenuOpen(false)}>{copy.common.rentCars}</Link>
+        <Link to="/cars"          className="gn-drawer-link" onClick={() => setMenuOpen(false)}>{copy.common.browseCars}</Link>
+        <Link to="/rentals"       className="gn-drawer-link" onClick={() => setMenuOpen(false)}>{copy.common.rentCars}</Link>
+        <Link to="/buying-guide"  className="gn-drawer-link" onClick={() => setMenuOpen(false)}>📖 Guide d'achat</Link>
+        <Link to="/emergency"     className="gn-drawer-link" onClick={() => setMenuOpen(false)}>🆘 Urgence / Accident</Link>
         <div className="gn-drawer-sep" />
         {isLoggedIn ? (
           <>
             <Link to="/messages"      className="gn-drawer-link" onClick={() => setMenuOpen(false)}>Messages</Link>
             <Link to="/notifications" className="gn-drawer-link" onClick={() => setMenuOpen(false)}>Notifications</Link>
             <Link to="/profile"       className="gn-drawer-link" onClick={() => setMenuOpen(false)}>Profile</Link>
+            <Link to="/kyc"           className="gn-drawer-link" onClick={() => setMenuOpen(false)}>🛡 Vérification identité</Link>
+            <Link to="/referral"      className="gn-drawer-link" onClick={() => setMenuOpen(false)}>🎁 Parrainage</Link>
+            <Link to="/credit-check"  className="gn-drawer-link" onClick={() => setMenuOpen(false)}>🔍 Vérif. crédit</Link>
+            {hasUserRole(auth, "car_owner") && (
+              <Link to="/fuel-tracker" className="gn-drawer-link" onClick={() => setMenuOpen(false)}>⛽ Carburant</Link>
+            )}
+            {auth?.role === "rental_owner" && (
+              <Link to="/owner/staff" className="gn-drawer-link" onClick={() => setMenuOpen(false)}>👥 Mon équipe</Link>
+            )}
             <div className="gn-drawer-sep" />
             <button onClick={() => { logout(); setMenuOpen(false); }} className="gn-drawer-link" style={{ background:"none", border:"none", cursor:"pointer", textAlign:"left", width:"100%" }}>
               {copy.common.logout}

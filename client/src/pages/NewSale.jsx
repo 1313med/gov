@@ -29,6 +29,7 @@ const NewSale = () => {
     seats: "",
     description: "",
     images: [],
+    videoUrl: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -96,6 +97,7 @@ const NewSale = () => {
         doors: formData.doors ? Number(formData.doors) : undefined,
         seats: formData.seats ? Number(formData.seats) : undefined,
         features,
+        videoUrl: formData.videoUrl || undefined,
       });
 
       navigate("/my-sales");
@@ -215,6 +217,13 @@ const NewSale = () => {
                 </div>
               ))}
             </div>
+          </section>
+
+          {/* ================= VIDEO URL ================= */}
+          <section className="bg-white dark:bg-slate-900 rounded-3xl border border-gray-200 dark:border-slate-700 shadow-sm p-8">
+            <h2 className="text-2xl font-semibold mb-2 text-slate-900 dark:text-white">Vidéo (optionnel)</h2>
+            <p className="text-sm text-gray-500 dark:text-slate-400 mb-5">Ajoutez un lien vers une vidéo YouTube ou autre pour présenter le véhicule.</p>
+            <Input name="videoUrl" placeholder="https://youtube.com/watch?v=..." value={formData.videoUrl} onChange={handleChange} />
           </section>
 
           {/* ================= SUBMIT ================= */}

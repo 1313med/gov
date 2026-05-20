@@ -11,3 +11,4 @@ export const markAsSold = (id) => api.put(`/sale/${id}/sold`);
 export const getAdminSales = () => api.get("/sale/admin");
 export const updateSaleStatus = (id, status) =>
   api.put(`/sale/admin/${id}/status`, { status });
+export const getSimilarSales = (params) => api.get("/sale", { params });

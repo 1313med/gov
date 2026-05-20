@@ -38,3 +38,5 @@ export const ownerAckBookingAlert = (id) => api.put(`/bookings/${id}/owner-ack-b
 /** Customer: post-trip review `{ overall: 'good'|'bad', note?: string }`. */
 export const submitBookingCustomerReview = (id, body) => api.post(`/bookings/${id}/customer-booking-review`, body);
 export const getBookingCustomerReview = (id) => api.get(`/bookings/${id}/customer-booking-review`);
+/** Customer: request extension. Body: { newEndDate: ISO string }. */
+export const requestBookingExtension = (id, body) => api.post(`/extensions/${id}`, body);

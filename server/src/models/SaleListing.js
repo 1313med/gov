@@ -23,8 +23,12 @@ const saleListingSchema = new mongoose.Schema(
     features: [{ type: String }],  // AC, GPS, Bluetooth, etc.
 
     images: [{ type: String }],
+    videoUrl: { type: String, default: null },
 
     viewCount: { type: Number, default: 0 },
+
+    /** Admin-visible flag: listing has been reported by users */
+    reportCount: { type: Number, default: 0 },
 
     status: {
       type: String,

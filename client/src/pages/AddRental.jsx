@@ -87,6 +87,10 @@ export default function AddRental() {
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [extras, setExtras] = useState([]);
+  const [newExtra, setNewExtra] = useState({ label: "", pricePerDay: "" });
+  const [seasonalPricing, setSeasonalPricing] = useState([]);
+  const [newRule, setNewRule] = useState({ label: "", startDate: "", endDate: "", multiplier: "1.2" });
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -121,6 +125,8 @@ export default function AddRental() {
         minRentalDays: Number(form.minRentalDays) || 1,
         features,
         images,
+        extras: extras.map((e) => ({ ...e, isActive: true })),
+        seasonalPricing: seasonalPricing.map((r) => ({ ...r, isActive: true })),
       });
       navigate("/my-rentals");
     } catch (err) {
@@ -206,6 +212,89 @@ export default function AddRental() {
                   {t.features[f] || f}
                 </label>
               ))}
+            </div>
+          </div>
+
+          {/* Extras / Options */}
+          <div className="ar-section">
+            <div className="ar-section-label">Extras & Options (optionnel)</div>
+            {extras.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+                {extras.map((ex, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--s2)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 14px" }}>
+                    <span style={{ flex: 1, fontFamily: "var(--mono)", fontSize: 12, color: "var(--txt)" }}>{ex.label}</span>
+                    <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--violet)" }}>{ex.pricePerDay} MAD/j</span>
+                    <button type="button" onClick={() => setExtras((p) => p.filter((_, idx) => idx !== i))} style={{ background: "none", border: "none", color: "#f87171", cursor: "pointer", fontSize: 14 }}>✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+              <div className="ar-field" style={{ flex: 2 }}>
+                <label className="ar-label">Nom de l'extra</label>
+                <input className="ar-input" value={newExtra.label} onChange={(e) => setNewExtra((p) => ({ ...p, label: e.target.value }))} placeholder="Ex: Siège bébé, GPS..." />
+              </div>
+              <div className="ar-field" style={{ flex: 1 }}>
+                <label className="ar-label">Prix/jour (MAD)</label>
+                <input className="ar-input" type="number" value={newExtra.pricePerDay} onChange={(e) => setNewExtra((p) => ({ ...p, pricePerDay: e.target.value }))} placeholder="50" />
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!newExtra.label || !newExtra.pricePerDay) return;
+                  setExtras((p) => [...p, { label: newExtra.label, pricePerDay: Number(newExtra.pricePerDay) }]);
+                  setNewExtra({ label: "", pricePerDay: "" });
+                }}
+                style={{ padding: "13px 18px", background: "rgba(124,108,252,.15)", border: "1px solid rgba(124,108,252,.3)", borderRadius: 11, color: "var(--violet)", fontFamily: "var(--mono)", fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}
+              >
+                + Ajouter
+              </button>
+            </div>
+          </div>
+
+          {/* Seasonal Pricing */}
+          <div className="ar-section">
+            <div className="ar-section-label">Tarification saisonnière (optionnel)</div>
+            {seasonalPricing.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+                {seasonalPricing.map((r, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--s2)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 14px" }}>
+                    <span style={{ flex: 1, fontFamily: "var(--mono)", fontSize: 12, color: "var(--txt)" }}>{r.label}</span>
+                    <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "#4ade80" }}>{r.startDate} → {r.endDate}</span>
+                    <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "#fbbf24" }}>×{r.multiplier}</span>
+                    <button type="button" onClick={() => setSeasonalPricing((p) => p.filter((_, idx) => idx !== i))} style={{ background: "none", border: "none", color: "#f87171", cursor: "pointer", fontSize: 14 }}>✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
+              <div className="ar-field" style={{ flex: "1 1 140px" }}>
+                <label className="ar-label">Nom de la période</label>
+                <input className="ar-input" value={newRule.label} onChange={(e) => setNewRule((p) => ({ ...p, label: e.target.value }))} placeholder="Ex: Été, Aïd..." />
+              </div>
+              <div className="ar-field" style={{ flex: "1 1 120px" }}>
+                <label className="ar-label">Début</label>
+                <input className="ar-input" type="date" value={newRule.startDate} onChange={(e) => setNewRule((p) => ({ ...p, startDate: e.target.value }))} />
+              </div>
+              <div className="ar-field" style={{ flex: "1 1 120px" }}>
+                <label className="ar-label">Fin</label>
+                <input className="ar-input" type="date" value={newRule.endDate} onChange={(e) => setNewRule((p) => ({ ...p, endDate: e.target.value }))} />
+              </div>
+              <div className="ar-field" style={{ flex: "0 1 100px" }}>
+                <label className="ar-label">Multiplicateur</label>
+                <input className="ar-input" type="number" step="0.05" min="0.1" max="5" value={newRule.multiplier} onChange={(e) => setNewRule((p) => ({ ...p, multiplier: e.target.value }))} />
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!newRule.label || !newRule.startDate || !newRule.endDate) return;
+                  setSeasonalPricing((p) => [...p, { label: newRule.label, startDate: newRule.startDate, endDate: newRule.endDate, multiplier: Number(newRule.multiplier) || 1.2 }]);
+                  setNewRule({ label: "", startDate: "", endDate: "", multiplier: "1.2" });
+                }}
+                style={{ padding: "13px 18px", background: "rgba(124,108,252,.15)", border: "1px solid rgba(124,108,252,.3)", borderRadius: 11, color: "var(--violet)", fontFamily: "var(--mono)", fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}
+              >
+                + Ajouter
+              </button>
             </div>
           </div>
 
