@@ -1504,7 +1504,7 @@ function HomeInner() {
                     )}
 
                     {hasUserRole(auth, "car_owner") && (
-                      <Link to="/dashboard" className="hx-drop-item" onClick={() => setProfileOpen(false)}>
+                      <Link to="/garage" className="hx-drop-item" onClick={() => setProfileOpen(false)}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h13l4 4v4a2 2 0 0 1-2 2h-2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
                         My garage
                       </Link>
@@ -1562,7 +1562,7 @@ function HomeInner() {
             <Link to="/profile"    className="hx-dlink" onClick={() => setMenu(false)}>My Profile</Link>
             {hasUserRole(auth, "customer") && <Link to="/my-bookings" className="hx-dlink" onClick={() => setMenu(false)}>My Bookings</Link>}
             {hasUserRole(auth, "rental_owner") && <Link to="/my-fleet" className="hx-dlink" onClick={() => setMenu(false)}>My Fleet</Link>}
-            {hasUserRole(auth, "car_owner") && <Link to="/dashboard" className="hx-dlink" onClick={() => setMenu(false)}>My garage</Link>}
+            {hasUserRole(auth, "car_owner") && <Link to="/garage" className="hx-dlink" onClick={() => setMenu(false)}>My garage</Link>}
             {hasUserRole(auth, "customer", "car_owner", "rental_owner", "admin") && <Link to="/my-sales" className="hx-dlink" onClick={() => setMenu(false)}>My listings</Link>}
             {hasUserRole(auth, "admin") &&
               !hasUserRole(auth, "car_owner", "rental_owner") && (

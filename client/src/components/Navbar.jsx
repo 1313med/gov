@@ -535,7 +535,7 @@ export default function Navbar() {
                           {ICO_USER} My Profile
                         </Link>
 
-                        {auth.role === "customer" && (
+                        {hasUserRole(auth, "customer") && (
                           <Link
                             to="/my-bookings"
                             className="gn-drop-item"
@@ -545,7 +545,15 @@ export default function Navbar() {
                           </Link>
                         )}
 
-                        {auth.role === "rental_owner" && (
+                        <Link
+                          to="/saved"
+                          className="gn-drop-item"
+                          onClick={() => setProfileOpen(false)}
+                        >
+                          ♥ Saved
+                        </Link>
+
+                        {hasUserRole(auth, "rental_owner") && (
                           <Link
                             to="/my-fleet"
                             className="gn-drop-item"
@@ -557,7 +565,7 @@ export default function Navbar() {
 
                         {hasUserRole(auth, "car_owner") && (
                           <Link
-                            to="/dashboard"
+                            to="/garage"
                             className="gn-drop-item"
                             onClick={() => setProfileOpen(false)}
                           >
@@ -601,7 +609,14 @@ export default function Navbar() {
                           </Link>
                         )}
 
-                        {auth.role === "rental_owner" && (
+                        <Link to="/estimate" className="gn-drop-item" onClick={() => setProfileOpen(false)}>
+                          💰 Price estimate
+                        </Link>
+                        <Link to="/price-alerts" className="gn-drop-item" onClick={() => setProfileOpen(false)}>
+                          🔔 Price alerts
+                        </Link>
+
+                        {hasUserRole(auth, "rental_owner") && (
                           <Link to="/owner/staff" className="gn-drop-item" onClick={() => setProfileOpen(false)}>
                             {ICO_TEAM} Mon équipe
                           </Link>
@@ -653,6 +668,14 @@ export default function Navbar() {
           <>
             <Link to="/messages"      className="gn-drawer-link" onClick={() => setMenuOpen(false)}>Messages</Link>
             <Link to="/notifications" className="gn-drawer-link" onClick={() => setMenuOpen(false)}>Notifications</Link>
+            <Link to="/saved"         className="gn-drawer-link" onClick={() => setMenuOpen(false)}>Saved</Link>
+            <Link to="/my-bookings"   className="gn-drawer-link" onClick={() => setMenuOpen(false)}>My Bookings</Link>
+            {hasUserRole(auth, "car_owner") && (
+              <Link to="/garage" className="gn-drawer-link" onClick={() => setMenuOpen(false)}>My garage</Link>
+            )}
+            {hasUserRole(auth, "rental_owner") && (
+              <Link to="/my-fleet" className="gn-drawer-link" onClick={() => setMenuOpen(false)}>My Fleet</Link>
+            )}
             <Link to="/profile"       className="gn-drawer-link" onClick={() => setMenuOpen(false)}>Profile</Link>
             <Link to="/kyc"           className="gn-drawer-link" onClick={() => setMenuOpen(false)}>🛡 Vérification identité</Link>
             <Link to="/referral"      className="gn-drawer-link" onClick={() => setMenuOpen(false)}>🎁 Parrainage</Link>
@@ -660,7 +683,7 @@ export default function Navbar() {
             {hasUserRole(auth, "car_owner") && (
               <Link to="/fuel-tracker" className="gn-drawer-link" onClick={() => setMenuOpen(false)}>⛽ Carburant</Link>
             )}
-            {auth?.role === "rental_owner" && (
+            {hasUserRole(auth, "rental_owner") && (
               <Link to="/owner/staff" className="gn-drawer-link" onClick={() => setMenuOpen(false)}>👥 Mon équipe</Link>
             )}
             <div className="gn-drawer-sep" />

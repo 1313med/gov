@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/axios";
+import { getMyProfile } from "../api/user";
 import { useAppLang } from "../context/AppLangContext";
 
 const FEATURE_KEYS = ["Air conditioning", "GPS", "Bluetooth", "Backup camera", "Sunroof", "Leather seats", "Heated seats", "USB port", "Cruise control", "Parking sensors"];
@@ -34,6 +35,23 @@ const NewSale = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [profileChecked, setProfileChecked] = useState(false);
+
+  useEffect(() => {
+    getMyProfile()
+      .then((r) => {
+        const u = r.data;
+        if (!u?.nationalId?.number || !u?.nationalId?.imageUrl) {
+          navigate("/verify-cin?purpose=sell&return=new-sale", { replace: true });
+        }
+      })
+      .catch(() => {})
+      .finally(() => setProfileChecked(true));
+  }, [navigate]);
+
+  if (!profileChecked) {
+    return <div className="p-10 text-slate-500">{t.loading || "Loading…"}</div>;
+  }
 
   // ================= INPUT CHANGE =================
   const handleChange = (e) => {

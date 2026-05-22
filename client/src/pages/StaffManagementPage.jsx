@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import OwnerLayout from "../components/owner/OwnerLayout";
 import { getMyStaff, inviteStaff, removeStaff, updateStaffPermissions } from "../api/staff";
 
 const PERMISSION_LABELS = {
@@ -45,6 +46,7 @@ export default function StaffManagementPage() {
   };
 
   return (
+    <OwnerLayout>
     <div className="max-w-2xl mx-auto px-4 py-10">
       <h1 className="text-2xl font-bold mb-6">👥 Mon équipe</h1>
 
@@ -141,5 +143,6 @@ export default function StaffManagementPage() {
         </form>
       </div>
     </div>
+    </OwnerLayout>
   );
 }

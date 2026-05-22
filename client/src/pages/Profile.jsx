@@ -9,6 +9,7 @@ import {
 } from "../api/user";
 import { getMyBookings } from "../api/booking";
 import { loadAuth, saveAuth } from "../utils/authStorage";
+import RoleModeSwitcher from "../components/RoleModeSwitcher";
 import { useTheme } from "../context/ThemeContext";
 import { useAppLang } from "../context/AppLangContext";
 
@@ -483,6 +484,8 @@ export default function Profile() {
       <div className="gp-hero" />
 
       <div className="gp-container">
+
+        <RoleModeSwitcher />
 
         {/* ── Identity row ── */}
         <div className="gp-identity">

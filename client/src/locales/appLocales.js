@@ -473,6 +473,8 @@ const ownerSidebarEn = {
     bookings: "Bookings",
     calendar: "Calendar",
     maintenance: "Maintenance",
+    listingViews: "Listing views",
+    staff: "Team",
   },
 };
 const ownerSidebarFr = {
@@ -489,6 +491,8 @@ const ownerSidebarFr = {
     bookings: "Réservations",
     calendar: "Calendrier",
     maintenance: "Maintenance",
+    listingViews: "Vues annonces",
+    staff: "Équipe",
   },
 };
 

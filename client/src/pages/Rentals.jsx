@@ -1,10 +1,10 @@
 import { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getApprovedRentals } from "../api/rental";
+import { getRentalFavorites, addRentalFavorite, removeRentalFavorite } from "../api/user";
+import { loadAuth } from "../utils/authStorage";
 import { useAppLang } from "../context/AppLangContext";
 import { useTheme } from "../context/ThemeContext";
-
-const FAV_STORAGE_KEY = "goovoiture-rental-favorites";
 
 /* ─────────────────────────────────────────────────────────────────────────── */
 /*  STYLES                                                                     */
@@ -672,18 +672,8 @@ export default function Rentals() {
   const [showAdv, setShowAdv] = useState(false);
   const [citySearch, setCitySearch] = useState("");
   const [viewMode, setViewMode] = useState("grid");
-  const [favIds, setFavIds] = useState(() => {
-    try {
-      const raw = localStorage.getItem(FAV_STORAGE_KEY);
-      if (raw) {
-        const arr = JSON.parse(raw);
-        if (Array.isArray(arr)) return new Set(arr);
-      }
-    } catch {
-      /* ignore */
-    }
-    return new Set();
-  });
+  const [favIds, setFavIds] = useState(new Set());
+  const auth = loadAuth();
 
   const [filters, setFilters] = useState({
     brand: "", minPrice: "", maxPrice: "",
@@ -712,22 +702,41 @@ export default function Rentals() {
   useEffect(() => { fetchRentals(); }, []);
 
   useEffect(() => {
+    if (!auth?._id) {
+      setFavIds(new Set());
+      return;
+    }
+    getRentalFavorites()
+      .then((res) => {
+        const ids = (Array.isArray(res.data) ? res.data : []).map((x) => x._id).filter(Boolean);
+        setFavIds(new Set(ids));
+      })
+      .catch(() => setFavIds(new Set()));
+  }, [auth?._id]);
+
+  const toggleFav = async (id, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!auth?._id) {
+      navigate("/login");
+      return;
+    }
+    const isFav = favIds.has(id);
     try {
-      localStorage.setItem(FAV_STORAGE_KEY, JSON.stringify([...favIds]));
+      if (isFav) {
+        await removeRentalFavorite(id);
+        setFavIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+      } else {
+        await addRentalFavorite(id);
+        setFavIds((prev) => new Set([...prev, id]));
+      }
     } catch {
       /* ignore */
     }
-  }, [favIds]);
-
-  const toggleFav = (id, e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setFavIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
   };
 
   const cities = useMemo(

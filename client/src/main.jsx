@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import { AppLangProvider } from "./context/AppLangContext.jsx";
 import { SocketProvider } from "./context/SocketContext.jsx";
 import { ThemeProvider } from "./context/ThemeContext.jsx";
+import { ActiveModeProvider } from "./context/ActiveModeContext.jsx";
 import App from "./App.jsx";
 import "./index.css";
 import "./styles/theme-screens.css";
@@ -14,7 +15,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <ThemeProvider>
         <AppLangProvider>
           <SocketProvider>
-            <App />
+            <ActiveModeProvider>
+              <App />
+            </ActiveModeProvider>
           </SocketProvider>
         </AppLangProvider>
       </ThemeProvider>

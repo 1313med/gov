@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/axios";
+import { getMyProfile } from "../api/user";
 import OwnerLayout from "../components/owner/OwnerLayout";
 import { useAppLang } from "../context/AppLangContext";
 
@@ -88,6 +89,24 @@ export default function AddRental() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [extras, setExtras] = useState([]);
+  const [docsReady, setDocsReady] = useState(false);
+
+  useEffect(() => {
+    getMyProfile()
+      .then((r) => {
+        const u = r.data;
+        const canRent =
+          u?.driverLicense?.number &&
+          u?.driverLicense?.imageUrl &&
+          u?.nationalId?.number &&
+          u?.nationalId?.imageUrl;
+        if (!canRent) {
+          navigate("/profile-documents?return=add-rental", { replace: true });
+        }
+      })
+      .catch(() => {})
+      .finally(() => setDocsReady(true));
+  }, [navigate]);
   const [newExtra, setNewExtra] = useState({ label: "", pricePerDay: "" });
   const [seasonalPricing, setSeasonalPricing] = useState([]);
   const [newRule, setNewRule] = useState({ label: "", startDate: "", endDate: "", multiplier: "1.2" });
@@ -133,6 +152,14 @@ export default function AddRental() {
       setError(err?.response?.data?.message || t.failed);
     } finally { setLoading(false); }
   };
+
+  if (!docsReady) {
+    return (
+      <OwnerLayout>
+        <div className="ar"><p className="ar-sub">{t.loading || "Loading…"}</p></div>
+      </OwnerLayout>
+    );
+  }
 
   return (
     <OwnerLayout>

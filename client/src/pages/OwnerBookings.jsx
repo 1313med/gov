@@ -5,7 +5,7 @@ import {
   markBookingPaid,
 } from "../api/booking";
 import { getOwnerBookingsCalendar } from "../api/rental";
-import SellerLayout from "../components/seller/SellerLayout";
+import OwnerLayout from "../components/owner/OwnerLayout";
 import { useAppLang } from "../context/AppLangContext";
 import "../styles/ownerCalendar.css";
 
@@ -196,13 +196,13 @@ export default function OwnerBookings() {
 
   if (loading)
     return (
-      <SellerLayout>
+      <OwnerLayout>
         <p className="text-slate-600 dark:text-slate-400">{t.loading}</p>
-      </SellerLayout>
+      </OwnerLayout>
     );
 
   return (
-    <SellerLayout>
+    <OwnerLayout>
 
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
@@ -347,6 +347,6 @@ export default function OwnerBookings() {
         </div>
       )}
 
-    </SellerLayout>
+    </OwnerLayout>
   );
 }

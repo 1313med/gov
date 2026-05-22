@@ -6,6 +6,7 @@ import { useTheme } from "../context/ThemeContext";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
 import { loadAuth } from "../utils/authStorage";
+import { getRentalFavorites, addRentalFavorite, removeRentalFavorite } from "../api/user";
 import ReviewSection from "../components/ReviewSection";
 import MapView from "../components/MapView";
 import SimilarListings from "../components/SimilarListings";
@@ -170,6 +171,7 @@ export default function RentalDetails() {
   const [rental, setRental] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showReport, setShowReport] = useState(false);
+  const [isFav, setIsFav] = useState(false);
 
   const [activeImage, setActiveImage] = useState(0);
 
@@ -253,6 +255,34 @@ export default function RentalDetails() {
 
     loadRental();
   }, [id]);
+
+  useEffect(() => {
+    if (!auth?._id || !id) return;
+    getRentalFavorites()
+      .then((res) => {
+        const ids = (Array.isArray(res.data) ? res.data : []).map((x) => x._id);
+        setIsFav(ids.includes(id));
+      })
+      .catch(() => {});
+  }, [auth?._id, id]);
+
+  const toggleFav = async () => {
+    if (!auth?._id) {
+      navigate("/login");
+      return;
+    }
+    try {
+      if (isFav) {
+        await removeRentalFavorite(id);
+        setIsFav(false);
+      } else {
+        await addRentalFavorite(id);
+        setIsFav(true);
+      }
+    } catch {
+      /* ignore */
+    }
+  };
 
   const handleBooking = async () => {
     if (!startDate || !endDate) {
@@ -393,7 +423,30 @@ export default function RentalDetails() {
       <div className="rd-inner">
         <div className="rd-grid">
           <div>
-            <div className="rd-card">
+            <div className="rd-card" style={{ position: "relative" }}>
+              {auth && (
+                <button
+                  type="button"
+                  onClick={toggleFav}
+                  aria-label={isFav ? "Saved" : "Save"}
+                  style={{
+                    position: "absolute",
+                    top: 14,
+                    right: 14,
+                    zIndex: 2,
+                    width: 44,
+                    height: 44,
+                    borderRadius: "50%",
+                    border: "none",
+                    background: "rgba(0,0,0,.45)",
+                    color: isFav ? "#f43f5e" : "#fff",
+                    fontSize: 22,
+                    cursor: "pointer",
+                  }}
+                >
+                  {isFav ? "♥" : "♡"}
+                </button>
+              )}
               {images.length > 0 ? (
                 <img
                   src={images[activeImage]}

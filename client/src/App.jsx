@@ -39,12 +39,27 @@ import BuyingGuidePage from "./pages/BuyingGuidePage";
 import FuelTrackerPage from "./pages/FuelTrackerPage";
 import AccidentAssistantPage from "./pages/AccidentAssistantPage";
 import StaffManagementPage from "./pages/StaffManagementPage";
+import SavedPage from "./pages/SavedPage";
+import EstimatePage from "./pages/EstimatePage";
+import PriceAlertsPage from "./pages/PriceAlertsPage";
+import GaragePage from "./pages/GaragePage";
+import AddCarPage from "./pages/AddCarPage";
+import OwnerListingViewsPage from "./pages/OwnerListingViewsPage";
+import VerifyCinPage from "./pages/VerifyCinPage";
+import ProfileDocumentsPage from "./pages/ProfileDocumentsPage";
+import ConditionChecklistPage from "./pages/ConditionChecklistPage";
+import DocScannerPage from "./pages/DocScannerPage";
 
 /* Paths where Navbar should not render (they have their own full-page nav) */
 const NO_NAV_PREFIXES = [
   "/admin",
   "/dashboard",
   "/my-sales",
+  "/my-fleet",
+  "/my-rentals",
+  "/owner",
+  "/add-rental",
+  "/owner-bookings",
 ];
 
 export default function App() {
@@ -80,6 +95,11 @@ export default function App() {
 
         {/* Customer */}
         <Route path="/my-bookings" element={<ProtectedRoute roles={["customer"]}><MyBookings /></ProtectedRoute>} />
+        <Route path="/saved" element={<ProtectedRoute roles={["customer","car_owner","rental_owner","admin"]}><SavedPage /></ProtectedRoute>} />
+        <Route path="/estimate" element={<ProtectedRoute roles={["customer","car_owner","rental_owner","admin"]}><EstimatePage /></ProtectedRoute>} />
+        <Route path="/price-alerts" element={<ProtectedRoute roles={["customer","car_owner","rental_owner","admin"]}><PriceAlertsPage /></ProtectedRoute>} />
+        <Route path="/verify-cin" element={<ProtectedRoute roles={["customer","car_owner","rental_owner","admin"]}><VerifyCinPage /></ProtectedRoute>} />
+        <Route path="/profile-documents" element={<ProtectedRoute roles={["customer","car_owner","rental_owner","admin"]}><ProfileDocumentsPage /></ProtectedRoute>} />
 
         {/* Rental owner */}
         <Route path="/my-fleet"        element={<ProtectedRoute roles={["rental_owner"]}><MyFleet /></ProtectedRoute>} />
@@ -89,6 +109,13 @@ export default function App() {
         <Route path="/add-rental"     element={<ProtectedRoute roles={["rental_owner"]}><AddRental /></ProtectedRoute>} />
         <Route path="/owner/analytics"     element={<ProtectedRoute roles={["rental_owner"]}><OwnerAnalytics /></ProtectedRoute>} />
         <Route path="/owner/maintenance"   element={<ProtectedRoute roles={["rental_owner"]}><MaintenancePage /></ProtectedRoute>} />
+        <Route path="/owner/listing-views" element={<ProtectedRoute roles={["rental_owner"]}><OwnerListingViewsPage /></ProtectedRoute>} />
+        <Route path="/owner/condition-checklist/:bookingId" element={<ProtectedRoute roles={["rental_owner"]}><ConditionChecklistPage /></ProtectedRoute>} />
+
+        {/* Car owner — garage */}
+        <Route path="/garage" element={<ProtectedRoute roles={["car_owner","admin"]}><GaragePage /></ProtectedRoute>} />
+        <Route path="/garage/add" element={<ProtectedRoute roles={["car_owner","admin"]}><AddCarPage /></ProtectedRoute>} />
+        <Route path="/garage/documents" element={<ProtectedRoute roles={["car_owner","admin"]}><DocScannerPage /></ProtectedRoute>} />
 
         {/* Seller */}
         <Route path="/dashboard"      element={<ProtectedRoute roles={["car_owner","admin"]}><Dashboard /></ProtectedRoute>} />

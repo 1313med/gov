@@ -7,15 +7,46 @@ export function normalizeRoleSlug(role) {
 
 export function getUserRoles(user) {
   if (!user) return ["customer"];
-  if (Array.isArray(user.roles) && user.roles.length) {
-    const set = new Set(user.roles.map(normalizeRoleSlug));
-    set.add("customer");
-    return [...set];
-  }
+
+  const set = new Set(["customer"]);
   const legacy = normalizeRoleSlug(user.role);
-  if (legacy === "admin") return ["admin", "customer"];
-  if (legacy === "customer") return ["customer"];
-  return ["customer", legacy];
+  if (legacy !== "customer") set.add(legacy);
+
+  if (Array.isArray(user.roles)) {
+    user.roles.map(normalizeRoleSlug).forEach((r) => set.add(r));
+  }
+
+  return [...set];
+}
+
+export function isStaffUser(user) {
+  return !!user?.staffForOwnerId;
+}
+
+export function isCarOwnerUser(user) {
+  return getUserRoles(user).includes("car_owner");
+}
+
+export function isRentalOwnerUser(user) {
+  return getUserRoles(user).includes("rental_owner");
+}
+
+/** Web home route after login (respects multi-role priority). */
+export function homePathForUser(user) {
+  const roles = getUserRoles(user);
+  if (roles.includes("car_owner")) return "/garage";
+  if (roles.includes("rental_owner") || isStaffUser(user)) return "/owner/analytics";
+  if (isAdminOnlyUser(user)) return "/admin";
+  return "/rentals";
+}
+
+/** Target path when switching role mode on web. */
+export function shellPathForMode(mode) {
+  const m = normalizeRoleSlug(mode);
+  if (m === "rental_owner") return "/owner/analytics";
+  if (m === "car_owner") return "/garage";
+  if (m === "admin") return "/admin";
+  return "/rentals";
 }
 
 export function isAdminOnlyUser(user) {
@@ -29,6 +60,12 @@ export function isAdminOnlyUser(user) {
 
 export function hasUserRole(user, ...allowed) {
   const set = new Set(getUserRoles(user));
+  if (
+    isStaffUser(user) &&
+    allowed.some((a) => normalizeRoleSlug(a) === "rental_owner")
+  ) {
+    return true;
+  }
   return allowed.some((a) => set.has(normalizeRoleSlug(a)));
 }
 

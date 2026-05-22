@@ -608,7 +608,8 @@ const PAGE_SIZE = 20;
 
 /* ─── media panel ─────────────────────────────────────────────────────── */
 function BookingMediaPanel({ booking, onSaved }) {
-  const { copy } = useAppLang();
+  const { copy, lang } = useAppLang();
+  const fr = lang === "fr";
   const tm = copy.ownerBookingsList.media;
   const [photoTab, setPhotoTab] = useState("before");
   const [before, setBefore]   = useState(booking.conditionPhotos?.before || []);
@@ -671,6 +672,24 @@ function BookingMediaPanel({ booking, onSaved }) {
     <div className="obl-detail-panel">
       <div>
         <p className="obl-panel-title">{tm.conditionPhotos}</p>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+          {["before", "after"].map((ph) => {
+            const q = new URLSearchParams({
+              phase: ph,
+              existingBefore: JSON.stringify(booking.conditionPhotos?.before || []),
+              existingAfter: JSON.stringify(booking.conditionPhotos?.after || []),
+            });
+            return (
+              <a
+                key={ph}
+                href={`/owner/condition-checklist/${booking._id}?${q}`}
+                style={{ fontSize: 12, padding: "6px 12px", borderRadius: 8, border: "1px solid rgba(124,107,255,.4)", color: "#7c6bff", textDecoration: "none" }}
+              >
+                {fr ? (ph === "before" ? "Checklist départ" : "Checklist retour") : (ph === "before" ? "Pickup checklist" : "Return checklist")}
+              </a>
+            );
+          })}
+        </div>
         <div className="obl-photo-tabs">
           <button className={`obl-ptab${photoTab === "before" ? " before" : ""}`} onClick={() => setPhotoTab("before")}>
             {tm.before} ({before.length})

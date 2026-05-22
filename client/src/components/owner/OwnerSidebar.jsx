@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Car, PlusCircle, Calendar, Layers, ClipboardList, Wrench } from "lucide-react";
+import { LayoutDashboard, Car, PlusCircle, Calendar, Layers, ClipboardList, Wrench, Eye, Users } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import { useAppLang } from "../../context/AppLangContext";
 
@@ -294,6 +294,8 @@ const MENU_DEFS = [
   { key: "bookings",    path: "/owner/bookings-list",   icon: ClipboardList   },
   { key: "calendar",    path: "/owner/bookings",        icon: Calendar        },
   { key: "maintenance", path: "/owner/maintenance",     icon: Wrench          },
+  { key: "listingViews", path: "/owner/listing-views", icon: Eye             },
+  { key: "staff",       path: "/owner/staff",           icon: Users           },
 ];
 
 export default function OwnerSidebar() {

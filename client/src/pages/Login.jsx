@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { api } from "../api/axios";
 import { saveAuth } from "../utils/authStorage";
+import { homePathForUser } from "../utils/userRoles";
 import { useAppLang } from "../context/AppLangContext";
 
 /* ─────────────────────────────────────────────
@@ -643,20 +644,7 @@ export default function Login() {
     try {
       const res = await api.post("/auth/login", { phone, password });
       saveAuth(res.data);
-      const roles = res.data.roles || [];
-      if (roles.includes("car_owner") || res.data.role === "car_owner" || res.data.role === "seller") {
-        navigate("/dashboard");
-      } else if (roles.includes("rental_owner") || res.data.role === "rental_owner") {
-        navigate("/owner/analytics");
-      } else if (
-        (roles.includes("admin") || res.data.role === "admin") &&
-        !roles.includes("car_owner") &&
-        !roles.includes("rental_owner")
-      ) {
-        navigate("/admin");
-      } else {
-        navigate("/");
-      }
+      navigate(homePathForUser(res.data));
     } catch (err) {
       setError(err?.response?.data?.message || copy.login.invalidCreds);
     } finally {
