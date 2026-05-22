@@ -634,6 +634,9 @@ export default function RentalOwnerDashboard() {
   const bookingAttentionCount = useOwnerBookingAttentionCount();
   const listingViewAttentionCount = useOwnerListingViewAttentionCount();
 
+  const isStaff = !!auth?.staffForOwnerId;
+  const canViewAnalytics = !isStaff || !!auth?.staffPermissions?.viewAnalytics;
+
   const [stats, setStats] = useState(null);
   const [pending, setPending] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -692,7 +695,7 @@ export default function RentalOwnerDashboard() {
   const load = useCallback(async () => {
     try {
       const [analyticsData, bookingsRes] = await Promise.all([
-        getOwnerAnalytics("30d").catch(() => null),
+        canViewAnalytics ? getOwnerAnalytics("30d").catch(() => null) : Promise.resolve(null),
         getOwnerBookings({ status: "pending", limit: 5 }).catch(() => null),
       ]);
       setStats(analyticsData);
@@ -809,7 +812,7 @@ export default function RentalOwnerDashboard() {
                   : "Command revenue, bookings, and visibility from one premium cockpit."}
               </Text>
 
-              {!loading && (
+              {!loading && canViewAnalytics && (
                 <LinearGradient colors={glassGrad} style={[s.revenueGlass, { borderColor: glassBorder }]}>
                   <View style={s.revenueRow}>
                     <View style={{ flex: 1 }}>
@@ -848,28 +851,31 @@ export default function RentalOwnerDashboard() {
         </Animated.View>
 
         <Animated.View style={{ opacity: contentFade, paddingHorizontal: 20, paddingTop: 4 }}>
-            <Text style={[s.sectionEyebrow, { color: accent }]}>{fr ? "Indicateurs" : "Metrics"}</Text>
-            <Text style={[s.sectionTitle, { color: titleColor, marginBottom: 12 }]}>
-              {fr ? "Vue d'ensemble" : "At a glance"}
-            </Text>
-
-            <MetricsElitePanel
-              stats={stats}
-              fr={fr}
-              isDark={isDark}
-              titleColor={titleColor}
-              glassBorder={glassBorder}
-              accent={accent}
-              violet={violet}
-              cyan={cyan}
-              gold={gold}
-              C={C}
-              kpiAnims={kpiAnims}
-              listingViewAttentionCount={listingViewAttentionCount}
-              pendingCount={pending.length}
-              formatMad={formatMad}
-              router={router}
-            />
+            {canViewAnalytics && (
+              <>
+                <Text style={[s.sectionEyebrow, { color: accent }]}>{fr ? "Indicateurs" : "Metrics"}</Text>
+                <Text style={[s.sectionTitle, { color: titleColor, marginBottom: 12 }]}>
+                  {fr ? "Vue d'ensemble" : "At a glance"}
+                </Text>
+                <MetricsElitePanel
+                  stats={stats}
+                  fr={fr}
+                  isDark={isDark}
+                  titleColor={titleColor}
+                  glassBorder={glassBorder}
+                  accent={accent}
+                  violet={violet}
+                  cyan={cyan}
+                  gold={gold}
+                  C={C}
+                  kpiAnims={kpiAnims}
+                  listingViewAttentionCount={listingViewAttentionCount}
+                  pendingCount={pending.length}
+                  formatMad={formatMad}
+                  router={router}
+                />
+              </>
+            )}
 
             <View style={s.sectionHead}>
               <View>

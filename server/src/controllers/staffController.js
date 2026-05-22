@@ -1,36 +1,60 @@
 const crypto = require("crypto");
 const User = require("../models/User");
 const StaffInvite = require("../models/StaffInvite");
+const { sendStaffInvite } = require("../utils/emailService");
 
 // ── POST /api/staff/invite ─────────────────────────────────────────────────────
 exports.inviteStaff = async (req, res, next) => {
   try {
-    const { phone, name, permissions } = req.body;
-    if (!phone || !name) return res.status(400).json({ message: "phone and name are required" });
+    const { email, name, permissions } = req.body;
+    if (!email || !name) return res.status(400).json({ message: "email and name are required" });
 
-    // Check the invited user is not already staff for someone else
-    const existingUser = await User.findOne({ phone, deletedAt: null });
-    if (existingUser?.staffForOwnerId) {
-      return res.status(409).json({ message: "This user is already a staff member for another agency" });
+    const normalizedEmail = email.trim().toLowerCase();
+    const perms = permissions || {};
+
+    // ── Fast path: user already has a Goovoiture account → add directly ──────
+    const existingUser = await User.findOne({ email: normalizedEmail, deletedAt: null });
+    if (existingUser) {
+      if (String(existingUser._id) === String(req.user._id)) {
+        return res.status(400).json({ message: "You cannot add yourself as staff" });
+      }
+      if (existingUser.staffForOwnerId && String(existingUser.staffForOwnerId) !== String(req.user._id)) {
+        return res.status(409).json({ message: "This user is already staff for another agency" });
+      }
+      existingUser.staffForOwnerId  = req.user._id;
+      existingUser.staffPermissions = { manageBookings: true, manageMessages: true, viewAnalytics: false, managePricing: false, ...perms };
+      existingUser.isEmailVerified  = true; // allow immediate login without verify step
+      await existingUser.save();
+      // Revoke any lingering pending invites for this email
+      await StaffInvite.updateMany({ ownerId: req.user._id, email: normalizedEmail, status: "pending" }, { status: "revoked" });
+      return res.status(201).json({ message: "Staff member added directly", direct: true });
     }
+
+    // ── Slow path: no account yet → send email invite ─────────────────────────
+    await StaffInvite.updateMany(
+      { ownerId: req.user._id, email: normalizedEmail, status: "pending" },
+      { status: "revoked" }
+    );
 
     const token     = crypto.randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
     const invite = await StaffInvite.create({
       ownerId: req.user._id,
-      phone,
+      email:   normalizedEmail,
       name,
-      permissions: permissions || {},
+      permissions: perms,
       token,
       expiresAt,
     });
 
-    // TODO: send WhatsApp invite link with token
+    const acceptUrl = `${process.env.CLIENT_URL}/staff/accept?token=${token}`;
+    await sendStaffInvite({ to: normalizedEmail, staffName: name, ownerName: req.user.name, acceptUrl, expiresAt }).catch(() => {});
+
     res.status(201).json({
-      message: "Staff invite created",
-      invite: { _id: invite._id, phone, name, expiresAt, status: invite.status },
-      // In production, the token is sent via WhatsApp — not exposed in API response
+      message: "Staff invite sent by email",
+      direct: false,
+      invite: { _id: invite._id, email: normalizedEmail, name, expiresAt, status: invite.status },
     });
   } catch (err) { next(err); }
 };
@@ -42,20 +66,19 @@ exports.acceptInvite = async (req, res, next) => {
     if (!token) return res.status(400).json({ message: "token is required" });
 
     const invite = await StaffInvite.findOne({ token, status: "pending" }).select("+token");
-    if (!invite)             return res.status(404).json({ message: "Invalid or expired invite" });
+    if (!invite) return res.status(404).json({ message: "Invalid or expired invite" });
     if (invite.expiresAt < new Date()) {
       invite.status = "revoked";
       await invite.save();
       return res.status(410).json({ message: "Invite has expired" });
     }
 
-    // Link the accepting user as staff for the owner
-    req.user.staffForOwnerId   = invite.ownerId;
-    req.user.staffPermissions  = invite.permissions;
+    req.user.staffForOwnerId  = invite.ownerId;
+    req.user.staffPermissions = invite.permissions;
     await req.user.save();
 
-    invite.status            = "accepted";
-    invite.acceptedByUserId  = req.user._id;
+    invite.status           = "accepted";
+    invite.acceptedByUserId = req.user._id;
     await invite.save();
 
     res.json({ message: "You are now a staff member for this rental agency" });
@@ -66,14 +89,30 @@ exports.acceptInvite = async (req, res, next) => {
 exports.getMyStaff = async (req, res, next) => {
   try {
     const staff = await User.find({ staffForOwnerId: req.user._id, deletedAt: null })
-      .select("name phone avatar staffPermissions createdAt")
+      .select("name email avatar staffPermissions createdAt")
       .lean();
 
     const pending = await StaffInvite.find({ ownerId: req.user._id, status: "pending" })
-      .select("phone name permissions expiresAt createdAt")
+      .select("email name permissions expiresAt createdAt")
       .lean();
 
     res.json({ staff, pendingInvites: pending });
+  } catch (err) { next(err); }
+};
+
+// ── DELETE /api/staff/invite/:inviteId ────────────────────────────────────────
+exports.cancelInvite = async (req, res, next) => {
+  try {
+    const invite = await StaffInvite.findOne({
+      _id: req.params.inviteId,
+      ownerId: req.user._id,
+      status: "pending",
+    });
+    if (!invite) return res.status(404).json({ message: "Pending invite not found" });
+
+    invite.status = "revoked";
+    await invite.save();
+    res.json({ message: "Invite cancelled" });
   } catch (err) { next(err); }
 };
 

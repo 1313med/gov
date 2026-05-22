@@ -2,11 +2,19 @@ import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../src/context/ThemeContext";
 import { useAppLang } from "../../src/context/AppLangContext";
+import { useAuth } from "../../src/context/AuthContext";
 
 export default function RentalOwnerLayout() {
   const { colors: C, isDark } = useTheme();
   const { lang } = useAppLang();
+  const { auth } = useAuth();
   const fr = lang === "fr";
+
+  const isStaff = !!auth?.staffForOwnerId;
+  const perms = auth?.staffPermissions || {};
+
+  // Returns null (hidden) for staff tabs they lack permission for, undefined (visible) otherwise
+  const tabHref = (granted) => (isStaff && !granted ? null : undefined);
 
   return (
     <Tabs
@@ -35,6 +43,7 @@ export default function RentalOwnerLayout() {
       <Tabs.Screen
         name="bookings"
         options={{
+          href: tabHref(perms.manageBookings),
           title: fr ? "Réservations" : "Bookings",
           tabBarIcon: ({ color, size }) => <Ionicons name="clipboard-outline" size={size} color={color} />,
         }}
@@ -42,6 +51,7 @@ export default function RentalOwnerLayout() {
       <Tabs.Screen
         name="analytics"
         options={{
+          href: tabHref(perms.viewAnalytics),
           title: fr ? "Analytique" : "Analytics",
           tabBarIcon: ({ color, size }) => <Ionicons name="analytics-outline" size={size} color={color} />,
         }}
@@ -49,6 +59,7 @@ export default function RentalOwnerLayout() {
       <Tabs.Screen
         name="fleet"
         options={{
+          href: tabHref(perms.managePricing),
           title: fr ? "Flotte" : "Fleet",
           tabBarIcon: ({ color, size }) => <Ionicons name="car-sport-outline" size={size} color={color} />,
         }}
@@ -56,7 +67,9 @@ export default function RentalOwnerLayout() {
       <Tabs.Screen
         name="messages"
         options={{
-          href: null,
+          href: isStaff ? tabHref(perms.manageMessages) : null,
+          title: fr ? "Messages" : "Messages",
+          tabBarIcon: ({ color, size }) => <Ionicons name="chatbubble-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen

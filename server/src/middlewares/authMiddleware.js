@@ -39,3 +39,12 @@ exports.role = (...roles) => (req, res, next) => {
   }
   next();
 };
+
+/** Allows rental_owners AND their staff members to access owner-scoped endpoints. */
+exports.ownerOrStaff = (req, res, next) => {
+  if (!req.user) return res.status(403).json({ message: "Forbidden" });
+  const isOwner = hasUserRole(req.user, "rental_owner");
+  const isStaff = !!req.user.staffForOwnerId;
+  if (!isOwner && !isStaff) return res.status(403).json({ message: "Forbidden" });
+  next();
+};

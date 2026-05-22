@@ -3,6 +3,8 @@ const RentalListing = require("../models/RentalListing");
 const Maintenance = require("../models/Maintenance");
 const { suggestPrice } = require("../utils/pricingEngine");
 
+const effectiveOwnerId = (user) => user.staffForOwnerId || user._id;
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -31,7 +33,7 @@ function daysBetween(a, b) {
 // ---------------------------------------------------------------------------
 exports.getOwnerAnalytics = async (req, res, next) => {
   try {
-    const ownerId  = req.user._id;
+    const ownerId  = effectiveOwnerId(req.user);
     const period   = req.query.period || "30d";
     const startDate = getPeriodStart(period);
     const now       = new Date();

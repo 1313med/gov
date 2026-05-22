@@ -11,6 +11,10 @@ const { canCustomerLeaveRentalListingReview } = require("../utils/reviewEligibil
 const { computeBookingTotalForRental } = require("../utils/bookingPricing");
 const { emitNotification } = require("../utils/socketManager");
 
+/** Returns the owner ID to use for owner-scoped queries.
+ *  Staff members act on behalf of their owner (staffForOwnerId). */
+const effectiveOwnerId = (user) => user.staffForOwnerId || user._id;
+
 /** Customer may cancel with refund info only this many hours before pickup. */
 const CUSTOMER_CANCEL_REFUND_MIN_HOURS = 48;
 /** Also allow refund cancel if pickup is at least this many local calendar days after today (covers e.g. “day after tomorrow” when wall-clock is just under 48h). */
@@ -122,9 +126,9 @@ exports.getBookingsForOwner = async (req, res, next) => {
       ? req.query.status
       : null;
 
-    // 1. Resolve this owner's rental IDs
+    // 1. Resolve this owner's rental IDs (staff use their owner's ID)
     const rentals = await RentalListing.find({
-      rentalOwnerId: req.user._id,
+      rentalOwnerId: effectiveOwnerId(req.user),
       deletedAt: null,
     }).select("_id");
     const rentalIds = rentals.map((r) => r._id);
@@ -267,7 +271,7 @@ exports.getBookingsForOwner = async (req, res, next) => {
 exports.getOwnerBookingOne = async (req, res, next) => {
   try {
     const rentals = await RentalListing.find({
-      rentalOwnerId: req.user._id,
+      rentalOwnerId: effectiveOwnerId(req.user),
       deletedAt: null,
     }).select("_id");
     const rentalIds = rentals.map((r) => r._id);
@@ -309,7 +313,7 @@ exports.updateBookingStatus = async (req, res, next) => {
       .populate("rentalId");
     if (!booking) return res.status(404).json({ message: "Booking not found" });
 
-    if (booking.rentalId.rentalOwnerId.toString() !== req.user._id.toString()) {
+    if (booking.rentalId.rentalOwnerId.toString() !== effectiveOwnerId(req.user).toString()) {
       return res.status(403).json({ message: "Forbidden" });
     }
 
@@ -595,7 +599,7 @@ exports.setOwnerBookingArchive = async (req, res, next) => {
     const wantArchive = !!req.body?.archived;
     const booking = await Booking.findOne({ _id: req.params.id, deletedAt: null }).populate("rentalId");
     if (!booking) return res.status(404).json({ message: "Booking not found" });
-    if (booking.rentalId.rentalOwnerId.toString() !== req.user._id.toString()) {
+    if (booking.rentalId.rentalOwnerId.toString() !== effectiveOwnerId(req.user).toString()) {
       return res.status(403).json({ message: "Forbidden" });
     }
     const archivable = ["completed", "rejected", "cancelled"];
@@ -618,7 +622,7 @@ exports.updateBookingMedia = async (req, res, next) => {
     const booking = await Booking.findOne({ _id: req.params.id, deletedAt: null })
       .populate("rentalId");
     if (!booking) return res.status(404).json({ message: "Booking not found" });
-    if (booking.rentalId.rentalOwnerId.toString() !== req.user._id.toString()) {
+    if (booking.rentalId.rentalOwnerId.toString() !== effectiveOwnerId(req.user).toString()) {
       return res.status(403).json({ message: "Forbidden" });
     }
     const { conditionPhotos, documents } = req.body;
@@ -635,7 +639,7 @@ exports.markBookingPaid = async (req, res, next) => {
     const booking = await Booking.findOne({ _id: req.params.id, deletedAt: null })
       .populate("rentalId");
     if (!booking) return res.status(404).json({ message: "Booking not found" });
-    if (booking.rentalId.rentalOwnerId.toString() !== req.user._id.toString()) {
+    if (booking.rentalId.rentalOwnerId.toString() !== effectiveOwnerId(req.user).toString()) {
       return res.status(403).json({ message: "Forbidden" });
     }
     booking.isPaid = !booking.isPaid;
@@ -653,7 +657,7 @@ exports.updateBookingDates = async (req, res, next) => {
       .populate("rentalId");
 
     if (!booking) return res.status(404).json({ message: "Booking not found" });
-    if (booking.rentalId.rentalOwnerId.toString() !== req.user._id.toString()) {
+    if (booking.rentalId.rentalOwnerId.toString() !== effectiveOwnerId(req.user).toString()) {
       return res.status(403).json({ message: "Forbidden" });
     }
 
@@ -693,7 +697,7 @@ exports.declareOwnerVehicleIssue = async (req, res, next) => {
     if (!["pending", "confirmed"].includes(booking.status)) {
       return res.status(400).json({ message: "This booking cannot be flagged for a vehicle issue" });
     }
-    if (booking.rentalId.rentalOwnerId.toString() !== req.user._id.toString()) {
+    if (booking.rentalId.rentalOwnerId.toString() !== effectiveOwnerId(req.user).toString()) {
       return res.status(403).json({ message: "Forbidden" });
     }
     if (vehiclePhase(booking) !== "none") {
@@ -914,7 +918,7 @@ exports.ownerConfirmVehicleRefund = async (req, res, next) => {
       "title rentalOwnerId"
     );
     if (!booking) return res.status(404).json({ message: "Booking not found" });
-    if (booking.rentalId.rentalOwnerId.toString() !== req.user._id.toString()) {
+    if (booking.rentalId.rentalOwnerId.toString() !== effectiveOwnerId(req.user).toString()) {
       return res.status(403).json({ message: "Forbidden" });
     }
     const phase = vehiclePhase(booking);
@@ -965,7 +969,7 @@ exports.ownerClearBookingNewFlag = async (req, res, next) => {
       "rentalOwnerId"
     );
     if (!booking) return res.status(404).json({ message: "Booking not found" });
-    if (booking.rentalId.rentalOwnerId.toString() !== req.user._id.toString()) {
+    if (booking.rentalId.rentalOwnerId.toString() !== effectiveOwnerId(req.user).toString()) {
       return res.status(403).json({ message: "Forbidden" });
     }
     booking.isNewForOwner = false;
@@ -987,7 +991,7 @@ exports.ownerAckBookingAlert = async (req, res, next) => {
       "rentalOwnerId"
     );
     if (!booking) return res.status(404).json({ message: "Booking not found" });
-    if (booking.rentalId.rentalOwnerId.toString() !== req.user._id.toString()) {
+    if (booking.rentalId.rentalOwnerId.toString() !== effectiveOwnerId(req.user).toString()) {
       return res.status(403).json({ message: "Forbidden" });
     }
     if (booking.status === "pending") {
@@ -1006,7 +1010,7 @@ exports.ownerAckBookingAlert = async (req, res, next) => {
 // ── RENTAL OWNER – Booking hub badge (home / profile) ───────────────────────
 exports.getOwnerBookingAttentionCount = async (req, res, next) => {
   try {
-    const rentals = await RentalListing.find({ rentalOwnerId: req.user._id, deletedAt: null }).select("_id");
+    const rentals = await RentalListing.find({ rentalOwnerId: effectiveOwnerId(req.user), deletedAt: null }).select("_id");
     const rentalIds = rentals.map((r) => r._id);
     if (!rentalIds.length) return res.json({ count: 0 });
 
@@ -1024,7 +1028,7 @@ exports.getOwnerBookingAttentionCount = async (req, res, next) => {
 /** Clears “needs review” flags after the owner has visited the bookings hub (blur). */
 exports.clearOwnerBookingAlerts = async (req, res, next) => {
   try {
-    const rentals = await RentalListing.find({ rentalOwnerId: req.user._id, deletedAt: null }).select("_id");
+    const rentals = await RentalListing.find({ rentalOwnerId: effectiveOwnerId(req.user), deletedAt: null }).select("_id");
     const rentalIds = rentals.map((r) => r._id);
     if (!rentalIds.length) return res.json({ ok: true, modified: 0 });
 

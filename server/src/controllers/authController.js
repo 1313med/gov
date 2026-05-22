@@ -132,6 +132,8 @@ exports.login = asyncHandler(async (req, res) => {
     role: primaryRole,
     roles,
     token,
+    staffForOwnerId:  user.staffForOwnerId  || null,
+    staffPermissions: user.staffPermissions || null,
   });
 });
 

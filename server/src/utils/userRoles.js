@@ -18,20 +18,18 @@ function normalizeRoleSlug(role) {
 function getUserRoles(user) {
   if (!user) return ["customer"];
 
-  const fromArray = Array.isArray(user.roles)
-    ? user.roles.map(normalizeRoleSlug).filter(Boolean)
-    : [];
+  const set = new Set(["customer"]);
 
-  if (fromArray.length) {
-    const set = new Set(fromArray);
-    set.add("customer");
-    return [...set];
+  // Always include legacy `role` field so accounts where `roles` only has
+  // "customer" but `role` is "rental_owner" still get the right capabilities.
+  const legacy = normalizeRoleSlug(user.role);
+  if (legacy !== "customer") set.add(legacy);
+
+  if (Array.isArray(user.roles)) {
+    user.roles.map(normalizeRoleSlug).forEach((r) => set.add(r));
   }
 
-  const legacy = normalizeRoleSlug(user.role);
-  if (legacy === "admin") return ["admin", "customer"];
-  if (legacy === "customer") return ["customer"];
-  return ["customer", legacy];
+  return [...set];
 }
 
 function hasUserRole(user, ...allowed) {

@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { clearAuth, loadAuth, saveAuth } from "../utils/authStorage";
-import { getUserRoles, getPrimaryRole, isAdminOnlyUser, isRentalOwnerUser, isCarOwnerUser } from "../utils/userRoles";
+import { getUserRoles, getPrimaryRole, isAdminOnlyUser, isRentalOwnerUser, isCarOwnerUser, isStaffUser } from "../utils/userRoles";
 import { getMyProfile } from "../api/user";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -43,7 +43,7 @@ export function AuthProvider({ children }) {
         const modeKey = `goovoiture-active-mode:${enriched._id}`;
         if (isCarOwnerUser(enriched)) {
           await AsyncStorage.setItem(modeKey, "car_owner");
-        } else if (isRentalOwnerUser(enriched)) {
+        } else if (isRentalOwnerUser(enriched) || isStaffUser(enriched)) {
           const saved = await AsyncStorage.getItem(modeKey);
           if (!saved || saved === "admin" || saved === "customer") {
             await AsyncStorage.setItem(modeKey, "rental_owner");
@@ -72,6 +72,8 @@ export function AuthProvider({ children }) {
         await AsyncStorage.setItem(modeKey, "rental_owner");
       } else if (isAdminOnlyUser({ roles })) {
         await AsyncStorage.setItem(modeKey, "admin");
+      } else if (isStaffUser(enriched)) {
+        await AsyncStorage.setItem(modeKey, "rental_owner");
       } else {
         await AsyncStorage.setItem(modeKey, "customer");
         await AsyncStorage.setItem(`goovoiture-customer-explore:${enriched._id}`, "rent");

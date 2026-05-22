@@ -291,6 +291,27 @@ exports.sendPriceAlert = (user, alert, matches) => {
   });
 };
 
+exports.sendStaffInvite = ({ to, staffName, ownerName, acceptUrl, expiresAt }) =>
+  send({
+    to,
+    subject: `${ownerName} vous invite à rejoindre son équipe sur Goovoiture`,
+    html: `
+      <div style="font-family:sans-serif;max-width:560px;margin:auto">
+        <h2 style="color:#7c3aed">Invitation à rejoindre l'équipe</h2>
+        <p>Bonjour ${staffName},</p>
+        <p><strong>${ownerName}</strong> vous invite à rejoindre son équipe en tant que collaborateur sur Goovoiture.</p>
+        <p>Cliquez sur le bouton ci-dessous pour accepter l'invitation :</p>
+        <p style="text-align:center;margin:28px 0">
+          <a href="${acceptUrl}" style="background:#7c3aed;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block">
+            Accepter l'invitation
+          </a>
+        </p>
+        <p style="color:#888;font-size:13px">Cette invitation expire le <strong>${new Date(expiresAt).toLocaleDateString("fr-FR")}</strong>.</p>
+        <p style="color:#aaa;font-size:12px;word-break:break-all">Ou copiez ce lien : ${acceptUrl}</p>
+        <p style="color:#ccc;font-size:11px;margin-top:24px">Si vous ne connaissez pas ${ownerName}, ignorez simplement cet email.</p>
+      </div>`,
+  });
+
 exports.sendMaintenanceReminder = (owner, records) => {
   const rows = records.map((r) => `
     <tr>

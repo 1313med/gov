@@ -16,6 +16,8 @@ const {
   applyGearboxFilter,
 } = require("../utils/listingFilters");
 
+const effectiveOwnerId = (user) => user.staffForOwnerId || user._id;
+
 /** Dedupe POST /record-view for same listing + visitor (double fetch / React Strict Mode). */
 const rentalViewDedupe = new Map();
 const RENTAL_VIEW_DEDUPE_MS = 3 * 60 * 1000;
@@ -121,14 +123,16 @@ exports.createRental = async (req, res, next) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    if (!hasUserRole(req.user, "rental_owner")) {
+    const ownerId = effectiveOwnerId(req.user);
+
+    if (!req.user.staffForOwnerId && !hasUserRole(req.user, "rental_owner")) {
       return res.status(403).json({
         message: "Only rental owners can list cars for rent. Enable the rental owner mode in your profile.",
         code: "RENTAL_OWNER_REQUIRED",
       });
     }
 
-    const owner = await User.findById(req.user._id).select("nationalId");
+    const owner = await User.findById(ownerId).select("nationalId");
     if (!userCanListForSale(owner)) {
       return res.status(403).json({
         message: "Please upload your national ID (CIN) in your profile before listing a car for rent.",
@@ -145,7 +149,7 @@ exports.createRental = async (req, res, next) => {
     }
 
     const rental = await RentalListing.create({
-      rentalOwnerId: req.user._id,
+      rentalOwnerId: ownerId,
       title, description, pricePerDay, city, brand, model, year, mileage, fuel, gearbox,
       color, doors, seats,
       features: features || [],
@@ -158,7 +162,7 @@ exports.createRental = async (req, res, next) => {
       status: "pending",
     });
 
-    await notify(req.user._id, `Your rental "${rental.title}" is pending approval.`, "pending");
+    await notify(ownerId, `Your rental "${rental.title}" is pending approval.`, "pending");
     res.status(201).json(rental);
   } catch (error) { next(error); }
 };
@@ -168,7 +172,7 @@ exports.updateRental = async (req, res, next) => {
   try {
     const rental = await RentalListing.findOne({ _id: req.params.id, deletedAt: null });
     if (!rental) return res.status(404).json({ message: "Rental not found" });
-    if (rental.rentalOwnerId.toString() !== req.user._id.toString()) {
+    if (rental.rentalOwnerId.toString() !== effectiveOwnerId(req.user).toString()) {
       return res.status(403).json({ message: "Forbidden" });
     }
     const ALLOWED_UPDATE_FIELDS = [
@@ -220,7 +224,7 @@ exports.deleteRental = async (req, res, next) => {
   try {
     const rental = await RentalListing.findOne({ _id: req.params.id, deletedAt: null });
     if (!rental) return res.status(404).json({ message: "Rental not found" });
-    if (rental.rentalOwnerId.toString() !== req.user._id.toString() && req.user.role !== "admin") {
+    if (rental.rentalOwnerId.toString() !== effectiveOwnerId(req.user).toString() && req.user.role !== "admin") {
       return res.status(403).json({ message: "Forbidden" });
     }
     rental.deletedAt = new Date();
@@ -324,7 +328,7 @@ exports.getOwnerListingViews = async (req, res, next) => {
     const raw = String(req.query.period || "all").toLowerCase();
     const period = LISTING_VIEW_PERIOD_KEYS.has(raw) ? raw : "all";
 
-    const rentals = await RentalListing.find({ rentalOwnerId: req.user._id, deletedAt: null })
+    const rentals = await RentalListing.find({ rentalOwnerId: effectiveOwnerId(req.user), deletedAt: null })
       .select("_id title brand model year city images viewCount status")
       .sort({ viewCount: -1, updatedAt: -1 })
       .lean();
@@ -382,7 +386,7 @@ exports.getOwnerListingViews = async (req, res, next) => {
 /** GET /api/rental/owner/listing-views-attention-count — deduped view events since owner last opened listing views (rolling 7d if never opened). */
 exports.getOwnerListingViewAttentionCount = async (req, res, next) => {
   try {
-    const rentals = await RentalListing.find({ rentalOwnerId: req.user._id, deletedAt: null }).select("_id");
+    const rentals = await RentalListing.find({ rentalOwnerId: effectiveOwnerId(req.user), deletedAt: null }).select("_id");
     const rentalIds = rentals.map((r) => r._id);
     if (!rentalIds.length) return res.json({ count: 0 });
 
@@ -503,7 +507,7 @@ exports.createBooking = async (req, res, next) => {
 // Rental owner bookings (used by the calendar view — returns all bookings as a flat array)
 exports.getOwnerBookings = async (req, res, next) => {
   try {
-    const rentals = await RentalListing.find({ rentalOwnerId: req.user._id, deletedAt: null }).select("_id");
+    const rentals = await RentalListing.find({ rentalOwnerId: effectiveOwnerId(req.user), deletedAt: null }).select("_id");
     const rentalIds = rentals.map((r) => r._id);
 
     const bookings = await Booking.find({ rentalId: { $in: rentalIds }, deletedAt: null })
@@ -578,7 +582,7 @@ exports.updateRentalStatus = async (req, res, next) => {
 exports.getMyRentals = async (req, res, next) => {
   try {
     const rentals = await RentalListing.find({
-      rentalOwnerId: req.user._id,
+      rentalOwnerId: effectiveOwnerId(req.user),
       deletedAt: null,
     }).sort({ createdAt: -1 });
     res.json(rentals);

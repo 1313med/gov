@@ -7,15 +7,19 @@ export function normalizeRoleSlug(role) {
 
 export function getUserRoles(user) {
   if (!user) return ["customer"];
-  if (Array.isArray(user.roles) && user.roles.length) {
-    const set = new Set(user.roles.map(normalizeRoleSlug));
-    set.add("customer");
-    return [...set];
-  }
+
+  const set = new Set(["customer"]);
+
+  // Always include legacy `role` field so accounts where `roles` only has
+  // "customer" but `role` is "rental_owner" still get the right capabilities.
   const legacy = normalizeRoleSlug(user.role);
-  if (legacy === "admin") return ["admin", "customer"];
-  if (legacy === "customer") return ["customer"];
-  return ["customer", legacy];
+  if (legacy !== "customer") set.add(legacy);
+
+  if (Array.isArray(user.roles)) {
+    user.roles.map(normalizeRoleSlug).forEach((r) => set.add(r));
+  }
+
+  return [...set];
 }
 
 /** True only for accounts meant to moderate the platform (not car owners who also browse). */
@@ -56,6 +60,7 @@ export function homeShellForUser(user) {
   if (roles.includes("car_owner")) return "/(car-owner)";
   if (roles.includes("rental_owner")) return "/(rental-owner)";
   if (isAdminOnlyUser(user)) return "/(admin)";
+  if (isStaffUser(user)) return "/(rental-owner)"; // staff uses owner shell
   return "/(customer)";
 }
 
@@ -65,6 +70,10 @@ export function isCarOwnerUser(user) {
 
 export function isRentalOwnerUser(user) {
   return getUserRoles(user).includes("rental_owner");
+}
+
+export function isStaffUser(user) {
+  return !!user?.staffForOwnerId;
 }
 
 /** Expo Router group name for a shell href, e.g. `/(rental-owner)` → `(rental-owner)`. */

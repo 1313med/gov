@@ -11,17 +11,17 @@ const {
   markOwnerListingViewsSeen,
   recordRentalView,
 } = require("../controllers/rentalController");
-const { protect, role } = require("../middlewares/authMiddleware");
+const { protect, role, ownerOrStaff } = require("../middlewares/authMiddleware");
 
 // PUBLIC
 router.get("/", getRentals);
 
 // OWNER ROUTES (must come before :id)
-router.get("/owner/bookings", protect, role("rental_owner"), getOwnerBookings);
-router.get("/owner/listing-views", protect, role("rental_owner"), getOwnerListingViews);
-router.get("/owner/listing-views-attention-count", protect, role("rental_owner"), getOwnerListingViewAttentionCount);
-router.post("/owner/listing-views-seen", protect, role("rental_owner"), markOwnerListingViewsSeen);
-router.get("/owner/mine", protect, role("rental_owner"), getMyRentals);
+router.get("/owner/bookings", protect, ownerOrStaff, getOwnerBookings);
+router.get("/owner/listing-views", protect, ownerOrStaff, getOwnerListingViews);
+router.get("/owner/listing-views-attention-count", protect, ownerOrStaff, getOwnerListingViewAttentionCount);
+router.post("/owner/listing-views-seen", protect, ownerOrStaff, markOwnerListingViewsSeen);
+router.get("/owner/mine", protect, ownerOrStaff, getMyRentals);
 
 // ADMIN
 router.get("/admin", protect, role("admin"), getAdminRentals);
@@ -41,8 +41,8 @@ router.post("/:id/record-view", recordRentalView);
 router.get("/:id", getRentalById);
 
 // CRUD (owner)
-router.post("/", protect, role("rental_owner"), createRental);
-router.put("/:id", protect, role("rental_owner"), updateRental);
-router.delete("/:id", protect, role("rental_owner", "admin"), deleteRental);
+router.post("/", protect, ownerOrStaff, createRental);
+router.put("/:id", protect, ownerOrStaff, updateRental);
+router.delete("/:id", protect, ownerOrStaff, deleteRental);
 
 module.exports = router;

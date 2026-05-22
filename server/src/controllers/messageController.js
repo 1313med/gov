@@ -5,10 +5,12 @@ const User = require("../models/User");
 const { emitMessage } = require("../utils/socketManager");
 const emailService = require("../utils/emailService");
 
+const effectiveOwnerId = (user) => user.staffForOwnerId || user._id;
+
 // GET /api/messages/conversations  – list all conversations for current user
 // Query: archive=1 → only threads this user archived; default → active (not archived for this user)
 exports.getConversations = asyncHandler(async (req, res) => {
-  const uid = req.user._id;
+  const uid = effectiveOwnerId(req.user);
   const wantArchived = ["1", "true", "yes"].includes(String(req.query.archive || "").toLowerCase());
 
   let filter;
@@ -42,12 +44,12 @@ exports.setConversationArchive = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error("Conversation not found");
   }
-  if (!conversation.participants.some((p) => p.toString() === req.user._id.toString())) {
+  const uid = effectiveOwnerId(req.user);
+  if (!conversation.participants.some((p) => p.toString() === uid.toString())) {
     res.status(403);
     throw new Error("Forbidden");
   }
 
-  const uid = req.user._id;
   if (archived) {
     await Conversation.updateOne({ _id: conversationId }, { $addToSet: { archivedBy: uid } });
   } else {
@@ -100,7 +102,8 @@ exports.getMessages = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error("Conversation not found");
   }
-  if (!conversation.participants.some((p) => p.toString() === req.user._id.toString())) {
+  const uid = effectiveOwnerId(req.user);
+  if (!conversation.participants.some((p) => p.toString() === uid.toString())) {
     res.status(403);
     throw new Error("Forbidden");
   }
@@ -109,14 +112,14 @@ exports.getMessages = asyncHandler(async (req, res) => {
     .populate("senderId", "name avatar")
     .sort({ createdAt: 1 });
 
-  // Mark all messages not sent by current user as read
+  // Mark all messages not sent by the effective user as read
   await Message.updateMany(
-    { conversationId, senderId: { $ne: req.user._id }, read: false },
+    { conversationId, senderId: { $ne: uid }, read: false },
     { read: true }
   );
 
-  // Reset unread count for current user
-  conversation.unreadCount.set(req.user._id.toString(), 0);
+  // Reset unread count for the effective user
+  conversation.unreadCount.set(uid.toString(), 0);
   await conversation.save();
 
   res.json(messages);
@@ -140,14 +143,15 @@ exports.sendMessage = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error("Conversation not found");
   }
-  if (!conversation.participants.some((p) => p._id.toString() === req.user._id.toString())) {
+  const uid = effectiveOwnerId(req.user);
+  if (!conversation.participants.some((p) => p._id.toString() === uid.toString())) {
     res.status(403);
     throw new Error("Forbidden");
   }
 
   const message = await Message.create({
     conversationId,
-    senderId: req.user._id,
+    senderId: uid,
     text: text.trim(),
   });
 
@@ -159,7 +163,7 @@ exports.sendMessage = asyncHandler(async (req, res) => {
 
   // Increment unread for recipient(s)
   conversation.participants.forEach((p) => {
-    if (p._id.toString() !== req.user._id.toString()) {
+    if (p._id.toString() !== uid.toString()) {
       const current = conversation.unreadCount.get(p._id.toString()) || 0;
       conversation.unreadCount.set(p._id.toString(), current + 1);
     }
@@ -169,9 +173,8 @@ exports.sendMessage = asyncHandler(async (req, res) => {
 
   // Real-time emit to recipient(s)
   conversation.participants.forEach((p) => {
-    if (p._id.toString() !== req.user._id.toString()) {
+    if (p._id.toString() !== uid.toString()) {
       emitMessage(p._id.toString(), populated);
-      // Send email notification (don't await to avoid blocking)
       if (p.email) {
         emailService.sendNewMessage(req.user, p, text.trim().substring(0, 200)).catch(() => {});
       }

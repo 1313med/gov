@@ -8,20 +8,25 @@ import {
   isAdminOnlyUser,
   isCarOwnerUser,
   isRentalOwnerUser,
+  isStaffUser,
 } from "../utils/userRoles";
 
 const STORAGE_KEY = "goovoiture-active-mode";
 
 const ActiveModeContext = createContext(null);
 
-function pickDefaultMode(roles) {
+function pickDefaultMode(roles, user) {
   if (roles.includes("car_owner")) return "car_owner";
   if (roles.includes("rental_owner")) return "rental_owner";
   if (roles.includes("admin")) return "admin";
+  if (isStaffUser(user)) return "rental_owner"; // staff uses owner shell
   return "customer";
 }
 
-function resolveStoredMode(saved, userRoles) {
+function resolveStoredMode(saved, userRoles, user) {
+  // Staff always lands in rental_owner mode
+  if (isStaffUser(user)) return "rental_owner";
+
   const normalized = normalizeRoleSlug(saved);
 
   if (userRoles.includes("car_owner")) {
@@ -37,11 +42,11 @@ function resolveStoredMode(saved, userRoles) {
   }
 
   if (!saved || !userRoles.includes(normalized)) {
-    return pickDefaultMode(userRoles);
+    return pickDefaultMode(userRoles, user);
   }
 
   if (normalized === "admin" && !isAdminOnlyUser({ roles: userRoles })) {
-    return pickDefaultMode(userRoles);
+    return pickDefaultMode(userRoles, user);
   }
 
   return normalized;
@@ -63,7 +68,7 @@ export function ActiveModeProvider({ children }) {
     const key = `${STORAGE_KEY}:${auth._id}`;
     AsyncStorage.getItem(key).then((saved) => {
       const userRoles = getUserRoles(auth);
-      setActiveModeState(resolveStoredMode(saved, userRoles));
+      setActiveModeState(resolveStoredMode(saved, userRoles, auth));
       setReady(true);
     });
   }, [auth?._id, auth?.roles, auth?.role]);

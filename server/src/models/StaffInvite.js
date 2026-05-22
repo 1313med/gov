@@ -7,8 +7,8 @@ const staffInviteSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    /** Phone number of the invited staff member */
-    phone: { type: String, required: true, trim: true },
+    /** Email address of the invited staff member */
+    email: { type: String, required: true, trim: true, lowercase: true },
     name:  { type: String, required: true, trim: true },
 
     permissions: {
@@ -38,7 +38,7 @@ const staffInviteSchema = new mongoose.Schema(
 );
 
 staffInviteSchema.index({ ownerId: 1 });
-staffInviteSchema.index({ phone: 1 });
+staffInviteSchema.index({ email: 1 });
 staffInviteSchema.index({ token: 1 });
 
 module.exports = mongoose.model("StaffInvite", staffInviteSchema);
