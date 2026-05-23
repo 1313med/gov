@@ -455,6 +455,27 @@ export default function CarDetails() {
             <FairPriceIndicator listing={car} />
           </div>
 
+          <Link
+            to={`/afford-car?brand=${encodeURIComponent(car.brand || "")}&model=${encodeURIComponent(car.model || "")}&year=${car.year || ""}&price=${car.price || ""}&fuel=${encodeURIComponent(car.fuel || "")}&city=${encodeURIComponent(car.city || "Casablanca")}`}
+            className="cd-fade"
+            style={{
+              animationDelay: "100ms",
+              display: "block",
+              marginBottom: 16,
+              padding: "14px 16px",
+              borderRadius: 14,
+              background: "linear-gradient(135deg,#eef2ff,#f5f3ff)",
+              border: "1px solid rgba(99,102,241,0.2)",
+              textDecoration: "none",
+              color: "#4338ca",
+              fontWeight: 700,
+              fontSize: 14,
+              textAlign: "center",
+            }}
+          >
+            🧮 Puis-je me l&apos;offrir ? — coût mensuel réel au Maroc
+          </Link>
+
           {/* Seller + CTA */}
           <div className="cd-seller-card cd-fade" style={{animationDelay:"120ms"}}>
             <div className="cd-label">{copy.carDetails.seller}</div>

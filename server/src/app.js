@@ -79,6 +79,7 @@ app.use("/api/fair-price",    require("./routes/fairPriceRoutes"));
 app.use("/api/credit-check",  require("./routes/creditCheckRoutes"));
 app.use("/api/reports",       require("./routes/listingReportRoutes"));
 app.use("/api/fuel-logs",     require("./routes/fuelLogRoutes"));
+app.use("/api/garage-intel",  require("./routes/garageIntelRoutes"));
 
 // ERROR HANDLING
 app.use(notFound);

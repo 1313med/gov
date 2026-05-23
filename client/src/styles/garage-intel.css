@@ -1,0 +1,200 @@
+.gi-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.gi-hero {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.gi-hero h1 {
+  font-size: 1.65rem;
+  font-weight: 800;
+  margin: 8px 0 6px;
+}
+
+.gi-hero p {
+  color: #64748b;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.gi-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.gi-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.gi-input,
+.gi-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  margin-bottom: 12px;
+}
+
+.gi-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  background: #4f46e5;
+  color: #fff;
+  width: 100%;
+}
+
+.gi-btn.secondary {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.gi-range {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 12px 0;
+}
+
+.gi-range .avg {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.gi-verdict {
+  padding: 14px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.gi-verdict.fair { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+.gi-verdict.expensive,
+.gi-verdict.high { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+.gi-verdict.cheap { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+
+.gi-score-ring {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  border: 6px solid;
+  font-weight: 800;
+}
+
+.gi-score-ring .num {
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.gi-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.gi-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.gi-chip {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.gi-chip.on {
+  background: #4f46e5;
+  color: #fff;
+  border-color: #4f46e5;
+}
+
+.gi-insight {
+  padding: 14px;
+  border-left: 4px solid #6366f1;
+  background: #f8fafc;
+  border-radius: 0 12px 12px 0;
+  margin-bottom: 10px;
+}
+
+.gi-insight h4 {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+}
+
+.gi-insight p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.gi-check {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.gi-check:last-child {
+  border-bottom: none;
+}
+
+.gi-emergency-cta {
+  display: block;
+  text-align: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  color: #fff;
+  border-radius: 16px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  text-decoration: none;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.35);
+}
+
+.gi-stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 0.9rem;
+  border-bottom: 1px dashed #e2e8f0;
+}
+
+.gi-stat-row strong {
+  color: #0f172a;
+}

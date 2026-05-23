@@ -38,12 +38,18 @@ import CreditCheckPage from "./pages/CreditCheckPage";
 import BuyingGuidePage from "./pages/BuyingGuidePage";
 import FuelTrackerPage from "./pages/FuelTrackerPage";
 import AccidentAssistantPage from "./pages/AccidentAssistantPage";
+import MechanicPricesPage from "./pages/MechanicPricesPage";
+import CarWorthPage from "./pages/CarWorthPage";
+import TravelReadyPage from "./pages/TravelReadyPage";
+import CommunityIntelPage from "./pages/CommunityIntelPage";
+import AffordCarPage from "./pages/AffordCarPage";
 import StaffManagementPage from "./pages/StaffManagementPage";
 import SavedPage from "./pages/SavedPage";
 import EstimatePage from "./pages/EstimatePage";
 import PriceAlertsPage from "./pages/PriceAlertsPage";
 import GaragePage from "./pages/GaragePage";
 import AddCarPage from "./pages/AddCarPage";
+import EditGarageItemPage from "./pages/EditGarageItemPage";
 import OwnerListingViewsPage from "./pages/OwnerListingViewsPage";
 import VerifyCinPage from "./pages/VerifyCinPage";
 import ProfileDocumentsPage from "./pages/ProfileDocumentsPage";
@@ -115,6 +121,7 @@ export default function App() {
         {/* Car owner — garage */}
         <Route path="/garage" element={<ProtectedRoute roles={["car_owner","admin"]}><GaragePage /></ProtectedRoute>} />
         <Route path="/garage/add" element={<ProtectedRoute roles={["car_owner","admin"]}><AddCarPage /></ProtectedRoute>} />
+        <Route path="/garage/edit/:field" element={<ProtectedRoute roles={["car_owner","admin"]}><EditGarageItemPage /></ProtectedRoute>} />
         <Route path="/garage/documents" element={<ProtectedRoute roles={["car_owner","admin"]}><DocScannerPage /></ProtectedRoute>} />
 
         {/* Seller */}
@@ -136,6 +143,11 @@ export default function App() {
         <Route path="/credit-check"     element={<ProtectedRoute roles={["customer","car_owner","rental_owner","admin"]}><CreditCheckPage /></ProtectedRoute>} />
         <Route path="/buying-guide"     element={<BuyingGuidePage />} />
         <Route path="/fuel-tracker"     element={<ProtectedRoute roles={["customer","car_owner","rental_owner","admin"]}><FuelTrackerPage /></ProtectedRoute>} />
+        <Route path="/mechanic-prices"  element={<MechanicPricesPage />} />
+        <Route path="/car-worth"        element={<ProtectedRoute roles={["car_owner","customer","rental_owner","admin"]}><CarWorthPage /></ProtectedRoute>} />
+        <Route path="/travel-ready"     element={<ProtectedRoute roles={["car_owner","admin"]}><TravelReadyPage /></ProtectedRoute>} />
+        <Route path="/community"        element={<CommunityIntelPage />} />
+        <Route path="/afford-car"       element={<AffordCarPage />} />
         <Route path="/accident"         element={<AccidentAssistantPage />} />
         <Route path="/owner/staff"      element={<ProtectedRoute roles={["rental_owner"]}><StaffManagementPage /></ProtectedRoute>} />
       </Routes>

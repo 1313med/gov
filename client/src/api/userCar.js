@@ -5,7 +5,13 @@ export const createCar = (data) => api.post("/user-car", data);
 export const updateCar = (id, data) => api.put(`/user-car/${id}`, data);
 export const deleteCar = (id) => api.delete(`/user-car/${id}`);
 
-export const patchMileage = (id, data) => api.patch(`/user-car/${id}/mileage`, data);
+export const patchMileage = (id, data) =>
+  api.patch(`/user-car/${id}/mileage`, data);
+/** Quick +100 / +500 km bumps or set absolute odometer */
+export const bumpMileage = (id, addKm) =>
+  api.patch(`/user-car/${id}/mileage`, { addKm });
+export const setMileage = (id, currentMileage) =>
+  api.patch(`/user-car/${id}/mileage`, { currentMileage });
 export const patchGarageReminders = (id, remindersEnabled) =>
   api.patch(`/user-car/${id}/reminders`, { remindersEnabled });
 
