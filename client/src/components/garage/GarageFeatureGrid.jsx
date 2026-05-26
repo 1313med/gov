@@ -1,11 +1,18 @@
 import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import { GARAGE_FEATURES } from "../../constants/garageFeatures";
+import GarageReveal from "./GarageReveal";
 
-export default function GarageFeatureGrid({ fr = true, onEstimate, delayStart = 0 }) {
+export default function GarageFeatureGrid({ fr = true, onEstimate, bento = true }) {
+  const ordered = [...GARAGE_FEATURES].sort((a, b) => {
+    if (a.id === "emergency") return -1;
+    if (b.id === "emergency") return 1;
+    return 0;
+  });
+
   return (
-    <div className="ge-feature-grid">
-      {GARAGE_FEATURES.map((f, i) => {
+    <div className={bento ? "ge-tools-bento" : "ge-feature-grid"}>
+      {ordered.map((f, i) => {
         const Icon = f.Icon;
         const isEstimate = f.action === "estimate";
 
@@ -23,19 +30,24 @@ export default function GarageFeatureGrid({ fr = true, onEstimate, delayStart = 
           </>
         );
 
-        const cls = `ge-feature-card ge-stagger`;
-        const style = { animationDelay: `${delayStart + i * 0.04}s` };
+        const cls = "ge-feature-card";
+
+        const wrap = (node) => (
+          <GarageReveal key={f.id} delay={i * 60}>
+            {node}
+          </GarageReveal>
+        );
 
         if (isEstimate && onEstimate) {
-          return (
-            <button key={f.id} type="button" className={cls} style={style} onClick={onEstimate}>
+          return wrap(
+            <button type="button" className={cls} onClick={onEstimate}>
               {inner}
             </button>
           );
         }
 
-        return (
-          <Link key={f.id} to={f.to} className={cls} style={style}>
+        return wrap(
+          <Link to={f.to} className={cls}>
             {inner}
           </Link>
         );

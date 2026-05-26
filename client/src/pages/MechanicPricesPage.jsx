@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { getMechanicPrices, submitMechanicPrice, evaluateMechanicQuote } from "../api/garageIntel";
 import GarageShell from "../components/garage/GarageShell";
+import GarageReveal from "../components/garage/GarageReveal";
 import { useAppLang } from "../context/AppLangContext";
 import "../styles/garage.css";
 
@@ -47,7 +48,8 @@ export default function MechanicPricesPage() {
       subtitle={fr ? "Fourchettes réelles au Maroc — évitez les arnaques" : "Real Morocco price ranges"}
       heroAccent="#f59e0b"
     >
-      <div className="ge-glass ge-slide-up">
+      <GarageReveal>
+      <div className="ge-glass">
         <label className="ge-spec-label">{fr ? "Ville" : "City"}</label>
         <select className="ge-input" value={city} onChange={(e) => setCity(e.target.value)}>
           {CITIES.map((c) => (
@@ -71,19 +73,23 @@ export default function MechanicPricesPage() {
           <input className="ge-input" placeholder="Clio" value={model} onChange={(e) => setModel(e.target.value)} />
         </div>
       </div>
+      </GarageReveal>
 
       {loading ? (
         <p style={{ textAlign: "center", color: "var(--ge-muted)" }}>{fr ? "Chargement…" : "Loading…"}</p>
       ) : cur ? (
-        <div className="ge-price-hero ge-stagger">
+        <GarageReveal delay={80}>
+        <div className="ge-price-hero">
           <p style={{ margin: 0, fontSize: 13, color: "var(--ge-muted)" }}>{cur.labelFr} · {cur.city}</p>
           <p className="big">{cur.avg?.toLocaleString()} MAD</p>
           <p style={{ margin: "8px 0 0", fontSize: 14 }}>
             {cur.min?.toLocaleString()} — {cur.max?.toLocaleString()} MAD
           </p>
         </div>
+        </GarageReveal>
       ) : null}
 
+      <GarageReveal delay={120}>
       <div className="ge-glass">
         <h3 style={{ marginTop: 0 }}>{fr ? "Votre devis est cher ?" : "Is your quote fair?"}</h3>
         <form
@@ -98,7 +104,9 @@ export default function MechanicPricesPage() {
         </form>
         {evaluation && <div className={`ge-verdict ${evaluation.verdict}`} style={{ marginTop: 14 }}>{evaluation.messageFr}</div>}
       </div>
+      </GarageReveal>
 
+      <GarageReveal delay={180}>
       <div className="ge-glass">
         <h3 style={{ marginTop: 0 }}>{fr ? "Partager un prix (anonyme)" : "Share a price"}</h3>
         <form
@@ -122,6 +130,7 @@ export default function MechanicPricesPage() {
         </form>
         {msg && <p style={{ color: "#4ade80", marginTop: 12, fontWeight: 700 }}>{msg}</p>}
       </div>
+      </GarageReveal>
     </GarageShell>
   );
 }

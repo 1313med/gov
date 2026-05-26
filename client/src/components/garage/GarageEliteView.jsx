@@ -3,11 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   Bell,
   Car,
+  CarFront,
   ChevronRight,
   FileText,
+  Fuel,
   Pencil,
   Plus,
-  Trash2,
   Wrench,
   Shield,
   ClipboardList,
@@ -48,6 +49,12 @@ import { useAppLang } from "../../context/AppLangContext";
 import { useTheme } from "../../context/ThemeContext";
 import HealthScoreRing from "./HealthScoreRing";
 import GarageFeatureGrid from "./GarageFeatureGrid";
+import GarageAmbient from "./GarageAmbient";
+import GarageDock from "./GarageDock";
+import GarageReveal from "./GarageReveal";
+import GarageLoader from "./GarageLoader";
+import GarageIconBadge from "./GarageIconBadge";
+import GarageVehicleHero from "./GarageVehicleHero";
 import { GARAGE_FEATURES, GARAGE_TABS } from "../../constants/garageFeatures";
 import "../../styles/garage.css";
 
@@ -170,6 +177,15 @@ export default function GarageEliteView() {
     load();
   }, [load]);
 
+  useEffect(() => {
+    const goTools = () => {
+      if (window.location.hash === "#outils") setActiveTab("tools");
+    };
+    goTools();
+    window.addEventListener("hashchange", goTools);
+    return () => window.removeEventListener("hashchange", goTools);
+  }, []);
+
   const statuses = useMemo(() => computeStatuses(car), [car]);
   const trackItems = useMemo(() => buildTrackItems(car, statuses, fr), [car, statuses, fr]);
   const paperItems = useMemo(() => trackItems.filter((i) => i.category === "papers"), [trackItems]);
@@ -286,10 +302,9 @@ export default function GarageEliteView() {
   if (loading) {
     return (
       <div className={pageClass}>
-        <div className="ge-loading">
-          <div className="ge-spin" />
-          {fr ? "Chargement de votre garage…" : "Loading your garage…"}
-        </div>
+        <GarageAmbient />
+        <GarageLoader label={fr ? "Préparation de votre garage…" : "Preparing your garage…"} />
+        <GarageDock fr={fr} />
       </div>
     );
   }
@@ -297,9 +312,10 @@ export default function GarageEliteView() {
   if (!car) {
     return (
       <div className={pageClass}>
+        <GarageAmbient />
         <div className="ge-body" style={{ paddingTop: 48 }}>
           <div className="ge-empty-wow ge-slide-up">
-            <div className="ge-empty-hero">🚗</div>
+            <GarageIconBadge icon={CarFront} size="lg" variant="teal" pulse className="ge-icon-badge-empty" />
             <h1 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 12px" }}>{fr ? "Mon garage" : "My garage"}</h1>
             <span className="ge-tagline">{fr ? "🇲🇦 Pensé pour le Maroc" : "🇲🇦 Built for Morocco"}</span>
             <p style={{ maxWidth: 400, margin: "16px auto 0", lineHeight: 1.6 }}>
@@ -315,27 +331,44 @@ export default function GarageEliteView() {
             </p>
           </div>
         </div>
+        <GarageDock fr={fr} />
       </div>
     );
   }
 
-  const img = car.image;
   const docCount = car.scannedDocuments?.length || 0;
-  const specs = [
-    { label: fr ? "Année" : "Year", value: car.year || "—" },
-    { label: fr ? "Kilométrage" : "Mileage", value: `${(car.currentMileage || 0).toLocaleString()} km` },
-    { label: fr ? "Carburant" : "Fuel", value: fuelLabel(car.fuelType, fr) },
-    { label: fr ? "Boîte" : "Gearbox", value: gearboxLabel(car.gearbox, fr) },
-    { label: fr ? "Couleur" : "Color", value: car.color || "—" },
+  const heroHighlights = [
+    { key: "year", label: fr ? "Année" : "Year", value: car.year || "—" },
     {
+      key: "mileage",
+      label: fr ? "Kilométrage" : "Mileage",
+      value: `${(car.currentMileage || 0).toLocaleString()} km`,
+    },
+    { key: "fuel", label: fr ? "Carburant" : "Fuel", value: fuelLabel(car.fuelType, fr) },
+    { key: "gearbox", label: fr ? "Boîte" : "Gearbox", value: gearboxLabel(car.gearbox, fr) },
+  ];
+  const heroDetails = [
+    { key: "color", label: fr ? "Couleur" : "Color", value: car.color || "—" },
+    {
+      key: "owner",
       label: fr ? "1er propriétaire" : "First owner",
       value: car.firstOwner === false ? (fr ? "Non" : "No") : fr ? "Oui" : "Yes",
     },
     {
+      key: "mileageUpdate",
       label: fr ? "Dernière mise à jour km" : "Last mileage update",
       value: car.lastMileageAt ? formatTrackDate(car.lastMileageAt, fr) : "—",
     },
   ];
+  const oilLine =
+    car.vidange?.brand ? (
+      <>
+        <Droplets size={14} style={{ verticalAlign: "middle", marginRight: 6 }} />
+        {fr ? "Huile recommandée" : "Recommended oil"}:{" "}
+        <strong>{car.vidange.brand}</strong>
+        {car.vidange.intervalKm ? ` · ${car.vidange.intervalKm.toLocaleString()} km` : ""}
+      </>
+    ) : null;
 
   const shownTips = tipsExpanded ? recommendations : recommendations.slice(0, 2);
 
@@ -343,92 +376,44 @@ export default function GarageEliteView() {
 
   return (
     <div className={pageClass}>
-      <div className="ge-ambient">
-        <div className="ge-ambient-orb a" />
-        <div className="ge-ambient-orb b" />
-        <div className="ge-ambient-grid" />
-      </div>
-      <header className="ge-hero ge-fade-in">
-        <div className="ge-hero-orb r" />
-        <div className="ge-hero-orb l" />
-        <div className="ge-hero-inner">
-          <div className="ge-hero-top">
-            <div>
-              <p className="ge-kicker">{fr ? "Mon garage · 🇲🇦" : "My garage · 🇲🇦"}</p>
-              <h1 className="ge-title">
-                {car.brand} {car.model}
-              </h1>
-              <p className="ge-tagline" style={{ marginTop: 8 }}>
-                {fr ? "Votre voiture, simplifiée" : "Your car, simplified"}
-              </p>
-              <p className="ge-subtitle">
-                {car.year}
-                {car.color ? ` · ${car.color}` : ""}
-                {docCount > 0 && (
-                  <span className="ge-docs-badge" style={{ marginLeft: 10 }}>
-                    <FileText size={12} /> {docCount} {fr ? "document(s)" : "document(s)"}
-                  </span>
-                )}
-              </p>
-            </div>
-            <div className="ge-hero-actions">
-              <Link to="/notifications" className="ge-icon-btn" title="Notifications">
-                <Bell size={18} />
-              </Link>
-              <button type="button" className="ge-icon-btn" onClick={goEditCar} title={fr ? "Modifier" : "Edit"}>
-                <Pencil size={18} />
-              </button>
-              <button type="button" className="ge-icon-btn danger" onClick={handleDelete} title={fr ? "Supprimer" : "Delete"}>
-                <Trash2 size={18} />
-              </button>
-            </div>
-          </div>
+      <GarageAmbient />
 
-          <div className="ge-hero-card">
-            <div>
-              <div className="ge-specs">
-                {specs.map((s) => (
-                  <div key={s.label} className="ge-spec">
-                    <div className="ge-spec-label">{s.label}</div>
-                    <div className="ge-spec-val">{s.value}</div>
-                  </div>
-                ))}
-              </div>
-              {car.vidange?.brand && (
-                <p style={{ marginTop: 12, fontSize: 13, color: "var(--ge-muted)" }}>
-                  {fr ? "Huile" : "Oil"}: <strong style={{ color: "var(--ge-txt)" }}>{car.vidange.brand}</strong>
-                  {car.vidange.intervalKm ? ` · ${fr ? "tous les" : "every"} ${car.vidange.intervalKm.toLocaleString()} km` : ""}
-                </p>
-              )}
-            </div>
-            {img ? (
-              <img src={img} alt={`${car.brand} ${car.model}`} className="ge-car-img" />
-            ) : (
-              <div className="ge-car-img-ph">🚗</div>
-            )}
-          </div>
-        </div>
-      </header>
+      <GarageVehicleHero
+        car={car}
+        fr={fr}
+        docCount={docCount}
+        onEdit={goEditCar}
+        onDelete={handleDelete}
+        highlights={heroHighlights}
+        details={heroDetails}
+        oilLine={oilLine}
+      />
 
       <div className="ge-body ge-fade-in">
         <div className="ge-tabs-v2">
-          {GARAGE_TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              className={`ge-tab-v2${activeTab === tab.id ? " on" : ""}`}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              <span className="emoji">{tab.emoji}</span>
-              {fr ? tab.fr : tab.en}
-            </button>
-          ))}
+          {GARAGE_TABS.map((tab) => {
+            const TabIcon = tab.Icon;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                className={`ge-tab-v2${activeTab === tab.id ? " on" : ""}`}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                <span className="ge-tab-icon">
+                  <TabIcon size={20} strokeWidth={activeTab === tab.id ? 2.25 : 1.85} />
+                </span>
+                {fr ? tab.fr : tab.en}
+              </button>
+            );
+          })}
         </div>
 
         {activeTab === "today" && (
           <>
-            <div className="ge-health-card ge-slide-up">
-              <HealthScoreRing score={health.score} color={healthColor} size={116} fr={fr} />
+            <GarageReveal>
+            <div className="ge-health-hero" style={{ "--ge-health-glow": `${healthColor}55` }}>
+              <HealthScoreRing score={health.score} color={healthColor} size={128} fr={fr} />
               <div className="ge-health-body">
                 <p className="ge-health-kicker">{fr ? "Score santé voiture" : "Car health score"}</p>
                 <h3 style={{ color: healthColor, margin: "4px 0" }}>{fr ? healthLabelFr : health.labelKey}</h3>
@@ -439,14 +424,29 @@ export default function GarageEliteView() {
                 </p>
               </div>
             </div>
+            </GarageReveal>
 
-            <div className="ge-section-head ge-stagger" style={{ animationDelay: "0.05s" }}>
+            <div className="ge-pill-row">
+              <span className={`ge-pill${alertCount > 0 ? " bad" : " ok"}`}>
+                {alertCount > 0 ? <AlertCircle size={14} /> : <CheckCircle2 size={14} />}
+                {alertCount > 0 ? `${alertCount} ${fr ? "à faire" : "to do"}` : fr ? "À jour" : "Up to date"}
+              </span>
+              <span className="ge-pill ok">
+                <CheckCircle2 size={14} /> {fr ? "Score" : "Score"} {health.score}
+              </span>
+              <span className="ge-pill warn">
+                <Fuel size={14} /> {fuelLabel(car.fuelType, fr)}
+              </span>
+            </div>
+
+            <GarageReveal delay={80}>
+            <div className="ge-section-head">
               <h2>{fr ? "Accès rapide" : "Quick access"}</h2>
               <Link to="#" onClick={(e) => { e.preventDefault(); setActiveTab("tools"); }}>
                 {fr ? "Tout voir" : "See all"}
               </Link>
             </div>
-            <div className="ge-quick-rail">
+            <div className="ge-quick-rail" style={{ marginBottom: 4 }}>
               {quickFeatures.map((f) => {
                 const Icon = f.Icon;
                 return (
@@ -459,8 +459,10 @@ export default function GarageEliteView() {
                 );
               })}
             </div>
+            </GarageReveal>
 
-            <div className={`ge-status ge-stagger${alertCount > 0 ? " warn" : " ok"}`} style={{ animationDelay: "0.1s" }}>
+            <GarageReveal delay={120}>
+            <div className={`ge-status${alertCount > 0 ? " warn" : " ok"}`}>
               {alertCount > 0 ? <AlertCircle size={28} color="#ef4444" /> : <CheckCircle2 size={28} color="#22c55e" />}
               <div>
                 <h3>
@@ -488,7 +490,9 @@ export default function GarageEliteView() {
                 </button>
               )}
             </div>
+            </GarageReveal>
 
+            <GarageReveal delay={160}>
             <h2 className="ge-section-title">{fr ? "À faire bientôt" : "Coming up"}</h2>
             <p className="ge-section-hint">
               {fr ? "Cliquez sur une ligne pour mettre à jour la date." : "Click a row to update the date."}
@@ -526,13 +530,15 @@ export default function GarageEliteView() {
               </div>
             )}
 
-            <div className="ge-reminder">
+            <div className="ge-reminder ge-glass">
               <Bell size={22} color="var(--ge-accent)" />
               <span>{fr ? "Me rappeler avant les échéances" : "Remind me before deadlines"}</span>
               <input type="checkbox" checked={remindersOn} onChange={toggleReminders} />
             </div>
+            </GarageReveal>
 
-            <div className="ge-card">
+            <GarageReveal delay={200}>
+            <div className="ge-card ge-glass">
               <h3 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 800 }}>{fr ? "Kilométrage du compteur" : "Odometer"}</h3>
               <p style={{ margin: "0 0 12px", fontSize: 13, color: "var(--ge-muted)" }}>
                 {fr ? "Appuyez si vous avez roulé récemment :" : "Tap if you drove recently:"}
@@ -559,8 +565,10 @@ export default function GarageEliteView() {
                 </button>
               </div>
             </div>
+            </GarageReveal>
 
             {recommendations.length > 0 && (
+              <GarageReveal delay={240}>
               <div className="ge-card ge-glass">
                 <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 800 }}>{fr ? "💡 Conseils" : "💡 Tips"}</h3>
                 {shownTips.map((rec, i) => (
@@ -587,17 +595,21 @@ export default function GarageEliteView() {
                   </button>
                 )}
               </div>
+              </GarageReveal>
             )}
           </>
         )}
 
         {activeTab === "car" && (
           <>
+            <GarageReveal>
             <button type="button" className="ge-edit-banner" onClick={goEditCar}>
               <Pencil size={20} /> {fr ? "Modifier les dates et infos" : "Edit dates & info"}
             </button>
+            </GarageReveal>
 
-            <div className="ge-card">
+            <GarageReveal delay={60}>
+            <div className="ge-card ge-glass">
               <div className="ge-card-head">
                 <FileText size={22} color="#f97316" />
                 <div>
@@ -609,8 +621,10 @@ export default function GarageEliteView() {
                 <TrackRow key={item.id} item={item} fr={fr} onClick={() => goEditItem(item.id)} />
               ))}
             </div>
+            </GarageReveal>
 
-            <div className="ge-card">
+            <GarageReveal delay={120}>
+            <div className="ge-card ge-glass">
               <div className="ge-card-head">
                 <Wrench size={22} color="var(--ge-accent)" />
                 <div>
@@ -622,8 +636,10 @@ export default function GarageEliteView() {
                 <TrackRow key={item.id} item={item} fr={fr} onClick={() => goEditItem(item.id)} />
               ))}
             </div>
+            </GarageReveal>
 
-            <Link to="/garage/documents" className="ge-card ge-row" style={{ textDecoration: "none", marginTop: 8 }}>
+            <GarageReveal delay={180}>
+            <Link to="/garage/documents" className="ge-card ge-glass ge-row" style={{ textDecoration: "none", marginTop: 8 }}>
               <FileText size={22} color="var(--ge-accent)" />
               <div className="ge-row-body">
                 <p className="ge-row-title">{fr ? "Documents scannés" : "Scanned documents"}</p>
@@ -632,7 +648,9 @@ export default function GarageEliteView() {
               <span className="ge-row-status" style={{ color: "var(--ge-accent)" }}>{docCount}</span>
               <ChevronRight size={18} />
             </Link>
+            </GarageReveal>
 
+            <GarageReveal delay={220}>
             <div className="ge-card ge-glass">
               <h3 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 800 }}>{fr ? "Budget mensuel" : "Monthly budget"}</h3>
               <p className="ge-km-big" style={{ fontSize: 28 }}>
@@ -646,8 +664,10 @@ export default function GarageEliteView() {
                 </div>
               ))}
             </div>
+            </GarageReveal>
 
-            <div className="ge-card">
+            <GarageReveal delay={260}>
+            <div className="ge-card ge-glass">
               <h3 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 800 }}>{fr ? "Historique garage" : "Service history"}</h3>
               <button type="button" className="ge-add-btn" onClick={() => setLogModal(true)}>
                 <Plus size={18} /> {fr ? "Ajouter" : "Add"}
@@ -674,20 +694,25 @@ export default function GarageEliteView() {
                 </div>
               ))}
             </div>
+            </GarageReveal>
           </>
         )}
 
         {activeTab === "tools" && (
-          <>
-            <p className="ge-section-hint ge-slide-up" style={{ marginTop: 0 }}>
-              {fr
-                ? "Tous les outils pour votre voiture au Maroc — cliquez pour ouvrir."
-                : "All tools for your car in Morocco — tap to open."}
-            </p>
-            <GarageFeatureGrid fr={fr} onEstimate={goEstimate} />
-          </>
+          <div id="garage-outils">
+            <GarageReveal>
+              <p className="ge-section-hint" style={{ marginTop: 0 }}>
+                {fr
+                  ? "Tous les outils pour votre voiture au Maroc — cliquez pour ouvrir."
+                  : "All tools for your car in Morocco — tap to open."}
+              </p>
+              <GarageFeatureGrid fr={fr} onEstimate={goEstimate} bento />
+            </GarageReveal>
+          </div>
         )}
       </div>
+
+      <GarageDock fr={fr} />
 
       {logModal && (
         <div className="ge-modal-bg" onClick={() => setLogModal(false)}>

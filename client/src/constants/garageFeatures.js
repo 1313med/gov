@@ -3,14 +3,19 @@ import {
   Fuel,
   Calculator,
   Users,
-  AlertTriangle,
-  MapPin,
+  UsersRound,
+  MapPinned,
+  ShieldAlert,
   Bell,
   Tag,
   Store,
   Grid3X3,
   TrendingUp,
   FileText,
+  FileStack,
+  LayoutDashboard,
+  CarFront,
+  Layers3,
 } from "lucide-react";
 
 /** Moroccan-friendly labels — simple French, short subtitles */
@@ -55,7 +60,7 @@ export const GARAGE_FEATURES = [
     subtitleFr: "Prêt pour la route?",
     en: "Before travel",
     subtitleEn: "Road-trip ready?",
-    Icon: MapPin,
+    Icon: MapPinned,
     gradient: "linear-gradient(135deg,#0ea5e9,#6366f1)",
     glow: "rgba(99,102,241,0.35)",
   },
@@ -66,7 +71,7 @@ export const GARAGE_FEATURES = [
     subtitleFr: "Même voiture que vous",
     en: "Community",
     subtitleEn: "Owners like you",
-    Icon: Users,
+    Icon: UsersRound,
     gradient: "linear-gradient(135deg,#a855f7,#7c3aed)",
     glow: "rgba(168,85,247,0.35)",
   },
@@ -77,7 +82,7 @@ export const GARAGE_FEATURES = [
     subtitleFr: "Guide urgence Maroc",
     en: "Accident",
     subtitleEn: "Morocco emergency",
-    Icon: AlertTriangle,
+    Icon: ShieldAlert,
     gradient: "linear-gradient(135deg,#ef4444,#b91c1c)",
     glow: "rgba(239,68,68,0.4)",
   },
@@ -133,7 +138,7 @@ export const GARAGE_FEATURES = [
     subtitleFr: "Carte grise, assurance…",
     en: "Documents",
     subtitleEn: "Papers & scans",
-    Icon: FileText,
+    Icon: FileStack,
     gradient: "linear-gradient(135deg,#14b8a6,#0d9488)",
     glow: "rgba(20,184,166,0.35)",
   },
@@ -151,7 +156,7 @@ export const GARAGE_FEATURES = [
 ];
 
 export const GARAGE_TABS = [
-  { id: "today", fr: "Accueil", en: "Home", emoji: "🏠" },
-  { id: "car", fr: "Ma voiture", en: "My car", emoji: "🚗" },
-  { id: "tools", fr: "Outils", en: "Tools", emoji: "✨" },
+  { id: "today", fr: "Accueil", en: "Home", Icon: LayoutDashboard },
+  { id: "car", fr: "Ma voiture", en: "My car", Icon: CarFront },
+  { id: "tools", fr: "Outils", en: "Tools", Icon: Layers3 },
 ];
