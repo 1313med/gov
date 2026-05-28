@@ -516,22 +516,104 @@ const CSS = `
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
   .lx-left { display: none; }
-  .lx-right { padding: 32px 20px; }
-  .lx-mobile-logo { display: block; }
-  .lx-card { padding: 32px 24px; }
+  .lx-grid { opacity: 0.35; }
+  .lx-particle { display: none; }
+  .lx-orb3 { display: none; }
+  .lx-right { padding: 18px 16px 28px; align-items: flex-start; }
+  .lx-mobile-logo {
+    display: block;
+    margin: 0 0 14px;
+    text-align: left;
+  }
+  .lx-mobile-logo .lx-logo-mark {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    font-size: 14px;
+  }
+  .lx-mobile-logo .lx-logo-text {
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+  }
+  .lx-card {
+    padding: 22px 18px 18px;
+    border-radius: 18px;
+    background: rgba(10, 12, 22, 0.84);
+    border-color: rgba(124,107,255,0.35);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+  }
+  .lx-ch {
+    margin-bottom: 16px;
+  }
+  .lx-ch-badge {
+    display: none;
+  }
+  .lx-ch h2 {
+    font-size: 26px;
+    margin-bottom: 4px;
+  }
+  .lx-ch-sub {
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--ink4);
+  }
+  .lx-form {
+    gap: 10px;
+  }
+  .lx-input {
+    border-radius: 12px;
+    padding: 18px 12px 8px 40px;
+    font-size: 14px;
+    background: rgba(255,255,255,0.04);
+  }
+  .lx-label {
+    left: 40px;
+  }
+  .lx-field-icon {
+    left: 14px;
+  }
+  .lx-submit {
+    margin-top: 4px;
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 10px 24px rgba(124,107,255,0.32);
+  }
+  .lx-divider {
+    display: none;
+  }
+  .lx-footer {
+    margin-top: 14px;
+    font-size: 12px;
+  }
+  .lx-back {
+    position: static;
+    margin-bottom: 10px;
+    width: fit-content;
+    font-size: 10px;
+  }
 }
 @media (max-width: 480px) {
-  .lx-right { padding: 24px 16px; align-items: flex-start; padding-top: 48px; }
-  .lx-card { border-radius: 20px; padding: 28px 20px; }
-  .lx-ch h2 { font-size: 26px; }
-  .lx-back { top: 16px; right: 16px; }
+  .lx-right { padding: 14px 12px 26px; }
+  .lx-mobile-logo { margin-bottom: 12px; }
+  .lx-mobile-logo .lx-logo-text { font-size: 24px; }
+  .lx-card { border-radius: 16px; padding: 18px 14px 14px; }
+  .lx-ch h2 { font-size: 23px; }
+  .lx-ch-sub { font-size: 13px; }
+  .lx-input { font-size: 13px; }
 }
 
 /* ── SMOOTH SCROLL GLOW ON MOBILE ── */
 @media (max-width: 900px) {
   .lx-root { background: var(--bg0); }
-  .lx-orb1 { width: 300px; height: 300px; opacity: 0.6; }
-  .lx-orb2 { width: 200px; height: 200px; opacity: 0.6; }
+  .lx-orb1 { width: 220px; height: 220px; opacity: 0.45; top: -80px; left: -80px; }
+  .lx-orb2 { width: 180px; height: 180px; opacity: 0.42; bottom: -60px; right: -50px; }
+  .lx-bg {
+    background: radial-gradient(ellipse 70% 60% at 15% 18%, rgba(124,107,255,0.2) 0%, transparent 65%),
+                radial-gradient(ellipse 55% 55% at 88% 85%, rgba(56,189,248,0.14) 0%, transparent 62%),
+                var(--bg0);
+  }
 }
 `;
 

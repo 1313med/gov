@@ -1,0 +1,144 @@
+.rms-wrap {
+  margin-bottom: 24px;
+}
+
+.rms-head {
+  margin-bottom: 12px;
+}
+
+.rms-kicker {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: #94a3b8;
+  margin-bottom: 6px;
+}
+
+.rms-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+}
+
+.rms-sub {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.gp-page.dark .rms-title {
+  color: #e2e8f0;
+}
+
+.gp-page.dark .rms-sub {
+  color: #94a3b8;
+}
+
+.rms-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.rms-card {
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.95));
+  text-align: left;
+  padding: 14px 12px;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.rms-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(124, 107, 255, 0.42);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.rms-card.on {
+  border-color: var(--rms-color);
+  box-shadow: 0 12px 34px color-mix(in srgb, var(--rms-color) 20%, transparent);
+}
+
+.rms-card.locked {
+  border-style: dashed;
+}
+
+.rms-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rms-color);
+  background: color-mix(in srgb, var(--rms-color) 16%, transparent);
+  margin-bottom: 10px;
+}
+
+.rms-label {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.rms-desc {
+  margin-top: 4px;
+  min-height: 34px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: #64748b;
+}
+
+.rms-meta {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--rms-color);
+}
+
+.rms-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 10px currentColor;
+}
+
+.gp-page.dark .rms-card {
+  background: linear-gradient(160deg, rgba(15, 23, 42, 0.9), rgba(10, 14, 26, 0.9));
+  border-color: rgba(148, 163, 184, 0.24);
+}
+
+.gp-page.dark .rms-label {
+  color: #e2e8f0;
+}
+
+.gp-page.dark .rms-desc {
+  color: #94a3b8;
+}
+
+@media (max-width: 740px) {
+  .rms-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .rms-card {
+    padding: 14px;
+  }
+
+  .rms-title {
+    font-size: 24px;
+  }
+}

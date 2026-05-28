@@ -22,36 +22,8 @@ import { useAppLang } from "../../src/context/AppLangContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import ThemeToggle from "../../src/components/ThemeToggle";
 import { getApiErrorMessage } from "../../src/utils/apiErrorMessage";
-
-const ROLE_META = {
-  customer: {
-    icon: "search",
-    colorLight: "#6248e8",
-    colorDark: "#a78bfa",
-    gradLight: ["#6248e8", "#4f46e5", "#4338ca"],
-    gradDark: ["#a78bfa", "#7c6bff", "#5b4ddb"],
-    en: { label: "Explorer", desc: "Rent or buy cars" },
-    fr: { label: "Explorer", desc: "Louer ou acheter" },
-  },
-  car_owner: {
-    icon: "car-sport",
-    colorLight: "#0284c7",
-    colorDark: "#38bdf8",
-    gradLight: ["#0ea5e9", "#0284c7", "#0369a1"],
-    gradDark: ["#38bdf8", "#0ea5e9", "#0284c7"],
-    en: { label: "My garage", desc: "Track my car" },
-    fr: { label: "Mon garage", desc: "Suivre ma voiture" },
-  },
-  rental_owner: {
-    icon: "business",
-    colorLight: "#059669",
-    colorDark: "#34d399",
-    gradLight: ["#10b981", "#059669", "#047857"],
-    gradDark: ["#34d399", "#10b981", "#059669"],
-    en: { label: "My fleet", desc: "Rent out my fleet" },
-    fr: { label: "Ma flotte", desc: "Louer ma flotte" },
-  },
-};
+import { getRoleTheme, normalizeRoleKey } from "../../src/constants/roleThemes";
+import { saveAuthRoleIntent } from "../../src/utils/authRoleIntent";
 
 function EliteField({
   label,
@@ -114,10 +86,10 @@ export default function RegisterScreen() {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams();
 
-  const preselectedRole = params.role || "customer";
-  const roleMeta = ROLE_META[preselectedRole] || ROLE_META.customer;
+  const preselectedRole = normalizeRoleKey(params.role);
+  const theme = getRoleTheme(preselectedRole, isDark);
   const fr = lang === "fr";
-  const roleCopy = fr ? roleMeta.fr : roleMeta.en;
+  const roleCopy = fr ? theme.fr : theme.en;
 
   const [form, setForm] = useState({
     name: "",
@@ -133,16 +105,17 @@ export default function RegisterScreen() {
   const heroOpacity = useRef(new Animated.Value(0)).current;
   const heroSlide = useRef(new Animated.Value(16)).current;
 
-  const accent = isDark ? roleMeta.colorDark : roleMeta.colorLight;
-  const ctaGrad = isDark ? roleMeta.gradDark : roleMeta.gradLight;
+  const accent = theme.accent;
+  const ctaGrad = theme.gradient;
   const titleColor = isDark ? "#f8fafc" : "#0f172a";
   const subColor = isDark ? "#94a3b8" : "#475569";
-  const primary = isDark ? "#a78bfa" : "#6248e8";
-  const heroGrad = isDark
-    ? ["#020108", "#120a28", "#061018", "#03040a"]
-    : ["#faf5ff", "#ede9fe", "#e0f2fe", "#f8fafc"];
+  const heroGrad = theme.heroGradient;
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
+  useEffect(() => {
+    saveAuthRoleIntent(preselectedRole);
+  }, [preselectedRole]);
 
   useEffect(() => {
     Animated.parallel([
@@ -164,7 +137,7 @@ export default function RegisterScreen() {
         fr
           ? "Compte créé. Vérifiez votre email avant de vous connecter."
           : "Account created. Check your email to verify before logging in.",
-        [{ text: "OK", onPress: () => router.push("/(auth)/login") }]
+        [{ text: "OK", onPress: () => router.push({ pathname: "/(auth)/login", params: { role: preselectedRole } }) }]
       );
     } catch (e) {
       Alert.alert(fr ? "Erreur" : "Error", getApiErrorMessage(e, c.regFail));
@@ -185,8 +158,8 @@ export default function RegisterScreen() {
         >
           <View style={styles.topBar}>
             <Pressable onPress={() => router.back()} style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.8 }]}>
-              <Ionicons name="chevron-back" size={20} color={primary} />
-              <Text style={[styles.backText, { color: primary }]}>{fr ? "Retour" : "Back"}</Text>
+              <Ionicons name="chevron-back" size={20} color={accent} />
+              <Text style={[styles.backText, { color: accent }]}>{fr ? "Retour" : "Back"}</Text>
             </Pressable>
             <ThemeToggle />
           </View>
@@ -194,7 +167,7 @@ export default function RegisterScreen() {
           <Animated.View style={[styles.hero, { opacity: heroOpacity, transform: [{ translateY: heroSlide }] }]}>
             <View style={styles.heroRow}>
               <LinearGradient colors={ctaGrad} style={styles.roleIcon}>
-                <Ionicons name={roleMeta.icon} size={22} color="#fff" />
+                <Ionicons name={theme.icon} size={22} color="#fff" />
               </LinearGradient>
               <View style={styles.heroCopy}>
                 <LinearGradient colors={ctaGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.roleChip}>
@@ -208,7 +181,8 @@ export default function RegisterScreen() {
             </View>
           </Animated.View>
 
-          <View style={[styles.formCard, { borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.06)" }]}>
+          <LinearGradient colors={ctaGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.formCardBorder}>
+            <View style={[styles.formCard, { backgroundColor: isDark ? "#0a0b12" : "#fafbff" }]}>
             <EliteField
               label={fr ? "NOM COMPLET" : "FULL NAME"}
               icon="person-outline"
@@ -271,16 +245,17 @@ export default function RegisterScreen() {
                 {!loading && <Ionicons name="arrow-forward-circle" size={22} color="#fff" />}
               </LinearGradient>
             </Pressable>
-          </View>
+            </View>
+          </LinearGradient>
 
           <Pressable
-            onPress={() => router.push("/(auth)/login")}
+            onPress={() => router.push({ pathname: "/(auth)/login", params: { role: preselectedRole } })}
             style={({ pressed }) => [styles.footerRow, pressed && { opacity: 0.85 }]}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             accessibilityRole="link"
           >
             <Text style={[styles.footerQ, { color: subColor }]}>{fr ? "Déjà un compte ? " : "Have an account? "}</Text>
-            <Text style={[styles.footerLink, { color: primary }]}>{fr ? "Se connecter" : "Sign in"}</Text>
+            <Text style={[styles.footerLink, { color: accent }]}>{fr ? "Se connecter" : "Sign in"}</Text>
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -347,11 +322,14 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     lineHeight: 18,
   },
+  formCardBorder: {
+    borderRadius: 24,
+    padding: 1.5,
+    marginBottom: 4,
+  },
   formCard: {
     borderRadius: 22,
-    borderWidth: 1,
     padding: 18,
-    backgroundColor: "rgba(255,255,255,0.03)",
   },
   fieldWrap: { marginBottom: 14 },
   fieldLabel: {

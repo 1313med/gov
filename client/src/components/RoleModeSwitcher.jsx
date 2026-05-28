@@ -1,15 +1,49 @@
 import { useNavigate } from "react-router-dom";
+import { CarFront, Compass, Shield, Sparkles, Warehouse } from "lucide-react";
 import { addMyRole } from "../api/user";
 import { saveAuth, loadAuth } from "../utils/authStorage";
 import { useActiveMode } from "../context/ActiveModeContext";
 import { useAppLang } from "../context/AppLangContext";
 import { shellPathForMode, isAdminOnlyUser } from "../utils/userRoles";
+import "../styles/role-mode-switcher.css";
 
 const MODES = [
-  { key: "customer", en: "Explore", fr: "Explorer", color: "#7c6bff" },
-  { key: "car_owner", en: "My garage", fr: "Mon garage", color: "#38bdf8" },
-  { key: "rental_owner", en: "My fleet", fr: "Ma flotte", color: "#34d399" },
-  { key: "admin", en: "Admin", fr: "Admin", color: "#f87171" },
+  {
+    key: "customer",
+    en: "Explore",
+    fr: "Explorer",
+    color: "#7c6bff",
+    Icon: Compass,
+    subEn: "Buy or rent",
+    subFr: "Acheter ou louer",
+  },
+  {
+    key: "car_owner",
+    en: "My garage",
+    fr: "Mon garage",
+    color: "#38bdf8",
+    Icon: CarFront,
+    subEn: "Track and maintain",
+    subFr: "Suivi et entretien",
+  },
+  {
+    key: "rental_owner",
+    en: "My fleet",
+    fr: "Ma flotte",
+    color: "#34d399",
+    Icon: Warehouse,
+    subEn: "Manage rentals",
+    subFr: "Gerer les locations",
+  },
+  {
+    key: "admin",
+    en: "Admin",
+    fr: "Admin",
+    color: "#f87171",
+    Icon: Shield,
+    subEn: "Platform control",
+    subFr: "Controle plateforme",
+  },
 ];
 
 export default function RoleModeSwitcher() {
@@ -49,34 +83,46 @@ export default function RoleModeSwitcher() {
   const visible = MODES.filter((m) => m.key !== "admin" || isAdminOnlyUser(auth));
 
   return (
-    <div style={{ marginBottom: 24 }}>
-      <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: 2, color: "#94a3b8", marginBottom: 12 }}>
-        {fr ? "VOS ESPACES GOOVOITURE" : "YOUR GOOVOITURE SPACES"}
-      </p>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
+    <div className="rms-wrap">
+      <div className="rms-head">
+        <p className="rms-kicker">{fr ? "SELECTIONNEZ VOTRE PARCOURS" : "SELECT YOUR PATH"}</p>
+        <h2 className="rms-title">{fr ? "Vos espaces GooVoiture" : "Your GooVoiture spaces"}</h2>
+        <p className="rms-sub">
+          {fr ? "Basculez entre vos roles en 1 clic." : "Switch between your modes in one tap."}
+        </p>
+      </div>
+
+      <div className="rms-grid">
         {visible.map((m) => {
           const active = activeMode === m.key;
           const unlocked = canAccess(m.key);
           const label = fr ? m.fr : m.en;
+          const subtitle = fr ? m.subFr : m.subEn;
+          const Icon = m.Icon;
+
           return (
             <button
               key={m.key}
               type="button"
               onClick={() => onPressMode(m.key)}
-              style={{
-                padding: "14px 12px",
-                borderRadius: 14,
-                border: `1px solid ${active ? m.color : "rgba(148,163,184,.35)"}`,
-                background: active ? `${m.color}18` : "transparent",
-                cursor: "pointer",
-                textAlign: "left",
-              }}
+              className={`rms-card${active ? " on" : ""}${!unlocked && m.key !== "customer" ? " locked" : ""}`}
+              style={{ "--rms-color": m.color }}
             >
-              <div style={{ fontWeight: 700, fontSize: 14, color: active ? m.color : "#0f172a" }}>{label}</div>
+              <span className="rms-icon">
+                <Icon size={20} strokeWidth={2} />
+              </span>
+              <div className="rms-label">{label}</div>
+              <div className="rms-desc">{subtitle}</div>
               {!unlocked && m.key !== "customer" ? (
-                <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>{fr ? "Activer" : "Enable"}</div>
+                <div className="rms-meta">
+                  <span className="rms-dot" />
+                  {fr ? "Activer" : "Enable"}
+                </div>
               ) : active ? (
-                <div style={{ fontSize: 11, color: m.color, marginTop: 4 }}>{fr ? "Actif" : "Active"}</div>
+                <div className="rms-meta">
+                  <Sparkles size={12} />
+                  {fr ? "Actif" : "Active"}
+                </div>
               ) : null}
             </button>
           );

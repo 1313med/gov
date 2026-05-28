@@ -13,7 +13,7 @@ import {
   Easing,
   Dimensions,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -28,28 +28,11 @@ import ThemeToggle from "../../src/components/ThemeToggle";
 import AppBrandMark from "../../src/components/AppBrandMark";
 import { getApiErrorMessage } from "../../src/utils/apiErrorMessage";
 import { clearLoginForm, loadLoginForm, saveLoginForm } from "../../src/utils/authStorage";
+import { getRoleTheme, normalizeRoleKey } from "../../src/constants/roleThemes";
+import { loadAuthRoleIntent, saveAuthRoleIntent } from "../../src/utils/authRoleIntent";
 
 const { width: W } = Dimensions.get("window");
 
-const GRAD_LIGHT = ["#6248e8", "#4f46e5", "#4338ca"];
-const GRAD_DARK = ["#a78bfa", "#7c6bff", "#5b4ddb"];
-const ACCENT_LIGHT = "#6248e8";
-const ACCENT_DARK = "#a78bfa";
-
-const PILL_ICONS = ["shield-checkmark-outline", "flash-outline", "people-outline", "lock-closed-outline"];
-
-const STATS = {
-  en: [
-    { icon: "car-sport-outline", value: "2K+", labelKey: "statListings" },
-    { icon: "star-outline", value: "4.9", labelKey: "statRating" },
-    { icon: "heart-outline", value: "98%", labelKey: "statSat" },
-  ],
-  fr: [
-    { icon: "car-sport-outline", value: "2K+", labelKey: "statListings" },
-    { icon: "star-outline", value: "4,9", labelKey: "statRating" },
-    { icon: "heart-outline", value: "98%", labelKey: "statSat" },
-  ],
-};
 
 function GlowOrb({ style, colors, scaleAnim }) {
   return (
@@ -59,47 +42,6 @@ function GlowOrb({ style, colors, scaleAnim }) {
     >
       <LinearGradient colors={colors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
     </Animated.View>
-  );
-}
-
-function FeatureChip({ icon, label, accent, isDark }) {
-  return (
-    <View
-      style={[
-        styles.featureChip,
-        {
-          borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(15,23,42,0.08)",
-          backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.9)",
-        },
-      ]}
-    >
-      <View style={[styles.featureChipIcon, { backgroundColor: `${accent}20` }]}>
-        <Ionicons name={icon} size={14} color={accent} />
-      </View>
-      <Text style={[styles.featureChipTxt, { color: isDark ? "#cbd5e1" : "#475569" }]} numberOfLines={1}>
-        {label}
-      </Text>
-    </View>
-  );
-}
-
-function StatGlass({ icon, value, label, accent, isDark }) {
-  return (
-    <View
-      style={[
-        styles.statGlass,
-        {
-          borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.06)",
-          backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.85)",
-        },
-      ]}
-    >
-      <Ionicons name={icon} size={16} color={accent} />
-      <Text style={[styles.statValue, { color: isDark ? "#f8fafc" : "#0f172a" }]}>{value}</Text>
-      <Text style={[styles.statLabel, { color: isDark ? "#64748b" : "#94a3b8" }]} numberOfLines={1}>
-        {label}
-      </Text>
-    </View>
   );
 }
 
@@ -153,8 +95,10 @@ export default function LoginScreen() {
   const c = copy.login;
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const params = useLocalSearchParams();
   const fr = lang === "fr";
 
+  const [authRole, setAuthRole] = useState("customer");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
@@ -171,17 +115,25 @@ export default function LoginScreen() {
   const shimmer = useRef(new Animated.Value(-1)).current;
   const btnGlow = useRef(new Animated.Value(0.5)).current;
 
-  const accent = isDark ? ACCENT_DARK : ACCENT_LIGHT;
-  const ctaGrad = isDark ? GRAD_DARK : GRAD_LIGHT;
+  const theme = getRoleTheme(authRole, isDark);
+  const accent = theme.accent;
+  const ctaGrad = theme.gradient;
   const titleColor = isDark ? "#f8fafc" : "#0f172a";
   const subColor = isDark ? "#94a3b8" : "#475569";
-  const heroGrad = isDark
-    ? ["#020108", "#120a28", "#061018", "#03040a"]
-    : ["#faf5ff", "#ede9fe", "#e0f2fe", "#f8fafc"];
+  const heroGrad = theme.heroGradient;
+  const roleCopy = fr ? theme.fr : theme.en;
 
   const readyToSignIn = Boolean(identifier.trim() && password);
-  const statsMeta = fr ? STATS.fr : STATS.en;
-  const pills = c.pills || [];
+
+  useEffect(() => {
+    const paramRole = params.role ? normalizeRoleKey(params.role) : null;
+    if (paramRole) {
+      setAuthRole(paramRole);
+      saveAuthRoleIntent(paramRole);
+      return;
+    }
+    loadAuthRoleIntent().then(setAuthRole);
+  }, [params.role]);
 
   useEffect(() => {
     loadLoginForm()
@@ -284,23 +236,10 @@ export default function LoginScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: isDark ? "#03040a" : C.bg }}>
       <LinearGradient pointerEvents="none" colors={heroGrad} locations={[0, 0.35, 0.7, 1]} style={StyleSheet.absoluteFill} />
-      <GlowOrb
-        scaleAnim={orbPulse}
-        colors={isDark ? ["rgba(167,139,250,0.5)", "rgba(167,139,250,0)"] : ["rgba(98,72,232,0.35)", "rgba(98,72,232,0)"]}
-        style={{ width: 240, height: 240, top: -90, right: -80 }}
-      />
+      <GlowOrb scaleAnim={orbPulse} colors={theme.orbPrimary} style={{ width: 240, height: 240, top: -90, right: -80 }} />
       <Animated.View pointerEvents="none" style={{ transform: [{ translateY: orbDriftY }] }}>
-        <GlowOrb
-          scaleAnim={orbPulse}
-          colors={isDark ? ["rgba(56,189,248,0.3)", "rgba(56,189,248,0)"] : ["rgba(14,165,233,0.25)", "rgba(14,165,233,0)"]}
-          style={{ width: 180, height: 180, top: 200, left: -90 }}
-        />
+        <GlowOrb scaleAnim={orbPulse} colors={theme.orbSecondary} style={{ width: 180, height: 180, top: 200, left: -90 }} />
       </Animated.View>
-      <GlowOrb
-        scaleAnim={orbPulse}
-        colors={isDark ? ["rgba(52,211,153,0.2)", "rgba(52,211,153,0)"] : ["rgba(16,185,129,0.18)", "rgba(16,185,129,0)"]}
-        style={{ width: 120, height: 120, top: 380, right: 20 }}
-      />
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView
@@ -338,13 +277,10 @@ export default function LoginScreen() {
           </View>
 
           <Animated.View style={[styles.hero, { opacity: heroOpacity, transform: [{ translateY: heroSlide }] }]}>
-            <LinearGradient colors={ctaGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.welcomeBadge}>
-              <Ionicons name="sparkles" size={12} color="#fff" />
-              <Text style={styles.welcomeBadgeTxt}>
-                {fr ? "Heureux de vous revoir" : "Great to see you again"}
-              </Text>
-            </LinearGradient>
-
+            <View style={[styles.roleBadge, { borderColor: theme.chipBorder, backgroundColor: theme.chipBg }]}>
+              <Ionicons name={theme.icon} size={12} color={accent} />
+              <Text style={[styles.roleBadgeTxt, { color: accent }]}>{roleCopy.label.toUpperCase()}</Text>
+            </View>
             <Text style={[styles.kicker, { color: accent }]}>{c.memberPortal || (fr ? "ESPACE MEMBRE" : "MEMBER SPACE")}</Text>
             <Text style={[styles.heroTitle, { color: titleColor }]}>
               {c.heroL1} {c.heroL2 ? `${c.heroL2} ` : ""}
@@ -352,41 +288,15 @@ export default function LoginScreen() {
               {c.heroL3 ? ` ${c.heroL3}` : ""}
             </Text>
             <Text style={[styles.heroSub, { color: subColor }]}>{c.heroSub}</Text>
-
-            <View style={styles.statsRow}>
-              {statsMeta.map((s) => (
-                <StatGlass
-                  key={s.labelKey}
-                  icon={s.icon}
-                  value={s.value}
-                  label={c[s.labelKey] || s.labelKey}
-                  accent={accent}
-                  isDark={isDark}
-                />
-              ))}
-            </View>
-
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsScroll}>
-              {pills.map((pill, idx) => (
-                <FeatureChip key={pill} icon={PILL_ICONS[idx] || "checkmark-outline"} label={pill} accent={accent} isDark={isDark} />
-              ))}
-            </ScrollView>
           </Animated.View>
 
           <Animated.View style={{ opacity: formOpacity, transform: [{ translateY: formSlide }] }}>
             <LinearGradient colors={ctaGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.formCardBorder}>
               <View style={[styles.formCardInner, { backgroundColor: isDark ? "#0a0b12" : "#fafbff" }]}>
-                <View style={styles.formHeader}>
-                  <View style={[styles.formIconWrap, { backgroundColor: `${accent}18` }]}>
-                    <Ionicons name="log-in-outline" size={22} color={accent} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.welcomeTitle, { color: titleColor }]}>
-                      {c.welcomeTitle}{" "}
-                      <Text style={{ color: accent }}>{c.welcomeEm}</Text>
-                    </Text>
-                    <Text style={[styles.welcomeSub, { color: subColor }]}>{c.welcomeSub}</Text>
-                  </View>
+                <View style={styles.formHeaderSimple}>
+                  <Text style={[styles.welcomeTitle, { color: titleColor }]}>
+                    {c.welcomeTitle} <Text style={{ color: accent }}>{c.welcomeEm}</Text>
+                  </Text>
                 </View>
 
                 <EliteField
@@ -467,36 +377,25 @@ export default function LoginScreen() {
             </View>
 
             <Pressable
-              onPress={() => router.push("/(auth)/role-select")}
+              onPress={() => router.push({ pathname: "/(auth)/register", params: { role: authRole } })}
               style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}
             >
-              <LinearGradient
-                colors={isDark ? ["rgba(167,139,250,0.15)", "rgba(56,189,248,0.08)"] : ["rgba(98,72,232,0.08)", "rgba(14,165,233,0.06)"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={[
-                  styles.registerCard,
-                  { borderColor: isDark ? "rgba(167,139,250,0.25)" : "rgba(98,72,232,0.2)" },
-                ]}
-              >
-                <LinearGradient colors={ctaGrad} style={styles.registerIcon}>
-                  <Ionicons name="rocket-outline" size={22} color="#fff" />
-                </LinearGradient>
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text style={[styles.registerTitle, { color: titleColor }]}>
-                    {fr ? "Créer un compte gratuit" : "Create your free account"}
-                  </Text>
-                  <Text style={[styles.registerSub, { color: subColor }]}>
-                    {fr
-                      ? "3 parcours : explorer, garage ou flotte — à vous de choisir."
-                      : "3 paths: explore, garage, or fleet — pick yours."}
-                  </Text>
-                  <View style={styles.registerCta}>
-                    <Text style={[styles.registerCtaTxt, { color: accent }]}>{fr ? "Commencer" : "Get started"}</Text>
-                    <Ionicons name="arrow-forward" size={14} color={accent} />
-                  </View>
-                </View>
-              </LinearGradient>
+              <View style={[styles.registerSimple, { borderColor: theme.chipBorder, backgroundColor: theme.chipBg }]}>
+                <Text style={[styles.registerSimpleTxt, { color: accent }]}>
+                  {fr ? `Nouveau ? Créer un compte ${roleCopy.label}` : `New here? Join as ${roleCopy.label}`}
+                </Text>
+                <Ionicons name="arrow-forward" size={14} color={accent} />
+              </View>
+            </Pressable>
+
+            <Pressable
+              onPress={() => router.push("/(auth)/role-select")}
+              style={({ pressed }) => [styles.changeRoleLink, pressed && { opacity: 0.85 }]}
+              hitSlop={8}
+            >
+              <Text style={[styles.changeRoleTxt, { color: subColor }]}>
+                {fr ? "Changer de parcours" : "Change your path"}
+              </Text>
             </Pressable>
 
             <Text style={[styles.footerNote, { color: isDark ? "#475569" : "#94a3b8" }]}>
@@ -560,21 +459,21 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.04)",
   },
   hero: { marginBottom: 18 },
-  welcomeBadge: {
+  roleBadge: {
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "flex-start",
     gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 999,
-    marginBottom: 12,
+    borderWidth: 1,
+    marginBottom: 10,
   },
-  welcomeBadgeTxt: {
-    color: "#fff",
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 0.2,
+  roleBadgeTxt: {
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 1,
   },
   kicker: {
     fontSize: 10,
@@ -594,59 +493,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
     lineHeight: 21,
-    marginBottom: 14,
-  },
-  statsRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 14,
-  },
-  statGlass: {
-    flex: 1,
-    borderRadius: 16,
-    borderWidth: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    alignItems: "center",
-    gap: 4,
-  },
-  statValue: {
-    fontSize: 16,
-    fontWeight: "900",
-    letterSpacing: -0.3,
-  },
-  statLabel: {
-    fontSize: 9,
-    fontWeight: "700",
-    textAlign: "center",
-    textTransform: "uppercase",
-    letterSpacing: 0.3,
-  },
-  chipsScroll: {
-    gap: 8,
-    paddingRight: 20,
-  },
-  featureChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
-    borderWidth: 1,
-    marginRight: 8,
-  },
-  featureChipIcon: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  featureChipTxt: {
-    fontSize: 11,
-    fontWeight: "700",
-    maxWidth: 120,
+    marginBottom: 6,
   },
   formCardBorder: {
     borderRadius: 24,
@@ -657,18 +504,8 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     padding: 18,
   },
-  formHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 12,
-    marginBottom: 18,
-  },
-  formIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
+  formHeaderSimple: {
+    marginBottom: 14,
   },
   welcomeTitle: {
     fontSize: 20,
@@ -770,42 +607,29 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
     textTransform: "uppercase",
   },
-  registerCard: {
+  registerSimple: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    borderRadius: 22,
-    borderWidth: 1,
-    padding: 16,
-    marginBottom: 14,
-  },
-  registerIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
+    gap: 8,
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginBottom: 14,
   },
-  registerTitle: {
-    fontSize: 17,
-    fontWeight: "900",
-    letterSpacing: -0.3,
-    marginBottom: 4,
-  },
-  registerSub: {
-    fontSize: 12,
-    fontWeight: "500",
-    lineHeight: 17,
-    marginBottom: 8,
-  },
-  registerCta: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  registerCtaTxt: {
+  registerSimpleTxt: {
     fontSize: 13,
     fontWeight: "800",
+  },
+  changeRoleLink: {
+    alignItems: "center",
+    marginTop: 12,
+    paddingVertical: 4,
+  },
+  changeRoleTxt: {
+    fontSize: 12,
+    fontWeight: "600",
   },
   footerNote: {
     fontSize: 11,
