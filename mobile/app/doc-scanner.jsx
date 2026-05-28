@@ -19,7 +19,7 @@ export default function DocScannerScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors: C, isDark } = useTheme();
-  const { lang } = useAppLang();
+  const { lang, pick, dateLocale } = useAppLang();
   const fr = lang === "fr";
   const PRESETS = fr ? PRESETS_FR : PRESETS_EN;
 
@@ -39,18 +39,18 @@ export default function DocScannerScreen() {
         setCar(r.data);
         setDocs(r.data?.scannedDocuments || []);
       })
-      .catch(() => Alert.alert(fr ? "Erreur" : "Error", fr ? "Impossible de charger le véhicule." : "Could not load vehicle."))
+      .catch(() => Alert.alert(pick("Error", "Erreur"), pick("Could not load vehicle.", "Impossible de charger le véhicule.")))
       .finally(() => setLoading(false));
   }, []);
 
   const pickAndUpload = async (fromCamera) => {
     const label = labelInput.trim();
     if (!label) {
-      Alert.alert(fr ? "Nom requis" : "Label required", fr ? "Entrez un nom pour ce document." : "Enter a label for this document.");
+      Alert.alert(pick("Label required", "Nom requis"), pick("Enter a label for this document.", "Entrez un nom pour ce document."));
       return;
     }
     if (!car?._id) {
-      Alert.alert(fr ? "Aucun véhicule" : "No vehicle", fr ? "Enregistrez d'abord un véhicule dans Mon Garage." : "Register a vehicle in My Garage first.");
+      Alert.alert(pick("No vehicle", "Aucun véhicule"), pick("Register a vehicle in My Garage first.", "Enregistrez d'abord un véhicule dans Mon Garage."));
       return;
     }
 
@@ -58,7 +58,7 @@ export default function DocScannerScreen() {
       ? await ImagePicker.requestCameraPermissionsAsync()
       : await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert(fr ? "Permission requise" : "Permission required");
+      Alert.alert(pick("Permission required", "Permission requise"));
       return;
     }
     const result = fromCamera
@@ -80,7 +80,7 @@ export default function DocScannerScreen() {
         setShowPresets(false);
       }
     } catch {
-      Alert.alert("Error", fr ? "Échec de l'envoi." : "Upload failed.");
+      Alert.alert("Error", pick("Upload failed.", "Échec de l'envoi."));
     } finally {
       setUploading(false);
     }
@@ -88,11 +88,11 @@ export default function DocScannerScreen() {
 
   const removeDoc = (idx) => {
     Alert.alert(
-      fr ? "Supprimer ?" : "Delete?",
-      fr ? "Supprimer ce document ?" : "Remove this document?",
+      pick("Delete?", "Supprimer ?"),
+      pick("Remove this document?", "Supprimer ce document ?"),
       [
-        { text: fr ? "Non" : "No", style: "cancel" },
-        { text: fr ? "Oui" : "Yes", style: "destructive", onPress: () => setDocs((p) => p.filter((_, i) => i !== idx)) },
+        { text: pick("No", "Non"), style: "cancel" },
+        { text: pick("Yes", "Oui"), style: "destructive", onPress: () => setDocs((p) => p.filter((_, i) => i !== idx)) },
       ]
     );
   };
@@ -102,9 +102,9 @@ export default function DocScannerScreen() {
     setSaving(true);
     try {
       await patchDocuments(car._id, docs);
-      Alert.alert(fr ? "Enregistré" : "Saved", fr ? "Documents mis à jour." : "Documents updated.", [{ text: "OK", onPress: () => router.back() }]);
+      Alert.alert(pick("Saved", "Enregistré"), pick("Documents updated.", "Documents mis à jour."), [{ text: "OK", onPress: () => router.back() }]);
     } catch (e) {
-      Alert.alert("Error", e?.response?.data?.message || (fr ? "Échec." : "Failed."));
+      Alert.alert("Error", e?.response?.data?.message || (pick("Failed.", "Échec.")));
     } finally {
       setSaving(false);
     }
@@ -126,11 +126,11 @@ export default function DocScannerScreen() {
           <Ionicons name="chevron-back" size={26} color={C.white} />
         </TouchableOpacity>
         <View style={{ flex: 1, marginHorizontal: 14 }}>
-          <Text style={s.headerTitle}>{fr ? "Scanner de documents" : "Document Scanner"}</Text>
-          <Text style={s.headerSub}>{car ? `${car.brand} ${car.model} ${car.year || ""}`.trim() : (fr ? "Aucun véhicule" : "No vehicle")}</Text>
+          <Text style={s.headerTitle}>{pick("Document Scanner", "Scanner de documents")}</Text>
+          <Text style={s.headerSub}>{car ? `${car.brand} ${car.model} ${car.year || ""}`.trim() : (pick("No vehicle", "Aucun véhicule"))}</Text>
         </View>
         <TouchableOpacity onPress={save} disabled={saving || !car} style={s.saveBtn} activeOpacity={0.85}>
-          {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={s.saveBtnTxt}>{fr ? "Sauv." : "Save"}</Text>}
+          {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={s.saveBtnTxt}>{pick("Save", "Sauv.")}</Text>}
         </TouchableOpacity>
       </View>
 
@@ -139,16 +139,14 @@ export default function DocScannerScreen() {
         <View style={s.infoBox}>
           <Ionicons name="document-text-outline" size={20} color={C.primary} />
           <Text style={s.infoTxt}>
-            {fr
-              ? "Scannez vos documents importants : carte grise, assurance, vignette… Ils seront attachés à votre véhicule."
-              : "Scan your important documents: registration, insurance, tax disc… They'll be attached to your vehicle."}
+            {pick("Scan your important documents: registration, insurance, tax disc… They'll be attached to your vehicle.", "Scannez vos documents importants : carte grise, assurance, vignette… Ils seront attachés à votre véhicule.")}
           </Text>
         </View>
 
         {/* Label input */}
-        <Text style={s.label}>{fr ? "Nom du document" : "Document label"}</Text>
+        <Text style={s.label}>{pick("Document label", "Nom du document")}</Text>
         <TouchableOpacity onPress={() => setShowPresets((v) => !v)} style={s.presetToggle} activeOpacity={0.8}>
-          <Text style={s.presetToggleTxt}>{fr ? "Choisir un type" : "Choose a type"}</Text>
+          <Text style={s.presetToggleTxt}>{pick("Choose a type", "Choisir un type")}</Text>
           <Ionicons name={showPresets ? "chevron-up" : "chevron-down"} size={16} color={C.muted} />
         </TouchableOpacity>
         {showPresets && (
@@ -163,7 +161,7 @@ export default function DocScannerScreen() {
         <TextInput
           value={labelInput}
           onChangeText={setLabelInput}
-          placeholder={fr ? "ex. Carte Grise" : "e.g. Registration"}
+          placeholder={pick("e.g. Registration", "ex. Carte Grise")}
           placeholderTextColor={C.muted}
           style={s.input}
         />
@@ -174,18 +172,18 @@ export default function DocScannerScreen() {
             {uploading
               ? <ActivityIndicator color={C.primary} size="small" />
               : <Ionicons name="camera-outline" size={22} color={C.primary} />}
-            <Text style={s.actionTxt}>{fr ? "Prendre une photo" : "Take photo"}</Text>
+            <Text style={s.actionTxt}>{pick("Take photo", "Prendre une photo")}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => pickAndUpload(false)} disabled={uploading} style={s.actionBtn} activeOpacity={0.85}>
             <Ionicons name="images-outline" size={22} color={C.primary} />
-            <Text style={s.actionTxt}>{fr ? "Depuis la galerie" : "From gallery"}</Text>
+            <Text style={s.actionTxt}>{pick("From gallery", "Depuis la galerie")}</Text>
           </TouchableOpacity>
         </View>
 
         {/* Document list */}
-        <Text style={[s.label, { marginTop: 20 }]}>{fr ? "Documents enregistrés" : "Saved documents"} ({docs.length})</Text>
+        <Text style={[s.label, { marginTop: 20 }]}>{pick("Saved documents", "Documents enregistrés")} ({docs.length})</Text>
         {docs.length === 0 ? (
-          <Text style={s.emptyTxt}>{fr ? "Aucun document ajouté." : "No documents added yet."}</Text>
+          <Text style={s.emptyTxt}>{pick("No documents added yet.", "Aucun document ajouté.")}</Text>
         ) : (
           docs.map((doc, idx) => (
             <View key={idx} style={s.docCard}>
@@ -199,7 +197,7 @@ export default function DocScannerScreen() {
               <View style={{ flex: 1, minWidth: 0, marginLeft: 12 }}>
                 <Text style={s.docLabel} numberOfLines={1}>{doc.label}</Text>
                 <Text style={s.docDate}>
-                  {doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString(fr ? "fr-FR" : "en-GB") : ""}
+                  {doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString(dateLocale) : ""}
                 </Text>
               </View>
               <TouchableOpacity onPress={() => removeDoc(idx)} hitSlop={10}>

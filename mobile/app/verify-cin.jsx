@@ -16,7 +16,7 @@ import { uploadListingImages } from "../src/api/upload";
 
 export default function VerifyCinScreen() {
   const { colors: C, isDark } = useTheme();
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const fr = lang === "fr";
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -65,18 +65,18 @@ export default function VerifyCinScreen() {
 
   const takeCinPhoto = useCallback(async () => {
     const perm = await ImagePicker.requestCameraPermissionsAsync();
-    if (!perm.granted) { Alert.alert(fr ? "Permission caméra requise" : "Camera permission required"); return; }
+    if (!perm.granted) { Alert.alert(pick("Camera permission required", "Permission caméra requise")); return; }
     const result = await ImagePicker.launchCameraAsync({ quality: 0.8, allowsEditing: true });
     if (!result.canceled) setCinImage(result.assets[0]);
   }, [fr]);
 
   const handleSubmit = useCallback(async () => {
     if (!cinNumber.trim()) {
-      Alert.alert(fr ? "Numéro CIN requis" : "CIN number required");
+      Alert.alert(pick("CIN number required", "Numéro CIN requis"));
       return;
     }
     if (!cinImage) {
-      Alert.alert(fr ? "Photo CIN requise" : "CIN photo required");
+      Alert.alert(pick("CIN photo required", "Photo CIN requise"));
       return;
     }
     setSaving(true);
@@ -88,12 +88,10 @@ export default function VerifyCinScreen() {
       }]);
       await updateNationalId({ number: cinNumber.trim(), imageUrl });
       Alert.alert(
-        fr ? "Demande envoyée ✓" : "Request sent ✓",
-        fr
-          ? "CIN enregistré. Vous pouvez remplir le formulaire de vente ; l'annonce sera validée par l'équipe."
-          : "ID saved. You can fill in the sale form; your listing will be reviewed by our team.",
+        pick("Request sent ✓", "Demande envoyée ✓"),
+        pick("ID saved. You can fill in the sale form; your listing will be reviewed by our team.", "CIN enregistré. Vous pouvez remplir le formulaire de vente ; l'annonce sera validée par l'équipe."),
         [{
-          text: fr ? "Créer l'annonce quand même" : "Post listing anyway",
+          text: pick("Post listing anyway", "Créer l'annonce quand même"),
           onPress: () => router.push({ pathname: returnPath, params }),
         }, { text: "OK" }]
       );
@@ -129,10 +127,10 @@ export default function VerifyCinScreen() {
           </TouchableOpacity>
           <View>
             <Text style={{ fontSize: 11, fontWeight: "800", letterSpacing: 2, textTransform: "uppercase", color: C.primary, marginBottom: 2 }}>
-              {fr ? "Confiance & sécurité" : "Trust & safety"}
+              {pick("Trust & safety", "Confiance & sécurité")}
             </Text>
             <Text style={{ fontSize: 20, fontWeight: "800", color: titleColor, letterSpacing: -0.4 }}>
-              {fr ? "Vendre ma voiture" : "Sell my car"}
+              {pick("Sell my car", "Vendre ma voiture")}
             </Text>
           </View>
         </View>
@@ -150,17 +148,17 @@ export default function VerifyCinScreen() {
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 16, fontWeight: "800", color: titleColor }}>
                 {isVerified
-                  ? (fr ? "CIN vérifié ✓" : "ID verified ✓")
+                  ? (pick("ID verified ✓", "CIN vérifié ✓"))
                   : isSubmitted
-                    ? (fr ? "CIN en cours de validation…" : "ID under review…")
-                    : (fr ? "CIN pour vendre" : "ID to sell your car")}
+                    ? (pick("ID under review…", "CIN en cours de validation…"))
+                    : (pick("ID to sell your car", "CIN pour vendre"))}
               </Text>
               <Text style={{ fontSize: 13, color: subColor, marginTop: 3, lineHeight: 19 }}>
                 {isVerified
-                  ? (fr ? "Vous pouvez publier une annonce de vente." : "You can post a car for sale.")
+                  ? (pick("You can post a car for sale.", "Vous pouvez publier une annonce de vente."))
                   : isSubmitted
-                    ? (fr ? "Notre équipe vérifie votre CIN sous 24–48h. Vous pouvez déjà soumettre une annonce." : "Our team reviews your ID within 24–48h. You can still submit a listing.")
-                    : (fr ? "Seul le CIN est requis pour vendre (pas le permis)." : "Only your national ID is required to sell (not your license).")}
+                    ? (pick("Our team reviews your ID within 24–48h. You can still submit a listing.", "Notre équipe vérifie votre CIN sous 24–48h. Vous pouvez déjà soumettre une annonce."))
+                    : (pick("Only your national ID is required to sell (not your license).", "Seul le CIN est requis pour vendre (pas le permis)."))}
               </Text>
             </View>
           </View>
@@ -168,9 +166,9 @@ export default function VerifyCinScreen() {
           {!isVerified && !isSubmitted && (
             <View style={{ gap: 8 }}>
               {[
-                { icon: "document-text-outline", text: fr ? "Une seule pièce : votre CIN" : "One document: your national ID" },
-                { icon: "time-outline", text: fr ? "Annonce en attente d'approbation admin" : "Listing waits for admin approval" },
-                { icon: "lock-closed-outline", text: fr ? "Votre CIN reste confidentiel" : "Your ID stays private" },
+                { icon: "document-text-outline", text: pick("One document: your national ID", "Une seule pièce : votre CIN") },
+                { icon: "time-outline", text: pick("Listing waits for admin approval", "Annonce en attente d'approbation admin") },
+                { icon: "lock-closed-outline", text: pick("Your ID stays private", "Votre CIN reste confidentiel") },
               ].map((item, i) => (
                 <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
                   <Ionicons name={item.icon} size={16} color={C.primary} />
@@ -186,7 +184,7 @@ export default function VerifyCinScreen() {
             <LinearGradient colors={["#22c55e", "#16a34a"]} style={{ borderRadius: 16, paddingVertical: 16, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 10 }}>
               <Ionicons name="pricetag-outline" size={20} color="#fff" />
               <Text style={{ color: "#fff", fontWeight: "800", fontSize: 16 }}>
-                {fr ? "Publier mon annonce" : "Post my listing"}
+                {pick("Post my listing", "Publier mon annonce")}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -196,7 +194,7 @@ export default function VerifyCinScreen() {
               <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
                 <Ionicons name="time-outline" size={20} color="#eab308" />
                 <Text style={{ fontSize: 14, color: "#eab308", fontWeight: "700", flex: 1 }}>
-                  {fr ? "Vérification en attente — 24 à 48h" : "Verification pending — 24 to 48h"}
+                  {pick("Verification pending — 24 to 48h", "Vérification en attente — 24 à 48h")}
                 </Text>
               </View>
             </View>
@@ -204,7 +202,7 @@ export default function VerifyCinScreen() {
               <View style={{ borderRadius: 16, paddingVertical: 14, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8, borderWidth: 1.5, borderColor: isDark ? "rgba(124,107,255,0.4)" : "rgba(98,72,232,0.3)", backgroundColor: isDark ? "rgba(124,107,255,0.08)" : "rgba(98,72,232,0.05)" }}>
                 <Ionicons name="pricetag-outline" size={18} color={C.primary} />
                 <Text style={{ color: C.primary, fontWeight: "800", fontSize: 15 }}>
-                  {fr ? "Publier sans badge (pour l'instant)" : "Post without badge (for now)"}
+                  {pick("Post without badge (for now)", "Publier sans badge (pour l'instant)")}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -214,23 +212,23 @@ export default function VerifyCinScreen() {
             {/* CIN upload form */}
             <View style={[s.card, { backgroundColor: cardBg, borderColor: cardBorder, marginBottom: 16 }]}>
               <Text style={{ fontSize: 13, fontWeight: "800", letterSpacing: 1.2, textTransform: "uppercase", color: isDark ? "#94a3b8" : "#64748b", marginBottom: 14 }}>
-                {fr ? "Votre CIN" : "Your CIN"}
+                {pick("Your CIN", "Votre CIN")}
               </Text>
 
               <Text style={{ fontSize: 12, fontWeight: "700", color: subColor, marginBottom: 6 }}>
-                {fr ? "Numéro CIN *" : "CIN number *"}
+                {pick("CIN number *", "Numéro CIN *")}
               </Text>
               <TextInput
                 value={cinNumber}
                 onChangeText={setCinNumber}
-                placeholder={fr ? "Ex: AB123456" : "e.g. AB123456"}
+                placeholder={pick("e.g. AB123456", "Ex: AB123456")}
                 placeholderTextColor={isDark ? "#475569" : "#94a3b8"}
                 autoCapitalize="characters"
                 style={[s.input, { backgroundColor: inputBg, borderColor: inputBorder, color: titleColor, marginBottom: 16 }]}
               />
 
               <Text style={{ fontSize: 12, fontWeight: "700", color: subColor, marginBottom: 10 }}>
-                {fr ? "Photo recto du CIN *" : "CIN front photo *"}
+                {pick("CIN front photo *", "Photo recto du CIN *")}
               </Text>
 
               {cinImage ? (
@@ -246,19 +244,17 @@ export default function VerifyCinScreen() {
                 <View style={{ flexDirection: "row", gap: 10 }}>
                   <TouchableOpacity onPress={pickCinImage} activeOpacity={0.8} style={{ flex: 1, borderRadius: 12, borderWidth: 1.5, borderColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(15,23,42,0.12)", borderStyle: "dashed", paddingVertical: 18, alignItems: "center", gap: 6 }}>
                     <Ionicons name="image-outline" size={24} color={subColor} />
-                    <Text style={{ fontSize: 12, color: subColor, fontWeight: "600" }}>{fr ? "Galerie" : "Gallery"}</Text>
+                    <Text style={{ fontSize: 12, color: subColor, fontWeight: "600" }}>{pick("Gallery", "Galerie")}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity onPress={takeCinPhoto} activeOpacity={0.8} style={{ flex: 1, borderRadius: 12, borderWidth: 1.5, borderColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(15,23,42,0.12)", borderStyle: "dashed", paddingVertical: 18, alignItems: "center", gap: 6 }}>
                     <Ionicons name="camera-outline" size={24} color={subColor} />
-                    <Text style={{ fontSize: 12, color: subColor, fontWeight: "600" }}>{fr ? "Caméra" : "Camera"}</Text>
+                    <Text style={{ fontSize: 12, color: subColor, fontWeight: "600" }}>{pick("Camera", "Caméra")}</Text>
                   </TouchableOpacity>
                 </View>
               )}
 
               <Text style={{ fontSize: 11, color: isDark ? "#475569" : "#94a3b8", marginTop: 10, lineHeight: 16 }}>
-                {fr
-                  ? "Votre CIN est chiffré et uniquement visible par notre équipe de vérification. Il ne sera jamais partagé publiquement."
-                  : "Your CIN is encrypted and only visible to our verification team. It will never be shared publicly."}
+                {pick("Your CIN is encrypted and only visible to our verification team. It will never be shared publicly.", "Votre CIN est chiffré et uniquement visible par notre équipe de vérification. Il ne sera jamais partagé publiquement.")}
               </Text>
             </View>
 
@@ -268,7 +264,7 @@ export default function VerifyCinScreen() {
                   : <>
                       <Ionicons name="shield-checkmark-outline" size={20} color="#fff" />
                       <Text style={{ color: "#fff", fontWeight: "800", fontSize: 16 }}>
-                        {fr ? "Soumettre pour vérification" : "Submit for verification"}
+                        {pick("Submit for verification", "Soumettre pour vérification")}
                       </Text>
                     </>
                 }
@@ -278,7 +274,7 @@ export default function VerifyCinScreen() {
             <TouchableOpacity onPress={goToSell} activeOpacity={0.85}>
               <View style={{ borderRadius: 16, paddingVertical: 13, alignItems: "center" }}>
                 <Text style={{ color: subColor, fontSize: 14, fontWeight: "600" }}>
-                  {fr ? "Passer pour l'instant →" : "Skip for now →"}
+                  {pick("Skip for now →", "Passer pour l'instant →")}
                 </Text>
               </View>
             </TouchableOpacity>

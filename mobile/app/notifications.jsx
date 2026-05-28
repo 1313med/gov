@@ -43,7 +43,7 @@ export default function NotificationsScreen() {
   const router = useRouter();
   const { auth } = useAuth();
   const { clearNotificationBadge } = useSocket();
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const { colors: C, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const fr = lang === "fr";
@@ -188,7 +188,7 @@ export default function NotificationsScreen() {
 
   const s = useMemo(() => createNotificationsStyles(C, isDark), [C, isDark]);
 
-  if (loading) return <PageLoader message={fr ? "Synchronisation…" : "Syncing your inbox…"} />;
+  if (loading) return <PageLoader message={pick("Syncing your inbox…", "Synchronisation…")} />;
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
@@ -209,15 +209,13 @@ export default function NotificationsScreen() {
             <LinearGradient colors={bannerGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.hero}>
               <View style={s.heroAccent} />
               <Text style={[s.heroEyebrow, { color: C.primary }]}>
-                {fr ? "Centre d'activité" : "Activity hub"}
+                {pick("Activity hub", "Centre d'activité")}
               </Text>
               <Text style={[s.heroTitle, { color: titleColor }]}>
-                {fr ? "Vos alertes" : "Your alerts"}
+                {pick("Your alerts", "Vos alertes")}
               </Text>
               <Text style={[s.heroSub, { color: subColor }]}>
-                {fr
-                  ? "Réservations, messages et mises à jour — tout au même endroit."
-                  : "Bookings, messages, and updates — distilled into one calm inbox."}
+                {pick("Bookings, messages, and updates — distilled into one calm inbox.", "Réservations, messages et mises à jour — tout au même endroit.")}
               </Text>
               <View style={s.scopeTabs}>
                 <TouchableOpacity
@@ -235,7 +233,7 @@ export default function NotificationsScreen() {
                     color={inboxScope === "active" ? "#fff" : subColor}
                   />
                   <Text style={[s.scopeTabText, { color: inboxScope === "active" ? "#fff" : subColor }]}>
-                    {fr ? "Boîte de réception" : "Inbox"}
+                    {pick("Inbox", "Boîte de réception")}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -253,7 +251,7 @@ export default function NotificationsScreen() {
                     color={inboxScope === "archived" ? "#fff" : subColor}
                   />
                   <Text style={[s.scopeTabText, { color: inboxScope === "archived" ? "#fff" : subColor }]}>
-                    {fr ? "Archives" : "Archived"}
+                    {pick("Archived", "Archives")}
                     {archivedCount != null && archivedCount > 0 ? ` (${archivedCount})` : ""}
                   </Text>
                 </TouchableOpacity>
@@ -263,17 +261,15 @@ export default function NotificationsScreen() {
                   <Ionicons name="mail-unread-outline" size={16} color="#fff" />
                   <Text style={s.unreadPillText}>
                     {unreadCount === 0
-                      ? fr
-                        ? "Tout lu"
-                        : "All read"
-                      : `${unreadCount} ${fr ? "non lues" : "unread"}`}
+                      ? pick("All read", "Tout lu")
+                      : `${unreadCount} ${pick("unread", "non lues")}`}
                   </Text>
                 </LinearGradient>
                 <View style={[s.totalChip, { borderColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(15,23,42,0.1)" }]}>
                   <Text style={[s.totalChipText, { color: subColor }]}>
                     {inboxScope === "archived"
-                      ? `${notifs.length} ${fr ? "archivée(s)" : "archived"}`
-                      : `${notifs.length} ${fr ? "au total" : "total"}`}
+                      ? `${notifs.length} ${pick("archived", "archivée(s)")}`
+                      : `${notifs.length} ${pick("total", "au total")}`}
                   </Text>
                 </View>
               </View>
@@ -295,21 +291,13 @@ export default function NotificationsScreen() {
             </LinearGradient>
             <Text style={[s.emptyTitle, { color: titleColor }]}>
               {inboxScope === "archived"
-                ? fr
-                  ? "Aucune archive"
-                  : "No archived items"
-                : fr
-                  ? "Aucune notification"
-                  : "Nothing new yet"}
+                ? pick("No archived items", "Aucune archive")
+                : pick("Nothing new yet", "Aucune notification")}
             </Text>
             <Text style={[s.emptySub, { color: subColor }]}>
               {inboxScope === "archived"
-                ? fr
-                  ? "Les notifications que vous archivez apparaîtront ici. Touchez « Boîte de réception » pour revenir."
-                  : "Notifications you archive show up here. Tap Inbox to go back."
-                : fr
-                  ? "Quand quelque chose arrive, vous le verrez ici — élégant et clair."
-                  : "When something happens, it will land here — clean and instant."}
+                ? pick("Notifications you archive show up here. Tap Inbox to go back.", "Les notifications que vous archivez apparaîtront ici. Touchez « Boîte de réception » pour revenir.")
+                : pick("When something happens, it will land here — clean and instant.", "Quand quelque chose arrive, vous le verrez ici — élégant et clair.")}
             </Text>
           </Animated.View>
         }
@@ -365,7 +353,7 @@ export default function NotificationsScreen() {
                       </View>
                       {bid ? (
                         <Text style={[s.openHint, { color: C.muted }]}>
-                          {fr ? "Appuyer sur la carte pour ouvrir la réservation" : "Tap the card to open this booking"}
+                          {pick("Tap the card to open this booking", "Appuyer sur la carte pour ouvrir la réservation")}
                         </Text>
                       ) : null}
                     </View>
@@ -381,14 +369,14 @@ export default function NotificationsScreen() {
                     <TouchableOpacity onPress={() => restoreFromArchive(item)} style={s.archiveBtn} activeOpacity={0.75}>
                       <Ionicons name="arrow-undo-outline" size={18} color={C.primary} />
                       <Text style={[s.archiveBtnText, { color: C.primary }]}>
-                        {fr ? "Remettre dans la boîte de réception" : "Move back to inbox"}
+                        {pick("Move back to inbox", "Remettre dans la boîte de réception")}
                       </Text>
                     </TouchableOpacity>
                   ) : (
                     <TouchableOpacity onPress={() => archive(item)} style={s.archiveBtn} activeOpacity={0.75}>
                       <Ionicons name="archive-outline" size={18} color={C.primary} />
                       <Text style={[s.archiveBtnText, { color: C.primary }]}>
-                        {fr ? "Archiver la notification" : "Archive notification"}
+                        {pick("Archive notification", "Archiver la notification")}
                       </Text>
                     </TouchableOpacity>
                   )}

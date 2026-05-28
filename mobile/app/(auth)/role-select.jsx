@@ -20,6 +20,8 @@ import { useAppLang } from "../../src/context/AppLangContext";
 import ThemeToggle from "../../src/components/ThemeToggle";
 import AppBrandMark from "../../src/components/AppBrandMark";
 import { saveAuthRoleIntent } from "../../src/utils/authRoleIntent";
+import { getRoleCopy } from "../../src/utils/roleCopy";
+import LanguageSwitcher from "../../src/components/LanguageSwitcher";
 
 const { width: W } = Dimensions.get("window");
 
@@ -46,6 +48,13 @@ const ROLES = [
       hint: "Conducteurs & voyageurs",
       bullets: ["Parcourir des annonces vérifiées", "Comparer rapidement les options", "Réserver en confiance"],
     },
+    ar: {
+      title: "استأجر أو اشترِ",
+      subtitle: "تصفّح سيارات وإيجارات موثوقة في المغرب.",
+      tag: "استكشف",
+      hint: "للسائقين والمسافرين",
+      bullets: ["تصفّح إعلانات موثوقة", "قارن الخيارات بسرعة", "احجز بثقة"],
+    },
   },
   {
     key: "car_owner",
@@ -69,6 +78,13 @@ const ROLES = [
       hint: "Entretien personnel",
       bullets: ["Suivre l'entretien et les échéances", "Centraliser vos documents", "Recevoir des rappels utiles"],
     },
+    ar: {
+      title: "أملك سيارة",
+      subtitle: "تابع التأمين والصيانة والمواعيد في مرآب واحد.",
+      tag: "مرآبي",
+      hint: "عناية شخصية بسيارتك",
+      bullets: ["متابعة الصيانة والمواعيد", "تجميع مستنداتك", "تذكيرات قبل انتهاء الصلاحية"],
+    },
   },
   {
     key: "rental_owner",
@@ -91,6 +107,13 @@ const ROLES = [
       tag: "Ma flotte",
       hint: "Loueurs pro",
       bullets: ["Gérer toutes vos voitures", "Suivre réservations et calendrier", "Voir les revenus clairement"],
+    },
+    ar: {
+      title: "أؤجّر سياراتي",
+      subtitle: "أدِر أسطولك وحجوزاتك وإيراداتك وتقويمك.",
+      tag: "أسطولي",
+      hint: "للمؤجّرين المحترفين",
+      bullets: ["إدارة كل سياراتك", "متابعة الحجوزات والتقويم", "عرض الإيرادات بوضوح"],
     },
   },
 ];
@@ -117,12 +140,12 @@ function TrustDot({ icon, label, isDark }) {
 
 const JOURNEY_ICONS = ["compass-outline", "person-add-outline", "rocket-outline"];
 
-function JourneySteps({ fr, hasSelection, isDark, pulseAnim, lineScale }) {
+function JourneySteps({ lang, hasSelection, isDark, pulseAnim, lineScale, pick }) {
   const accent = isDark ? "#a78bfa" : "#6248e8";
   const steps = [
-    { label: fr ? "Choisir le rôle" : "Pick your role", done: true },
-    { label: fr ? "Créer le compte" : "Create account", done: hasSelection },
-    { label: fr ? "Commencer" : "Get started", done: hasSelection },
+    { label: pick("Pick your role", "Choisir le rôle", "اختر دورك"), done: true },
+    { label: pick("Create account", "Créer le compte", "إنشاء حساب"), done: hasSelection },
+    { label: pick("Get started", "Commencer", "ابدأ الآن"), done: hasSelection },
   ];
 
   const pulseScale = pulseAnim.interpolate({
@@ -135,7 +158,7 @@ function JourneySteps({ fr, hasSelection, isDark, pulseAnim, lineScale }) {
       <View style={styles.journeyHeader}>
         <Ionicons name="trail-sign-outline" size={14} color={accent} />
         <Text style={[styles.journeyHeaderTxt, { color: accent }]}>
-          {fr ? "VOTRE PARCOURS EN 3 ÉTAPES" : "YOUR 3-STEP PATH"}
+          {pick("YOUR 3-STEP PATH", "VOTRE PARCOURS EN 3 ÉTAPES", "مسارك في 3 خطوات")}
         </Text>
       </View>
 
@@ -202,7 +225,7 @@ function JourneySteps({ fr, hasSelection, isDark, pulseAnim, lineScale }) {
 
 const BURST_ANGLES = [0, 60, 120, 180, 240, 300];
 
-function ChoiceReadyModal({ visible, role, fr, isDark, grad, onContinue, onDismiss, bottomInset }) {
+function ChoiceReadyModal({ visible, role, lang, isDark, grad, onContinue, onDismiss, bottomInset, pick }) {
   const backdrop = useRef(new Animated.Value(0)).current;
   const sheet = useRef(new Animated.Value(0)).current;
   const iconPop = useRef(new Animated.Value(0)).current;
@@ -271,7 +294,7 @@ function ChoiceReadyModal({ visible, role, fr, isDark, grad, onContinue, onDismi
 
   if (!role) return null;
 
-  const copy = fr ? role.fr : role.en;
+  const copy = getRoleCopy(role, lang);
   const color = isDark ? role.colorDark : role.colorLight;
   const sheetScale = sheet.interpolate({ inputRange: [0, 1], outputRange: [0.72, 1] });
   const sheetY = sheet.interpolate({ inputRange: [0, 1], outputRange: [72, 0] });
@@ -281,14 +304,16 @@ function ChoiceReadyModal({ visible, role, fr, isDark, grad, onContinue, onDismi
   const arrowX = arrowNudge.interpolate({ inputRange: [0, 1], outputRange: [0, 6] });
   const backdropOpacity = backdrop.interpolate({ inputRange: [0, 1], outputRange: [0, 0.72] });
 
-  const formSteps = fr
-    ? ["Profil rapide", "Email & mot de passe", "C'est parti !"]
-    : ["Quick profile", "Email & password", "You're in!"];
+  const formSteps = [
+    pick("Quick profile", "Profil rapide", "ملف سريع"),
+    pick("Email & password", "Email & mot de passe", "البريد وكلمة المرور"),
+    pick("You're in!", "C'est parti !", "أنت جاهز!"),
+  ];
 
   return (
     <Modal visible={visible} transparent animationType="none" statusBarTranslucent onRequestClose={onDismiss}>
       <View style={styles.modalRoot}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onDismiss} accessibilityLabel={fr ? "Fermer" : "Close"}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onDismiss} accessibilityLabel={pick("Close", "Fermer")}>
           <Animated.View style={[styles.modalBackdrop, { opacity: backdropOpacity }]} />
         </Pressable>
 
@@ -305,7 +330,7 @@ function ChoiceReadyModal({ visible, role, fr, isDark, grad, onContinue, onDismi
           <View style={[styles.modalSheet, { borderColor: `${color}44`, backgroundColor: isDark ? "#0a0c14" : "#ffffff" }]}>
             <LinearGradient colors={grad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.modalRibbon}>
               <Ionicons name="sparkles" size={14} color="#fff" />
-              <Text style={styles.modalRibbonTxt}>{fr ? "VOTRE CHOIX EST PRÊT" : "YOUR CHOICE IS READY"}</Text>
+              <Text style={styles.modalRibbonTxt}>{pick("YOUR CHOICE IS READY", "VOTRE CHOIX EST PRÊT", "اختيارك جاهز")}</Text>
               <Ionicons name="sparkles" size={14} color="#fff" />
             </LinearGradient>
 
@@ -356,15 +381,13 @@ function ChoiceReadyModal({ visible, role, fr, isDark, grad, onContinue, onDismi
 
             <Animated.View style={{ opacity: content, transform: [{ translateY: contentY }] }}>
               <Text style={[styles.modalHeadline, { color: isDark ? "#f8fafc" : "#0f172a" }]}>
-                {fr ? "Plus qu'une étape !" : "One step away!"}
+                {pick("One step away!", "Plus qu'une étape !", "خطوة واحدة فقط!")}
               </Text>
               <Text style={[styles.modalModeLine, { color }]}>
                 {copy.tag} · {copy.title}
               </Text>
               <Text style={[styles.modalPitch, { color: isDark ? "#94a3b8" : "#64748b" }]}>
-                {fr
-                  ? `Créez votre compte pour débloquer le mode ${copy.tag} et accéder à toutes les fonctionnalités.`
-                  : `Create your account to unlock ${copy.tag} mode and access every feature.`}
+                {pick(`Create your account to unlock ${copy.tag} mode and access every feature.`, `Créez votre compte pour débloquer le mode ${copy.tag} et accéder à toutes les fonctionnalités.`)}
               </Text>
 
               <View style={styles.modalFormTrack}>
@@ -382,14 +405,14 @@ function ChoiceReadyModal({ visible, role, fr, isDark, grad, onContinue, onDismi
                 onPress={onContinue}
                 style={({ pressed }) => ({ opacity: pressed ? 0.92 : 1, marginTop: 18 })}
                 accessibilityRole="button"
-                accessibilityLabel={fr ? "Créer mon compte" : "Create my account"}
+                accessibilityLabel={pick("Create my account", "Créer mon compte")}
               >
                 <Animated.View style={{ transform: [{ scale: ctaPulse }] }}>
                   <LinearGradient colors={grad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.modalCta}>
                     <View>
-                      <Text style={styles.modalCtaTitle}>{fr ? "Créer mon compte" : "Create my account"}</Text>
+                      <Text style={styles.modalCtaTitle}>{pick("Create my account", "Créer mon compte")}</Text>
                       <Text style={styles.modalCtaSub}>
-                        {fr ? "Remplir le formulaire — 2 min" : "Fill the form — 2 min"}
+                        {pick("Fill the form — 2 min", "Remplir le formulaire — 2 min")}
                       </Text>
                     </View>
                     <Animated.View style={{ transform: [{ translateX: arrowX }] }}>
@@ -401,7 +424,7 @@ function ChoiceReadyModal({ visible, role, fr, isDark, grad, onContinue, onDismi
 
               <Pressable onPress={onDismiss} style={styles.modalDismiss} hitSlop={12}>
                 <Text style={[styles.modalDismissTxt, { color: isDark ? "#64748b" : "#94a3b8" }]}>
-                  {fr ? "Choisir un autre mode" : "Pick a different mode"}
+                  {pick("Pick a different mode", "Choisir un autre mode")}
                 </Text>
               </Pressable>
             </Animated.View>
@@ -412,8 +435,8 @@ function ChoiceReadyModal({ visible, role, fr, isDark, grad, onContinue, onDismi
   );
 }
 
-function RoleCard({ role, index, selected, onPress, isDark, fr, anim, selectAnim }) {
-  const copy = fr ? role.fr : role.en;
+function RoleCard({ role, index, selected, onPress, isDark, lang, anim, selectAnim }) {
+  const copy = getRoleCopy(role, lang);
   const color = isDark ? role.colorDark : role.colorLight;
   const grad = isDark ? role.gradDark : role.gradLight;
   const isSelected = selected === role.key;
@@ -524,11 +547,9 @@ function RoleCard({ role, index, selected, onPress, isDark, fr, anim, selectAnim
 
 export default function RoleSelectScreen() {
   const { colors: C, isDark } = useTheme();
-  const { lang, setLang } = useAppLang();
+  const { lang, setLang, pick } = useAppLang();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const fr = lang === "fr";
-
   const [selected, setSelected] = useState(null);
   const [choiceModalVisible, setChoiceModalVisible] = useState(false);
 
@@ -705,9 +726,7 @@ export default function RoleSelectScreen() {
       >
         <View style={styles.topBar}>
           <View style={{ flex: 1 }} />
-          <TouchableOpacity onPress={() => setLang(fr ? "en" : "fr")} style={[styles.langBtn, { borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(15,23,42,0.08)" }]}>
-            <Text style={{ color: primary, fontWeight: "800", fontSize: 12 }}>{fr ? "EN" : "FR"}</Text>
-          </TouchableOpacity>
+          <LanguageSwitcher variant="compact" accent={primary} isDark={isDark} />
           <ThemeToggle />
         </View>
 
@@ -718,7 +737,7 @@ export default function RoleSelectScreen() {
             <AppBrandMark size={52} radius={16} halo />
 
             <View style={styles.heroCopy}>
-              <Text style={[styles.kicker, { color: primary }]}>{fr ? "BIENVENUE" : "WELCOME"}</Text>
+              <Text style={[styles.kicker, { color: primary }]}>{pick("WELCOME", "BIENVENUE")}</Text>
               <View style={styles.brandWrap}>
                 <Text style={[styles.brand, { color: titleColor }]}>
                   Goo<Text style={{ fontStyle: "italic", color: primary }}>voiture</Text>
@@ -729,32 +748,30 @@ export default function RoleSelectScreen() {
                 />
               </View>
               <Text style={[styles.heroTagline, { color: primary }]} numberOfLines={1}>
-                {fr ? "Mobilité premium au Maroc" : "Premium mobility in Morocco"}
+                {pick("Premium mobility in Morocco", "Mobilité premium au Maroc")}
               </Text>
             </View>
           </View>
 
           <Text style={[styles.heroSub, { color: subColor }]} numberOfLines={2}>
-            {fr
-              ? "Choisissez votre parcours — d'autres rôles pourront être ajoutés plus tard."
-              : "Pick your path — you can add more roles later."}
+            {pick("Pick your path — you can add more roles later.", "Choisissez votre parcours — d'autres rôles pourront être ajoutés plus tard.")}
           </Text>
 
           <View style={styles.trustRow}>
-            <TrustDot icon="shield-checkmark-outline" label={fr ? "Sécurisé" : "Secure"} isDark={isDark} />
+            <TrustDot icon="shield-checkmark-outline" label={pick("Secure", "Sécurisé")} isDark={isDark} />
             <Text style={[styles.trustSep, { color: isDark ? "#334155" : "#cbd5e1" }]}>·</Text>
-            <TrustDot icon="checkmark-done-outline" label={fr ? "Vérifié" : "Verified"} isDark={isDark} />
+            <TrustDot icon="checkmark-done-outline" label={pick("Verified", "Vérifié")} isDark={isDark} />
             <Text style={[styles.trustSep, { color: isDark ? "#334155" : "#cbd5e1" }]}>·</Text>
             <TrustDot icon="sparkles-outline" label="Premium" isDark={isDark} />
           </View>
         </Animated.View>
 
         <Animated.View style={{ opacity: heroOpacity, marginBottom: 16 }}>
-          <JourneySteps fr={fr} hasSelection={!!selected} isDark={isDark} pulseAnim={journeyPulse} lineScale={journeyLine} />
+          <JourneySteps lang={lang} pick={pick} hasSelection={!!selected} isDark={isDark} pulseAnim={journeyPulse} lineScale={journeyLine} />
         </Animated.View>
 
         <Text style={[styles.pickLabel, { color: isDark ? "#64748b" : "#94a3b8" }]}>
-          {fr ? "CHOISISSEZ VOTRE MODE" : "PICK YOUR MODE"}
+          {pick("PICK YOUR MODE", "CHOISISSEZ VOTRE MODE")}
         </Text>
 
         {ROLES.map((role, i) => (
@@ -765,7 +782,7 @@ export default function RoleSelectScreen() {
             selected={selected}
             onPress={handleSelect}
             isDark={isDark}
-            fr={fr}
+            lang={lang}
             anim={cardAnims[i]}
             selectAnim={selectAnims[i]}
           />
@@ -782,12 +799,12 @@ export default function RoleSelectScreen() {
               >
                 <Text style={[styles.continueTxt, { color: selected ? "#fff" : isDark ? "#64748b" : "#94a3b8" }]}>
                   {selected
-                    ? fr
-                      ? `Continuer en mode ${selectedRole?.fr?.tag || ""}`
-                      : `Continue with ${selectedRole?.en?.tag || "this role"}`
-                    : fr
-                      ? "Sélectionnez une option"
-                      : "Select an option"}
+                    ? pick(
+                        `Continue with ${getRoleCopy(selectedRole, "en")?.tag || "this role"}`,
+                        `Continuer en mode ${getRoleCopy(selectedRole, "fr")?.tag || ""}`,
+                        `المتابعة في وضع ${getRoleCopy(selectedRole, "ar")?.tag || ""}`
+                      )
+                    : pick("Select an option", "Sélectionnez une option", "اختر خياراً")}
                 </Text>
                 <Ionicons
                   name={selected ? "arrow-forward-circle" : "ellipse-outline"}
@@ -804,17 +821,18 @@ export default function RoleSelectScreen() {
           style={({ pressed }) => [styles.loginRow, pressed && { opacity: 0.85 }]}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           accessibilityRole="link"
-          accessibilityLabel={fr ? "Se connecter" : "Sign in"}
+          accessibilityLabel={pick("Sign in", "Se connecter")}
         >
-          <Text style={[styles.loginQ, { color: subColor }]}>{fr ? "Déjà un compte ? " : "Already have an account? "}</Text>
-          <Text style={[styles.loginLink, { color: primary }]}>{fr ? "Se connecter" : "Sign in"}</Text>
+          <Text style={[styles.loginQ, { color: subColor }]}>{pick("Already have an account? ", "Déjà un compte ? ")}</Text>
+          <Text style={[styles.loginLink, { color: primary }]}>{pick("Sign in", "Se connecter")}</Text>
         </Pressable>
       </ScrollView>
 
       <ChoiceReadyModal
         visible={choiceModalVisible && !!selectedRole}
         role={selectedRole}
-        fr={fr}
+        lang={lang}
+        pick={pick}
         isDark={isDark}
         grad={selectedGrad}
         onContinue={handleContinue}

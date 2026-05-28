@@ -19,6 +19,7 @@ export const ROLE_THEMES = {
     chipBorderDark: "rgba(167,139,250,0.28)",
     en: { label: "Explorer", desc: "Rent or buy cars" },
     fr: { label: "Explorer", desc: "Louer ou acheter" },
+    ar: { label: "استكشف", desc: "استأجر أو اشترِ سيارة" },
   },
   car_owner: {
     key: "car_owner",
@@ -39,6 +40,7 @@ export const ROLE_THEMES = {
     chipBorderDark: "rgba(56,189,248,0.28)",
     en: { label: "My garage", desc: "Track my car" },
     fr: { label: "Mon garage", desc: "Suivre ma voiture" },
+    ar: { label: "مرآبي", desc: "تابع سيارتك" },
   },
   rental_owner: {
     key: "rental_owner",
@@ -59,6 +61,7 @@ export const ROLE_THEMES = {
     chipBorderDark: "rgba(52,211,153,0.28)",
     en: { label: "My fleet", desc: "Rent out my fleet" },
     fr: { label: "Ma flotte", desc: "Louer ma flotte" },
+    ar: { label: "أسطولي", desc: "أؤجّر أسطولي" },
   },
 };
 
@@ -82,5 +85,8 @@ export function getRoleTheme(roleKey, isDark) {
     orbSecondary: isDark ? theme.orbSecondaryDark : theme.orbSecondaryLight,
     chipBg: isDark ? theme.chipBgDark : theme.chipBgLight,
     chipBorder: isDark ? theme.chipBorderDark : theme.chipBorderLight,
+    en: theme.en,
+    fr: theme.fr,
+    ar: theme.ar,
   };
 }

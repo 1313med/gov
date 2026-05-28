@@ -93,7 +93,7 @@ export default function GarageEliteScreen({
 }) {
   const { auth } = useAuth();
   const { colors: C, isDark } = useTheme();
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const fr = lang === "fr";
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -194,11 +194,11 @@ export default function GarageEliteScreen({
   }, [loading, heroOpacity, heroSlide, contentOpacity]);
 
   const statuses = useMemo(() => computeStatuses(car), [car]);
-  const trackItems = useMemo(() => buildTrackItems(car, statuses, fr), [car, statuses, fr]);
+  const trackItems = useMemo(() => buildTrackItems(car, statuses, lang), [car, statuses, lang]);
   const alertCount = useMemo(() => countAlerts(trackItems), [trackItems]);
-  const nextDue = useMemo(() => soonestDeadline(trackItems, fr), [trackItems, fr]);
+  const nextDue = useMemo(() => soonestDeadline(trackItems, lang), [trackItems, lang]);
   const recommendations = useMemo(() => (car ? getRecommendations(car, fr) : []), [car, fr]);
-  const timeline = useMemo(() => buildGarageTimeline(car, statuses, fr, 30), [car, statuses, fr]);
+  const timeline = useMemo(() => buildGarageTimeline(car, statuses, lang, 30), [car, statuses, lang]);
   const costs = useMemo(() => computeGarageCosts(car, serviceLogs, fr), [car, serviceLogs, fr]);
   const todoEvents = useMemo(() => timeline.flat || [], [timeline]);
   const paperItems = useMemo(() => trackItems.filter((i) => i.category === "papers"), [trackItems]);
@@ -252,19 +252,19 @@ export default function GarageEliteScreen({
 
   const handleDelete = useCallback(() => {
     Alert.alert(
-      fr ? "Supprimer ma voiture ?" : "Remove my car?",
-      fr ? "Cette action est irréversible." : "This cannot be undone.",
+      pick("Remove my car?", "Supprimer ma voiture ?"),
+      pick("This cannot be undone.", "Cette action est irréversible."),
       [
-        { text: fr ? "Annuler" : "Cancel", style: "cancel" },
+        { text: pick("Cancel", "Annuler"), style: "cancel" },
         {
-          text: fr ? "Supprimer" : "Delete",
+          text: pick("Delete", "Supprimer"),
           style: "destructive",
           onPress: async () => {
             try {
               await deleteCar(car._id);
               setCar(null);
             } catch {
-              Alert.alert(fr ? "Erreur" : "Error", fr ? "Impossible de supprimer." : "Could not delete.");
+              Alert.alert(pick("Error", "Erreur"), pick("Could not delete.", "Impossible de supprimer."));
             }
           },
         },
@@ -281,7 +281,7 @@ export default function GarageEliteScreen({
         setCar(res.data);
         syncGarageLocalReminders(res.data, fr, remindersOn).catch(() => {});
       } catch {
-        Alert.alert(fr ? "Oups" : "Oops", fr ? "Km non enregistrés" : "Could not save mileage");
+        Alert.alert(pick("Oops", "Oups"), pick("Could not save mileage", "Km non enregistrés"));
       } finally {
         setMileageSaving(false);
       }
@@ -312,7 +312,7 @@ export default function GarageEliteScreen({
         setLogModal(false);
         await load(true);
       } catch {
-        Alert.alert(fr ? "Erreur" : "Error", fr ? "Impossible d'enregistrer" : "Could not save");
+        Alert.alert(pick("Error", "Erreur"), pick("Could not save", "Impossible d'enregistrer"));
       } finally {
         setLogSaving(false);
       }
@@ -322,17 +322,17 @@ export default function GarageEliteScreen({
 
   const handleDeleteLog = useCallback(
     (log) => {
-      Alert.alert(fr ? "Supprimer ?" : "Delete?", log.title, [
-        { text: fr ? "Annuler" : "Cancel", style: "cancel" },
+      Alert.alert(pick("Delete?", "Supprimer ?"), log.title, [
+        { text: pick("Cancel", "Annuler"), style: "cancel" },
         {
-          text: fr ? "Supprimer" : "Delete",
+          text: pick("Delete", "Supprimer"),
           style: "destructive",
           onPress: async () => {
             try {
               await deleteServiceLog(log._id);
               await load(true);
             } catch {
-              Alert.alert(fr ? "Erreur" : "Error", fr ? "Échec" : "Failed");
+              Alert.alert(pick("Error", "Erreur"), pick("Failed", "Échec"));
             }
           },
         },
@@ -372,7 +372,7 @@ export default function GarageEliteScreen({
             )}
             <View style={{ flex: 1, alignItems: "center" }}>
               <Text style={[s.headerTitle, { color: titleColor }]} numberOfLines={1}>
-                {fr ? "Mon garage" : "My garage"}
+                {pick("My garage", "Mon garage")}
               </Text>
               {car ? (
                 <Text style={[s.headerSub, { color: subColor }]} numberOfLines={1}>
@@ -413,17 +413,15 @@ export default function GarageEliteScreen({
             <AppBrandMark size={64} radius={20} halo />
           </LinearGradient>
           <Text style={[s.emptyTitle, { color: titleColor }]}>
-            {fr ? "Ajoutez votre voiture" : "Add your car"}
+            {pick("Add your car", "Ajoutez votre voiture")}
           </Text>
           <Text style={[s.emptyBody, { color: subColor }]}>
-            {fr
-              ? "On vous rappelle l'assurance, la visite technique, la vidange… tout en un seul endroit."
-              : "We remind you about insurance, inspection, oil changes… all in one place."}
+            {pick("We remind you about insurance, inspection, oil changes… all in one place.", "On vous rappelle l'assurance, la visite technique, la vidange… tout en un seul endroit.")}
           </Text>
           <TouchableOpacity onPress={goAdd} activeOpacity={0.88} style={{ width: "100%" }}>
             <LinearGradient colors={primaryGrad} style={s.ctaBtn}>
               <Ionicons name="add" size={22} color="#fff" />
-              <Text style={s.ctaText}>{fr ? "Commencer" : "Get started"}</Text>
+              <Text style={s.ctaText}>{pick("Get started", "Commencer")}</Text>
             </LinearGradient>
           </TouchableOpacity>
         </Animated.ScrollView>
@@ -449,10 +447,10 @@ export default function GarageEliteScreen({
                   onFix={() => setActiveTab("car")}
                 />
                 <Text style={[s.sectionLead, { color: titleColor }]}>
-                  {fr ? "À faire bientôt" : "Coming up"}
+                  {pick("Coming up", "À faire bientôt")}
                 </Text>
                 <Text style={[s.sectionHint, { color: subColor }]}>
-                  {fr ? "Appuyez sur une ligne pour mettre à jour la date." : "Tap a row to update the date."}
+                  {pick("Tap a row to update the date.", "Appuyez sur une ligne pour mettre à jour la date.")}
                 </Text>
                 <GarageTodoList events={todoEvents} fr={fr} isDark={isDark} onPress={(ev) => goEditItem(ev)} />
                 <View style={{ marginTop: 20 }}>
@@ -468,28 +466,28 @@ export default function GarageEliteScreen({
               <>
                 <TouchableOpacity onPress={goEdit} activeOpacity={0.9} style={[s.editBanner, { backgroundColor: accent }]}>
                   <Ionicons name="create-outline" size={20} color="#fff" />
-                  <Text style={s.editBannerText}>{fr ? "Modifier les dates et infos" : "Edit dates & info"}</Text>
+                  <Text style={s.editBannerText}>{pick("Edit dates & info", "Modifier les dates et infos")}</Text>
                 </TouchableOpacity>
 
                 <GarageGroupCard
-                  title={fr ? "Papiers officiels" : "Official papers"}
-                  subtitle={fr ? "Assurance, visite, vignette, permis" : "Insurance, inspection, tax, licence"}
+                  title={pick("Official papers", "Papiers officiels")}
+                  subtitle={pick("Insurance, inspection, tax, licence", "Assurance, visite, vignette, permis")}
                   icon="document-text-outline"
                   isDark={isDark}
                 >
                   {paperItems.map((item) => (
-                    <GarageSimpleRow key={item.id} item={item} fr={fr} isDark={isDark} onPress={() => goEditItem(item)} />
+                    <GarageSimpleRow key={item.id} item={item} lang={lang} pick={pick} isDark={isDark} onPress={() => goEditItem(item)} />
                   ))}
                 </GarageGroupCard>
 
                 <GarageGroupCard
-                  title={fr ? "Entretien" : "Maintenance"}
-                  subtitle={fr ? "Vidange, pneus, freins, batterie…" : "Oil, tyres, brakes, battery…"}
+                  title={pick("Maintenance", "Entretien")}
+                  subtitle={pick("Oil, tyres, brakes, battery…", "Vidange, pneus, freins, batterie…")}
                   icon="construct-outline"
                   isDark={isDark}
                 >
                   {mechItems.map((item) => (
-                    <GarageSimpleRow key={item.id} item={item} fr={fr} isDark={isDark} onPress={() => goEditItem(item)} />
+                    <GarageSimpleRow key={item.id} item={item} lang={lang} pick={pick} isDark={isDark} onPress={() => goEditItem(item)} />
                   ))}
                 </GarageGroupCard>
               </>
@@ -508,15 +506,15 @@ export default function GarageEliteScreen({
                 />
                 <GarageTipsSimple tips={recommendations} fr={fr} isDark={isDark} onEstimate={goEstimate} />
                 <Text style={[s.sectionLead, { color: titleColor, marginTop: 8 }]}>
-                  {fr ? "Autres actions" : "Other actions"}
+                  {pick("Other actions", "Autres actions")}
                 </Text>
                 <GarageActionGrid
                   isDark={isDark}
                   actions={[
-                    { key: "est", icon: "calculator-outline", label: fr ? "Estimer le prix" : "Estimate price", color: "#6366f1", onPress: goEstimate },
-                    { key: "sell", icon: "pricetag-outline", label: fr ? "Vendre ma voiture" : "Sell my car", color: "#a78bfa", onPress: goSell },
-                    { key: "alert", icon: "notifications-outline", label: fr ? "Alertes prix" : "Price alerts", color: "#22c55e", onPress: goAlerts },
-                    { key: "shop", icon: "storefront-outline", label: fr ? "Voir le marché" : "Browse market", color: "#f97316", onPress: goExplore },
+                    { key: "est", icon: "calculator-outline", label: pick("Estimate price", "Estimer le prix"), color: "#6366f1", onPress: goEstimate },
+                    { key: "sell", icon: "pricetag-outline", label: pick("Sell my car", "Vendre ma voiture"), color: "#a78bfa", onPress: goSell },
+                    { key: "alert", icon: "notifications-outline", label: pick("Price alerts", "Alertes prix"), color: "#22c55e", onPress: goAlerts },
+                    { key: "shop", icon: "storefront-outline", label: pick("Browse market", "Voir le marché"), color: "#f97316", onPress: goExplore },
                   ]}
                 />
               </>

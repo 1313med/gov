@@ -4,7 +4,7 @@ import { useTheme } from "../../src/context/ThemeContext";
 import { useAppLang } from "../../src/context/AppLangContext";
 export default function CarOwnerLayout() {
   const { colors: C, isDark } = useTheme();
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const fr = lang === "fr";
 
   return (
@@ -28,7 +28,7 @@ export default function CarOwnerLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: fr ? "Mon garage" : "My garage",
+          title: pick("My garage", "Mon garage"),
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name={focused ? "car-sport" : "car-sport-outline"} size={size} color={color} />
           ),
@@ -37,21 +37,21 @@ export default function CarOwnerLayout() {
       <Tabs.Screen
         name="explore"
         options={{
-          title: fr ? "Marché" : "Marketplace",
+          title: pick("Marketplace", "Marché"),
           tabBarIcon: ({ color, size }) => <Ionicons name="storefront-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="messages"
         options={{
-          title: fr ? "Messages" : "Messages",
+          title: pick("Messages", "Messages"),
           tabBarIcon: ({ color, size }) => <Ionicons name="chatbubble-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: fr ? "Profil" : "Profile",
+          title: pick("Profile", "Profil"),
           tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} />,
         }}
       />

@@ -88,7 +88,7 @@ function WizardTrail({ fr, isDark, accent, muted }) {
   return (
     <View style={{ marginTop: 18, marginBottom: 6 }}>
       <Text style={{ fontSize: 9, fontWeight: "800", letterSpacing: 1.8, textTransform: "uppercase", color: muted, textAlign: "center", marginBottom: 12 }}>
-        {fr ? "Votre parcours" : "Your journey"}
+        {pick("Your journey", "Votre parcours")}
       </Text>
       <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "center" }}>
         {[0, 1, 2].map((i) => (
@@ -128,7 +128,7 @@ function WizardTrail({ fr, isDark, accent, muted }) {
 
 export default function CarsScreen() {
   const { auth } = useAuth();
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const { colors: C, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -225,7 +225,7 @@ export default function CarsScreen() {
         }
         setHasMore(curPage < pages && list.length > 0);
       } catch {
-        Alert.alert("Error", fr ? "Échec du chargement" : "Failed to load cars");
+        Alert.alert("Error", pick("Failed to load cars", "Échec du chargement"));
       } finally {
         setLoading(false);
         setLoadingMore(false);
@@ -244,7 +244,7 @@ export default function CarsScreen() {
   }, [auth]);
 
   const toggleFav = async (id) => {
-    if (!auth) return Alert.alert(fr ? "Connectez-vous pour sauvegarder" : "Please login to save favorites");
+    if (!auth) return Alert.alert(pick("Please login to save favorites", "Connectez-vous pour sauvegarder"));
     const isFav = favorites.includes(id);
     try {
       if (isFav) {
@@ -269,16 +269,14 @@ export default function CarsScreen() {
         <GlowOrb scaleAnim={orbPulse} colors={orbB} style={{ width: 180, height: 180, bottom: -40, left: -75 }} />
         <View style={{ paddingHorizontal: 20 }}>
           <Text style={{ color: C.primary, fontSize: 10, fontWeight: "800", letterSpacing: 2.2, textTransform: "uppercase", marginBottom: 8 }}>
-            {fr ? "Salle d'exposition" : "Showroom"}
+            {pick("Showroom", "Salle d'exposition")}
           </Text>
           <Text style={{ color: titleColor, fontWeight: "900", fontSize: 28, letterSpacing: -0.8, lineHeight: 34 }}>
-            {fr ? "Achetez votre" : "Buy your"}{" "}
-            <Text style={{ fontStyle: "italic", color: C.primary, fontWeight: "900" }}>{fr ? "perle" : "gem"}</Text>
+            {pick("Buy your", "Achetez votre")}{" "}
+            <Text style={{ fontStyle: "italic", color: C.primary, fontWeight: "900" }}>{pick("gem", "perle")}</Text>
           </Text>
           <Text style={{ color: subColor, fontSize: 14, lineHeight: 21, marginTop: 10, fontWeight: "500", maxWidth: 320 }}>
-            {fr
-              ? "Parcourez des annonces vérifiées, affinez votre recherche, trouvez la voiture qui vous correspond."
-              : "Browse verified listings, refine your search, and find the car that fits you."}
+            {pick("Browse verified listings, refine your search, and find the car that fits you.", "Parcourez des annonces vérifiées, affinez votre recherche, trouvez la voiture qui vous correspond.")}
           </Text>
           <HeroShimmer color={C.primary} track={shimmerTrack} />
           <WizardTrail fr={fr} isDark={isDark} accent={C.primary} muted={subColor} />
@@ -304,7 +302,7 @@ export default function CarsScreen() {
             <TextInput
               value={searchDraft}
               onChangeText={setSearchDraft}
-              placeholder={fr ? "Marque, modèle, mots-clés…" : "Brand, model, keywords…"}
+              placeholder={pick("Brand, model, keywords…", "Marque, modèle, mots-clés…")}
               placeholderTextColor={C.muted}
               style={{ flex: 1, color: titleColor, paddingVertical: 16, marginLeft: 10, fontSize: 15, fontWeight: "500" }}
             />
@@ -322,7 +320,7 @@ export default function CarsScreen() {
           </View>
 
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 16 }}>
-            <Text style={{ color: subColor, fontSize: 12, fontWeight: "700" }}>{fr ? "Affinez comme un pro" : "Refine like a pro"}</Text>
+            <Text style={{ color: subColor, fontSize: 12, fontWeight: "700" }}>{pick("Refine like a pro", "Affinez comme un pro")}</Text>
             <Pressable
               onPress={() => setShowFilters(!showFilters)}
               style={({ pressed }) => [{ opacity: pressed ? 0.88 : 1 }]}
@@ -334,7 +332,7 @@ export default function CarsScreen() {
                 style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, borderWidth: showFilters ? 0 : 1, borderColor: isDark ? "rgba(124,107,255,0.25)" : "rgba(98,72,232,0.2)" }}
               >
                 <Ionicons name="options-outline" size={18} color={showFilters ? "#fff" : C.primary} />
-                <Text style={{ color: showFilters ? "#fff" : C.primary, fontSize: 13, fontWeight: "800" }}>{fr ? "Filtres" : "Filters"}</Text>
+                <Text style={{ color: showFilters ? "#fff" : C.primary, fontSize: 13, fontWeight: "800" }}>{pick("Filters", "Filtres")}</Text>
               </LinearGradient>
             </Pressable>
           </View>
@@ -371,7 +369,7 @@ export default function CarsScreen() {
                   <TextInput
                     value={cityDraft}
                     onChangeText={setCityDraft}
-                    placeholder={fr ? "Ville ou région" : "City or region"}
+                    placeholder={pick("City or region", "Ville ou région")}
                     placeholderTextColor={C.muted}
                     style={{ flex: 1, color: titleColor, paddingVertical: 14, marginLeft: 10, fontSize: 15 }}
                   />
@@ -410,13 +408,13 @@ export default function CarsScreen() {
       </LinearGradient>
 
       <View style={{ paddingHorizontal: 18, paddingTop: 20, paddingBottom: 8 }}>
-        <Text style={{ color: C.primary, fontSize: 10, fontWeight: "800", letterSpacing: 2, textTransform: "uppercase" }}>{fr ? "Collection" : "Collection"}</Text>
+        <Text style={{ color: C.primary, fontSize: 10, fontWeight: "800", letterSpacing: 2, textTransform: "uppercase" }}>{pick("Collection", "Collection")}</Text>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 6 }}>
-          <Text style={{ color: titleColor, fontWeight: "900", fontSize: 18, letterSpacing: -0.3 }}>{fr ? "Annonces pour vous" : "Listings for you"}</Text>
+          <Text style={{ color: titleColor, fontWeight: "900", fontSize: 18, letterSpacing: -0.3 }}>{pick("Listings for you", "Annonces pour vous")}</Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
             <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: C.accent, opacity: 0.9 }} />
             <Text style={{ color: subColor, fontSize: 12, fontWeight: "700" }}>
-              {cars.length} {fr ? "résultats" : "results"}
+              {cars.length} {pick("results", "résultats")}
             </Text>
           </View>
         </View>
@@ -456,9 +454,9 @@ export default function CarsScreen() {
                 >
                   <Ionicons name="car-outline" size={44} color={C.primary} />
                 </LinearGradient>
-                <Text style={{ color: titleColor, fontWeight: "800", fontSize: 19, textAlign: "center" }}>{fr ? "Aucune voiture trouvée" : "No cars found"}</Text>
+                <Text style={{ color: titleColor, fontWeight: "800", fontSize: 19, textAlign: "center" }}>{pick("No cars found", "Aucune voiture trouvée")}</Text>
                 <Text style={{ color: subColor, fontSize: 14, marginTop: 10, textAlign: "center", lineHeight: 21 }}>
-                  {fr ? "Élargissez la recherche ou changez le budget." : "Widen your search or adjust your budget."}
+                  {pick("Widen your search or adjust your budget.", "Élargissez la recherche ou changez le budget.")}
                 </Text>
               </View>
             ) : null

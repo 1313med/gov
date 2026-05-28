@@ -9,6 +9,7 @@ import { useAuth } from "../context/AuthContext";
 import { useAppLang } from "../context/AppLangContext";
 import { useTheme } from "../context/ThemeContext";
 import ThemeToggle from "./ThemeToggle";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 const permSt = StyleSheet.create({
   badge: {
@@ -45,7 +46,7 @@ function PermBadge({ label, granted, C, isDark }) {
 
 export default function StaffProfile() {
   const { auth, logout } = useAuth();
-  const { lang, setLang } = useAppLang();
+  const { lang, setLang, pick } = useAppLang();
   const { colors: C, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const fr = lang === "fr";
@@ -89,17 +90,17 @@ export default function StaffProfile() {
 
       <View style={{ paddingHorizontal: 20, paddingTop: 20 }}>
         <Text style={[styles.section, { color: isDark ? "#94a3b8" : "#475569" }]}>
-          {fr ? "Accès accordés" : "Granted access"}
+          {pick("Granted access", "Accès accordés")}
         </Text>
         <View style={styles.permsGrid}>
-          <PermBadge label={fr ? "Réservations" : "Bookings"} granted={perms.manageBookings} C={C} isDark={isDark} />
-          <PermBadge label={fr ? "Messages" : "Messages"} granted={perms.manageMessages} C={C} isDark={isDark} />
-          <PermBadge label={fr ? "Analytique" : "Analytics"} granted={perms.viewAnalytics} C={C} isDark={isDark} />
-          <PermBadge label={fr ? "Tarification" : "Pricing"} granted={perms.managePricing} C={C} isDark={isDark} />
+          <PermBadge label={pick("Bookings", "Réservations")} granted={perms.manageBookings} C={C} isDark={isDark} />
+          <PermBadge label={pick("Messages", "Messages")} granted={perms.manageMessages} C={C} isDark={isDark} />
+          <PermBadge label={pick("Analytics", "Analytique")} granted={perms.viewAnalytics} C={C} isDark={isDark} />
+          <PermBadge label={pick("Pricing", "Tarification")} granted={perms.managePricing} C={C} isDark={isDark} />
         </View>
 
         <Text style={[styles.section, { color: isDark ? "#94a3b8" : "#475569", marginTop: 8 }]}>
-          {fr ? "Préférences" : "Preferences"}
+          {pick("Preferences", "Préférences")}
         </Text>
         <View style={[styles.card, { backgroundColor: C.card, borderColor: C.border }]}>
           <View style={styles.row}>
@@ -107,36 +108,26 @@ export default function StaffProfile() {
               <Ionicons name="moon-outline" size={18} color={C.primary} />
             </View>
             <Text style={[styles.rowLabel, { color: isDark ? "#f1f5f9" : "#0f172a" }]}>
-              {fr ? "Thème sombre" : "Dark mode"}
+              {pick("Dark mode", "Thème sombre")}
             </Text>
             <ThemeToggle />
           </View>
-          <TouchableOpacity
-            onPress={() => setLang(lang === "fr" ? "en" : "fr")}
-            style={[styles.row, styles.rowLast]}
-            activeOpacity={0.8}
-          >
-            <View style={[styles.rowIcon, { backgroundColor: isDark ? "rgba(56,189,248,0.15)" : "rgba(2,132,199,0.1)" }]}>
-              <Ionicons name="language-outline" size={18} color={isDark ? "#38bdf8" : "#0284c7"} />
-            </View>
+          <View style={[styles.row, styles.rowLast, { flexDirection: "column", alignItems: "stretch", gap: 10 }]}>
             <Text style={[styles.rowLabel, { color: isDark ? "#f1f5f9" : "#0f172a" }]}>
-              {fr ? "Langue" : "Language"}
+              {pick("Language", "Langue", "اللغة")}
             </Text>
-            <Text style={{ color: isDark ? "#94a3b8" : "#64748b", fontSize: 14, fontWeight: "600" }}>
-              {fr ? "Français" : "English"}
-            </Text>
-            <Ionicons name="chevron-forward" size={16} color={C.muted} style={{ marginLeft: 4 }} />
-          </TouchableOpacity>
+            <LanguageSwitcher variant="full" accent={C.primary} isDark={isDark} />
+          </View>
         </View>
 
         <TouchableOpacity
           onPress={() =>
             Alert.alert(
-              fr ? "Déconnexion" : "Log out",
-              fr ? "Voulez-vous vous déconnecter ?" : "Are you sure you want to log out?",
+              pick("Log out", "Déconnexion"),
+              pick("Are you sure you want to log out?", "Voulez-vous vous déconnecter ?"),
               [
-                { text: fr ? "Annuler" : "Cancel", style: "cancel" },
-                { text: fr ? "Déconnecter" : "Log out", style: "destructive", onPress: logout },
+                { text: pick("Cancel", "Annuler"), style: "cancel" },
+                { text: pick("Log out", "Déconnecter"), style: "destructive", onPress: logout },
               ]
             )
           }
@@ -144,7 +135,7 @@ export default function StaffProfile() {
           style={styles.logoutBtn}
         >
           <Ionicons name="log-out-outline" size={18} color="#f87171" />
-          <Text style={styles.logoutText}>{fr ? "Déconnexion" : "Log out"}</Text>
+          <Text style={styles.logoutText}>{pick("Log out", "Déconnexion")}</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

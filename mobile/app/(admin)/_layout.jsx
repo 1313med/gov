@@ -5,7 +5,7 @@ import { useAppLang } from "../../src/context/AppLangContext";
 
 export default function AdminLayout() {
   const { colors: C, isDark } = useTheme();
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const fr = lang === "fr";
 
   return (
@@ -28,28 +28,28 @@ export default function AdminLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: fr ? "Tableau" : "Dashboard",
+          title: pick("Dashboard", "Tableau"),
           tabBarIcon: ({ color, size }) => <Ionicons name="grid-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="listings"
         options={{
-          title: fr ? "Annonces" : "Listings",
+          title: pick("Listings", "Annonces"),
           tabBarIcon: ({ color, size }) => <Ionicons name="list-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="users"
         options={{
-          title: fr ? "Utilisateurs" : "Users",
+          title: pick("Users", "Utilisateurs"),
           tabBarIcon: ({ color, size }) => <Ionicons name="people-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: fr ? "Profil" : "Profile",
+          title: pick("Profile", "Profil"),
           tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} />,
         }}
       />

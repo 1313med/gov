@@ -33,7 +33,7 @@ function normalizeList(data) {
 
 export default function AdminDashboard() {
   const { auth } = useAuth();
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const fr = lang === "fr";
   const { colors: C, isDark } = useTheme();
   const insets = useSafeAreaInsets();
@@ -116,13 +116,13 @@ export default function AdminDashboard() {
 
         <Animated.View style={{ opacity: heroOpacity }}>
           <Text style={{ fontSize: 12, fontWeight: "800", letterSpacing: 2, textTransform: "uppercase", color: accent, marginBottom: 4 }}>
-            {fr ? "ADMINISTRATION" : "ADMINISTRATION"}
+            {pick("ADMINISTRATION", "ADMINISTRATION")}
           </Text>
           <Text style={{ fontSize: 26, fontWeight: "800", color: isDark ? "#f8fafc" : "#0f172a", letterSpacing: -0.5, marginBottom: 4 }}>
-            {fr ? "Tableau de bord" : "Dashboard"}
+            {pick("Dashboard", "Tableau de bord")}
           </Text>
           <Text style={{ fontSize: 14, color: isDark ? "#94a3b8" : "#475569", fontWeight: "500" }}>
-            {fr ? "Vue d'ensemble de la plateforme." : "Platform overview at a glance."}
+            {pick("Platform overview at a glance.", "Vue d'ensemble de la plateforme.")}
           </Text>
         </Animated.View>
       </LinearGradient>
@@ -131,33 +131,33 @@ export default function AdminDashboard() {
           <>
             {/* Platform KPIs */}
             <Text style={[s.sectionTitle, { color: isDark ? "#94a3b8" : "#475569" }]}>
-              {fr ? "STATISTIQUES PLATEFORME" : "PLATFORM STATS"}
+              {pick("PLATFORM STATS", "STATISTIQUES PLATEFORME")}
             </Text>
             <View style={s.statsGrid}>
               <StatCard
                 icon="people-outline"
-                label={fr ? "Utilisateurs" : "Users"}
+                label={pick("Users", "Utilisateurs")}
                 value={String(totalUsers)}
                 gradient={ctaGrad}
                 isDark={isDark}
               />
               <StatCard
                 icon="storefront-outline"
-                label={fr ? "Annonces" : "Listings"}
+                label={pick("Listings", "Annonces")}
                 value={String(totalListings)}
                 gradient={isDark ? ["#7c6bff", "#5b4ddb"] : ["#6248e8", "#4f46e5"]}
                 isDark={isDark}
               />
               <StatCard
                 icon="pricetag-outline"
-                label={fr ? "Ventes" : "Sales"}
+                label={pick("Sales", "Ventes")}
                 value={String(totalSales)}
                 gradient={isDark ? ["#38bdf8", "#0ea5e9"] : ["#0284c7", "#0369a1"]}
                 isDark={isDark}
               />
               <StatCard
                 icon="car-sport-outline"
-                label={fr ? "Locations" : "Rentals"}
+                label={pick("Rentals", "Locations")}
                 value={String(totalRentals)}
                 gradient={isDark ? ["#34d399", "#10b981"] : ["#059669", "#047857"]}
                 isDark={isDark}
@@ -167,10 +167,10 @@ export default function AdminDashboard() {
             {/* Pending Moderation Queue */}
             <View style={s.sectionRow}>
               <Text style={[s.sectionTitle, { color: isDark ? "#94a3b8" : "#475569" }]}>
-                {fr ? "EN ATTENTE DE MODÉRATION" : "PENDING MODERATION"}
+                {pick("PENDING MODERATION", "EN ATTENTE DE MODÉRATION")}
               </Text>
               <TouchableOpacity onPress={() => router.push("/(admin)/listings")} activeOpacity={0.8}>
-                <Text style={{ color: accent, fontSize: 12, fontWeight: "800" }}>{fr ? "Tout voir" : "See all"}</Text>
+                <Text style={{ color: accent, fontSize: 12, fontWeight: "800" }}>{pick("See all", "Tout voir")}</Text>
               </TouchableOpacity>
             </View>
 
@@ -178,7 +178,7 @@ export default function AdminDashboard() {
               <View style={[s.emptyCard, { backgroundColor: C.card, borderColor: C.border }]}>
                 <Ionicons name="checkmark-circle-outline" size={32} color={isDark ? "#34d399" : "#059669"} />
                 <Text style={{ color: isDark ? "#f1f5f9" : "#0f172a", fontWeight: "700", fontSize: 15, marginTop: 10 }}>
-                  {fr ? "Aucune annonce en attente" : "No pending listings"}
+                  {pick("No pending listings", "Aucune annonce en attente")}
                 </Text>
               </View>
             ) : (
@@ -201,7 +201,7 @@ export default function AdminDashboard() {
                       {item.title || `${item.brand || ""} ${item.model || ""}`.trim() || "—"}
                     </Text>
                     <Text style={{ color: C.muted, fontSize: 12, marginTop: 2 }}>
-                      {item._type === "sale" ? (fr ? "Vente" : "For sale") : (fr ? "Location" : "Rental")} · {item.city || "—"}
+                      {item._type === "sale" ? (pick("For sale", "Vente")) : (pick("Rental", "Location"))} · {item.city || "—"}
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={16} color={C.muted} />
@@ -211,18 +211,18 @@ export default function AdminDashboard() {
 
             {/* Quick nav */}
             <Text style={[s.sectionTitle, { color: isDark ? "#94a3b8" : "#475569", marginTop: 8 }]}>
-              {fr ? "NAVIGATION RAPIDE" : "QUICK NAVIGATION"}
+              {pick("QUICK NAVIGATION", "NAVIGATION RAPIDE")}
             </Text>
             <View style={{ flexDirection: "row", gap: 12 }}>
               <QuickAction
                 icon="list-outline"
-                label={fr ? "Modérer" : "Moderate"}
+                label={pick("Moderate", "Modérer")}
                 onPress={() => router.push("/(admin)/listings")}
                 gradient={ctaGrad}
               />
               <QuickAction
                 icon="people-outline"
-                label={fr ? "Utilisateurs" : "Users"}
+                label={pick("Users", "Utilisateurs")}
                 onPress={() => router.push("/(admin)/users")}
                 gradient={isDark ? ["#7c6bff", "#5b4ddb"] : ["#6248e8", "#4f46e5"]}
               />

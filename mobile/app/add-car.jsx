@@ -81,7 +81,7 @@ function StepIndicator({ step, total, colors, isDark }) {
 
 export default function AddCarScreen() {
   const { colors: C, isDark } = useTheme();
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const fr = lang === "fr";
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -204,15 +204,15 @@ export default function AddCarScreen() {
   const goNext = useCallback(() => {
     if (step === 0 && !resolvedBrand) {
       Alert.alert(
-        fr ? "Champ requis" : "Required field",
-        fr ? "Choisissez ou saisissez la marque de votre voiture." : "Select or enter your car brand.",
+        pick("Required field", "Champ requis"),
+        pick("Select or enter your car brand.", "Choisissez ou saisissez la marque de votre voiture."),
       );
       return;
     }
     if (step === 0 && !resolvedModel) {
       Alert.alert(
-        fr ? "Champ requis" : "Required field",
-        fr ? "Choisissez ou saisissez le modèle." : "Select or enter the model.",
+        pick("Required field", "Champ requis"),
+        pick("Select or enter the model.", "Choisissez ou saisissez le modèle."),
       );
       return;
     }
@@ -242,8 +242,8 @@ export default function AddCarScreen() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
       Alert.alert(
-        fr ? "Permission refusée" : "Permission denied",
-        fr ? "Accès à la galerie requis." : "Gallery access is required."
+        pick("Permission denied", "Permission refusée"),
+        pick("Gallery access is required.", "Accès à la galerie requis.")
       );
       return;
     }
@@ -317,7 +317,7 @@ export default function AddCarScreen() {
       if (auth?._id) await clearGarageSetupDefer(auth._id);
       router.replace("/(car-owner)");
     } catch (e) {
-      Alert.alert(fr ? "Erreur" : "Error", e?.response?.data?.message || (fr ? "Impossible de sauvegarder." : "Could not save."));
+      Alert.alert(pick("Error", "Erreur"), e?.response?.data?.message || (pick("Could not save.", "Impossible de sauvegarder.")));
     } finally {
       setSaving(false);
     }
@@ -366,7 +366,7 @@ export default function AddCarScreen() {
             <Ionicons name="arrow-back" size={20} color={titleColor} />
           </TouchableOpacity>
           <Text style={{ fontSize: 16, fontWeight: "800", color: titleColor }}>
-            {isEdit ? (fr ? "Modifier ma voiture" : "Edit my car") : (fr ? "Ajouter ma voiture" : "Add my car")}
+            {isEdit ? (pick("Edit my car", "Modifier ma voiture")) : (pick("Add my car", "Ajouter ma voiture"))}
           </Text>
           <View style={{ width: 40 }} />
         </View>
@@ -379,12 +379,12 @@ export default function AddCarScreen() {
           </LinearGradient>
           <View>
             <Text style={{ fontSize: 11, fontWeight: "800", letterSpacing: 1.6, textTransform: "uppercase", color: stepColor }}>
-              {fr ? `Étape ${step + 1} / ${STEPS.length}` : `Step ${step + 1} / ${STEPS.length}`}
+              {pick(`Step ${step + 1} / ${STEPS.length}`, `Étape ${step + 1} / ${STEPS.length}`)}
             </Text>
             <Text style={{ fontSize: 18, fontWeight: "800", color: titleColor, letterSpacing: -0.3, marginTop: 2 }}>
-              {step === 0 ? (fr ? "Identité du véhicule" : "Vehicle identity")
-                : step === 1 ? (fr ? "Papiers administratifs" : "Administrative papers")
-                : (fr ? "Mécanique" : "Maintenance")}
+              {step === 0 ? (pick("Vehicle identity", "Identité du véhicule"))
+                : step === 1 ? (pick("Administrative papers", "Papiers administratifs"))
+                : (pick("Maintenance", "Mécanique"))}
             </Text>
           </View>
         </View>
@@ -411,18 +411,16 @@ export default function AddCarScreen() {
               <Ionicons name="car-sport" size={28} color={isDark ? "#38bdf8" : "#0284c7"} />
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 16, fontWeight: "800", color: titleColor, marginBottom: 6 }}>
-                  {fr ? "Ajoutez votre voiture pour commencer" : "Add your car to get started"}
+                  {pick("Add your car to get started", "Ajoutez votre voiture pour commencer")}
                 </Text>
                 <Text style={{ fontSize: 13, color: subColor, lineHeight: 20 }}>
-                  {fr
-                    ? "C'est la fonction principale de GooVoiture pour vous : suivi des papiers, alertes et entretien. Choisissez marque et modèle pour démarrer — le reste est optionnel."
-                    : "This is your main GooVoiture feature: track papers, get alerts, and maintenance. Pick brand and model to start — everything else is optional."}
+                  {pick("This is your main GooVoiture feature: track papers, get alerts, and maintenance. Pick brand and model to start — everything else is optional.", "C'est la fonction principale de GooVoiture pour vous : suivi des papiers, alertes et entretien. Choisissez marque et modèle pour démarrer — le reste est optionnel.")}
                 </Text>
               </View>
             </View>
             <TouchableOpacity onPress={goLater} activeOpacity={0.85} style={{ marginTop: 14, alignSelf: "flex-start" }}>
               <Text style={{ fontSize: 13, fontWeight: "700", color: isDark ? "#94a3b8" : "#64748b" }}>
-                {fr ? "Plus tard" : "I'll do this later"}
+                {pick("I'll do this later", "Plus tard")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -432,7 +430,7 @@ export default function AddCarScreen() {
         {step === 0 && (
           <View>
             {/* Car photo picker */}
-            <FieldLabel text={fr ? "Photo de la voiture" : "Car photo"} isDark={isDark} />
+            <FieldLabel text={pick("Car photo", "Photo de la voiture")} isDark={isDark} />
             <TouchableOpacity onPress={pickImage} activeOpacity={0.8}>
               {imageUri || imageUrl ? (
                 <View style={{ borderRadius: 16, overflow: "hidden", height: 180, marginBottom: 4 }}>
@@ -443,7 +441,7 @@ export default function AddCarScreen() {
                   />
                   <View style={{ position: "absolute", bottom: 10, right: 10, flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "rgba(0,0,0,0.55)", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 }}>
                     <Ionicons name="camera-outline" size={14} color="#fff" />
-                    <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>{fr ? "Changer" : "Change"}</Text>
+                    <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>{pick("Change", "Changer")}</Text>
                   </View>
                 </View>
               ) : (
@@ -452,16 +450,16 @@ export default function AddCarScreen() {
                     <Ionicons name="camera-outline" size={24} color={accent} />
                   </LinearGradient>
                   <Text style={{ fontSize: 13, fontWeight: "700", color: isDark ? "#94a3b8" : "#64748b" }}>
-                    {fr ? "Ajouter une photo (optionnel)" : "Add a photo (optional)"}
+                    {pick("Add a photo (optional)", "Ajouter une photo (optionnel)")}
                   </Text>
                 </View>
               )}
             </TouchableOpacity>
 
             <CarSelectField
-              label={fr ? "Marque *" : "Brand *"}
+              label={pick("Brand *", "Marque *")}
               value={resolvedBrand || null}
-              placeholder={fr ? "Choisir une marque" : "Choose brand"}
+              placeholder={pick("Choose brand", "Choisir une marque")}
               onPress={() => setActivePicker("brand")}
               accent={accent}
               isDark={isDark}
@@ -469,16 +467,12 @@ export default function AddCarScreen() {
             />
 
             <CarSelectField
-              label={fr ? "Modèle *" : "Model *"}
+              label={pick("Model *", "Modèle *")}
               value={resolvedModel || null}
               placeholder={
                 catalogBrandKey
-                  ? fr
-                    ? "Choisir un modèle"
-                    : "Choose model"
-                  : fr
-                    ? "Choisir la marque d'abord"
-                    : "Choose brand first"
+                  ? pick("Choose model", "Choisir un modèle")
+                  : pick("Choose brand first", "Choisir la marque d'abord")
               }
               onPress={() => catalogBrandKey && setActivePicker("model")}
               disabled={!catalogBrandKey}
@@ -488,14 +482,14 @@ export default function AddCarScreen() {
             />
 
             <CarSelectField
-              label={fr ? "Année" : "Year"}
+              label={pick("Year", "Année")}
               value={identity.year || null}
-              placeholder={fr ? "Choisir l'année" : "Choose year"}
+              placeholder={pick("Choose year", "Choisir l'année")}
               onPress={() => setActivePicker("year")}
               accent={accent}
               isDark={isDark}
             />
-            <FieldLabel text={fr ? "Kilométrage actuel" : "Current mileage"} isDark={isDark} />
+            <FieldLabel text={pick("Current mileage", "Kilométrage actuel")} isDark={isDark} />
             <TextInput
               style={inputStyle}
               placeholderTextColor={isDark ? "#475569" : "#94a3b8"}
@@ -505,35 +499,35 @@ export default function AddCarScreen() {
               keyboardType="numeric"
             />
             <CarSelectField
-              label={fr ? "Couleur" : "Color"}
+              label={pick("Color", "Couleur")}
               value={resolvedColor || null}
-              placeholder={fr ? "Choisir une couleur" : "Choose color"}
+              placeholder={pick("Choose color", "Choisir une couleur")}
               onPress={() => setActivePicker("color")}
               accent={accent}
               isDark={isDark}
             />
 
             <CarSelectField
-              label={fr ? "Carburant" : "Fuel type"}
-              value={FUEL_OPTIONS.find((f) => f.id === identity.fuelType)?.[fr ? "fr" : "en"] ?? null}
-              placeholder={fr ? "Choisir le carburant" : "Choose fuel"}
+              label={pick("Fuel type", "Carburant")}
+              value={FUEL_OPTIONS.find((f) => f.id === identity.fuelType)?.[pick("en", "fr")] ?? null}
+              placeholder={pick("Choose fuel", "Choisir le carburant")}
               onPress={() => setActivePicker("fuel")}
               accent={accent}
               isDark={isDark}
             />
 
             <CarSelectField
-              label={fr ? "Boîte de vitesse" : "Gearbox"}
-              value={GEARBOX_OPTIONS.find((g) => g.id === identity.gearbox)?.[fr ? "fr" : "en"] ?? null}
-              placeholder={fr ? "Choisir la boîte" : "Choose gearbox"}
+              label={pick("Gearbox", "Boîte de vitesse")}
+              value={GEARBOX_OPTIONS.find((g) => g.id === identity.gearbox)?.[pick("en", "fr")] ?? null}
+              placeholder={pick("Choose gearbox", "Choisir la boîte")}
               onPress={() => setActivePicker("gearbox")}
               accent={accent}
               isDark={isDark}
             />
-            <FieldLabel text={fr ? "Première main" : "First owner"} isDark={isDark} />
+            <FieldLabel text={pick("First owner", "Première main")} isDark={isDark} />
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 14, paddingVertical: 13, borderRadius: 12, borderWidth: 1, borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(15,23,42,0.1)", backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.8)" }}>
               <Text style={{ fontSize: 14, fontWeight: "600", color: isDark ? "#f1f5f9" : "#0f172a" }}>
-                {identity.firstOwner ? (fr ? "Oui, 1ère main" : "Yes, first owner") : (fr ? "Non, 2ème main" : "No, 2nd hand")}
+                {identity.firstOwner ? (pick("Yes, first owner", "Oui, 1ère main")) : (pick("No, 2nd hand", "Non, 2ème main"))}
               </Text>
               <Switch
                 value={identity.firstOwner}
@@ -549,13 +543,13 @@ export default function AddCarScreen() {
         {step === 1 && (
           <View>
             <Text style={{ fontSize: 13, color: subColor, lineHeight: 20, marginBottom: 8 }}>
-              {fr ? "Renseignez vos dates d'expiration pour recevoir des rappels automatiques." : "Enter your expiry dates to receive automatic reminders."}
+              {pick("Enter your expiry dates to receive automatic reminders.", "Renseignez vos dates d'expiration pour recevoir des rappels automatiques.")}
             </Text>
-            <DatePickerField label={fr ? "Assurance — début" : "Insurance — start"} value={papers.assuranceStart} onChange={(v) => setPapers((p) => ({ ...p, assuranceStart: v }))} isDark={isDark} fr={fr} accent={accent} />
-            <DatePickerField label={fr ? "Assurance — expiration *" : "Insurance — expiry *"} value={papers.assuranceExpiry} onChange={(v) => setPapers((p) => ({ ...p, assuranceExpiry: v }))} isDark={isDark} fr={fr} accent={accent} />
-            <DatePickerField label={fr ? "Visite technique — expiration" : "Car inspection — expiry"} value={papers.visiteTechniqueExpiry} onChange={(v) => setPapers((p) => ({ ...p, visiteTechniqueExpiry: v }))} isDark={isDark} fr={fr} accent={accent} />
-            <DatePickerField label={fr ? "Vignette — expiration" : "Road tax — expiry"} value={papers.vignetteExpiry} onChange={(v) => setPapers((p) => ({ ...p, vignetteExpiry: v }))} isDark={isDark} fr={fr} accent={accent} />
-            <DatePickerField label={fr ? "Permis de conduire — expiration" : "Driving licence — expiry"} value={papers.permisExpiry} onChange={(v) => setPapers((p) => ({ ...p, permisExpiry: v }))} isDark={isDark} fr={fr} accent={accent} />
+            <DatePickerField label={pick("Insurance — start", "Assurance — début")} value={papers.assuranceStart} onChange={(v) => setPapers((p) => ({ ...p, assuranceStart: v }))} isDark={isDark} fr={fr} accent={accent} />
+            <DatePickerField label={pick("Insurance — expiry *", "Assurance — expiration *")} value={papers.assuranceExpiry} onChange={(v) => setPapers((p) => ({ ...p, assuranceExpiry: v }))} isDark={isDark} fr={fr} accent={accent} />
+            <DatePickerField label={pick("Car inspection — expiry", "Visite technique — expiration")} value={papers.visiteTechniqueExpiry} onChange={(v) => setPapers((p) => ({ ...p, visiteTechniqueExpiry: v }))} isDark={isDark} fr={fr} accent={accent} />
+            <DatePickerField label={pick("Road tax — expiry", "Vignette — expiration")} value={papers.vignetteExpiry} onChange={(v) => setPapers((p) => ({ ...p, vignetteExpiry: v }))} isDark={isDark} fr={fr} accent={accent} />
+            <DatePickerField label={pick("Driving licence — expiry", "Permis de conduire — expiration")} value={papers.permisExpiry} onChange={(v) => setPapers((p) => ({ ...p, permisExpiry: v }))} isDark={isDark} fr={fr} accent={accent} />
           </View>
         )}
 
@@ -563,51 +557,51 @@ export default function AddCarScreen() {
         {step === 2 && (
           <View>
             <Text style={{ fontSize: 13, color: subColor, lineHeight: 20, marginBottom: 8 }}>
-              {fr ? "Ces informations permettent d'estimer les prochaines échéances mécaniques." : "This information helps estimate upcoming maintenance deadlines."}
+              {pick("This information helps estimate upcoming maintenance deadlines.", "Ces informations permettent d'estimer les prochaines échéances mécaniques.")}
             </Text>
             {/* Vidange */}
             <View style={sectionBox(isDark)}>
               <Text style={{ fontSize: 13, fontWeight: "800", color: "#38bdf8", letterSpacing: 0.6, marginBottom: 4 }}>
-                {fr ? "Vidange" : "Oil change"}
+                {pick("Oil change", "Vidange")}
               </Text>
-              <DatePickerField label={fr ? "Date dernière vidange" : "Last oil change date"} value={mecanique.vidangeDate} onChange={(v) => setMecanique((p) => ({ ...p, vidangeDate: v }))} isDark={isDark} fr={fr} accent={accent} maximumDate={new Date()} />
-              <FieldLabel text={fr ? "Km à la dernière vidange" : "Mileage at last change"} isDark={isDark} />
+              <DatePickerField label={pick("Last oil change date", "Date dernière vidange")} value={mecanique.vidangeDate} onChange={(v) => setMecanique((p) => ({ ...p, vidangeDate: v }))} isDark={isDark} fr={fr} accent={accent} maximumDate={new Date()} />
+              <FieldLabel text={pick("Mileage at last change", "Km à la dernière vidange")} isDark={isDark} />
               <TextInput style={inputStyle} placeholderTextColor={isDark ? "#475569" : "#94a3b8"} placeholder="120000" value={mecanique.vidangeKm} onChangeText={(v) => setMecanique((p) => ({ ...p, vidangeKm: v }))} keyboardType="numeric" />
-              <FieldLabel text={fr ? "Intervalle (km)" : "Interval (km)"} isDark={isDark} />
+              <FieldLabel text={pick("Interval (km)", "Intervalle (km)")} isDark={isDark} />
               <TextInput style={inputStyle} placeholderTextColor={isDark ? "#475569" : "#94a3b8"} placeholder="10000" value={mecanique.vidangeIntervalKm} onChangeText={(v) => setMecanique((p) => ({ ...p, vidangeIntervalKm: v }))} keyboardType="numeric" />
-              <FieldLabel text={fr ? "Marque huile" : "Oil brand"} isDark={isDark} />
+              <FieldLabel text={pick("Oil brand", "Marque huile")} isDark={isDark} />
               <TextInput style={inputStyle} placeholderTextColor={isDark ? "#475569" : "#94a3b8"} placeholder="Castrol, Total…" value={mecanique.vidangeBrand} onChangeText={(v) => setMecanique((p) => ({ ...p, vidangeBrand: v }))} />
             </View>
 
             {/* Pneus */}
             <View style={sectionBox(isDark)}>
-              <Text style={{ fontSize: 13, fontWeight: "800", color: "#38bdf8", letterSpacing: 0.6, marginBottom: 4 }}>{fr ? "Pneus" : "Tyres"}</Text>
-              <DatePickerField label={fr ? "Date dernier changement" : "Last change date"} value={mecanique.pneusDate} onChange={(v) => setMecanique((p) => ({ ...p, pneusDate: v }))} isDark={isDark} fr={fr} accent={accent} maximumDate={new Date()} />
-              <FieldLabel text={fr ? "Marque" : "Brand"} isDark={isDark} />
+              <Text style={{ fontSize: 13, fontWeight: "800", color: "#38bdf8", letterSpacing: 0.6, marginBottom: 4 }}>{pick("Tyres", "Pneus")}</Text>
+              <DatePickerField label={pick("Last change date", "Date dernier changement")} value={mecanique.pneusDate} onChange={(v) => setMecanique((p) => ({ ...p, pneusDate: v }))} isDark={isDark} fr={fr} accent={accent} maximumDate={new Date()} />
+              <FieldLabel text={pick("Brand", "Marque")} isDark={isDark} />
               <TextInput style={inputStyle} placeholderTextColor={isDark ? "#475569" : "#94a3b8"} placeholder="Michelin, Bridgestone…" value={mecanique.pneusBrand} onChangeText={(v) => setMecanique((p) => ({ ...p, pneusBrand: v }))} />
             </View>
 
             {/* Batterie */}
             <View style={sectionBox(isDark)}>
-              <Text style={{ fontSize: 13, fontWeight: "800", color: "#38bdf8", letterSpacing: 0.6, marginBottom: 4 }}>{fr ? "Batterie" : "Battery"}</Text>
-              <DatePickerField label={fr ? "Date dernier changement" : "Last change date"} value={mecanique.batterieDate} onChange={(v) => setMecanique((p) => ({ ...p, batterieDate: v }))} isDark={isDark} fr={fr} accent={accent} maximumDate={new Date()} />
-              <FieldLabel text={fr ? "Marque" : "Brand"} isDark={isDark} />
+              <Text style={{ fontSize: 13, fontWeight: "800", color: "#38bdf8", letterSpacing: 0.6, marginBottom: 4 }}>{pick("Battery", "Batterie")}</Text>
+              <DatePickerField label={pick("Last change date", "Date dernier changement")} value={mecanique.batterieDate} onChange={(v) => setMecanique((p) => ({ ...p, batterieDate: v }))} isDark={isDark} fr={fr} accent={accent} maximumDate={new Date()} />
+              <FieldLabel text={pick("Brand", "Marque")} isDark={isDark} />
               <TextInput style={inputStyle} placeholderTextColor={isDark ? "#475569" : "#94a3b8"} placeholder="Varta, Bosch…" value={mecanique.batterieBrand} onChangeText={(v) => setMecanique((p) => ({ ...p, batterieBrand: v }))} />
             </View>
 
             {/* Chaîne distribution */}
             <View style={sectionBox(isDark)}>
-              <Text style={{ fontSize: 13, fontWeight: "800", color: "#38bdf8", letterSpacing: 0.6, marginBottom: 4 }}>{fr ? "Chaîne de distribution" : "Timing chain / belt"}</Text>
-              <DatePickerField label={fr ? "Date dernier changement" : "Last change date"} value={mecanique.chainDate} onChange={(v) => setMecanique((p) => ({ ...p, chainDate: v }))} isDark={isDark} fr={fr} accent={accent} maximumDate={new Date()} />
-              <FieldLabel text={fr ? "Km au dernier changement" : "Mileage at last change"} isDark={isDark} />
+              <Text style={{ fontSize: 13, fontWeight: "800", color: "#38bdf8", letterSpacing: 0.6, marginBottom: 4 }}>{pick("Timing chain / belt", "Chaîne de distribution")}</Text>
+              <DatePickerField label={pick("Last change date", "Date dernier changement")} value={mecanique.chainDate} onChange={(v) => setMecanique((p) => ({ ...p, chainDate: v }))} isDark={isDark} fr={fr} accent={accent} maximumDate={new Date()} />
+              <FieldLabel text={pick("Mileage at last change", "Km au dernier changement")} isDark={isDark} />
               <TextInput style={inputStyle} placeholderTextColor={isDark ? "#475569" : "#94a3b8"} placeholder="100000" value={mecanique.chainKm} onChangeText={(v) => setMecanique((p) => ({ ...p, chainKm: v }))} keyboardType="numeric" />
             </View>
 
             {/* Freins */}
             <View style={sectionBox(isDark)}>
-              <Text style={{ fontSize: 13, fontWeight: "800", color: "#38bdf8", letterSpacing: 0.6, marginBottom: 4 }}>{fr ? "Freins" : "Brakes"}</Text>
-              <DatePickerField label={fr ? "Date dernier changement" : "Last change date"} value={mecanique.freinsDate} onChange={(v) => setMecanique((p) => ({ ...p, freinsDate: v }))} isDark={isDark} fr={fr} accent={accent} maximumDate={new Date()} />
-              <FieldLabel text={fr ? "Marque plaquettes" : "Brake pad brand"} isDark={isDark} />
+              <Text style={{ fontSize: 13, fontWeight: "800", color: "#38bdf8", letterSpacing: 0.6, marginBottom: 4 }}>{pick("Brakes", "Freins")}</Text>
+              <DatePickerField label={pick("Last change date", "Date dernier changement")} value={mecanique.freinsDate} onChange={(v) => setMecanique((p) => ({ ...p, freinsDate: v }))} isDark={isDark} fr={fr} accent={accent} maximumDate={new Date()} />
+              <FieldLabel text={pick("Brake pad brand", "Marque plaquettes")} isDark={isDark} />
               <TextInput style={inputStyle} placeholderTextColor={isDark ? "#475569" : "#94a3b8"} placeholder="Brembo, Ferodo…" value={mecanique.freinsBrand} onChangeText={(v) => setMecanique((p) => ({ ...p, freinsBrand: v }))} />
             </View>
           </View>
@@ -616,8 +610,8 @@ export default function AddCarScreen() {
 
       <CarSelectSheet
         visible={activePicker === "brand"}
-        title={fr ? "Marque" : "Brand"}
-        subtitle={fr ? "Marques courantes au Maroc" : "Common brands in Morocco"}
+        title={pick("Brand", "Marque")}
+        subtitle={pick("Common brands in Morocco", "Marques courantes au Maroc")}
         options={CAR_BRANDS}
         selected={identity.brand}
         onSelect={(b) => {
@@ -632,12 +626,12 @@ export default function AddCarScreen() {
         allowOther
         otherValue={brandCustom}
         onOtherChange={setBrandCustom}
-        otherPlaceholder={fr ? "Nom de la marque" : "Brand name"}
+        otherPlaceholder={pick("Brand name", "Nom de la marque")}
       />
 
       <CarSelectSheet
         visible={activePicker === "model"}
-        title={fr ? "Modèle" : "Model"}
+        title={pick("Model", "Modèle")}
         subtitle={catalogBrandKey ? `${catalogBrandKey}` : undefined}
         options={modelOptions}
         selected={identity.model}
@@ -652,12 +646,12 @@ export default function AddCarScreen() {
         allowOther
         otherValue={modelCustom}
         onOtherChange={setModelCustom}
-        otherPlaceholder={fr ? "Nom du modèle" : "Model name"}
+        otherPlaceholder={pick("Model name", "Nom du modèle")}
       />
 
       <CarSelectSheet
         visible={activePicker === "year"}
-        title={fr ? "Année" : "Year"}
+        title={pick("Year", "Année")}
         options={CAR_YEAR_OPTIONS}
         selected={identity.year}
         onSelect={(y) => setIdentity((p) => ({ ...p, year: y }))}
@@ -669,7 +663,7 @@ export default function AddCarScreen() {
 
       <CarSelectSheet
         visible={activePicker === "color"}
-        title={fr ? "Couleur" : "Color"}
+        title={pick("Color", "Couleur")}
         options={CAR_COLORS}
         selected={identity.color}
         onSelect={(c) => {
@@ -683,14 +677,14 @@ export default function AddCarScreen() {
         allowOther
         otherValue={colorCustom}
         onOtherChange={setColorCustom}
-        otherPlaceholder={fr ? "Autre couleur" : "Other color"}
+        otherPlaceholder={pick("Other color", "Autre couleur")}
       />
 
       <CarSelectSheet
         visible={activePicker === "fuel"}
-        title={fr ? "Carburant" : "Fuel type"}
+        title={pick("Fuel type", "Carburant")}
         options={FUEL_OPTIONS.map((f) => (fr ? f.fr : f.en))}
-        selected={FUEL_OPTIONS.find((f) => f.id === identity.fuelType)?.[fr ? "fr" : "en"]}
+        selected={FUEL_OPTIONS.find((f) => f.id === identity.fuelType)?.[pick("en", "fr")]}
         onSelect={(label) => {
           const opt = FUEL_OPTIONS.find((f) => (fr ? f.fr : f.en) === label);
           if (opt) setIdentity((p) => ({ ...p, fuelType: opt.id }));
@@ -703,9 +697,9 @@ export default function AddCarScreen() {
 
       <CarSelectSheet
         visible={activePicker === "gearbox"}
-        title={fr ? "Boîte de vitesse" : "Gearbox"}
+        title={pick("Gearbox", "Boîte de vitesse")}
         options={GEARBOX_OPTIONS.map((g) => (fr ? g.fr : g.en))}
-        selected={GEARBOX_OPTIONS.find((g) => g.id === identity.gearbox)?.[fr ? "fr" : "en"]}
+        selected={GEARBOX_OPTIONS.find((g) => g.id === identity.gearbox)?.[pick("en", "fr")]}
         onSelect={(label) => {
           const opt = GEARBOX_OPTIONS.find((g) => (fr ? g.fr : g.en) === label);
           if (opt) setIdentity((p) => ({ ...p, gearbox: opt.id }));
@@ -722,14 +716,14 @@ export default function AddCarScreen() {
           <TouchableOpacity onPress={goBack} activeOpacity={0.8}
             style={{ flex: 1, paddingVertical: 15, borderRadius: 14, borderWidth: 1.5, borderColor: isDark ? "rgba(255,255,255,0.14)" : "rgba(15,23,42,0.12)", alignItems: "center", justifyContent: "center", backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.8)" }}
           >
-            <Text style={{ fontSize: 15, fontWeight: "800", color: isDark ? "#94a3b8" : "#64748b" }}>{fr ? "Retour" : "Back"}</Text>
+            <Text style={{ fontSize: 15, fontWeight: "800", color: isDark ? "#94a3b8" : "#64748b" }}>{pick("Back", "Retour")}</Text>
           </TouchableOpacity>
         )}
 
         {step < STEPS.length - 1 ? (
           <TouchableOpacity onPress={goNext} activeOpacity={0.85} style={{ flex: 2 }}>
             <LinearGradient colors={isDark ? ["#38bdf8", "#0284c7"] : ["#0284c7", "#0369a1"]} style={{ borderRadius: 14, paddingVertical: 15, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, shadowColor: accent, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 14, elevation: 8 }}>
-              <Text style={{ color: "#fff", fontWeight: "800", fontSize: 15 }}>{fr ? "Suivant" : "Next"}</Text>
+              <Text style={{ color: "#fff", fontWeight: "800", fontSize: 15 }}>{pick("Next", "Suivant")}</Text>
               <Ionicons name="arrow-forward" size={18} color="#fff" />
             </LinearGradient>
           </TouchableOpacity>
@@ -737,7 +731,7 @@ export default function AddCarScreen() {
           <TouchableOpacity onPress={handleSave} disabled={saving} activeOpacity={0.85} style={{ flex: 2 }}>
             <LinearGradient colors={isDark ? ["#22c55e", "#16a34a"] : ["#16a34a", "#15803d"]} style={{ borderRadius: 14, paddingVertical: 15, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, shadowColor: "#22c55e", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 14, elevation: 8, opacity: saving ? 0.7 : 1 }}>
               {saving ? <ActivityIndicator size="small" color="#fff" /> : <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />}
-              <Text style={{ color: "#fff", fontWeight: "800", fontSize: 15 }}>{fr ? "Enregistrer" : "Save"}</Text>
+              <Text style={{ color: "#fff", fontWeight: "800", fontSize: 15 }}>{pick("Save", "Enregistrer")}</Text>
             </LinearGradient>
           </TouchableOpacity>
         )}

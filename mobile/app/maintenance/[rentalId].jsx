@@ -59,14 +59,13 @@ export default function MaintenanceDetailScreen() {
   const { rentalId: rid } = useLocalSearchParams();
   const rentalId = Array.isArray(rid) ? rid[0] : rid;
   const { auth } = useAuth();
-  const { lang, copy } = useAppLang();
+  const { lang, copy, pick, numberLocale } = useAppLang();
   const t = copy.maintenance;
   const { colors: C, isDark } = useTheme();
   const router = useRouter();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const fr = lang === "fr";
-  const numLocale = fr ? "fr-FR" : "en-US";
   const s = useMemo(() => createStyles(C, isDark), [C, isDark]);
 
   const titleColor = isDark ? "#f8fafc" : "#0f172a";
@@ -169,7 +168,7 @@ export default function MaintenanceDetailScreen() {
 
   const handleDelete = (id) => {
     Alert.alert(t.delete, t.confirmDelete, [
-      { text: fr ? "Annuler" : "Cancel", style: "cancel" },
+      { text: pick("Cancel", "Annuler"), style: "cancel" },
       {
         text: t.delete,
         style: "destructive",
@@ -212,10 +211,10 @@ export default function MaintenanceDetailScreen() {
         <View style={s.missOrb}>
           <Ionicons name="car-outline" size={48} color={C.muted} />
         </View>
-        <Text style={[s.denied, { color: titleColor }]}>{fr ? "Véhicule introuvable." : "Vehicle not found."}</Text>
+        <Text style={[s.denied, { color: titleColor }]}>{pick("Vehicle not found.", "Véhicule introuvable.")}</Text>
         <TouchableOpacity onPress={() => router.back()} activeOpacity={0.9}>
           <LinearGradient colors={ctaGrad} style={s.backBtn}>
-            <Text style={s.backBtnText}>{fr ? "Retour" : "Go back"}</Text>
+            <Text style={s.backBtnText}>{pick("Go back", "Retour")}</Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>
@@ -267,13 +266,11 @@ export default function MaintenanceDetailScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={[s.totalLabel, { color: subColor }]}>{t.detailTotal}</Text>
                   <Text style={[s.totalValue, { color: C.primary }]}>
-                    {Number(totalCost).toLocaleString(numLocale)} {t.mad}
+                    {Number(totalCost).toLocaleString(numberLocale)} {t.mad}
                   </Text>
                   {filtersActive && records.length > 0 && (
                     <Text style={[s.filteredHint, { color: subColor }]}>
-                      {fr
-                        ? `Filtre : ${filteredRecords.length}/${records.length} · ${Number(filteredCost).toLocaleString(numLocale)} ${t.mad}`
-                        : `Filtered: ${filteredRecords.length}/${records.length} · ${Number(filteredCost).toLocaleString(numLocale)} ${t.mad}`}
+                      {pick(`Filtered: ${filteredRecords.length}/${records.length} · ${Number(filteredCost).toLocaleString(numberLocale)} ${t.mad}`, `Filtre : ${filteredRecords.length}/${records.length} · ${Number(filteredCost).toLocaleString(numberLocale)} ${t.mad}`)}
                     </Text>
                   )}
                 </View>
@@ -288,14 +285,14 @@ export default function MaintenanceDetailScreen() {
               style={s.filterPanel}
             >
               <Text style={[s.filterPanelTitle, { color: C.primary }]}>
-                {fr ? "Filtrer l'historique" : "Filter records"}
+                {pick("Filter records", "Filtrer l'historique")}
               </Text>
               <View style={[s.searchRow, { borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(15,23,42,0.08)" }]}>
                 <Ionicons name="search-outline" size={18} color={C.muted} />
                 <TextInput
                   value={recordSearch}
                   onChangeText={setRecordSearch}
-                  placeholder={fr ? "Type, prestataire, notes…" : "Type, provider, notes…"}
+                  placeholder={pick("Type, provider, notes…", "Type, prestataire, notes…")}
                   placeholderTextColor={C.label}
                   style={[s.searchInput, { color: titleColor }]}
                 />
@@ -305,7 +302,7 @@ export default function MaintenanceDetailScreen() {
                   </TouchableOpacity>
                 )}
               </View>
-              <Text style={[s.filterSubLabel, { color: subColor }]}>{fr ? "Période" : "Period"}</Text>
+              <Text style={[s.filterSubLabel, { color: subColor }]}>{pick("Period", "Période")}</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.hChips}>
                 {PERIOD_KEYS.map((key) => {
                   const on = periodFilter === key;
@@ -325,16 +322,16 @@ export default function MaintenanceDetailScreen() {
                   );
                 })}
               </ScrollView>
-              <Text style={[s.filterSubLabel, { color: subColor }]}>{fr ? "Type d'intervention" : "Service type"}</Text>
+              <Text style={[s.filterSubLabel, { color: subColor }]}>{pick("Service type", "Type d'intervention")}</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.hChips}>
                 <TouchableOpacity onPress={() => setTypeFilter("all")} activeOpacity={0.85}>
                   {typeFilter === "all" ? (
                     <LinearGradient colors={ctaGrad} style={s.chipOn}>
-                      <Text style={s.chipOnText}>{fr ? "Tous" : "All types"}</Text>
+                      <Text style={s.chipOnText}>{pick("All types", "Tous")}</Text>
                     </LinearGradient>
                   ) : (
                     <View style={[s.chipOff, { borderColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(15,23,42,0.1)" }]}>
-                      <Text style={[s.chipOffText, { color: subColor }]}>{fr ? "Tous" : "All types"}</Text>
+                      <Text style={[s.chipOffText, { color: subColor }]}>{pick("All types", "Tous")}</Text>
                     </View>
                   )}
                 </TouchableOpacity>
@@ -359,13 +356,13 @@ export default function MaintenanceDetailScreen() {
                 <TouchableOpacity onPress={clearRecordFilters} style={s.clearRow}>
                   <Ionicons name="refresh-outline" size={16} color={C.primary} />
                   <Text style={[s.clearText, { color: C.primary }]}>
-                    {fr ? "Réinitialiser les filtres" : "Reset filters"}
+                    {pick("Reset filters", "Réinitialiser les filtres")}
                   </Text>
                 </TouchableOpacity>
               )}
             </LinearGradient>
 
-            <Text style={[s.sectionEyebrow, { color: C.primary }]}>{fr ? "Historique" : "History"}</Text>
+            <Text style={[s.sectionEyebrow, { color: C.primary }]}>{pick("History", "Historique")}</Text>
             <Text style={[s.sectionTitle, { color: titleColor }]}>{t.detailTitle}</Text>
 
             {records.length === 0 ? (
@@ -382,9 +379,9 @@ export default function MaintenanceDetailScreen() {
                 style={s.emptyBox}
               >
                 <Ionicons name="funnel-outline" size={40} color={C.muted} />
-                <Text style={[s.emptyText, { color: titleColor }]}>{fr ? "Aucun enregistrement ne correspond." : "No records match your filters."}</Text>
+                <Text style={[s.emptyText, { color: titleColor }]}>{pick("No records match your filters.", "Aucun enregistrement ne correspond.")}</Text>
                 <TouchableOpacity onPress={clearRecordFilters} style={{ marginTop: 14 }}>
-                  <Text style={{ color: C.primary, fontWeight: "800" }}>{fr ? "Effacer les filtres" : "Clear filters"}</Text>
+                  <Text style={{ color: C.primary, fontWeight: "800" }}>{pick("Clear filters", "Effacer les filtres")}</Text>
                 </TouchableOpacity>
               </LinearGradient>
             ) : (
@@ -420,14 +417,14 @@ export default function MaintenanceDetailScreen() {
                   <View style={s.row}>
                     <Text style={[s.lbl, { color: subColor }]}>{t.lblCost}</Text>
                     <Text style={[s.val, { color: titleColor }]}>
-                      {Number(r.cost).toLocaleString(numLocale)} {t.mad}
+                      {Number(r.cost).toLocaleString(numberLocale)} {t.mad}
                     </Text>
                   </View>
                   {r.mileageAtService != null && r.mileageAtService !== "" && (
                     <View style={s.row}>
                       <Text style={[s.lbl, { color: subColor }]}>{t.lblMileage}</Text>
                       <Text style={[s.val, { color: titleColor }]}>
-                        {Number(r.mileageAtService).toLocaleString(numLocale)} km
+                        {Number(r.mileageAtService).toLocaleString(numberLocale)} km
                       </Text>
                     </View>
                   )}
@@ -455,7 +452,7 @@ export default function MaintenanceDetailScreen() {
                     <View style={s.row}>
                       <Text style={[s.lbl, { color: subColor }]}>{t.lblNextMileage}</Text>
                       <Text style={[s.val, { color: titleColor }]}>
-                        {Number(r.nextServiceMileage).toLocaleString(numLocale)} km
+                        {Number(r.nextServiceMileage).toLocaleString(numberLocale)} km
                       </Text>
                     </View>
                   ) : null}

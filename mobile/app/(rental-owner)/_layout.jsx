@@ -6,7 +6,7 @@ import { useAuth } from "../../src/context/AuthContext";
 
 export default function RentalOwnerLayout() {
   const { colors: C, isDark } = useTheme();
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const { auth } = useAuth();
   const fr = lang === "fr";
 
@@ -36,7 +36,7 @@ export default function RentalOwnerLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: fr ? "Tableau" : "Dashboard",
+          title: pick("Dashboard", "Tableau"),
           tabBarIcon: ({ color, size }) => <Ionicons name="grid-outline" size={size} color={color} />,
         }}
       />
@@ -44,7 +44,7 @@ export default function RentalOwnerLayout() {
         name="bookings"
         options={{
           href: tabHref(perms.manageBookings),
-          title: fr ? "Réservations" : "Bookings",
+          title: pick("Bookings", "Réservations"),
           tabBarIcon: ({ color, size }) => <Ionicons name="clipboard-outline" size={size} color={color} />,
         }}
       />
@@ -52,7 +52,7 @@ export default function RentalOwnerLayout() {
         name="analytics"
         options={{
           href: tabHref(perms.viewAnalytics),
-          title: fr ? "Analytique" : "Analytics",
+          title: pick("Analytics", "Analytique"),
           tabBarIcon: ({ color, size }) => <Ionicons name="analytics-outline" size={size} color={color} />,
         }}
       />
@@ -60,7 +60,7 @@ export default function RentalOwnerLayout() {
         name="fleet"
         options={{
           href: tabHref(perms.managePricing),
-          title: fr ? "Flotte" : "Fleet",
+          title: pick("Fleet", "Flotte"),
           tabBarIcon: ({ color, size }) => <Ionicons name="car-sport-outline" size={size} color={color} />,
         }}
       />
@@ -68,14 +68,14 @@ export default function RentalOwnerLayout() {
         name="messages"
         options={{
           href: isStaff ? tabHref(perms.manageMessages) : null,
-          title: fr ? "Messages" : "Messages",
+          title: pick("Messages", "Messages"),
           tabBarIcon: ({ color, size }) => <Ionicons name="chatbubble-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: fr ? "Profil" : "Profile",
+          title: pick("Profile", "Profil"),
           tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} />,
         }}
       />

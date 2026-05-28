@@ -22,7 +22,7 @@ const STATUS_EN = {
 
 export default function CreditCheckScreen() {
   const { colors: C } = useTheme();
-  const { lang } = useAppLang();
+  const { lang, pick, dateLocale } = useAppLang();
   const fr = lang === "fr";
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -41,17 +41,17 @@ export default function CreditCheckScreen() {
 
   const handleSubmit = async () => {
     if (!form.immatriculation && !form.ownerCin) {
-      Alert.alert(fr ? "Erreur" : "Error", fr ? "Entrez l'immatriculation ou le CIN du vendeur." : "Enter the plate or seller's national ID.");
+      Alert.alert(pick("Error", "Erreur"), pick("Enter the plate or seller's national ID.", "Entrez l'immatriculation ou le CIN du vendeur."));
       return;
     }
     setSaving(true);
     try {
       await api.post("/credit-check", form);
-      Alert.alert(fr ? "Envoyé !" : "Sent!", fr ? "Vous serez notifié dans 48h." : "You'll be notified within 48h.");
+      Alert.alert(pick("Sent!", "Envoyé !"), pick("You'll be notified within 48h.", "Vous serez notifié dans 48h."));
       setForm({ immatriculation: "", ownerCin: "", brand: "", model: "", year: "" });
       load();
     } catch (e) {
-      Alert.alert(fr ? "Erreur" : "Error", e?.response?.data?.message || (fr ? "Erreur réseau" : "Network error"));
+      Alert.alert(pick("Error", "Erreur"), e?.response?.data?.message || (pick("Network error", "Erreur réseau")));
     } finally {
       setSaving(false);
     }
@@ -63,49 +63,47 @@ export default function CreditCheckScreen() {
         <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-back" size={26} color={C.white} />
         </TouchableOpacity>
-        <Text style={{ color: C.white, fontWeight: "800", fontSize: 16 }}>{fr ? "Vérification de crédit" : "Credit Check"}</Text>
+        <Text style={{ color: C.white, fontWeight: "800", fontSize: 16 }}>{pick("Credit Check", "Vérification de crédit")}</Text>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 40 }}>
         <Text style={{ color: C.muted, fontSize: 13, marginBottom: 16, lineHeight: 20 }}>
-          {fr ? "Vérifiez si la voiture a une charge bancaire avant d'acheter." : "Check if the car has a bank charge before buying."}
+          {pick("Check if the car has a bank charge before buying.", "Vérifiez si la voiture a une charge bancaire avant d'acheter.")}
         </Text>
 
         <View style={[s.warning, { backgroundColor: "rgba(245,158,11,0.1)", borderColor: "rgba(245,158,11,0.35)" }]}>
           <Text style={[s.warningText, { color: "#fbbf24" }]}>
-            {fr
-              ? "⚠️ Au Maroc, des voitures sont vendues sous crédit bancaire. La banque peut récupérer le véhicule même si vous l'avez acheté."
-              : "⚠️ In Morocco, cars are sometimes sold with outstanding bank loans. The bank can repossess the car even after you buy it."}
+            {pick("⚠️ In Morocco, cars are sometimes sold with outstanding bank loans. The bank can repossess the car even after you buy it.", "⚠️ Au Maroc, des voitures sont vendues sous crédit bancaire. La banque peut récupérer le véhicule même si vous l'avez acheté.")}
           </Text>
         </View>
 
         <View style={[s.formBox, { backgroundColor: C.card, borderColor: C.border }]}>
-          <Text style={[s.formTitle, { color: C.white }]}>{fr ? "Nouvelle vérification" : "New check"}</Text>
+          <Text style={[s.formTitle, { color: C.white }]}>{pick("New check", "Nouvelle vérification")}</Text>
           <TextInput style={[s.input, { color: C.white, borderColor: C.border, backgroundColor: C.inputBg }]}
             value={form.immatriculation} onChangeText={(v) => setForm((p) => ({ ...p, immatriculation: v }))}
-            placeholder={fr ? "Immatriculation (Ex: 12345-A-1)" : "Plate number"} placeholderTextColor={C.muted} />
+            placeholder={pick("Plate number", "Immatriculation (Ex: 12345-A-1)")} placeholderTextColor={C.muted} />
           <TextInput style={[s.input, { color: C.white, borderColor: C.border, backgroundColor: C.inputBg }]}
             value={form.ownerCin} onChangeText={(v) => setForm((p) => ({ ...p, ownerCin: v }))}
-            placeholder={fr ? "CIN du vendeur (optionnel)" : "Seller's national ID (optional)"} placeholderTextColor={C.muted} />
+            placeholder={pick("Seller's national ID (optional)", "CIN du vendeur (optionnel)")} placeholderTextColor={C.muted} />
           <View style={{ flexDirection: "row", gap: 8 }}>
             <TextInput style={[s.input, { flex: 1, color: C.white, borderColor: C.border, backgroundColor: C.inputBg }]}
               value={form.brand} onChangeText={(v) => setForm((p) => ({ ...p, brand: v }))}
-              placeholder={fr ? "Marque" : "Brand"} placeholderTextColor={C.muted} />
+              placeholder={pick("Brand", "Marque")} placeholderTextColor={C.muted} />
             <TextInput style={[s.input, { flex: 1, color: C.white, borderColor: C.border, backgroundColor: C.inputBg }]}
               value={form.model} onChangeText={(v) => setForm((p) => ({ ...p, model: v }))}
-              placeholder={fr ? "Modèle" : "Model"} placeholderTextColor={C.muted} />
+              placeholder={pick("Model", "Modèle")} placeholderTextColor={C.muted} />
           </View>
           <TextInput style={[s.input, { color: C.white, borderColor: C.border, backgroundColor: C.inputBg }]}
             value={form.year} onChangeText={(v) => setForm((p) => ({ ...p, year: v }))}
-            placeholder={fr ? "Année" : "Year"} placeholderTextColor={C.muted} keyboardType="numeric" />
+            placeholder={pick("Year", "Année")} placeholderTextColor={C.muted} keyboardType="numeric" />
           <TouchableOpacity style={[s.btn, { backgroundColor: C.primary }, saving && { opacity: 0.6 }]} onPress={handleSubmit} disabled={saving}>
-            {saving ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>{fr ? "Demander une vérification (gratuit)" : "Request a check (free)"}</Text>}
+            {saving ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>{pick("Request a check (free)", "Demander une vérification (gratuit)")}</Text>}
           </TouchableOpacity>
         </View>
 
         {checks.length > 0 && (
           <View>
-            <Text style={[s.histTitle, { color: C.white }]}>{fr ? "Mes vérifications" : "My checks"}</Text>
+            <Text style={[s.histTitle, { color: C.white }]}>{pick("My checks", "Mes vérifications")}</Text>
             {checks.map((c) => {
               const st = STATUS[c.status] || STATUS.pending;
               return (
@@ -113,7 +111,7 @@ export default function CreditCheckScreen() {
                   <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 10 }}>
                     <View style={{ flex: 1 }}>
                       <Text style={[s.checkTitle, { color: st.color }]}>{c.brand} {c.model} {c.year || ""}</Text>
-                      <Text style={[s.checkSub, { color: st.color }]}>{c.immatriculation || c.ownerCin || "—"} · {new Date(c.createdAt).toLocaleDateString(fr ? "fr-FR" : "en-GB")}</Text>
+                      <Text style={[s.checkSub, { color: st.color }]}>{c.immatriculation || c.ownerCin || "—"} · {new Date(c.createdAt).toLocaleDateString(dateLocale)}</Text>
                       {c.adminNote ? <Text style={[s.checkNote, { color: st.color }]}>{c.adminNote}</Text> : null}
                     </View>
                     <View style={{ alignItems: "center" }}>

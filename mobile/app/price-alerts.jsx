@@ -17,7 +17,7 @@ const CURRENT_YEAR = new Date().getFullYear();
 
 export default function PriceAlertsScreen() {
   const { colors: C, isDark } = useTheme();
-  const { lang } = useAppLang();
+  const { lang, pick, dateLocale } = useAppLang();
   const fr = lang === "fr";
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -53,7 +53,7 @@ export default function PriceAlertsScreen() {
 
   const handleCreate = useCallback(async () => {
     if (!form.brand.trim() || !form.maxPrice.trim()) {
-      Alert.alert(fr ? "Champs requis" : "Required", fr ? "La marque et le prix max sont obligatoires." : "Brand and max price are required.");
+      Alert.alert(pick("Required", "Champs requis"), pick("Brand and max price are required.", "La marque et le prix max sont obligatoires."));
       return;
     }
     setSaving(true);
@@ -78,12 +78,12 @@ export default function PriceAlertsScreen() {
 
   const handleDelete = useCallback((id) => {
     Alert.alert(
-      fr ? "Supprimer l'alerte ?" : "Delete alert?",
-      fr ? "Vous ne serez plus notifié pour ce critère." : "You won't be notified for this criterion anymore.",
+      pick("Delete alert?", "Supprimer l'alerte ?"),
+      pick("You won't be notified for this criterion anymore.", "Vous ne serez plus notifié pour ce critère."),
       [
-        { text: fr ? "Annuler" : "Cancel", style: "cancel" },
+        { text: pick("Cancel", "Annuler"), style: "cancel" },
         {
-          text: fr ? "Supprimer" : "Delete", style: "destructive",
+          text: pick("Delete", "Supprimer"), style: "destructive",
           onPress: async () => {
             try {
               await deleteAlert(id);
@@ -118,17 +118,17 @@ export default function PriceAlertsScreen() {
             </TouchableOpacity>
             <View>
               <Text style={{ fontSize: 11, fontWeight: "800", letterSpacing: 2, textTransform: "uppercase", color: C.primary, marginBottom: 2 }}>
-                {fr ? "Notifications" : "Notifications"}
+                {pick("Notifications", "Notifications")}
               </Text>
               <Text style={{ fontSize: 20, fontWeight: "800", color: titleColor, letterSpacing: -0.4 }}>
-                {fr ? "Alertes prix" : "Price alerts"}
+                {pick("Price alerts", "Alertes prix")}
               </Text>
             </View>
           </View>
           <TouchableOpacity onPress={() => setModal(true)} activeOpacity={0.85}
             style={{ paddingHorizontal: 14, paddingVertical: 9, borderRadius: 20, backgroundColor: C.primary }}
           >
-            <Text style={{ color: "#fff", fontWeight: "800", fontSize: 13 }}>+ {fr ? "Créer" : "Create"}</Text>
+            <Text style={{ color: "#fff", fontWeight: "800", fontSize: 13 }}>+ {pick("Create", "Créer")}</Text>
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -139,18 +139,16 @@ export default function PriceAlertsScreen() {
             <Ionicons name="notifications-outline" size={36} color={C.primary} />
           </LinearGradient>
           <Text style={{ fontSize: 20, fontWeight: "800", color: titleColor, textAlign: "center", marginBottom: 10 }}>
-            {fr ? "Aucune alerte" : "No alerts yet"}
+            {pick("No alerts yet", "Aucune alerte")}
           </Text>
           <Text style={{ fontSize: 14, color: subColor, textAlign: "center", lineHeight: 22, marginBottom: 28 }}>
-            {fr
-              ? "Créez une alerte pour être notifié dès qu'une annonce correspond à votre budget."
-              : "Create an alert to be notified when a listing matches your budget."}
+            {pick("Create an alert to be notified when a listing matches your budget.", "Créez une alerte pour être notifié dès qu'une annonce correspond à votre budget.")}
           </Text>
           <TouchableOpacity onPress={() => setModal(true)} activeOpacity={0.85} style={{ width: "100%" }}>
             <LinearGradient colors={["#6248e8", "#4f46e5", "#4338ca"]} style={{ borderRadius: 16, paddingVertical: 16, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 10 }}>
               <Ionicons name="add-circle-outline" size={20} color="#fff" />
               <Text style={{ color: "#fff", fontWeight: "800", fontSize: 16 }}>
-                {fr ? "Créer une alerte" : "Create alert"}
+                {pick("Create alert", "Créer une alerte")}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -160,7 +158,7 @@ export default function PriceAlertsScreen() {
           contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 20, paddingBottom: insets.bottom + 40 }}
         >
           <Text style={{ fontSize: 12, color: subColor, marginBottom: 16 }}>
-            {fr ? `${alerts.length} alerte(s) · Notifié(e) quotidiennement` : `${alerts.length} alert(s) · Notified daily`}
+            {pick(`${alerts.length} alert(s) · Notified daily`, `${alerts.length} alerte(s) · Notifié(e) quotidiennement`)}
           </Text>
           {alerts.map((a) => (
             <View key={a._id} style={[s.card, { backgroundColor: cardBg, borderColor: a.active ? cardBorder : (isDark ? "rgba(255,255,255,0.06)" : "rgba(15,23,42,0.06)"), marginBottom: 12, opacity: a.active ? 1 : 0.55 }]}>
@@ -176,7 +174,7 @@ export default function PriceAlertsScreen() {
                     ≤ {a.maxPrice.toLocaleString()} MAD
                   </Text>
                   <Text style={{ fontSize: 12, color: subColor, marginTop: 2 }}>
-                    {[a.minYear ? `Depuis ${a.minYear}` : "", a.fuelType, a.city].filter(Boolean).join(" · ") || (fr ? "Tous critères" : "All criteria")}
+                    {[a.minYear ? `Depuis ${a.minYear}` : "", a.fuelType, a.city].filter(Boolean).join(" · ") || (pick("All criteria", "Tous critères"))}
                   </Text>
                 </View>
                 <View style={{ flexDirection: "row", gap: 6 }}>
@@ -194,8 +192,8 @@ export default function PriceAlertsScreen() {
               </View>
               {a.lastNotifiedAt && (
                 <Text style={{ fontSize: 11, color: subColor, marginTop: 10, marginLeft: 54 }}>
-                  {fr ? "Dernière alerte : " : "Last notified: "}
-                  {new Date(a.lastNotifiedAt).toLocaleDateString(fr ? "fr-FR" : "en-GB")}
+                  {pick("Last notified: ", "Dernière alerte : ")}
+                  {new Date(a.lastNotifiedAt).toLocaleDateString(dateLocale)}
                 </Text>
               )}
             </View>
@@ -209,7 +207,7 @@ export default function PriceAlertsScreen() {
           <View style={{ backgroundColor: isDark ? "#0f172a" : "#fff", borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: insets.bottom + 24 }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
               <Text style={{ fontSize: 18, fontWeight: "800", color: titleColor }}>
-                {fr ? "Nouvelle alerte" : "New alert"}
+                {pick("New alert", "Nouvelle alerte")}
               </Text>
               <TouchableOpacity onPress={() => setModal(false)}>
                 <Ionicons name="close" size={24} color={subColor} />
@@ -217,11 +215,11 @@ export default function PriceAlertsScreen() {
             </View>
 
             {[
-              { key: "brand",    label: fr ? "Marque *" : "Brand *",        ph: "Toyota, Dacia…" },
-              { key: "model",    label: fr ? "Modèle" : "Model",            ph: fr ? "Optionnel" : "Optional" },
-              { key: "maxPrice", label: fr ? "Prix max (MAD) *" : "Max price (MAD) *", ph: "150000", keyboard: "numeric" },
-              { key: "minYear",  label: fr ? "Année min" : "Min year",      ph: String(CURRENT_YEAR - 5), keyboard: "numeric" },
-              { key: "city",     label: fr ? "Ville" : "City",              ph: fr ? "Casablanca…" : "Casablanca…" },
+              { key: "brand",    label: pick("Brand *", "Marque *"),        ph: "Toyota, Dacia…" },
+              { key: "model",    label: pick("Model", "Modèle"),            ph: pick("Optional", "Optionnel") },
+              { key: "maxPrice", label: pick("Max price (MAD) *", "Prix max (MAD) *"), ph: "150000", keyboard: "numeric" },
+              { key: "minYear",  label: pick("Min year", "Année min"),      ph: String(CURRENT_YEAR - 5), keyboard: "numeric" },
+              { key: "city",     label: pick("City", "Ville"),              ph: pick("Casablanca…", "Casablanca…") },
             ].map(({ key, label, ph, keyboard }) => (
               <View key={key} style={{ marginBottom: 12 }}>
                 <Text style={{ fontSize: 12, fontWeight: "700", color: subColor, marginBottom: 6 }}>{label}</Text>
@@ -237,7 +235,7 @@ export default function PriceAlertsScreen() {
             ))}
 
             <Text style={{ fontSize: 12, fontWeight: "700", color: subColor, marginBottom: 8 }}>
-              {fr ? "Carburant" : "Fuel type"}
+              {pick("Fuel type", "Carburant")}
             </Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
               {FUEL_OPTIONS.map((f) => {
@@ -258,7 +256,7 @@ export default function PriceAlertsScreen() {
                   : <>
                       <Ionicons name="notifications-outline" size={18} color="#fff" />
                       <Text style={{ color: "#fff", fontWeight: "800", fontSize: 16 }}>
-                        {fr ? "Créer l'alerte" : "Create alert"}
+                        {pick("Create alert", "Créer l'alerte")}
                       </Text>
                     </>
                 }

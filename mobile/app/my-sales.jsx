@@ -16,7 +16,7 @@ const STATUS = {
 };
 
 export default function MySalesScreen() {
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const { colors: C } = useTheme();
   const s = useMemo(() => createMySalesStyles(C), [C]);
   const router = useRouter();
@@ -33,11 +33,11 @@ export default function MySalesScreen() {
   useEffect(() => { load(); }, []);
 
   const handleDelete = (id) => Alert.alert(
-    fr ? "Supprimer l'annonce" : "Delete Listing",
-    fr ? "Cette action est irréversible." : "This cannot be undone.",
+    pick("Delete Listing", "Supprimer l'annonce"),
+    pick("This cannot be undone.", "Cette action est irréversible."),
     [
-      { text: fr ? "Annuler" : "Cancel" },
-      { text: fr ? "Supprimer" : "Delete", style:"destructive", onPress: async () => {
+      { text: pick("Cancel", "Annuler") },
+      { text: pick("Delete", "Supprimer"), style:"destructive", onPress: async () => {
         try { await deleteSale(id); load(); }
         catch { Alert.alert("Failed to delete"); }
       }},
@@ -45,11 +45,11 @@ export default function MySalesScreen() {
   );
 
   const handleMarkSold = (id) => Alert.alert(
-    fr ? "Marquer comme vendu" : "Mark as Sold",
-    fr ? "Confirmer ?" : "Confirm?",
+    pick("Mark as Sold", "Marquer comme vendu"),
+    pick("Confirm?", "Confirmer ?"),
     [
-      { text: fr ? "Annuler" : "Cancel" },
-      { text: fr ? "Confirmer" : "Confirm", onPress: async () => {
+      { text: pick("Cancel", "Annuler") },
+      { text: pick("Confirm", "Confirmer"), onPress: async () => {
         try { await markAsSold(id); load(); }
         catch { Alert.alert("Failed to update"); }
       }},
@@ -71,10 +71,10 @@ export default function MySalesScreen() {
         ListEmptyComponent={
           <View style={s.empty}>
             <Ionicons name="pricetag-outline" size={56} color={C.muted} />
-            <Text style={s.emptyTitle}>{fr ? "Aucune annonce" : "No listings yet"}</Text>
+            <Text style={s.emptyTitle}>{pick("No listings yet", "Aucune annonce")}</Text>
             <TouchableOpacity onPress={() => router.push("/new-sale")} style={s.emptyBtn}>
               <Ionicons name="add-circle-outline" size={18} color="#fff" />
-              <Text style={s.emptyBtnText}>{fr ? "Créer une annonce" : "Create a Listing"}</Text>
+              <Text style={s.emptyBtnText}>{pick("Create a Listing", "Créer une annonce")}</Text>
             </TouchableOpacity>
           </View>
         }
@@ -98,11 +98,11 @@ export default function MySalesScreen() {
                 <View style={s.actionsRow}>
                   {item.status === "approved" && (
                     <TouchableOpacity onPress={() => handleMarkSold(item._id)} style={[s.actionBtn, { backgroundColor:"rgba(96,165,250,0.1)", borderColor:"rgba(96,165,250,0.3)" }]}>
-                      <Text style={[s.actionBtnText, { color:"#60a5fa" }]}>{fr ? "Marquer vendu" : "Mark Sold"}</Text>
+                      <Text style={[s.actionBtnText, { color:"#60a5fa" }]}>{pick("Mark Sold", "Marquer vendu")}</Text>
                     </TouchableOpacity>
                   )}
                   <TouchableOpacity onPress={() => handleDelete(item._id)} style={[s.actionBtn, { backgroundColor:"rgba(239,68,68,0.1)", borderColor:"rgba(239,68,68,0.3)" }]}>
-                    <Text style={[s.actionBtnText, { color: C.red }]}>{fr ? "Supprimer" : "Delete"}</Text>
+                    <Text style={[s.actionBtnText, { color: C.red }]}>{pick("Delete", "Supprimer")}</Text>
                   </TouchableOpacity>
                 </View>
               </View>

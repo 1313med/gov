@@ -351,9 +351,9 @@ function GarageWidget({ car, alertCount, C, isDark, fr, router }) {
   const statusIcon  = alertCount === 0 ? "checkmark-circle" : "alert-circle";
   const statusText  = car
     ? (alertCount === 0
-        ? (fr ? "Tout est à jour" : "All up to date")
-        : (fr ? `${alertCount} échéance(s)` : `${alertCount} item(s) due`))
-    : (fr ? "Aucune voiture" : "No car added");
+        ? (pick("All up to date", "Tout est à jour"))
+        : (pick(`${alertCount} item(s) due`, `${alertCount} échéance(s)`)))
+    : (pick("No car added", "Aucune voiture"));
 
   return (
     <TouchableOpacity onPress={() => router.push("/mon-garage")} activeOpacity={0.82}>
@@ -380,10 +380,10 @@ function GarageWidget({ car, alertCount, C, isDark, fr, router }) {
         )}
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: 11, fontWeight: "800", letterSpacing: 1.6, textTransform: "uppercase", color: C.primary, marginBottom: 3 }}>
-            {fr ? "Mon Garage" : "My Garage"}
+            {pick("My Garage", "Mon Garage")}
           </Text>
           <Text style={{ fontSize: 15, fontWeight: "800", color: titleColor, letterSpacing: -0.2 }}>
-            {car ? `${car.brand}${car.model ? " " + car.model : ""}${car.year ? " " + car.year : ""}` : (fr ? "Ajouter ma voiture" : "Add my car")}
+            {car ? `${car.brand}${car.model ? " " + car.model : ""}${car.year ? " " + car.year : ""}` : (pick("Add my car", "Ajouter ma voiture"))}
           </Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 4 }}>
             <Ionicons name={statusIcon} size={13} color={statusColor} />
@@ -402,7 +402,7 @@ export default function HomeScreen() {
   const listingViewAttentionCount = useOwnerListingViewAttentionCount();
   const { car: garageCar, alertCount: garageAlertCount } = useGarageSummary(auth);
   const { unreadNotifications } = useSocket();
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const { colors: C, isDark } = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -539,7 +539,7 @@ export default function HomeScreen() {
                       Goo<Text style={s.logoItalic}>voiture</Text>
                     </Text>
                     <Text style={[s.logoTagline, { color: subColor }]}>
-                      {fr ? "Mobilité premium au Maroc" : "Premium mobility in Morocco"}
+                      {pick("Premium mobility in Morocco", "Mobilité premium au Maroc")}
                     </Text>
                   </View>
                 </View>
@@ -567,18 +567,16 @@ export default function HomeScreen() {
                 </View>
               </View>
 
-              <Text style={[s.heroKicker, { color: C.primary }]}>{fr ? "L'excellence routière" : "The road, elevated"}</Text>
+              <Text style={[s.heroKicker, { color: C.primary }]}>{pick("The road, elevated", "L'excellence routière")}</Text>
               <Text style={[s.heroTitle, { color: titleColor }]}>
-                {fr ? "Votre marketplace" : "Your marketplace"}
+                {pick("Your marketplace", "Votre marketplace")}
                 {"\n"}
-                <Text style={{ color: C.primary, fontStyle: "italic", fontWeight: "800" }}>{fr ? "automobile" : "automotive"}</Text>
-                {fr ? " de confiance." : " you trust."}
+                <Text style={{ color: C.primary, fontStyle: "italic", fontWeight: "800" }}>{pick("automotive", "automobile")}</Text>
+                {pick(" you trust.", " de confiance.")}
               </Text>
               <ShimmerLine color={C.primary} />
               <Text style={[s.heroSub, { color: subColor }]}>
-                {fr
-                  ? "Achetez, vendez et louez des voitures vérifiées — une expérience fluide, sécurisée, inoubliable."
-                  : "Buy, sell and rent verified cars — a fluid, secure experience that feels unforgettable."}
+                {pick("Buy, sell and rent verified cars — a fluid, secure experience that feels unforgettable.", "Achetez, vendez et louez des voitures vérifiées — une expérience fluide, sécurisée, inoubliable.")}
               </Text>
 
               <View style={s.ctaRow}>
@@ -588,7 +586,7 @@ export default function HomeScreen() {
                   style={{ flex: 1 }}
                 >
                   <Ionicons name="car" size={18} color="#fff" />
-                  <Text style={s.ctaPrimaryText}>{fr ? "Acheter" : "Buy a Car"}</Text>
+                  <Text style={s.ctaPrimaryText}>{pick("Buy a Car", "Acheter")}</Text>
                 </PrimaryCta>
                 <Pressable
                   onPress={() => router.push("/(tabs)/rentals")}
@@ -599,7 +597,7 @@ export default function HomeScreen() {
                     style={[s.ctaSecondary, { borderColor: isDark ? "rgba(56,189,248,0.45)" : "rgba(14,165,233,0.4)" }]}
                   >
                     <Ionicons name="car-sport" size={18} color={C.accent} />
-                    <Text style={[s.ctaSecondaryText, { color: C.accent }]}>{fr ? "Louer" : "Rent a Car"}</Text>
+                    <Text style={[s.ctaSecondaryText, { color: C.accent }]}>{pick("Rent a Car", "Louer")}</Text>
                   </LinearGradient>
                 </Pressable>
               </View>
@@ -611,7 +609,7 @@ export default function HomeScreen() {
                   style={[s.pill, { borderColor: glassBorder, backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.65)" }]}
                 >
                   <Ionicons name="heart" size={14} color="#f472b6" />
-                  <Text style={[s.pillText, { color: titleColor }]}>{fr ? "Favoris" : "Saved"}</Text>
+                  <Text style={[s.pillText, { color: titleColor }]}>{pick("Saved", "Favoris")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => router.push("/(tabs)/messages")}
@@ -619,7 +617,7 @@ export default function HomeScreen() {
                   style={[s.pill, { borderColor: glassBorder, backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.65)" }]}
                 >
                   <Ionicons name="chatbubbles-outline" size={14} color={C.accent} />
-                  <Text style={[s.pillText, { color: titleColor }]}>{fr ? "Messages" : "Messages"}</Text>
+                  <Text style={[s.pillText, { color: titleColor }]}>{pick("Messages", "Messages")}</Text>
                 </TouchableOpacity>
               </View>
             </Animated.View>
@@ -628,21 +626,19 @@ export default function HomeScreen() {
 
         <View style={s.statsRow}>
           {[
-            ["2,400+", fr ? "Annonces" : "Listings", C.primary],
-            ["4.9★", fr ? "Note" : "Rating", "#fbbf24"],
-            ["98%", fr ? "Satisfaction" : "Happy", C.green],
+            ["2,400+", pick("Listings", "Annonces"), C.primary],
+            ["4.9★", pick("Rating", "Note"), "#fbbf24"],
+            ["98%", pick("Happy", "Satisfaction"), C.green],
           ].map(([v, l, accent], i) => (
             <StatCard key={l} value={v} label={l} delayAnim={statAnims[i]} accent={accent} isDark={isDark} />
           ))}
         </View>
 
         <View style={s.sectionWhy}>
-          <Text style={[s.sectionEyebrow, { color: C.primary, marginBottom: 5 }]}>{fr ? "Pourquoi nous choisir" : "Why us"}</Text>
-          <Text style={[s.sectionTitleTight, { color: titleColor }]}>{fr ? "L'art du mouvement" : "The art of motion"}</Text>
+          <Text style={[s.sectionEyebrow, { color: C.primary, marginBottom: 5 }]}>{pick("Why us", "Pourquoi nous choisir")}</Text>
+          <Text style={[s.sectionTitleTight, { color: titleColor }]}>{pick("The art of motion", "L'art du mouvement")}</Text>
           <Text style={[s.sectionSubTight, { color: subColor }]}>
-            {fr
-              ? "Chaque détail compte — de la vérification à la signature."
-              : "Every detail matters — from verification to the handoff."}
+            {pick("Every detail matters — from verification to the handoff.", "Chaque détail compte — de la vérification à la signature.")}
           </Text>
 
           <View style={s.bento}>
@@ -677,26 +673,26 @@ export default function HomeScreen() {
 
         {auth && (
           <View style={s.section}>
-            <Text style={[s.sectionEyebrow, { color: C.accent }]}>{fr ? "Espace pro" : "Your workspace"}</Text>
-            <Text style={[s.sectionTitle, { color: titleColor }]}>{fr ? "Accès rapide" : "Quick actions"}</Text>
+            <Text style={[s.sectionEyebrow, { color: C.accent }]}>{pick("Your workspace", "Espace pro")}</Text>
+            <Text style={[s.sectionTitle, { color: titleColor }]}>{pick("Quick actions", "Accès rapide")}</Text>
             <Animated.View style={[s.quickActionsStack, { opacity: quickFade }]}>
               {auth.role === "customer" && (
                 <QuickActionCard
                   C={C}
                   isDark={isDark}
                   icon="calendar-outline"
-                  label={fr ? "Mes réservations" : "My Bookings"}
+                  label={pick("My Bookings", "Mes réservations")}
                   onPress={() => router.push("/my-bookings")}
                 />
               )}
               {auth.role === "seller" && (
                 <>
-                  <QuickActionCard C={C} isDark={isDark} icon="list-outline" label={fr ? "Mes annonces" : "My Sales"} onPress={() => router.push("/my-sales")} />
+                  <QuickActionCard C={C} isDark={isDark} icon="list-outline" label={pick("My Sales", "Mes annonces")} onPress={() => router.push("/my-sales")} />
                   <QuickActionCard
                     C={C}
                     isDark={isDark}
                     icon="add-circle-outline"
-                    label={fr ? "Nouvelle annonce" : "New Listing"}
+                    label={pick("New Listing", "Nouvelle annonce")}
                     onPress={() => router.push("/new-sale")}
                     color={C.accent}
                   />
@@ -706,23 +702,23 @@ export default function HomeScreen() {
                 <>
                   <QuickActionCard
                     featured
-                    featuredKicker={fr ? "APERÇU" : "INSIGHTS"}
-                    featuredSubtitle={fr ? "Performance & tendances" : "Performance & trends"}
+                    featuredKicker={pick("INSIGHTS", "APERÇU")}
+                    featuredSubtitle={pick("Performance & trends", "Performance & tendances")}
                     C={C}
                     isDark={isDark}
                     icon="analytics-outline"
-                    label={fr ? "Statistiques" : "Analytics"}
+                    label={pick("Analytics", "Statistiques")}
                     onPress={() => router.push("/owner-analytics")}
                     color={C.accent}
                   />
                   <QuickActionCard
                     elevated
-                    elevatedKicker={fr ? "À SUIVRE" : "PIPELINE"}
-                    elevatedSubtitle={fr ? "Demandes, statuts et planning" : "Requests, status & schedule"}
+                    elevatedKicker={pick("PIPELINE", "À SUIVRE")}
+                    elevatedSubtitle={pick("Requests, status & schedule", "Demandes, statuts et planning")}
                     C={C}
                     isDark={isDark}
                     icon="clipboard-outline"
-                    label={fr ? "Réservations" : "Bookings"}
+                    label={pick("Bookings", "Réservations")}
                     onPress={() => router.push("/owner-bookings")}
                     attentionCount={bookingAttentionCount}
                   />
@@ -730,25 +726,25 @@ export default function HomeScreen() {
                     C={C}
                     isDark={isDark}
                     icon="calendar-outline"
-                    label={fr ? "Calendrier" : "Calendar"}
+                    label={pick("Calendar", "Calendrier")}
                     onPress={() => router.push("/owner-booking-calendar")}
                   />
-                  <QuickActionCard C={C} isDark={isDark} icon="car-outline" label={fr ? "Mon parc" : "My Fleet"} onPress={() => router.push("/my-fleet")} />
+                  <QuickActionCard C={C} isDark={isDark} icon="car-outline" label={pick("My Fleet", "Mon parc")} onPress={() => router.push("/my-fleet")} />
                   <QuickActionCard
                     C={C}
                     isDark={isDark}
                     icon="pulse-outline"
-                    label={fr ? "Visibilité des annonces" : "Listing views"}
+                    label={pick("Listing views", "Visibilité des annonces")}
                     onPress={() => router.push("/owner-listing-views")}
                     attentionCount={listingViewAttentionCount}
                     attentionWeight="soft"
                   />
-                  <QuickActionCard C={C} isDark={isDark} icon="construct-outline" label={fr ? "Maintenance" : "Maintenance"} onPress={() => router.push("/maintenance")} />
+                  <QuickActionCard C={C} isDark={isDark} icon="construct-outline" label={pick("Maintenance", "Maintenance")} onPress={() => router.push("/maintenance")} />
                   <QuickActionCard
                     C={C}
                     isDark={isDark}
                     icon="add-circle-outline"
-                    label={fr ? "Ajouter location" : "Add Rental"}
+                    label={pick("Add Rental", "Ajouter location")}
                     onPress={() => router.push("/add-rental")}
                     color={C.accent}
                   />
@@ -759,14 +755,14 @@ export default function HomeScreen() {
                   C={C}
                   isDark={isDark}
                   icon="shield-checkmark-outline"
-                  label={fr ? "Modération" : "Moderation"}
+                  label={pick("Moderation", "Modération")}
                   onPress={() => router.push("/admin-moderation")}
                   color={C.accent}
                 />
               )}
             </Animated.View>
             <View style={{ marginTop: 20 }}>
-              <Text style={[s.sectionEyebrow, { color: C.primary, marginBottom: 10 }]}>{fr ? "Mon Garage" : "My Garage"}</Text>
+              <Text style={[s.sectionEyebrow, { color: C.primary, marginBottom: 10 }]}>{pick("My Garage", "Mon Garage")}</Text>
               <GarageWidget car={garageCar} alertCount={garageAlertCount} C={C} isDark={isDark} fr={fr} router={router} />
             </View>
             <BrandFooterLogo style={{ marginTop: 16, marginBottom: 4 }} />
@@ -784,12 +780,12 @@ export default function HomeScreen() {
               <View style={s.joinIconRing}>
                 <Ionicons name="person-add-outline" size={32} color={C.primary} />
               </View>
-              <Text style={[s.joinTitle, { color: titleColor }]}>{fr ? "Rejoindre Goovoiture" : "Join Goovoiture"}</Text>
+              <Text style={[s.joinTitle, { color: titleColor }]}>{pick("Join Goovoiture", "Rejoindre Goovoiture")}</Text>
               <Text style={[s.joinSub, { color: subColor }]}>
-                {fr ? "Créez un compte gratuit — débloquez l'intégralité de l'expérience." : "Create a free account — unlock the full experience."}
+                {pick("Create a free account — unlock the full experience.", "Créez un compte gratuit — débloquez l'intégralité de l'expérience.")}
               </Text>
               <PrimaryCta onPress={() => router.push("/(auth)/register")} colors={ctaPrimaryGrad} style={{ alignSelf: "stretch", width: "100%" }}>
-                <Text style={s.joinBtnText}>{fr ? "Commencer" : "Get Started"}</Text>
+                <Text style={s.joinBtnText}>{pick("Get Started", "Commencer")}</Text>
                 <Ionicons name="arrow-forward" size={18} color="#fff" />
               </PrimaryCta>
             </LinearGradient>

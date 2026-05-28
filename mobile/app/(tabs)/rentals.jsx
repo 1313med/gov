@@ -87,7 +87,7 @@ function WizardTrail({ fr, isDark, accent, muted }) {
   return (
     <View style={{ marginTop: 18, marginBottom: 6 }}>
       <Text style={{ fontSize: 9, fontWeight: "800", letterSpacing: 1.8, textTransform: "uppercase", color: muted, textAlign: "center", marginBottom: 12 }}>
-        {fr ? "Expérience location" : "Rental flow"}
+        {pick("Rental flow", "Expérience location")}
       </Text>
       <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "center" }}>
         {[0, 1, 2].map((i) => (
@@ -127,7 +127,7 @@ function WizardTrail({ fr, isDark, accent, muted }) {
 
 export default function RentalsScreen() {
   const { auth } = useAuth();
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const { colors: C, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -179,7 +179,7 @@ export default function RentalsScreen() {
       });
       setRentals(Array.isArray(data) ? data : data.rentals || []);
     } catch {
-      Alert.alert("Error", fr ? "Échec du chargement" : "Failed to load rentals");
+      Alert.alert("Error", pick("Failed to load rentals", "Échec du chargement"));
     } finally {
       setLoading(false);
       setHydrated(true);
@@ -195,7 +195,7 @@ export default function RentalsScreen() {
   }, [auth]);
 
   const toggleFav = async (id) => {
-    if (!auth) return Alert.alert(fr ? "Connectez-vous" : "Please login");
+    if (!auth) return Alert.alert(pick("Please login", "Connectez-vous"));
     const isFav = favorites.includes(id);
     try {
       if (isFav) {
@@ -220,22 +220,20 @@ export default function RentalsScreen() {
         <GlowOrb scaleAnim={orbPulse} colors={orbB} style={{ width: 190, height: 190, bottom: -35, left: -80 }} />
         <View style={{ paddingHorizontal: 20 }}>
           <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 2.2, textTransform: "uppercase", marginBottom: 8 }}>
-            {fr ? "Mobilité premium" : "Premium mobility"}
+            {pick("Premium mobility", "Mobilité premium")}
           </Text>
           <Text style={{ color: titleColor, fontWeight: "900", fontSize: 28, letterSpacing: -0.8, lineHeight: 34 }}>
-            {fr ? "Roulez avec" : "Drive with"}{" "}
-            <Text style={{ fontStyle: "italic", color: C.accent, fontWeight: "900" }}>{fr ? "élégance" : "style"}</Text>
+            {pick("Drive with", "Roulez avec")}{" "}
+            <Text style={{ fontStyle: "italic", color: C.accent, fontWeight: "900" }}>{pick("style", "élégance")}</Text>
           </Text>
           <Text style={{ color: subColor, fontSize: 14, lineHeight: 21, marginTop: 10, fontWeight: "500", maxWidth: 320 }}>
-            {fr
-              ? "Des véhicules prêts à partir, tarifs clairs, promos mises en avant — votre route commence ici."
-              : "Cars ready to go, clear daily rates, deals highlighted — your trip starts here."}
+            {pick("Cars ready to go, clear daily rates, deals highlighted — your trip starts here.", "Des véhicules prêts à partir, tarifs clairs, promos mises en avant — votre route commence ici.")}
           </Text>
           <HeroShimmer color={C.accent} track={shimmerTrack} />
           <WizardTrail fr={fr} isDark={isDark} accent={C.accent} muted={subColor} />
 
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 8 }}>
-            <Text style={{ color: subColor, fontSize: 12, fontWeight: "700" }}>{fr ? "Filtres rapides" : "Quick filters"}</Text>
+            <Text style={{ color: subColor, fontSize: 12, fontWeight: "700" }}>{pick("Quick filters", "Filtres rapides")}</Text>
             <Pressable
               onPress={() => setShowFilters(!showFilters)}
               style={({ pressed }) => [{ opacity: pressed ? 0.88 : 1 }]}
@@ -256,7 +254,7 @@ export default function RentalsScreen() {
                 }}
               >
                 <Ionicons name="options-outline" size={18} color={showFilters ? "#fff" : C.accent} />
-                <Text style={{ color: showFilters ? "#fff" : C.accent, fontSize: 13, fontWeight: "800" }}>{fr ? "Filtres" : "Filters"}</Text>
+                <Text style={{ color: showFilters ? "#fff" : C.accent, fontSize: 13, fontWeight: "800" }}>{pick("Filters", "Filtres")}</Text>
               </LinearGradient>
             </Pressable>
           </View>
@@ -293,7 +291,7 @@ export default function RentalsScreen() {
                   <TextInput
                     value={cityDraft}
                     onChangeText={setCityDraft}
-                    placeholder={fr ? "Ville ou région" : "City or region"}
+                    placeholder={pick("City or region", "Ville ou région")}
                     placeholderTextColor={C.muted}
                     style={{ flex: 1, color: titleColor, paddingVertical: 14, marginLeft: 10, fontSize: 15 }}
                   />
@@ -351,7 +349,7 @@ export default function RentalsScreen() {
                   ) : null}
                   <Ionicons name={airportOnly ? "airplane" : "airplane-outline"} size={20} color={airportOnly ? "#fff" : C.accent} style={{ zIndex: 1 }} />
                   <Text style={{ zIndex: 1, color: airportOnly ? "#fff" : subColor, fontSize: 14, fontWeight: "800" }}>
-                    {fr ? "Livraison aéroport uniquement" : "Airport delivery only"}
+                    {pick("Airport delivery only", "Livraison aéroport uniquement")}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -361,13 +359,13 @@ export default function RentalsScreen() {
       </LinearGradient>
 
       <View style={{ paddingHorizontal: 18, paddingTop: 20, paddingBottom: 8 }}>
-        <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 2, textTransform: "uppercase" }}>{fr ? "Flotte" : "Fleet"}</Text>
+        <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 2, textTransform: "uppercase" }}>{pick("Fleet", "Flotte")}</Text>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 6 }}>
-          <Text style={{ color: titleColor, fontWeight: "900", fontSize: 18, letterSpacing: -0.3 }}>{fr ? "Voitures disponibles" : "Available cars"}</Text>
+          <Text style={{ color: titleColor, fontWeight: "900", fontSize: 18, letterSpacing: -0.3 }}>{pick("Available cars", "Voitures disponibles")}</Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
             <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: C.primary, opacity: 0.85 }} />
             <Text style={{ color: subColor, fontSize: 12, fontWeight: "700" }}>
-              {rentals.length} {fr ? "résultats" : "results"}
+              {rentals.length} {pick("results", "résultats")}
             </Text>
           </View>
         </View>
@@ -396,15 +394,11 @@ export default function RentalsScreen() {
                 >
                   <Ionicons name="car-sport-outline" size={44} color={C.accent} />
                 </LinearGradient>
-                <Text style={{ color: titleColor, fontWeight: "800", fontSize: 19, textAlign: "center" }}>{fr ? "Aucune location trouvée" : "No rentals found"}</Text>
+                <Text style={{ color: titleColor, fontWeight: "800", fontSize: 19, textAlign: "center" }}>{pick("No rentals found", "Aucune location trouvée")}</Text>
                 <Text style={{ color: subColor, fontSize: 14, marginTop: 10, textAlign: "center", lineHeight: 21 }}>
                   {airportOnly
-                    ? fr
-                      ? "Aucune voiture avec livraison aéroport ne correspond. Désactivez le filtre Aéroport ou élargissez la recherche."
-                      : "No cars with airport delivery match. Turn off the Airport filter or broaden your search."
-                    : fr
-                      ? "Essayez une autre ville ou une tranche de prix."
-                      : "Try another city or price range."}
+                    ? pick("No cars with airport delivery match. Turn off the Airport filter or broaden your search.", "Aucune voiture avec livraison aéroport ne correspond. Désactivez le filtre Aéroport ou élargissez la recherche.")
+                    : pick("Try another city or price range.", "Essayez une autre ville ou une tranche de prix.")}
                 </Text>
               </View>
             ) : null

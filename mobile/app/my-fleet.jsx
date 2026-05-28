@@ -22,6 +22,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { getOwnerRentals, deleteRental, updateRental } from "../src/api/rental";
 import { useAppLang } from "../src/context/AppLangContext";
+import { dateLocaleTag, pickLang } from "../src/utils/i18n";
+import { arOverrides } from "../src/locales/arOverrides";
+import { localeArMap } from "../src/locales/localeArMap";
+
+const fullArOverrides = { ...localeArMap, ...arOverrides };
 import { resolveMediaUrl } from "../src/utils/mediaUrl";
 import { useTheme } from "../src/context/ThemeContext";
 import { DatePickerField } from "../src/components/garage/DatePickerField";
@@ -42,18 +47,16 @@ const BLANK_OFFER = {
   expiresAt: "",
 };
 
-function offerSummary(o, fr) {
+const p = (lang, en, fr, ar) => pickLang(lang, en, fr, ar, fullArOverrides);
+
+function offerSummary(o, lang) {
   if (o.type === "free_days") {
-    return fr
-      ? `À partir de ${o.minDays} j. · +${o.freeExtraDays} j. offert(s)`
-      : `From ${o.minDays} days · +${o.freeExtraDays} free day(s)`;
+    return p(lang, `From ${o.minDays} days · +${o.freeExtraDays} free day(s)`, `À partir de ${o.minDays} j. · +${o.freeExtraDays} j. offert(s)`, `من ${o.minDays} أيام · +${o.freeExtraDays} يوم مجاني`);
   }
   if (o.type === "percent_discount") {
-    return fr
-      ? `À partir de ${o.minDays} j. · −${o.discountPercent} %`
-      : `From ${o.minDays} days · −${o.discountPercent}%`;
+    return p(lang, `From ${o.minDays} days · −${o.discountPercent}%`, `À partir de ${o.minDays} j. · −${o.discountPercent} %`, `من ${o.minDays} أيام · −${o.discountPercent}%`);
   }
-  return o.description?.trim() || (fr ? "Offre personnalisée" : "Custom offer");
+  return o.description?.trim() || p(lang, "Custom offer", "Offre personnalisée", "عرض مخصص");
 }
 
 function toDateOnly(v) {
@@ -69,8 +72,8 @@ function availabilityForApi(ranges) {
   }));
 }
 
-function formatBlockedRange(start, end, fr) {
-  const loc = fr ? "fr-FR" : "en-GB";
+function formatBlockedRange(start, end, lang) {
+  const loc = dateLocaleTag(lang);
   const a = toDateOnly(start);
   const b = toDateOnly(end);
   if (!a || !b) return "";
@@ -94,7 +97,7 @@ function normalizeOffersForApi(offers) {
 }
 
 export default function MyFleetScreen() {
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const { colors: C, isDark } = useTheme();
   const s = useMemo(() => createMyFleetStyles(C), [C]);
   const router = useRouter();
@@ -164,8 +167,8 @@ export default function MyFleetScreen() {
     const end = toDateOnly(blockEnd);
     if (!start || !end || end <= start) {
       Alert.alert(
-        fr ? "Dates invalides" : "Invalid dates",
-        fr ? "La date de fin doit être après la date de début." : "End date must be after start date.",
+        pick("Invalid dates", "Dates invalides"),
+        pick("End date must be after start date.", "La date de fin doit être après la date de début."),
       );
       return;
     }
@@ -180,7 +183,7 @@ export default function MyFleetScreen() {
     if (!editRental) return;
     const priceNum = parseFloat(String(editPrice).replace(",", "."));
     if (!Number.isFinite(priceNum) || priceNum <= 0) {
-      Alert.alert(fr ? "Prix" : "Price", fr ? "Entrez un prix par jour valide." : "Enter a valid price per day.");
+      Alert.alert(pick("Price", "Prix"), pick("Enter a valid price per day.", "Entrez un prix par jour valide."));
       return;
     }
     setSavingEdit(true);
@@ -190,10 +193,10 @@ export default function MyFleetScreen() {
         availability: availabilityForApi(availability),
       });
       setRentals((p) => p.map((c) => (c._id === data._id ? data : c)));
-      Alert.alert("", fr ? "Annonce mise à jour." : "Listing updated.");
+      Alert.alert("", pick("Listing updated.", "Annonce mise à jour."));
       closeEdit();
     } catch (e) {
-      Alert.alert("Error", e?.response?.data?.message || (fr ? "Échec" : "Save failed"));
+      Alert.alert("Error", e?.response?.data?.message || (pick("Save failed", "Échec")));
     } finally {
       setSavingEdit(false);
     }
@@ -214,7 +217,7 @@ export default function MyFleetScreen() {
 
   const addOffer = () => {
     if (!newOffer.title?.trim()) {
-      Alert.alert(fr ? "Titre requis" : "Title required", fr ? "Donnez un titre à l’offre." : "Give the offer a title.");
+      Alert.alert(pick("Title required", "Titre requis"), pick("Give the offer a title.", "Donnez un titre à l’offre."));
       return;
     }
     setOffers((p) => [...p, { ...newOffer, isActive: true, title: newOffer.title.trim() }]);
@@ -229,7 +232,7 @@ export default function MyFleetScreen() {
     if (!promoRental) return;
     for (const o of offers) {
       if (!String(o.title || "").trim()) {
-        Alert.alert(fr ? "Titre manquant" : "Missing title", fr ? "Chaque offre doit avoir un titre." : "Each offer needs a title.");
+        Alert.alert(pick("Missing title", "Titre manquant"), pick("Each offer needs a title.", "Chaque offre doit avoir un titre."));
         return;
       }
     }
@@ -238,10 +241,10 @@ export default function MyFleetScreen() {
       const body = normalizeOffersForApi(offers);
       const { data } = await updateRental(promoRental._id, { offers: body });
       setRentals((p) => p.map((c) => (c._id === data._id ? data : c)));
-      Alert.alert("", fr ? "Promotions enregistrées." : "Promotions saved.");
+      Alert.alert("", pick("Promotions saved.", "Promotions enregistrées."));
       closePromos();
     } catch (e) {
-      Alert.alert("Error", e?.response?.data?.message || (fr ? "Échec de l’enregistrement" : "Save failed"));
+      Alert.alert("Error", e?.response?.data?.message || (pick("Save failed", "Échec de l’enregistrement")));
     } finally {
       setSavingPromos(false);
     }
@@ -267,7 +270,7 @@ export default function MyFleetScreen() {
     if (!airportRental) return;
     const fee = Math.max(0, parseFloat(String(airportFee).replace(",", ".")) || 0);
     if (airportOffered && fee <= 0) {
-      Alert.alert(fr ? "Tarif" : "Fee", fr ? "Entrez un montant supérieur à 0 MAD." : "Enter a fee greater than 0 MAD.");
+      Alert.alert(pick("Fee", "Tarif"), pick("Enter a fee greater than 0 MAD.", "Entrez un montant supérieur à 0 MAD."));
       return;
     }
     setSavingAirport(true);
@@ -277,20 +280,20 @@ export default function MyFleetScreen() {
         airportDeliveryFeeMad: airportOffered ? fee : 0,
       });
       setRentals((p) => p.map((c) => (c._id === data._id ? data : c)));
-      Alert.alert("", fr ? "Service aéroport enregistré." : "Airport service saved.");
+      Alert.alert("", pick("Airport service saved.", "Service aéroport enregistré."));
       closeAirport();
     } catch (e) {
-      Alert.alert("Error", e?.response?.data?.message || (fr ? "Échec" : "Save failed"));
+      Alert.alert("Error", e?.response?.data?.message || (pick("Save failed", "Échec")));
     } finally {
       setSavingAirport(false);
     }
   };
 
   const handleDelete = (id) =>
-    Alert.alert(fr ? "Supprimer" : "Delete", fr ? "Êtes-vous sûr ?" : "Are you sure?", [
-      { text: fr ? "Annuler" : "Cancel" },
+    Alert.alert(pick("Delete", "Supprimer"), pick("Are you sure?", "Êtes-vous sûr ?"), [
+      { text: pick("Cancel", "Annuler") },
       {
-        text: fr ? "Supprimer" : "Delete",
+        text: pick("Delete", "Supprimer"),
         style: "destructive",
         onPress: async () => {
           try {
@@ -323,10 +326,10 @@ export default function MyFleetScreen() {
         ListEmptyComponent={
           <View style={s.empty}>
             <Ionicons name="car-outline" size={56} color={C.muted} />
-            <Text style={s.emptyTitle}>{fr ? "Parc vide" : "No vehicles yet"}</Text>
+            <Text style={s.emptyTitle}>{pick("No vehicles yet", "Parc vide")}</Text>
             <TouchableOpacity onPress={() => router.push("/add-rental")} style={s.emptyBtn}>
               <Ionicons name="add-circle-outline" size={18} color="#fff" />
-              <Text style={s.emptyBtnText}>{fr ? "Ajouter un véhicule" : "Add Vehicle"}</Text>
+              <Text style={s.emptyBtnText}>{pick("Add Vehicle", "Ajouter un véhicule")}</Text>
             </TouchableOpacity>
           </View>
         }
@@ -348,17 +351,25 @@ export default function MyFleetScreen() {
                   <Text style={s.cardTitle} numberOfLines={1}>
                     {item.title || `${item.brand} ${item.model}`}
                   </Text>
-                  <Text style={s.cardPrice}>{item.pricePerDay} MAD/day</Text>
+                  <Text style={s.cardPrice}>
+                    {item.pricePerDay} {pick("MAD/day", "MAD/jour")}
+                  </Text>
                 </View>
                 <View style={s.metaRow}>
                   <View style={[s.badge, { backgroundColor: st.bg, borderColor: st.border }]}>
-                    <Text style={[s.badgeText, { color: st.text }]}>{item.status}</Text>
+                    <Text style={[s.badgeText, { color: st.text }]}>
+                      {pick(
+                        { pending: "Pending", approved: "Approved", rejected: "Rejected" }[item.status] || item.status,
+                        { pending: "En attente", approved: "Approuvé", rejected: "Refusé" }[item.status] || item.status,
+                        { pending: "قيد الانتظار", approved: "معتمد", rejected: "مرفوض" }[item.status] || item.status,
+                      )}
+                    </Text>
                   </View>
                   {activeOffers.length > 0 && (
                     <View style={s.promoBadge}>
                       <Ionicons name="pricetag" size={11} color="#fbbf24" />
                       <Text style={s.promoBadgeText}>
-                        {activeOffers.length} {fr ? "promo act." : "active"}
+                        {activeOffers.length} {pick("active", "promo act.")}
                       </Text>
                     </View>
                   )}
@@ -373,9 +384,9 @@ export default function MyFleetScreen() {
                       <Ionicons name="calendar-outline" size={11} color="#f87171" />
                       <Text style={s.blockedBadgeText}>
                         {(item.availability || []).length}{" "}
-                        {fr
-                          ? (item.availability.length > 1 ? "périodes bloquées" : "période bloquée")
-                          : (item.availability.length > 1 ? "blocked periods" : "blocked period")}
+                        {item.availability.length > 1
+                          ? pick("blocked periods", "périodes bloquées", "فترات محجوبة")
+                          : pick("blocked period", "période bloquée", "فترة محجوبة")}
                       </Text>
                     </View>
                   )}
@@ -389,29 +400,29 @@ export default function MyFleetScreen() {
                 <View style={s.actionsRow}>
                   <TouchableOpacity onPress={() => openEdit(item)} style={[s.actionBtn, s.actionEdit]}>
                     <Ionicons name="create-outline" size={15} color={C.primary} />
-                    <Text style={[s.actionBtnText, { color: C.primary }]}>{fr ? "Modifier" : "Edit"}</Text>
+                    <Text style={[s.actionBtnText, { color: C.primary }]}>{pick("Edit", "Modifier")}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity onPress={() => openPromos(item)} style={[s.actionBtn, s.actionPromo]}>
                     <Ionicons name="pricetag-outline" size={15} color="#fbbf24" />
-                    <Text style={[s.actionBtnText, { color: "#fbbf24" }]}>{fr ? "Promos" : "Deals"}</Text>
+                    <Text style={[s.actionBtnText, { color: "#fbbf24" }]}>{pick("Deals", "Promos")}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity onPress={() => openAirport(item)} style={[s.actionBtn, s.actionAirport]}>
                     <Ionicons name="airplane-outline" size={15} color="#38bdf8" />
-                    <Text style={[s.actionBtnText, { color: "#38bdf8" }]}>{fr ? "Aéroport" : "Airport"}</Text>
+                    <Text style={[s.actionBtnText, { color: "#38bdf8" }]}>{pick("Airport", "Aéroport")}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => router.push("/owner-bookings")}
                     style={[s.actionBtn, { backgroundColor: "rgba(124,107,255,0.1)", borderColor: "rgba(124,107,255,0.3)" }]}
                   >
                     <Ionicons name="calendar-outline" size={15} color={C.primary} />
-                    <Text style={[s.actionBtnText, { color: C.primary }]}>{fr ? "Résa." : "Bookings"}</Text>
+                    <Text style={[s.actionBtnText, { color: C.primary }]}>{pick("Bookings", "Résa.")}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => handleDelete(item._id)}
                     style={[s.actionBtn, { backgroundColor: "rgba(239,68,68,0.1)", borderColor: "rgba(239,68,68,0.3)" }]}
                   >
                     <Ionicons name="trash-outline" size={15} color={C.red} />
-                    <Text style={[s.actionBtnText, { color: C.red }]}>{fr ? "Suppr." : "Delete"}</Text>
+                    <Text style={[s.actionBtnText, { color: C.red }]}>{pick("Delete", "Suppr.")}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -427,7 +438,7 @@ export default function MyFleetScreen() {
             <View style={s.modalBox}>
               <View style={s.modalHead}>
                 <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text style={s.modalTitle}>{fr ? "Modifier l'annonce" : "Edit listing"}</Text>
+                  <Text style={s.modalTitle}>{pick("Edit listing", "Modifier l'annonce")}</Text>
                   <Text style={s.modalSub} numberOfLines={1}>
                     {editRental?.title}
                   </Text>
@@ -438,8 +449,8 @@ export default function MyFleetScreen() {
               </View>
 
               <ScrollView style={s.modalScroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-                <Text style={s.sectionLabel}>{fr ? "PRIX" : "PRICE"}</Text>
-                <Text style={s.formLabel}>{fr ? "Prix par jour (MAD)" : "Price per day (MAD)"}</Text>
+                <Text style={s.sectionLabel}>{pick("PRICE", "PRIX")}</Text>
+                <Text style={s.formLabel}>{pick("Price per day (MAD)", "Prix par jour (MAD)")}</Text>
                 <TextInput
                   value={editPrice}
                   onChangeText={setEditPrice}
@@ -449,17 +460,15 @@ export default function MyFleetScreen() {
                   style={s.input}
                 />
 
-                <Text style={[s.sectionLabel, { marginTop: 20 }]}>{fr ? "INDISPONIBILITÉS" : "UNAVAILABLE"}</Text>
+                <Text style={[s.sectionLabel, { marginTop: 20 }]}>{pick("UNAVAILABLE", "INDISPONIBILITÉS")}</Text>
                 <Text style={s.modalHint}>
-                  {fr
-                    ? "Bloquez des dates (entretien, usage personnel…) — les clients ne pourront pas réserver sur ces jours."
-                    : "Block dates (maintenance, personal use…) — customers cannot book on those days."}
+                  {pick("Block dates (maintenance, personal use…) — customers cannot book on those days.", "Bloquez des dates (entretien, usage personnel…) — les clients ne pourront pas réserver sur ces jours.")}
                 </Text>
 
                 {availability.map((r, i) => (
                   <View key={`${r.startDate}-${r.endDate}-${i}`} style={s.blockedRow}>
                     <Ionicons name="calendar-outline" size={16} color="#f87171" />
-                    <Text style={s.blockedRowText}>{formatBlockedRange(r.startDate, r.endDate, fr)}</Text>
+                    <Text style={s.blockedRowText}>{formatBlockedRange(r.startDate, r.endDate, lang)}</Text>
                     <TouchableOpacity onPress={() => removeBlockedRange(i)} hitSlop={8}>
                       <Ionicons name="close-circle" size={20} color={C.red} />
                     </TouchableOpacity>
@@ -467,28 +476,28 @@ export default function MyFleetScreen() {
                 ))}
 
                 <DatePickerField
-                  label={fr ? "Du" : "From"}
+                  label={pick("From", "Du")}
                   value={blockStart ? `${blockStart}T12:00:00.000Z` : ""}
                   onChange={(v) => setBlockStart(toDateOnly(v))}
                   isDark={isDark}
                   fr={fr}
                   accent={C.primary}
                   minimumDate={new Date(todayYmd)}
-                  emptyLabel={fr ? "Choisir" : "Pick date"}
+                  emptyLabel={pick("Pick date", "Choisir")}
                 />
                 <DatePickerField
-                  label={fr ? "Au" : "To"}
+                  label={pick("To", "Au")}
                   value={blockEnd ? `${blockEnd}T12:00:00.000Z` : ""}
                   onChange={(v) => setBlockEnd(toDateOnly(v))}
                   isDark={isDark}
                   fr={fr}
                   accent={C.primary}
                   minimumDate={blockStart ? new Date(blockStart) : new Date(todayYmd)}
-                  emptyLabel={fr ? "Choisir" : "Pick date"}
+                  emptyLabel={pick("Pick date", "Choisir")}
                 />
                 <TouchableOpacity onPress={addBlockedRange} style={s.addBlockBtn}>
                   <Ionicons name="add-circle-outline" size={18} color={C.primary} />
-                  <Text style={s.addBlockBtnText}>{fr ? "Ajouter la période" : "Add blocked period"}</Text>
+                  <Text style={s.addBlockBtnText}>{pick("Add blocked period", "Ajouter la période")}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -501,7 +510,7 @@ export default function MyFleetScreen() {
                 >
                   <Ionicons name="pricetag-outline" size={18} color="#fbbf24" />
                   <Text style={s.linkPromosText}>
-                    {fr ? "Gérer les promotions →" : "Manage promotions →"}
+                    {pick("Manage promotions →", "Gérer les promotions →")}
                   </Text>
                 </TouchableOpacity>
               </ScrollView>
@@ -514,7 +523,7 @@ export default function MyFleetScreen() {
                 {savingEdit ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={s.saveBtnText}>{fr ? "Enregistrer" : "Save changes"}</Text>
+                  <Text style={s.saveBtnText}>{pick("Save changes", "Enregistrer")}</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -530,7 +539,7 @@ export default function MyFleetScreen() {
               <View style={s.modalHead}>
               <View style={{ flex: 1, minWidth: 0 }}>
                 <Text style={s.modalTitle} numberOfLines={2}>
-                  {fr ? "Promotions" : "Promotions"}
+                  {pick("Promotions", "Promotions")}
                 </Text>
                 <Text style={s.modalSub} numberOfLines={1}>
                   {promoRental?.title}
@@ -542,9 +551,7 @@ export default function MyFleetScreen() {
               </View>
 
               <Text style={s.modalHint}>
-              {fr
-                ? "Réductions ou jours offerts quand la location atteint une durée minimum (comme sur le web)."
-                : "Discounts or free days when the rental meets a minimum length (same as web)."}
+              {pick("Discounts or free days when the rental meets a minimum length (same as web).", "Réductions ou jours offerts quand la location atteint une durée minimum (comme sur le web).")}
               </Text>
 
               <ScrollView style={s.modalScroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
@@ -565,10 +572,10 @@ export default function MyFleetScreen() {
                         <Ionicons name="trash-outline" size={18} color={C.red} />
                       </TouchableOpacity>
                     </View>
-                    <Text style={s.offerMeta}>{offerSummary(o, fr)}</Text>
+                    <Text style={s.offerMeta}>{offerSummary(o, lang)}</Text>
                     {o.expiresAt ? (
                       <Text style={s.offerExp}>
-                        {fr ? "Expire" : "Expires"}: {String(o.expiresAt).slice(0, 10)}
+                        {pick("Expires", "Expire")}: {String(o.expiresAt).slice(0, 10)}
                       </Text>
                     ) : null}
                     {o.description ? <Text style={s.offerDesc}>{o.description}</Text> : null}
@@ -577,12 +584,12 @@ export default function MyFleetScreen() {
 
                 {showOfferForm ? (
                   <View style={s.formBox}>
-                  <Text style={s.formLabel}>{fr ? "Type" : "Type"}</Text>
+                  <Text style={s.formLabel}>{pick("Type", "Type")}</Text>
                   <View style={s.typeRow}>
                     {[
-                      ["free_days", fr ? "Jours offerts" : "Free days"],
-                      ["percent_discount", fr ? "−%" : "−%"],
-                      ["custom", fr ? "Perso." : "Custom"],
+                      ["free_days", pick("Free days", "Jours offerts")],
+                      ["percent_discount", pick("−%", "−%")],
+                      ["custom", pick("Custom", "Perso.")],
                     ].map(([key, label]) => (
                       <TouchableOpacity
                         key={key}
@@ -594,16 +601,16 @@ export default function MyFleetScreen() {
                     ))}
                   </View>
 
-                  <Text style={s.formLabel}>{fr ? "Titre" : "Title"}</Text>
+                  <Text style={s.formLabel}>{pick("Title", "Titre")}</Text>
                   <TextInput
                     value={newOffer.title}
                     onChangeText={(t) => setNewOffer((p) => ({ ...p, title: t }))}
-                    placeholder={fr ? "ex. Semaine en or" : "e.g. Week special"}
+                    placeholder={pick("e.g. Week special", "ex. Semaine en or")}
                     placeholderTextColor={C.muted}
                     style={s.input}
                   />
 
-                  <Text style={s.formLabel}>{fr ? "Description (optionnel)" : "Description (optional)"}</Text>
+                  <Text style={s.formLabel}>{pick("Description (optional)", "Description (optionnel)")}</Text>
                   <TextInput
                     value={newOffer.description}
                     onChangeText={(t) => setNewOffer((p) => ({ ...p, description: t }))}
@@ -615,7 +622,7 @@ export default function MyFleetScreen() {
                   {newOffer.type !== "custom" && (
                     <View style={s.formRow}>
                       <View style={{ flex: 1 }}>
-                        <Text style={s.formLabel}>{fr ? "Jours min." : "Min days"}</Text>
+                        <Text style={s.formLabel}>{pick("Min days", "Jours min.")}</Text>
                         <TextInput
                           value={String(newOffer.minDays)}
                           onChangeText={(t) => setNewOffer((p) => ({ ...p, minDays: parseInt(t, 10) || 1 }))}
@@ -625,7 +632,7 @@ export default function MyFleetScreen() {
                       </View>
                       {newOffer.type === "free_days" && (
                         <View style={{ flex: 1 }}>
-                          <Text style={s.formLabel}>{fr ? "J. offerts" : "Free days"}</Text>
+                          <Text style={s.formLabel}>{pick("Free days", "J. offerts")}</Text>
                           <TextInput
                             value={String(newOffer.freeExtraDays)}
                             onChangeText={(t) => setNewOffer((p) => ({ ...p, freeExtraDays: parseInt(t, 10) || 0 }))}
@@ -636,7 +643,7 @@ export default function MyFleetScreen() {
                       )}
                       {newOffer.type === "percent_discount" && (
                         <View style={{ flex: 1 }}>
-                          <Text style={s.formLabel}>{fr ? "%" : "% off"}</Text>
+                          <Text style={s.formLabel}>{pick("% off", "%")}</Text>
                           <TextInput
                             value={String(newOffer.discountPercent)}
                             onChangeText={(t) => setNewOffer((p) => ({ ...p, discountPercent: parseInt(t, 10) || 0 }))}
@@ -648,7 +655,7 @@ export default function MyFleetScreen() {
                     </View>
                   )}
 
-                  <Text style={s.formLabel}>{fr ? "Expire le (AAAA-MM-JJ, vide = jamais)" : "Expires (YYYY-MM-DD, empty = never)"}</Text>
+                  <Text style={s.formLabel}>{pick("Expires (YYYY-MM-DD, empty = never)", "Expire le (AAAA-MM-JJ, vide = jamais)")}</Text>
                   <TextInput
                     value={newOffer.expiresAt}
                     onChangeText={(t) => setNewOffer((p) => ({ ...p, expiresAt: t }))}
@@ -660,17 +667,17 @@ export default function MyFleetScreen() {
 
                     <View style={s.formActions}>
                       <TouchableOpacity onPress={() => setShowOfferForm(false)} style={s.btnGhost}>
-                        <Text style={s.btnGhostText}>{fr ? "Annuler" : "Cancel"}</Text>
+                        <Text style={s.btnGhostText}>{pick("Cancel", "Annuler")}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity onPress={addOffer} style={s.btnPrimary}>
-                        <Text style={s.btnPrimaryText}>{fr ? "Ajouter" : "Add"}</Text>
+                        <Text style={s.btnPrimaryText}>{pick("Add", "Ajouter")}</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
                 ) : (
                   <TouchableOpacity onPress={() => setShowOfferForm(true)} style={s.addOfferBtn}>
                     <Ionicons name="add-circle-outline" size={20} color={C.primary} />
-                    <Text style={s.addOfferBtnText}>{fr ? "Nouvelle promotion" : "New promotion"}</Text>
+                    <Text style={s.addOfferBtnText}>{pick("New promotion", "Nouvelle promotion")}</Text>
                   </TouchableOpacity>
                 )}
               </ScrollView>
@@ -683,7 +690,7 @@ export default function MyFleetScreen() {
                 {savingPromos ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={s.saveBtnText}>{fr ? "Enregistrer les promotions" : "Save promotions"}</Text>
+                  <Text style={s.saveBtnText}>{pick("Save promotions", "Enregistrer les promotions")}</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -698,7 +705,7 @@ export default function MyFleetScreen() {
             <View style={s.modalBox}>
               <View style={s.modalHead}>
                 <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text style={s.modalTitle}>{fr ? "Livraison aéroport" : "Airport delivery"}</Text>
+                  <Text style={s.modalTitle}>{pick("Airport delivery", "Livraison aéroport")}</Text>
                   <Text style={s.modalSub} numberOfLines={1}>
                     {airportRental?.title}
                   </Text>
@@ -708,12 +715,10 @@ export default function MyFleetScreen() {
                 </TouchableOpacity>
               </View>
               <Text style={s.modalHint}>
-                {fr
-                  ? "Proposez de déposer le véhicule à l'aéroport pour le client. Tarif unique en MAD."
-                  : "Offer to bring the car to the airport for your renter. One-time fee in MAD."}
+                {pick("Offer to bring the car to the airport for your renter. One-time fee in MAD.", "Proposez de déposer le véhicule à l'aéroport pour le client. Tarif unique en MAD.")}
               </Text>
               <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                <Text style={{ color: C.white, fontWeight: "700", fontSize: 15 }}>{fr ? "Activer" : "Enabled"}</Text>
+                <Text style={{ color: C.white, fontWeight: "700", fontSize: 15 }}>{pick("Enabled", "Activer")}</Text>
                 <Switch
                   value={airportOffered}
                   onValueChange={setAirportOffered}
@@ -723,7 +728,7 @@ export default function MyFleetScreen() {
               </View>
               {airportOffered ? (
                 <>
-                  <Text style={s.formLabel}>{fr ? "Tarif (MAD)" : "Fee (MAD)"}</Text>
+                  <Text style={s.formLabel}>{pick("Fee (MAD)", "Tarif (MAD)")}</Text>
                   <TextInput
                     value={airportFee}
                     onChangeText={setAirportFee}
@@ -742,7 +747,7 @@ export default function MyFleetScreen() {
                 {savingAirport ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={s.saveBtnText}>{fr ? "Enregistrer" : "Save"}</Text>
+                  <Text style={s.saveBtnText}>{pick("Save", "Enregistrer")}</Text>
                 )}
               </TouchableOpacity>
             </View>

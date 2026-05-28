@@ -18,7 +18,7 @@ const LEVEL_LABEL = {
 
 export default function TrustPassportCard({ userId }) {
   const { colors: C } = useTheme();
-  const { lang } = useAppLang();
+  const { lang, pick, dateLocale } = useAppLang();
   const fr = lang === "fr";
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -42,13 +42,13 @@ export default function TrustPassportCard({ userId }) {
   if (!data) {
     return (
       <Text style={{ color: C.muted, fontSize: 13, textAlign: "center", paddingVertical: 16 }}>
-        {fr ? "Données indisponibles." : "Data unavailable."}
+        {pick("Data unavailable.", "Données indisponibles.")}
       </Text>
     );
   }
 
   const lvl = LEVEL_COLORS[data.trustLevel] || LEVEL_COLORS.medium;
-  const lvlLabel = (LEVEL_LABEL[fr ? "fr" : "en"])[data.trustLevel] || "";
+  const lvlLabel = (LEVEL_LABEL[pick("en", "fr")])[data.trustLevel] || "";
 
   return (
     <View style={[s.wrap, { backgroundColor: lvl.bg, borderColor: lvl.border }]}>
@@ -65,8 +65,8 @@ export default function TrustPassportCard({ userId }) {
         <View style={{ flex: 1, minWidth: 0, marginLeft: 12 }}>
           <Text style={[s.name, { color: lvl.text }]} numberOfLines={1}>{data.name}</Text>
           <Text style={s.since}>
-            {fr ? "Membre depuis " : "Member since "}
-            {new Date(data.memberSince).toLocaleDateString(fr ? "fr-FR" : "en-GB", { month: "short", year: "numeric" })}
+            {pick("Member since ", "Membre depuis ")}
+            {new Date(data.memberSince).toLocaleDateString(dateLocale, { month: "short", year: "numeric" })}
           </Text>
         </View>
         <View style={s.scoreWrap}>
@@ -82,14 +82,14 @@ export default function TrustPassportCard({ userId }) {
           <Ionicons name={data.verification.cinVerified ? "checkmark-circle" : "ellipse-outline"} size={13}
             color={data.verification.cinVerified ? "#22c55e" : "#94a3b8"} />
           <Text style={[s.chipTxt, { color: data.verification.cinVerified ? "#22c55e" : "#94a3b8" }]}>
-            CIN {data.verification.cinVerified ? (fr ? "vérifiée" : "verified") : data.verification.cinSubmitted ? (fr ? "(en attente)" : "(pending)") : (fr ? "non soumise" : "not submitted")}
+            CIN {data.verification.cinVerified ? (pick("verified", "vérifiée")) : data.verification.cinSubmitted ? (pick("(pending)", "(en attente)")) : (pick("not submitted", "non soumise"))}
           </Text>
         </View>
         <View style={[s.chip, data.verification.permisVerified ? s.chipOk : s.chipOff]}>
           <Ionicons name={data.verification.permisVerified ? "checkmark-circle" : "ellipse-outline"} size={13}
             color={data.verification.permisVerified ? "#22c55e" : "#94a3b8"} />
           <Text style={[s.chipTxt, { color: data.verification.permisVerified ? "#22c55e" : "#94a3b8" }]}>
-            {fr ? "Permis " : "License "}{data.verification.permisVerified ? (fr ? "vérifié" : "verified") : data.verification.permisSubmitted ? (fr ? "(en attente)" : "(pending)") : (fr ? "non soumis" : "not submitted")}
+            {pick("License ", "Permis ")}{data.verification.permisVerified ? (pick("verified", "vérifié")) : data.verification.permisSubmitted ? (pick("(pending)", "(en attente)")) : (pick("not submitted", "non soumis"))}
           </Text>
         </View>
       </View>
@@ -98,15 +98,15 @@ export default function TrustPassportCard({ userId }) {
       <View style={s.statsRow}>
         <Text style={s.statTxt}>
           <Text style={s.statNum}>{data.stats.completedRentals}</Text>
-          {fr ? " loc. complétées" : " completed trips"}
+          {pick(" completed trips", " loc. complétées")}
         </Text>
         <Text style={s.statTxt}>
           <Text style={s.statNum}>{data.stats.cancelledRentals}</Text>
-          {fr ? " annulation(s)" : " cancellation(s)"}
+          {pick(" cancellation(s)", " annulation(s)")}
         </Text>
         {data.stats.platformFlags > 0 && (
           <Text style={[s.statTxt, { color: "#f87171" }]}>
-            ⚠ {data.stats.platformFlags} {fr ? "signalement(s)" : "flag(s)"}
+            ⚠ {data.stats.platformFlags} {pick("flag(s)", "signalement(s)")}
           </Text>
         )}
       </View>

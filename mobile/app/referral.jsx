@@ -9,7 +9,7 @@ import { useAppLang } from "../src/context/AppLangContext";
 
 export default function ReferralScreen() {
   const { colors: C } = useTheme();
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const fr = lang === "fr";
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -31,18 +31,14 @@ export default function ReferralScreen() {
   const handleShare = async () => {
     if (!data) return;
     try {
-      const txt = fr
-        ? `Rejoins GooVoiture avec mon code ${data.referralCode} et gagne ${data.rewards.refereeCreditMad} MAD de crédit ! 🚗`
-        : `Join GooVoiture with my code ${data.referralCode} and get ${data.rewards.refereeCreditMad} MAD credit! 🚗`;
+      const txt = pick(`Join GooVoiture with my code ${data.referralCode} and get ${data.rewards.refereeCreditMad} MAD credit! 🚗`, `Rejoins GooVoiture avec mon code ${data.referralCode} et gagne ${data.rewards.refereeCreditMad} MAD de crédit ! 🚗`);
       await Share.share({ message: txt });
     } catch {}
   };
 
   const handleWhatsApp = () => {
     if (!data) return;
-    const txt = fr
-      ? `Rejoins GooVoiture avec mon code ${data.referralCode} et gagne ${data.rewards.refereeCreditMad} MAD de crédit ! 🚗`
-      : `Join GooVoiture with my code ${data.referralCode} and get ${data.rewards.refereeCreditMad} MAD credit! 🚗`;
+    const txt = pick(`Join GooVoiture with my code ${data.referralCode} and get ${data.rewards.refereeCreditMad} MAD credit! 🚗`, `Rejoins GooVoiture avec mon code ${data.referralCode} et gagne ${data.rewards.refereeCreditMad} MAD de crédit ! 🚗`);
     Linking.openURL(`whatsapp://send?text=${encodeURIComponent(txt)}`);
   };
 
@@ -52,10 +48,10 @@ export default function ReferralScreen() {
     setMsg(null);
     try {
       const { data: res } = await api.post("/referral/apply", { code: code.toUpperCase() });
-      setMsg({ type: "success", text: res.message || (fr ? "Code appliqué !" : "Code applied!") });
+      setMsg({ type: "success", text: res.message || (pick("Code applied!", "Code appliqué !")) });
       load();
     } catch (e) {
-      setMsg({ type: "error", text: e?.response?.data?.message || (fr ? "Code invalide" : "Invalid code") });
+      setMsg({ type: "error", text: e?.response?.data?.message || (pick("Invalid code", "Code invalide")) });
     } finally {
       setLoading(false);
     }
@@ -69,35 +65,35 @@ export default function ReferralScreen() {
         <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-back" size={26} color={C.white} />
         </TouchableOpacity>
-        <Text style={{ color: C.white, fontWeight: "800", fontSize: 16 }}>{fr ? "Programme de parrainage" : "Referral Program"}</Text>
+        <Text style={{ color: C.white, fontWeight: "800", fontSize: 16 }}>{pick("Referral Program", "Programme de parrainage")}</Text>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 40 }}>
         <Text style={{ color: C.muted, fontSize: 13, marginBottom: 20, lineHeight: 20 }}>
-          {fr ? "Invitez vos amis et gagnez des crédits." : "Invite friends and earn credits."}
+          {pick("Invite friends and earn credits.", "Invitez vos amis et gagnez des crédits.")}
         </Text>
 
         {data && (
           <>
             {/* Credits card */}
             <View style={[s.card, { backgroundColor: C.primary }]}>
-              <Text style={s.creditLabel}>{fr ? "Mes crédits" : "My credits"}</Text>
+              <Text style={s.creditLabel}>{pick("My credits", "Mes crédits")}</Text>
               <Text style={s.creditAmount}>{data.referralCredits} MAD</Text>
               <View style={s.statsRow}>
-                <View style={s.statPill}><Text style={s.statNum}>{data.referredUsersCount}</Text><Text style={s.statLabel}>{fr ? "Amis" : "Friends"}</Text></View>
-                <View style={s.statPill}><Text style={s.statNum}>{data.rewards.referrerCreditMad} MAD</Text><Text style={s.statLabel}>{fr ? "Vous gagnez" : "You earn"}</Text></View>
-                <View style={s.statPill}><Text style={s.statNum}>{data.rewards.refereeCreditMad} MAD</Text><Text style={s.statLabel}>{fr ? "Ils gagnent" : "They earn"}</Text></View>
+                <View style={s.statPill}><Text style={s.statNum}>{data.referredUsersCount}</Text><Text style={s.statLabel}>{pick("Friends", "Amis")}</Text></View>
+                <View style={s.statPill}><Text style={s.statNum}>{data.rewards.referrerCreditMad} MAD</Text><Text style={s.statLabel}>{pick("You earn", "Vous gagnez")}</Text></View>
+                <View style={s.statPill}><Text style={s.statNum}>{data.rewards.refereeCreditMad} MAD</Text><Text style={s.statLabel}>{pick("They earn", "Ils gagnent")}</Text></View>
               </View>
             </View>
 
             {/* Code */}
             <View style={[s.codeBox, { borderColor: C.primary, backgroundColor: C.card }]}>
-              <Text style={[s.codeLabel, { color: C.muted }]}>{fr ? "Votre code" : "Your code"}</Text>
+              <Text style={[s.codeLabel, { color: C.muted }]}>{pick("Your code", "Votre code")}</Text>
               <Text style={[s.codeText, { color: C.primary }]}>{data.referralCode}</Text>
             </View>
             <View style={s.shareRow}>
               <TouchableOpacity style={[s.shareBtn, { backgroundColor: C.primary }]} onPress={handleShare}>
-                <Text style={s.shareBtnText}>{fr ? "📤 Partager" : "📤 Share"}</Text>
+                <Text style={s.shareBtnText}>{pick("📤 Share", "📤 Partager")}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[s.shareBtn, { backgroundColor: "#25D366" }]} onPress={handleWhatsApp}>
                 <Text style={s.shareBtnText}>📲 WhatsApp</Text>
@@ -108,7 +104,7 @@ export default function ReferralScreen() {
 
         {/* Apply code */}
         <View style={[s.applyBox, { backgroundColor: C.card, borderColor: C.border }]}>
-          <Text style={[s.applyLabel, { color: C.white }]}>{fr ? "Utiliser un code ami" : "Use a friend's code"}</Text>
+          <Text style={[s.applyLabel, { color: C.white }]}>{pick("Use a friend's code", "Utiliser un code ami")}</Text>
           <View style={s.inputRow}>
             <TextInput
               style={[s.codeInput, { color: C.white, borderColor: C.border, backgroundColor: C.inputBg }]}
@@ -120,7 +116,7 @@ export default function ReferralScreen() {
               placeholderTextColor={C.muted}
             />
             <TouchableOpacity style={[s.applyBtn, { backgroundColor: C.primary }, (!code || loading) && { opacity: 0.4 }]} onPress={handleApply} disabled={!code || loading}>
-              <Text style={s.applyBtnText}>{loading ? "…" : (fr ? "Appliquer" : "Apply")}</Text>
+              <Text style={s.applyBtnText}>{loading ? "…" : (pick("Apply", "Appliquer"))}</Text>
             </TouchableOpacity>
           </View>
           {msg && <Text style={[s.msgText, msg.type === "success" ? s.msgGreen : s.msgRed]}>{msg.text}</Text>}

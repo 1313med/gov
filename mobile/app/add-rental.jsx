@@ -70,7 +70,7 @@ const FIELD_GROUPS = [
 
 export default function AddRentalScreen() {
   const { auth } = useAuth();
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const { colors: C, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const s = useMemo(() => createAddRentalStyles(C, isDark), [C, isDark]);
@@ -81,10 +81,8 @@ export default function AddRentalScreen() {
     if (!auth) return;
     if (!hasUserRole(auth, "rental_owner")) {
       Alert.alert(
-        fr ? "Réservé aux loueurs" : "Rental owners only",
-        fr
-          ? "Seuls les propriétaires de flotte peuvent proposer une location. Activez le mode « Ma flotte » dans votre profil."
-          : "Only rental owners can list cars for rent. Enable “My fleet” mode from your profile.",
+        pick("Rental owners only", "Réservé aux loueurs"),
+        pick("Only rental owners can list cars for rent. Enable “My fleet” mode from your profile.", "Seuls les propriétaires de flotte peuvent proposer une location. Activez le mode « Ma flotte » dans votre profil."),
         [{ text: "OK", onPress: () => router.back() }]
       );
       return;
@@ -93,16 +91,14 @@ export default function AddRentalScreen() {
       .then((r) => {
         if (!userHasCinOnFile(r.data)) {
           Alert.alert(
-            fr ? "CIN requis" : "CIN required",
-            fr
-              ? "Vous devez soumettre votre carte d'identité (CIN) avant de proposer une voiture à la location."
-              : "You must submit your national ID (CIN) before listing a car for rent.",
+            pick("CIN required", "CIN requis"),
+            pick("You must submit your national ID (CIN) before listing a car for rent.", "Vous devez soumettre votre carte d'identité (CIN) avant de proposer une voiture à la location."),
             [
               {
-                text: fr ? "Vérifier mon CIN" : "Verify CIN",
+                text: pick("Verify CIN", "Vérifier mon CIN"),
                 onPress: () => router.replace({ pathname: "/profile-documents", params: { return: "add-rental" } }),
               },
-              { text: fr ? "Annuler" : "Cancel", style: "cancel", onPress: () => router.back() },
+              { text: pick("Cancel", "Annuler"), style: "cancel", onPress: () => router.back() },
             ]
           );
         }
@@ -164,27 +160,27 @@ export default function AddRentalScreen() {
   const handleSubmit = async () => {
     if (!form.title?.trim() || !form.pricePerDay || !form.brand?.trim() || !form.model?.trim()) {
       return Alert.alert(
-        fr ? "Champs requis" : "Required fields",
-        fr ? "Remplissez titre, marque, modèle et prix/jour." : "Fill in title, brand, model and price per day."
+        pick("Required fields", "Champs requis"),
+        pick("Fill in title, brand, model and price per day.", "Remplissez titre, marque, modèle et prix/jour.")
       );
     }
     if (!form.city?.trim()) {
-      return Alert.alert(fr ? "Ville" : "City", fr ? "La ville est requise." : "City is required.");
+      return Alert.alert(pick("City", "Ville"), pick("City is required.", "La ville est requise."));
     }
     const yearNum = parseInt(String(form.year), 10);
     const ppd = parseFloat(String(form.pricePerDay));
     if (!Number.isFinite(yearNum) || yearNum < 1900) {
-      return Alert.alert(fr ? "Année" : "Year", fr ? "Année invalide" : "Invalid year");
+      return Alert.alert(pick("Year", "Année"), pick("Invalid year", "Année invalide"));
     }
     if (!Number.isFinite(ppd) || ppd <= 0) {
-      return Alert.alert(fr ? "Prix" : "Price", fr ? "Prix / jour invalide" : "Invalid price per day");
+      return Alert.alert(pick("Price", "Prix"), pick("Invalid price per day", "Prix / jour invalide"));
     }
     const adOffered = !!form.airportDeliveryOffered;
     const adFee = Math.max(0, parseFloat(String(form.airportDeliveryFeeMad).replace(",", ".")) || 0);
     if (adOffered && adFee <= 0) {
       return Alert.alert(
-        fr ? "Aéroport" : "Airport",
-        fr ? "Indiquez un tarif supérieur à 0 MAD pour la livraison à l'aéroport." : "Enter an airport service fee greater than 0 MAD.",
+        pick("Airport", "Aéroport"),
+        pick("Enter an airport service fee greater than 0 MAD.", "Indiquez un tarif supérieur à 0 MAD pour la livraison à l'aéroport."),
       );
     }
     setLoading(true);
@@ -213,16 +209,16 @@ export default function AddRentalScreen() {
         airportDeliveryFeeMad: adOffered ? adFee : 0,
       };
       await createRental(payload);
-      Alert.alert(fr ? "Succès" : "Success", fr ? "Location soumise pour approbation." : "Rental submitted for approval.", [
+      Alert.alert(pick("Success", "Succès"), pick("Rental submitted for approval.", "Location soumise pour approbation."), [
         { text: "OK", onPress: () => router.back() },
       ]);
     } catch (e) {
       const msg = e?.response?.data?.message || "Failed to create rental";
       const code = e?.response?.data?.code;
       if (code === "CIN_REQUIRED" || String(msg).toLowerCase().includes("cin")) {
-        Alert.alert(fr ? "CIN requis" : "CIN required", msg, [
-          { text: fr ? "Plus tard" : "Later", style: "cancel" },
-          { text: fr ? "Documents" : "Documents", onPress: () => router.push("/profile-documents") },
+        Alert.alert(pick("CIN required", "CIN requis"), msg, [
+          { text: pick("Later", "Plus tard"), style: "cancel" },
+          { text: pick("Documents", "Documents"), onPress: () => router.push("/profile-documents") },
         ]);
       } else {
         Alert.alert("Error", msg);
@@ -293,13 +289,11 @@ export default function AddRentalScreen() {
         >
           <View style={s.heroBadge}>
             <Ionicons name="sparkles" size={14} color={C.primary} />
-            <Text style={s.heroBadgeText}>{fr ? "FLOTTE" : "FLEET"}</Text>
+            <Text style={s.heroBadgeText}>{pick("FLEET", "FLOTTE")}</Text>
           </View>
-          <Text style={s.heroTitle}>{fr ? "Nouvelle annonce" : "New listing"}</Text>
+          <Text style={s.heroTitle}>{pick("New listing", "Nouvelle annonce")}</Text>
           <Text style={s.heroSub}>
-            {fr
-              ? "Photos nettes, détails précis — vos clients réservent plus vite."
-              : "Sharp photos and clear details help renters book with confidence."}
+            {pick("Sharp photos and clear details help renters book with confidence.", "Photos nettes, détails précis — vos clients réservent plus vite.")}
           </Text>
         </LinearGradient>
 
@@ -311,9 +305,9 @@ export default function AddRentalScreen() {
                 <Ionicons name="images-outline" size={22} color="#f472b6" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={s.sectionTitle}>{fr ? "Galerie" : "Gallery"}</Text>
+                <Text style={s.sectionTitle}>{pick("Gallery", "Galerie")}</Text>
                 <Text style={s.sectionHint}>
-                  {fr ? "Jusqu'à 8 photos · première = couverture" : "Up to 8 photos · first is the cover"}
+                  {pick("Up to 8 photos · first is the cover", "Jusqu'à 8 photos · première = couverture")}
                 </Text>
               </View>
               <Text style={s.photoCount}>
@@ -329,7 +323,7 @@ export default function AddRentalScreen() {
                   </TouchableOpacity>
                   {i === 0 && (
                     <View style={s.coverTag}>
-                      <Text style={s.coverTagText}>{fr ? "Couverture" : "Cover"}</Text>
+                      <Text style={s.coverTagText}>{pick("Cover", "Couverture")}</Text>
                     </View>
                   )}
                 </View>
@@ -339,13 +333,13 @@ export default function AddRentalScreen() {
                   <TouchableOpacity onPress={pickImages} style={s.addPhotoBtn} activeOpacity={0.85}>
                     <LinearGradient colors={[`${C.primary}33`, `${C.primary}12`]} style={s.addPhotoGrad}>
                       <Ionicons name="images-outline" size={26} color={C.primary} />
-                      <Text style={s.addPhotoBtnText}>{fr ? "Importer" : "Library"}</Text>
+                      <Text style={s.addPhotoBtnText}>{pick("Library", "Importer")}</Text>
                     </LinearGradient>
                   </TouchableOpacity>
                   <TouchableOpacity onPress={takePhoto} style={s.addPhotoBtn} activeOpacity={0.85}>
                     <LinearGradient colors={["rgba(56,189,248,0.2)", "rgba(56,189,248,0.08)"]} style={s.addPhotoGrad}>
                       <Ionicons name="camera-outline" size={26} color="#38bdf8" />
-                      <Text style={[s.addPhotoBtnText, { color: "#38bdf8" }]}>{fr ? "Caméra" : "Camera"}</Text>
+                      <Text style={[s.addPhotoBtnText, { color: "#38bdf8" }]}>{pick("Camera", "Caméra")}</Text>
                     </LinearGradient>
                   </TouchableOpacity>
                 </>
@@ -364,14 +358,14 @@ export default function AddRentalScreen() {
                 </View>
                 <View>
                   <Text style={s.sectionTitle}>
-                    {group.key === "vehicle" && (fr ? "Véhicule" : "Vehicle")}
-                    {group.key === "rate" && (fr ? "Tarif & lieu" : "Rate & location")}
-                    {group.key === "specs" && (fr ? "Équipement" : "Specs")}
+                    {group.key === "vehicle" && (pick("Vehicle", "Véhicule"))}
+                    {group.key === "rate" && (pick("Rate & location", "Tarif & lieu"))}
+                    {group.key === "specs" && (pick("Specs", "Équipement"))}
                   </Text>
                   <Text style={s.sectionHint}>
-                    {group.key === "vehicle" && (fr ? "Identité du modèle" : "Model identity")}
-                    {group.key === "rate" && (fr ? "Prix journalier et ville" : "Daily price and city")}
-                    {group.key === "specs" && (fr ? "Moteur, boîte, description" : "Engine, gearbox, story")}
+                    {group.key === "vehicle" && (pick("Model identity", "Identité du modèle"))}
+                    {group.key === "rate" && (pick("Daily price and city", "Prix journalier et ville"))}
+                    {group.key === "specs" && (pick("Engine, gearbox, story", "Moteur, boîte, description"))}
                   </Text>
                 </View>
               </View>
@@ -388,11 +382,9 @@ export default function AddRentalScreen() {
                 <Ionicons name="airplane-outline" size={20} color="#38bdf8" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={s.sectionTitle}>{fr ? "Livraison aéroport" : "Airport delivery"}</Text>
+                <Text style={s.sectionTitle}>{pick("Airport delivery", "Livraison aéroport")}</Text>
                 <Text style={s.sectionHint}>
-                  {fr
-                    ? "Vous amenez le véhicule à l'aéroport pour le client (frais unique en MAD)."
-                    : "You bring the car to the airport for the client (one-time fee in MAD)."}
+                  {pick("You bring the car to the airport for the client (one-time fee in MAD).", "Vous amenez le véhicule à l'aéroport pour le client (frais unique en MAD).")}
                 </Text>
               </View>
               <Switch
@@ -404,7 +396,7 @@ export default function AddRentalScreen() {
             </View>
             {form.airportDeliveryOffered ? (
               <View style={s.fieldWrap}>
-                <Text style={s.fieldLabel}>{fr ? "Tarif service aéroport (MAD)" : "Airport service fee (MAD)"}</Text>
+                <Text style={s.fieldLabel}>{pick("Airport service fee (MAD)", "Tarif service aéroport (MAD)")}</Text>
                 <TextInput
                   value={form.airportDeliveryFeeMad}
                   onChangeText={(v) => set("airportDeliveryFeeMad", v)}
@@ -429,14 +421,14 @@ export default function AddRentalScreen() {
               <ActivityIndicator color="#fff" />
             ) : (
               <>
-                <Text style={s.submitBtnText}>{fr ? "Publier la location" : "Publish rental"}</Text>
+                <Text style={s.submitBtnText}>{pick("Publish rental", "Publier la location")}</Text>
                 <Ionicons name="arrow-forward-circle" size={22} color="rgba(255,255,255,0.95)" />
               </>
             )}
           </LinearGradient>
         </TouchableOpacity>
         <Text style={s.footerNote}>
-          {fr ? "Soumis pour modération avant mise en ligne." : "Submitted for review before going live."}
+          {pick("Submitted for review before going live.", "Soumis pour modération avant mise en ligne.")}
         </Text>
       </ScrollView>
     </KeyboardAvoidingView>

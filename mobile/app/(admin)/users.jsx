@@ -30,7 +30,7 @@ function roleMeta(role) {
 }
 
 export default function AdminUsersScreen() {
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const fr = lang === "fr";
   const { colors: C, isDark } = useTheme();
   const insets = useSafeAreaInsets();
@@ -65,7 +65,7 @@ export default function AdminUsersScreen() {
       setPage(pg);
     } catch (e) {
       if (e?.response?.status !== 404) {
-        Alert.alert(fr ? "Erreur" : "Error", e?.response?.data?.message || (fr ? "Impossible de charger les utilisateurs." : "Failed to load users."));
+        Alert.alert(pick("Error", "Erreur"), e?.response?.data?.message || (pick("Failed to load users.", "Impossible de charger les utilisateurs.")));
       }
       if (reset || pg === 1) setUsers([]);
     } finally {
@@ -106,14 +106,14 @@ export default function AdminUsersScreen() {
 
   const toggleBan = async (user) => {
     const isBanned = user.isBanned || user.banned;
-    const action = isBanned ? (fr ? "débannir" : "unban") : (fr ? "bannir" : "ban");
+    const action = isBanned ? (pick("unban", "débannir")) : (pick("ban", "bannir"));
     Alert.alert(
-      fr ? "Confirmer" : "Confirm",
-      fr ? `Voulez-vous ${action} ${user.name || user.email} ?` : `Are you sure you want to ${action} ${user.name || user.email}?`,
+      pick("Confirm", "Confirmer"),
+      pick(`Are you sure you want to ${action} ${user.name || user.email}?`, `Voulez-vous ${action} ${user.name || user.email} ?`),
       [
-        { text: fr ? "Annuler" : "Cancel", style: "cancel" },
+        { text: pick("Cancel", "Annuler"), style: "cancel" },
         {
-          text: fr ? "Confirmer" : "Confirm",
+          text: pick("Confirm", "Confirmer"),
           style: isBanned ? "default" : "destructive",
           onPress: async () => {
             setBusyId(user._id);
@@ -121,7 +121,7 @@ export default function AdminUsersScreen() {
               await api.patch(`/admin/users/${user._id}/${isBanned ? "unban" : "ban"}`);
               setUsers((prev) => prev.map((u) => u._id === user._id ? { ...u, isBanned: !isBanned, banned: !isBanned } : u));
             } catch (e) {
-              Alert.alert(fr ? "Erreur" : "Error", e?.response?.data?.message || (fr ? "Action échouée." : "Action failed."));
+              Alert.alert(pick("Error", "Erreur"), e?.response?.data?.message || (pick("Action failed.", "Action échouée.")));
             } finally {
               setBusyId(null);
             }
@@ -133,10 +133,10 @@ export default function AdminUsersScreen() {
 
   const ROLES = ["all", "customer", "car-owner", "rental-owner", "admin"];
   const roleLabels = {
-    all: fr ? "Tous" : "All",
-    customer: fr ? "Client" : "Customer",
-    "car-owner": fr ? "Proprio." : "Car Owner",
-    "rental-owner": fr ? "Loueur" : "Rental",
+    all: pick("All", "Tous"),
+    customer: pick("Customer", "Client"),
+    "car-owner": pick("Car Owner", "Proprio."),
+    "rental-owner": pick("Rental", "Loueur"),
     admin: "Admin",
   };
 
@@ -161,7 +161,7 @@ export default function AdminUsersScreen() {
             </Text>
             {isBanned && (
               <View style={styles.bannedBadge}>
-                <Text style={{ color: "#f87171", fontSize: 9, fontWeight: "800" }}>{fr ? "BANNI" : "BANNED"}</Text>
+                <Text style={{ color: "#f87171", fontSize: 9, fontWeight: "800" }}>{pick("BANNED", "BANNI")}</Text>
               </View>
             )}
           </View>
@@ -196,11 +196,11 @@ export default function AdminUsersScreen() {
         style={{ paddingTop: insets.top + 12, paddingBottom: 16, paddingHorizontal: 20 }}
       >
         <Text style={{ fontSize: 10, fontWeight: "800", letterSpacing: 2, textTransform: "uppercase", color: accent, marginBottom: 2 }}>
-          {fr ? "ADMINISTRATION" : "ADMINISTRATION"}
+          {pick("ADMINISTRATION", "ADMINISTRATION")}
         </Text>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <Text style={{ fontSize: 22, fontWeight: "800", color: isDark ? "#f8fafc" : "#0f172a", letterSpacing: -0.5 }}>
-            {fr ? "Utilisateurs" : "Users"}
+            {pick("Users", "Utilisateurs")}
           </Text>
           {total > 0 && (
             <View style={[styles.totalBadge, { backgroundColor: `${accent}18`, borderColor: `${accent}30` }]}>
@@ -215,7 +215,7 @@ export default function AdminUsersScreen() {
           <TextInput
             value={search}
             onChangeText={onSearchChange}
-            placeholder={fr ? "Rechercher par nom ou email…" : "Search by name or email…"}
+            placeholder={pick("Search by name or email…", "Rechercher par nom ou email…")}
             placeholderTextColor={C.muted}
             style={{ flex: 1, color: isDark ? "#f1f5f9" : "#0f172a", fontSize: 14, marginLeft: 8 }}
             autoCorrect={false}
@@ -264,10 +264,10 @@ export default function AdminUsersScreen() {
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
           <Ionicons name="people-outline" size={48} color={C.muted} />
           <Text style={{ color: isDark ? "#f1f5f9" : "#0f172a", fontWeight: "700", fontSize: 16, marginTop: 14 }}>
-            {fr ? "Aucun utilisateur trouvé" : "No users found"}
+            {pick("No users found", "Aucun utilisateur trouvé")}
           </Text>
           <Text style={{ color: C.muted, fontSize: 13, marginTop: 6, textAlign: "center" }}>
-            {search ? (fr ? "Essayez un autre terme de recherche." : "Try a different search term.") : (fr ? "Aucun utilisateur pour ce filtre." : "No users for this filter.")}
+            {search ? (pick("Try a different search term.", "Essayez un autre terme de recherche.")) : (pick("No users for this filter.", "Aucun utilisateur pour ce filtre."))}
           </Text>
         </View>
       ) : (

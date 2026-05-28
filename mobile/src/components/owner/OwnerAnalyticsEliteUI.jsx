@@ -12,15 +12,16 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { useAppLang } from "../../context/AppLangContext";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 
 export const ANALYTICS_PERIODS = [
-  { key: "today", en: "Today", fr: "Aujourd'hui" },
-  { key: "7d", en: "7d", fr: "7 j." },
-  { key: "30d", en: "30d", fr: "30 j." },
-  { key: "3m", en: "3 mo", fr: "3 m." },
-  { key: "1y", en: "1y", fr: "1 an" },
+  { key: "today", en: "Today", fr: "Aujourd'hui", ar: "اليوم" },
+  { key: "7d", en: "7d", fr: "7 j.", ar: "7 أيام" },
+  { key: "30d", en: "30d", fr: "30 j.", ar: "30 يوماً" },
+  { key: "3m", en: "3 mo", fr: "3 m.", ar: "3 أشهر" },
+  { key: "1y", en: "1y", fr: "1 an", ar: "سنة" },
 ];
 
 function GlowOrb({ scaleAnim, colors, style }) {
@@ -231,7 +232,7 @@ function PremiumMetricCard({ icon, kicker, label, value, sub, colors, anim, isDa
 
 /** Hero + period selector */
 export function AnalyticsEliteHero({
-  fr,
+  fr: _fr,
   isDark,
   insets,
   period,
@@ -241,6 +242,7 @@ export function AnalyticsEliteHero({
   subColor,
   accent,
 }) {
+  const { pick } = useAppLang();
   const orbPulse = useRef(new Animated.Value(1)).current;
   const heroOpacity = useRef(new Animated.Value(0)).current;
   const heroSlide = useRef(new Animated.Value(24)).current;
@@ -280,16 +282,17 @@ export function AnalyticsEliteHero({
       <Animated.View style={{ opacity: heroOpacity, transform: [{ translateY: heroSlide }] }}>
         <View style={st.liveRow}>
           <View style={[st.liveDot, { backgroundColor: accent }]} />
-          <Text style={[st.liveText, { color: accent }]}>{fr ? "ANALYTIQUE LIVE" : "LIVE ANALYTICS"}</Text>
+          <Text style={[st.liveText, { color: accent }]}>{pick("LIVE ANALYTICS", "ANALYTIQUE LIVE")}</Text>
         </View>
         <Text style={[st.heroTitle, { color: titleColor }]}>
-          {fr ? "Cockpit" : "Cockpit"}
-          <Text style={{ color: accent, fontStyle: "italic" }}> {fr ? "revenus" : "revenue"}</Text>
+          {pick("Cockpit", "Cockpit")}
+          <Text style={{ color: accent, fontStyle: "italic" }}> {pick("revenue", "revenus")}</Text>
         </Text>
         <Text style={[st.heroSub, { color: subColor }]}>
-          {fr
-            ? "Décisions premium — revenus, volume et occupation en un coup d'œil."
-            : "Premium decisions — revenue, volume & occupancy at a glance."}
+          {pick(
+            "Premium decisions — revenue, volume & occupancy at a glance.",
+            "Décisions premium — revenus, volume et occupation en un coup d'œil.",
+          )}
         </Text>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 22 }} contentContainerStyle={{ gap: 10, paddingRight: 12 }}>
@@ -309,7 +312,7 @@ export function AnalyticsEliteHero({
                 ]}
               >
                 <Text style={{ color: period === p.key ? "#fff" : subColor, fontWeight: "800", fontSize: 13 }}>
-                  {fr ? p.fr : p.en}
+                  {pick(p.en, p.fr, p.ar)}
                 </Text>
               </TouchableOpacity>
             </Animated.View>
@@ -323,13 +326,14 @@ export function AnalyticsEliteHero({
 /** Bold revenue centerpiece — no occupancy ring */
 export function AnalyticsCommandCard({
   data,
-  fr,
+  fr: _fr,
   isDark,
   titleColor,
   subColor,
   accent,
   fmtMoney,
 }) {
+  const { pick, numberLocale } = useAppLang();
   const growth = data.revenueGrowth ?? 0;
   const growthPositive = growth > 0;
   const growthLabel = growth > 0 ? `+${growth}%` : growth < 0 ? `${growth}%` : "—";
@@ -356,27 +360,27 @@ export function AnalyticsCommandCard({
           <View style={[st.revenueBadge, { backgroundColor: `${accent}22`, borderColor: `${accent}45` }]}>
             <Ionicons name="sparkles" size={12} color={accent} />
             <Text style={[st.revenueBadgeText, { color: accent }]}>
-              {fr ? "PÉRIODE SÉLECTIONNÉE" : "SELECTED PERIOD"}
+              {pick("SELECTED PERIOD", "PÉRIODE SÉLECTIONNÉE")}
             </Text>
           </View>
 
           <View style={st.revenueAmountRow}>
             <AnimatedMetricNumber
               value={revenueNum}
-              formatter={(n) => Math.round(n).toLocaleString(fr ? "fr-FR" : "en-US")}
+              formatter={(n) => Math.round(n).toLocaleString(numberLocale)}
               textColor={titleColor}
               style={st.revenueAmount}
             />
             <Text style={[st.revenueCurrency, { color: subColor }]}>MAD</Text>
           </View>
           <Text style={[st.revenueCaption, { color: subColor }]}>
-            {fr ? "Chiffre d'affaires total" : "Total revenue"}
+            {pick("Total revenue", "Chiffre d'affaires total")}
           </Text>
 
           <View style={st.statGrid}>
             <StatTile
               icon="speedometer-outline"
-              label={fr ? "Occupation" : "Occupancy"}
+              label={pick("Occupancy", "Occupation")}
               value={`${data.occupancyRate ?? 0}%`}
               tint={accent}
               isDark={isDark}
@@ -384,7 +388,7 @@ export function AnalyticsCommandCard({
             />
             <StatTile
               icon={growthPositive ? "trending-up" : growth < 0 ? "trending-down" : "remove-outline"}
-              label={fr ? "Évolution" : "Growth"}
+              label={pick("Growth", "Évolution")}
               value={growthLabel}
               tint={growthPositive ? accent : growth < 0 ? "#f87171" : subColor}
               isDark={isDark}
@@ -392,7 +396,7 @@ export function AnalyticsCommandCard({
             />
             <StatTile
               icon="calendar-outline"
-              label={fr ? "Réservations" : "Bookings"}
+              label={pick("Bookings", "Réservations")}
               value={String(data.totalBookings ?? 0)}
               tint="#a78bfa"
               isDark={isDark}
@@ -400,7 +404,7 @@ export function AnalyticsCommandCard({
             />
             <StatTile
               icon="flash-outline"
-              label={fr ? "Moy. / jour" : "Avg / day"}
+              label={pick("Avg / day", "Moy. / jour")}
               value={fmtMoney(data.avgDailyRevenue ?? 0)}
               tint="#38bdf8"
               isDark={isDark}
@@ -414,7 +418,8 @@ export function AnalyticsCommandCard({
 }
 
 /** Horizontal premium KPI cards */
-export function AnalyticsMetricsRail({ data, fr, isDark, titleColor, glassBorder, fmtMoney, kpiAnims }) {
+export function AnalyticsMetricsRail({ data, fr: _fr, isDark, titleColor, glassBorder, fmtMoney, kpiAnims }) {
+  const { pick } = useAppLang();
   const netProfit = data.netProfit ?? 0;
   const violet = isDark ? "#a78bfa" : "#6248e8";
   const cyan = isDark ? "#38bdf8" : "#0ea5e9";
@@ -422,18 +427,18 @@ export function AnalyticsMetricsRail({ data, fr, isDark, titleColor, glassBorder
   return (
     <View style={{ marginTop: 20, marginBottom: 8 }}>
       <Text style={[st.railEyebrow, { color: isDark ? "#34d399" : "#059669" }]}>
-        {fr ? "INDICATEURS CLÉS" : "KEY SIGNALS"}
+        {pick("KEY SIGNALS", "INDICATEURS CLÉS")}
       </Text>
-      <Text style={[st.railTitle, { color: titleColor }]}>{fr ? "Vue exécutive" : "Executive view"}</Text>
+      <Text style={[st.railTitle, { color: titleColor }]}>{pick("Executive view", "Vue exécutive")}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={st.metricsCarousel} decelerationRate="fast">
         <PremiumMetricCard
           wide
           anim={kpiAnims[0]}
           icon="wallet"
-          kicker={fr ? "RÉSULTAT" : "BOTTOM LINE"}
-          label={fr ? "Profit net" : "Net profit"}
+          kicker={pick("BOTTOM LINE", "RÉSULTAT")}
+          label={pick("Net profit", "Profit net")}
           value={fmtMoney(netProfit)}
-          sub={fr ? "Après entretien" : "After maintenance"}
+          sub={pick("After maintenance", "Après entretien")}
           colors={netProfit >= 0 ? ["#34d399", "#10b981"] : ["#f87171", "#ef4444"]}
           isDark={isDark}
           titleColor={titleColor}
@@ -441,10 +446,10 @@ export function AnalyticsMetricsRail({ data, fr, isDark, titleColor, glassBorder
         <PremiumMetricCard
           anim={kpiAnims[1]}
           icon="calendar"
-          kicker={fr ? "VOLUME" : "VOLUME"}
-          label={fr ? "Réservations" : "Bookings"}
+          kicker={pick("VOLUME", "VOLUME")}
+          label={pick("Bookings", "Réservations")}
           value={String(data.totalBookings ?? 0)}
-          sub={fr ? "Tous statuts" : "All statuses"}
+          sub={pick("All statuses", "Tous statuts")}
           colors={[violet, "#7c6bff"]}
           isDark={isDark}
           titleColor={titleColor}
@@ -452,10 +457,10 @@ export function AnalyticsMetricsRail({ data, fr, isDark, titleColor, glassBorder
         <PremiumMetricCard
           anim={kpiAnims[2]}
           icon="checkmark-circle"
-          kicker={fr ? "ENCAISSÉ" : "COLLECTED"}
-          label={fr ? "Encaissé" : "Collected"}
+          kicker={pick("COLLECTED", "ENCAISSÉ")}
+          label={pick("Collected", "Encaissé")}
           value={fmtMoney(data.collectedRevenue)}
-          sub={fr ? "Payé sur la période" : "Paid in period"}
+          sub={pick("Paid in period", "Payé sur la période")}
           colors={[cyan, "#0284c7"]}
           isDark={isDark}
           titleColor={titleColor}
@@ -463,10 +468,10 @@ export function AnalyticsMetricsRail({ data, fr, isDark, titleColor, glassBorder
         <PremiumMetricCard
           anim={kpiAnims[3]}
           icon="hourglass"
-          kicker={fr ? "PIPELINE" : "PIPELINE"}
-          label={fr ? "En attente" : "Pending"}
+          kicker={pick("PIPELINE", "PIPELINE")}
+          label={pick("Pending", "En attente")}
           value={fmtMoney(data.pendingRevenue)}
-          sub={fr ? "Confirmé, non payé" : "Confirmed, unpaid"}
+          sub={pick("Confirmed, unpaid", "Confirmé, non payé")}
           colors={["#fbbf24", "#f59e0b"]}
           isDark={isDark}
           titleColor={titleColor}
@@ -477,7 +482,8 @@ export function AnalyticsMetricsRail({ data, fr, isDark, titleColor, glassBorder
 }
 
 /** Tabbed area chart — revenue vs bookings */
-export function AnalyticsTrendFusion({ monthly, trends, fr, isDark, titleColor, subColor, accent, fmtMoney }) {
+export function AnalyticsTrendFusion({ monthly, trends, fr: _fr, isDark, titleColor, subColor, accent, fmtMoney }) {
+  const { pick } = useAppLang();
   const [tab, setTab] = useState("revenue");
   const merged = useMemo(() => mergeMonthlySeries(monthly, trends), [monthly, trends]);
   const isRevenue = tab === "revenue";
@@ -485,9 +491,9 @@ export function AnalyticsTrendFusion({ monthly, trends, fr, isDark, titleColor, 
   const formatPeak = useCallback(
     (row) =>
       isRevenue
-        ? `${fr ? "Meilleur mois" : "Best month"} · ${row.month} · ${fmtMoney(row.revenue)}`
-        : `${fr ? "Pic réservations" : "Booking peak"} · ${row.month} · ${row.bookings} ${fr ? "résa." : "bk."}`,
-    [fr, fmtMoney, isRevenue],
+        ? `${pick("Best month", "Meilleur mois")} · ${row.month} · ${fmtMoney(row.revenue)}`
+        : `${pick("Booking peak", "Pic réservations")} · ${row.month} · ${row.bookings} ${pick("bk.", "résa.")}`,
+    [pick, fmtMoney, isRevenue],
   );
 
   if (!merged.length) return null;
@@ -503,9 +509,9 @@ export function AnalyticsTrendFusion({ monthly, trends, fr, isDark, titleColor, 
       <View style={[st.trendPanel, { backgroundColor: panelBg, borderColor: panelBorder }]}>
         <View style={st.trendHead}>
           <View style={{ flex: 1 }}>
-            <Text style={[st.trendEyebrow, { color: accent }]}>{fr ? "ÉVOLUTION MENSUELLE" : "MONTHLY EVOLUTION"}</Text>
+            <Text style={[st.trendEyebrow, { color: accent }]}>{pick("MONTHLY EVOLUTION", "ÉVOLUTION MENSUELLE")}</Text>
             <Text style={[st.trendTitle, { color: titleColor }]}>
-              {fr ? "Courbe de performance" : "Performance curve"}
+              {pick("Performance curve", "Courbe de performance")}
             </Text>
           </View>
         </View>
@@ -518,7 +524,7 @@ export function AnalyticsTrendFusion({ monthly, trends, fr, isDark, titleColor, 
           >
             <View style={[st.tabDot, { backgroundColor: accent }]} />
             <Text style={[st.tabText, { color: tab === "revenue" ? titleColor : subColor }]}>
-              {fr ? "Revenus" : "Revenue"}
+              {pick("Revenue", "Revenus")}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -528,7 +534,7 @@ export function AnalyticsTrendFusion({ monthly, trends, fr, isDark, titleColor, 
           >
             <View style={[st.tabDot, { backgroundColor: "#818cf8" }]} />
             <Text style={[st.tabText, { color: tab === "bookings" ? titleColor : subColor }]}>
-              {fr ? "Réservations" : "Bookings"}
+              {pick("Bookings", "Réservations")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -543,11 +549,11 @@ export function AnalyticsTrendFusion({ monthly, trends, fr, isDark, titleColor, 
         />
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={st.monthChips}>
-          {merged.map((row) => {
+          {merged.map((row, idx) => {
             const val = isRevenue ? fmtMoney(row.revenue) : String(row.bookings);
             return (
               <View
-                key={row.month}
+                key={`${row.month}-${idx}`}
                 style={[
                   st.monthChip,
                   {

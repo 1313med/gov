@@ -1,4 +1,6 @@
-/** Home2.jsx copy — English & French */
+/** Home2.jsx copy — English, French & Arabic */
+
+import { home2Ar } from "./home2Ar";
 
 export const home2Dict = {
   en: {
@@ -573,4 +575,6 @@ export const home2Dict = {
       built: "Fait avec soin ♥",
     },
   },
+
+  ar: home2Ar,
 };

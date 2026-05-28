@@ -7,15 +7,17 @@ import { useActiveMode } from "../context/ActiveModeContext";
 import { addMyRole } from "../api/user";
 import { useAuth } from "../context/AuthContext";
 import { shellForMode, isAdminOnlyUser } from "../utils/userRoles";
+import { useAppLang } from "../context/AppLangContext";
 
 const MODES = [
-  { key: "customer", icon: "search-outline", colorLight: "#6248e8", colorDark: "#7c6bff", en: "Explore", fr: "Explorer" },
-  { key: "car_owner", icon: "car-sport-outline", colorLight: "#0284c7", colorDark: "#38bdf8", en: "My garage", fr: "Mon garage" },
-  { key: "rental_owner", icon: "business-outline", colorLight: "#059669", colorDark: "#34d399", en: "My fleet", fr: "Ma flotte" },
-  { key: "admin", icon: "shield-outline", colorLight: "#dc2626", colorDark: "#f87171", en: "Admin", fr: "Admin" },
+  { key: "customer", icon: "search-outline", colorLight: "#6248e8", colorDark: "#7c6bff", en: "Explore", fr: "Explorer", ar: "استكشف" },
+  { key: "car_owner", icon: "car-sport-outline", colorLight: "#0284c7", colorDark: "#38bdf8", en: "My garage", fr: "Mon garage", ar: "كراجي" },
+  { key: "rental_owner", icon: "business-outline", colorLight: "#059669", colorDark: "#34d399", en: "My fleet", fr: "Ma flotte", ar: "أسطولي" },
+  { key: "admin", icon: "shield-outline", colorLight: "#dc2626", colorDark: "#f87171", en: "Admin", fr: "Admin", ar: "الإدارة" },
 ];
 
-export default function RoleModeSwitcher({ fr = false }) {
+export default function RoleModeSwitcher() {
+  const { pick } = useAppLang();
   const { colors: C, isDark } = useTheme();
   const { roles, activeMode, setActiveMode, ensureCarOwnerLanding, canAccess } = useActiveMode();
   const { login, auth } = useAuth();
@@ -33,8 +35,8 @@ export default function RoleModeSwitcher({ fr = false }) {
       router.replace(shellForMode(roleKey));
     } catch (e) {
       Alert.alert(
-        fr ? "Erreur" : "Error",
-        e?.response?.data?.message || (fr ? "Impossible d'activer ce mode." : "Could not enable this mode.")
+        pick("Error", "Erreur", "خطأ"),
+        e?.response?.data?.message || pick("Could not enable this mode.", "Impossible d'activer ce mode.", "تعذّر تفعيل هذا الوضع.")
       );
     }
   };
@@ -47,15 +49,19 @@ export default function RoleModeSwitcher({ fr = false }) {
     }
     if (key === "admin") return;
     const labels = {
-      car_owner: fr ? "Suivre ma voiture et vendre plus tard" : "Track my car and sell when ready",
-      rental_owner: fr ? "Louer mes voitures" : "Rent out my cars",
+      car_owner: pick(
+        "Track my car and sell when ready",
+        "Suivre ma voiture et vendre plus tard",
+        "تتبّع سيارتي والبيع لاحقاً"
+      ),
+      rental_owner: pick("Rent out my cars", "Louer mes voitures", "تأجير سياراتي"),
     };
     Alert.alert(
-      fr ? "Activer ce mode ?" : "Enable this mode?",
+      pick("Enable this mode?", "Activer ce mode ?", "تفعيل هذا الوضع؟"),
       labels[key] || "",
       [
-        { text: fr ? "Annuler" : "Cancel", style: "cancel" },
-        { text: fr ? "Activer" : "Enable", onPress: () => enableRole(key) },
+        { text: pick("Cancel", "Annuler", "إلغاء"), style: "cancel" },
+        { text: pick("Enable", "Activer", "تفعيل"), onPress: () => enableRole(key) },
       ]
     );
   };
@@ -63,14 +69,14 @@ export default function RoleModeSwitcher({ fr = false }) {
   return (
     <View style={{ marginBottom: 20 }}>
       <Text style={[styles.section, { color: isDark ? "#94a3b8" : "#475569" }]}>
-        {fr ? "VOS ESPACES GOOVOITURE" : "YOUR GOOVOITURE SPACES"}
+        {pick("YOUR GOOVOITURE SPACES", "VOS ESPACES GOOVOITURE", "مساحاتك في جوفويتور")}
       </Text>
       <View style={styles.grid}>
         {MODES.filter((m) => m.key !== "admin" || isAdminOnlyUser(auth)).map((m) => {
           const active = activeMode === m.key;
           const unlocked = canAccess(m.key);
           const color = isDark ? m.colorDark : m.colorLight;
-          const copy = fr ? m.fr : m.en;
+          const copy = pick(m.en, m.fr, m.ar);
           return (
             <TouchableOpacity
               key={m.key}
@@ -95,9 +101,9 @@ export default function RoleModeSwitcher({ fr = false }) {
                 {copy}
               </Text>
               {!unlocked && m.key !== "customer" ? (
-                <Text style={[styles.tileHint, { color: C.muted }]}>{fr ? "Activer" : "Enable"}</Text>
+                <Text style={[styles.tileHint, { color: C.muted }]}>{pick("Enable", "Activer", "تفعيل")}</Text>
               ) : active ? (
-                <Text style={[styles.tileHint, { color }]}>{fr ? "Actif" : "Active"}</Text>
+                <Text style={[styles.tileHint, { color }]}>{pick("Active", "Actif", "نشط")}</Text>
               ) : null}
             </TouchableOpacity>
           );

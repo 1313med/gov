@@ -164,13 +164,13 @@ function MessagesEliteLoader({ fr, C, isDark, heroGrad, orbPulse, orbA, orbB, ct
         </View>
 
         <Text style={{ color: C.primary, fontSize: 10, fontWeight: "800", letterSpacing: 3.2, textTransform: "uppercase", marginBottom: 10 }}>
-          {fr ? "Boîte de réception" : "Inbox"}
+          {pick("Inbox", "Boîte de réception")}
         </Text>
         <Text style={{ color: titleColor, fontSize: 24, fontWeight: "800", letterSpacing: -0.6, textAlign: "center" }}>
-          {fr ? "Préparation" : "Preparing"}
+          {pick("Preparing", "Préparation")}
         </Text>
         <Text style={{ color: subColor, fontSize: 15, fontWeight: "600", marginTop: 10, textAlign: "center", lineHeight: 22, maxWidth: 280 }}>
-          {fr ? "Récupération de vos fils de discussion…" : "Fetching your conversation threads…"}
+          {pick("Fetching your conversation threads…", "Récupération de vos fils de discussion…")}
         </Text>
         <View style={{ width: Math.min(280, SCREEN_W - 56), marginTop: 22 }}>
           <HeroShimmer color={C.primary} track={shimmerTrack} />
@@ -180,15 +180,15 @@ function MessagesEliteLoader({ fr, C, isDark, heroGrad, orbPulse, orbA, orbB, ct
   );
 }
 
-function formatConvTime(iso, fr) {
+function formatConvTime(iso, lang, numberLoc, dateLoc) {
   if (!iso) return "";
   const d = new Date(iso);
   const now = new Date();
   const sameDay = d.toDateString() === now.toDateString();
   if (sameDay) {
-    return d.toLocaleTimeString(fr ? "fr-FR" : "en-US", { hour: "2-digit", minute: "2-digit" });
+    return d.toLocaleTimeString(numberLoc, { hour: "2-digit", minute: "2-digit" });
   }
-  return d.toLocaleDateString(fr ? "fr-FR" : "en-US", { day: "numeric", month: "short" });
+  return d.toLocaleDateString(dateLoc, { day: "numeric", month: "short" });
 }
 
 function unreadForUser(conv, userId) {
@@ -198,26 +198,26 @@ function unreadForUser(conv, userId) {
   return Number(m[id] ?? m[userId] ?? 0) || 0;
 }
 
-function lastMessagePreview(item, fr) {
+function lastMessagePreview(item, pick) {
   const lm = item?.lastMessage;
-  if (lm == null) return fr ? "Aucun message" : "No messages yet";
+  if (lm == null) return pick("No messages yet", "Aucun message");
   if (typeof lm === "string") return lm;
   if (typeof lm === "object" && lm.text) return lm.text;
-  return fr ? "Aucun message" : "No messages yet";
+  return pick("No messages yet", "Aucun message");
 }
 
-function ConversationRow({ item, onOpen, onArchived, archiveScope, authId, fr, C, isDark, titleColor, subColor, ctaGrad }) {
+function ConversationRow({ item, onOpen, onArchived, archiveScope, authId, lang, pick, numberLocale, dateLocale, C, isDark, titleColor, subColor, ctaGrad }) {
   const other = item.participants?.find((p) => String(p._id || p) !== String(authId));
   const name = other?.name || "User";
   const initial = name[0]?.toUpperCase() || "?";
   const avatarUri = other?.avatar ? resolveMediaUrl(other.avatar) : null;
   const unread = unreadForUser(item, authId);
-  const timeStr = formatConvTime(item.lastMessageAt, fr);
+  const timeStr = formatConvTime(item.lastMessageAt, lang, numberLocale, dateLocale);
   const scale = useRef(new Animated.Value(1)).current;
   const swipeRef = useRef(null);
   const pressIn = () => Animated.spring(scale, { toValue: 0.98, friction: 6, useNativeDriver: true }).start();
   const pressOut = () => Animated.spring(scale, { toValue: 1, friction: 5, useNativeDriver: true }).start();
-  const preview = lastMessagePreview(item, fr);
+  const preview = lastMessagePreview(item, pick);
   const showArchive = archiveScope === "active";
 
   const renderRightActions = () => (
@@ -242,7 +242,7 @@ function ConversationRow({ item, onOpen, onArchived, archiveScope, authId, fr, C
       >
         <Ionicons name={showArchive ? "archive-outline" : "arrow-undo-outline"} size={24} color="#fff" />
         <Text style={{ color: "#fff", fontSize: 10, fontWeight: "800", marginTop: 4, textAlign: "center" }}>
-          {showArchive ? (fr ? "Archiver" : "Archive") : fr ? "Restaurer" : "Restore"}
+          {showArchive ? (pick("Archive", "Archiver")) : pick("Restore", "Restaurer")}
         </Text>
       </Pressable>
     </View>
@@ -315,7 +315,7 @@ function ConversationRow({ item, onOpen, onArchived, archiveScope, authId, fr, C
 export default function MessagesScreen() {
   const { auth } = useAuth();
   const { clearMessageBadge } = useSocket();
-  const { lang } = useAppLang();
+  const { lang, pick, numberLocale, dateLocale } = useAppLang();
   const { colors: C, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -398,14 +398,14 @@ export default function MessagesScreen() {
       <GlowOrb scaleAnim={orbPulse} colors={orbA} style={{ width: 240, height: 240, top: -50, right: -80 }} />
       <GlowOrb scaleAnim={orbPulse} colors={orbB} style={{ width: 200, height: 200, bottom: 120, left: -90 }} />
       <Text style={{ color: C.primary, fontSize: 10, fontWeight: "800", letterSpacing: 2.2, textTransform: "uppercase", marginBottom: 10 }}>
-        {fr ? "Boîte de réception" : "Inbox"}
+        {pick("Inbox", "Boîte de réception")}
       </Text>
       <Text style={{ color: titleColor, fontWeight: "900", fontSize: 30, letterSpacing: -0.8, lineHeight: 36 }}>
-        {fr ? "Vos " : "Your "}
-        <Text style={{ fontStyle: "italic", color: C.primary, fontWeight: "900" }}>{fr ? "échanges" : "conversations"}</Text>
+        {pick("Your ", "Vos ")}
+        <Text style={{ fontStyle: "italic", color: C.primary, fontWeight: "900" }}>{pick("conversations", "échanges")}</Text>
       </Text>
       <Text style={{ color: subColor, fontSize: 15, lineHeight: 23, marginTop: 14, maxWidth: 320 }}>
-        {fr ? "Connectez-vous pour échanger avec vendeurs et loueurs en toute simplicité." : "Sign in to chat with sellers and hosts in one elegant thread."}
+        {pick("Sign in to chat with sellers and hosts in one elegant thread.", "Connectez-vous pour échanger avec vendeurs et loueurs en toute simplicité.")}
       </Text>
       <HeroShimmer color={C.primary} track={shimmerTrack} />
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingBottom: 48 }}>
@@ -414,7 +414,7 @@ export default function MessagesScreen() {
         </LinearGradient>
         <TouchableOpacity onPress={() => router.push("/(auth)/login")} activeOpacity={0.92} style={{ width: "100%", maxWidth: 320 }}>
           <LinearGradient colors={ctaGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ borderRadius: 16, paddingVertical: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}>
-            <Text style={{ color: "#fff", fontWeight: "800", fontSize: 16 }}>{fr ? "Connexion" : "Login"}</Text>
+            <Text style={{ color: "#fff", fontWeight: "800", fontSize: 16 }}>{pick("Login", "Connexion")}</Text>
             <Ionicons name="arrow-forward" size={20} color="#fff" />
           </LinearGradient>
         </TouchableOpacity>
@@ -428,14 +428,12 @@ export default function MessagesScreen() {
         <GlowOrb scaleAnim={orbPulse} colors={orbA} style={{ width: 200, height: 200, top: -70, right: -60 }} />
         <GlowOrb scaleAnim={orbPulse} colors={orbB} style={{ width: 170, height: 170, bottom: -40, left: -70 }} />
         <View style={{ paddingHorizontal: 20 }}>
-          <Text style={{ color: C.primary, fontSize: 10, fontWeight: "800", letterSpacing: 2.2, textTransform: "uppercase", marginBottom: 8 }}>{fr ? "Boîte de réception" : "Inbox"}</Text>
+          <Text style={{ color: C.primary, fontSize: 10, fontWeight: "800", letterSpacing: 2.2, textTransform: "uppercase", marginBottom: 8 }}>{pick("Inbox", "Boîte de réception")}</Text>
           <Text style={{ color: titleColor, fontWeight: "900", fontSize: 28, letterSpacing: -0.8, lineHeight: 34 }}>
-            {fr ? "Messages" : "Messages"}
+            {pick("Messages", "Messages")}
           </Text>
           <Text style={{ color: subColor, fontSize: 14, lineHeight: 21, marginTop: 10, fontWeight: "500", maxWidth: 340 }}>
-            {fr
-              ? "Touchez une conversation pour reprendre où vous vous êtes arrêté."
-              : "Tap a thread to pick up where you left off — fast, clear, and calm."}
+            {pick("Tap a thread to pick up where you left off — fast, clear, and calm.", "Touchez une conversation pour reprendre où vous vous êtes arrêté.")}
           </Text>
           <HeroShimmer color={C.primary} track={shimmerTrack} />
           <View style={{ flexDirection: "row", gap: 10, marginTop: 16 }}>
@@ -452,7 +450,7 @@ export default function MessagesScreen() {
                 alignItems: "center",
               }}
             >
-              <Text style={{ color: inboxScope === "active" ? titleColor : subColor, fontSize: 13, fontWeight: "800" }}>{fr ? "Actives" : "Active"}</Text>
+              <Text style={{ color: inboxScope === "active" ? titleColor : subColor, fontSize: 13, fontWeight: "800" }}>{pick("Active", "Actives")}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setInboxScope("archived")}
@@ -467,13 +465,11 @@ export default function MessagesScreen() {
                 alignItems: "center",
               }}
             >
-              <Text style={{ color: inboxScope === "archived" ? titleColor : subColor, fontSize: 13, fontWeight: "800" }}>{fr ? "Archives" : "Archive"}</Text>
+              <Text style={{ color: inboxScope === "archived" ? titleColor : subColor, fontSize: 13, fontWeight: "800" }}>{pick("Archive", "Archives")}</Text>
             </TouchableOpacity>
           </View>
           <Text style={{ color: subColor, fontSize: 12, marginTop: 12, lineHeight: 17, fontWeight: "600" }}>
-            {fr
-              ? "Glissez vers la gauche sur une ligne pour archiver ou restaurer."
-              : "Swipe left on a row to archive it or restore it from Archive."}
+            {pick("Swipe left on a row to archive it or restore it from Archive.", "Glissez vers la gauche sur une ligne pour archiver ou restaurer.")}
           </Text>
         </View>
       </LinearGradient>
@@ -485,7 +481,7 @@ export default function MessagesScreen() {
 
   if (active) {
     const other = active.participants?.find((p) => String(p._id || p) !== String(auth._id));
-    const chatName = other?.name || (fr ? "Conversation" : "Conversation");
+    const chatName = other?.name || (pick("Conversation", "Conversation"));
     const initial = chatName[0]?.toUpperCase() || "?";
     const avatarUri = other?.avatar ? resolveMediaUrl(other.avatar) : null;
 
@@ -526,7 +522,7 @@ export default function MessagesScreen() {
                 <Text style={{ color: titleColor, fontWeight: "900", fontSize: 17, letterSpacing: -0.3 }} numberOfLines={1}>
                   {chatName}
                 </Text>
-                <Text style={{ color: subColor, fontSize: 12, fontWeight: "600", marginTop: 2 }}>{fr ? "Discussion en direct" : "Live conversation"}</Text>
+                <Text style={{ color: subColor, fontSize: 12, fontWeight: "600", marginTop: 2 }}>{pick("Live conversation", "Discussion en direct")}</Text>
               </View>
             </View>
           </LinearGradient>
@@ -541,7 +537,7 @@ export default function MessagesScreen() {
               refreshControl={<RefreshControl refreshing={false} onRefresh={() => openConv(active)} tintColor={C.primary} />}
               renderItem={({ item }) => {
                 const isMe = String(item.senderId?._id || item.senderId) === String(auth._id);
-                const t = new Date(item.createdAt).toLocaleTimeString(fr ? "fr-FR" : "en-US", { hour: "2-digit", minute: "2-digit" });
+                const t = new Date(item.createdAt).toLocaleTimeString(numberLocale, { hour: "2-digit", minute: "2-digit" });
                 return (
                   <View style={{ marginBottom: 14, maxWidth: "82%", alignSelf: isMe ? "flex-end" : "flex-start" }}>
                     {isMe ? (
@@ -571,7 +567,7 @@ export default function MessagesScreen() {
               ListEmptyComponent={
                 <View style={{ alignItems: "center", paddingVertical: 48 }}>
                   <Ionicons name="chatbubble-ellipses-outline" size={48} color={C.muted} />
-                  <Text style={{ color: subColor, fontSize: 14, marginTop: 12, fontWeight: "600" }}>{fr ? "Écrivez le premier message" : "Send the first message"}</Text>
+                  <Text style={{ color: subColor, fontSize: 14, marginTop: 12, fontWeight: "600" }}>{pick("Send the first message", "Écrivez le premier message")}</Text>
                 </View>
               }
             />
@@ -603,7 +599,7 @@ export default function MessagesScreen() {
                 <TextInput
                   value={text}
                   onChangeText={setText}
-                  placeholder={fr ? "Écrire un message…" : "Write a message…"}
+                  placeholder={pick("Write a message…", "Écrire un message…")}
                   placeholderTextColor={C.muted}
                   style={{ color: titleColor, paddingVertical: 12, fontSize: 16, maxHeight: 100 }}
                   multiline
@@ -641,21 +637,13 @@ export default function MessagesScreen() {
             </LinearGradient>
             <Text style={{ color: titleColor, fontWeight: "800", fontSize: 19, textAlign: "center" }}>
               {inboxScope === "archived"
-                ? fr
-                  ? "Aucune conversation archivée"
-                  : "No archived conversations"
-                : fr
-                  ? "Aucune conversation"
-                  : "No conversations yet"}
+                ? pick("No archived conversations", "Aucune conversation archivée")
+                : pick("No conversations yet", "Aucune conversation")}
             </Text>
             <Text style={{ color: subColor, fontSize: 14, marginTop: 10, textAlign: "center", lineHeight: 21, maxWidth: 300 }}>
               {inboxScope === "archived"
-                ? fr
-                  ? "Les fils que vous archivez (glissement à gauche) apparaissent ici."
-                  : "Threads you swipe to archive show up here."
-                : fr
-                  ? "Ouvrez une annonce et contactez le vendeur ou le loueur."
-                  : "Open a listing and message the seller or host."}
+                ? pick("Threads you swipe to archive show up here.", "Les fils que vous archivez (glissement à gauche) apparaissent ici.")
+                : pick("Open a listing and message the seller or host.", "Ouvrez une annonce et contactez le vendeur ou le loueur.")}
             </Text>
           </View>
         }
@@ -666,7 +654,10 @@ export default function MessagesScreen() {
             onArchived={fetchConversations}
             archiveScope={inboxScope}
             authId={auth._id}
-            fr={fr}
+            lang={lang}
+            pick={pick}
+            numberLocale={numberLocale}
+            dateLocale={dateLocale}
             C={C}
             isDark={isDark}
             titleColor={titleColor}

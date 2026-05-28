@@ -17,7 +17,7 @@ function normalizeReviews(payload) {
 
 export default function ReviewSection({ targetModel, targetId }) {
   const { auth } = useAuth();
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const fr = lang === "fr";
   const { colors: C } = useTheme();
   const s = useMemo(() => createReviewStyles(C), [C]);
@@ -97,16 +97,12 @@ export default function ReviewSection({ targetModel, targetId }) {
     if (!rentalWriteElig || rentalWriteElig.eligible) return null;
     const { code } = rentalWriteElig;
     if (code === "no_rental") {
-      return fr
-        ? "Vous ne pouvez noter que les véhicules que vous avez loués sur cette annonce."
-        : "You can only review a car you have rented on this listing.";
+      return pick("You can only review a car you have rented on this listing.", "Vous ne pouvez noter que les véhicules que vous avez loués sur cette annonce.");
     }
     if (code === "before_last_day") {
-      return fr
-        ? "Les avis s’ouvrent le dernier jour de votre location (jour de fin), pas avant."
-        : "Reviews open on the last day of your booking (checkout day), not before.";
+      return pick("Reviews open on the last day of your booking (checkout day), not before.", "Les avis s’ouvrent le dernier jour de votre location (jour de fin), pas avant.");
     }
-    return fr ? "Impossible d’afficher les droits d’avis pour le moment." : "Could not verify review eligibility.";
+    return pick("Could not verify review eligibility.", "Impossible d’afficher les droits d’avis pour le moment.");
   };
 
   const remove = (id) =>

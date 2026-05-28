@@ -22,6 +22,7 @@ import { useAuth } from "../../src/context/AuthContext";
 import { useAppLang } from "../../src/context/AppLangContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import ThemeToggle from "../../src/components/ThemeToggle";
+import LanguageSwitcher from "../../src/components/LanguageSwitcher";
 import ProfileDocumentsSection from "../../src/components/ProfileDocumentsSection";
 import { resolveMediaUrl } from "../../src/utils/mediaUrl";
 import RoleModeSwitcher from "../../src/components/RoleModeSwitcher";
@@ -35,9 +36,7 @@ import {
 
 export default function CustomerProfileScreen() {
   const { auth, logout } = useAuth();
-  const { lang, setLang } = useAppLang();
-  const toggleLang = () => setLang(lang === "fr" ? "en" : "fr");
-  const fr = lang === "fr";
+  const { pick } = useAppLang();
   const { colors: C, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -86,7 +85,7 @@ export default function CustomerProfileScreen() {
         await uploadAvatarFile(result.assets[0]);
         load();
       } catch {
-        Alert.alert(fr ? "Échec du téléchargement" : "Upload failed");
+        Alert.alert(pick("Upload failed", "Échec du téléchargement"));
       }
     }
   };
@@ -137,7 +136,7 @@ export default function CustomerProfileScreen() {
             <View style={s.roleBadge}>
               <LinearGradient colors={ctaGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.roleBadgeInner}>
                 <Ionicons name="person-outline" size={11} color="#fff" />
-                <Text style={s.roleBadgeText}>{fr ? "CLIENT" : "CUSTOMER"}</Text>
+                <Text style={s.roleBadgeText}>{pick("CUSTOMER", "CLIENT")}</Text>
               </LinearGradient>
             </View>
           </View>
@@ -147,7 +146,7 @@ export default function CustomerProfileScreen() {
       </LinearGradient>
 
       <View style={{ paddingHorizontal: 20, paddingTop: 20 }}>
-        <RoleModeSwitcher fr={fr} />
+        <RoleModeSwitcher />
 
         {!canRent && (
           <TouchableOpacity
@@ -158,12 +157,10 @@ export default function CustomerProfileScreen() {
             <Ionicons name="car-outline" size={24} color="#f59e0b" />
             <View style={{ flex: 1 }}>
               <Text style={[s.verifyTitle, { color: "#f59e0b" }]}>
-                {fr ? "Pour louer une voiture" : "To rent a car"}
+                {pick("To rent a car", "Pour louer une voiture")}
               </Text>
               <Text style={[s.verifySub, { color: isDark ? "#fcd34d" : "#92400e" }]}>
-                {fr
-                  ? "Ajoutez votre permis de conduire et votre CIN (carte d'identité)."
-                  : "Add your driving license and national ID (CIN)."}
+                {pick("Add your driving license and national ID (CIN).", "Ajoutez votre permis de conduire et votre CIN (carte d'identité).")}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color="#f59e0b" />
@@ -175,20 +172,18 @@ export default function CustomerProfileScreen() {
             <Ionicons name="checkmark-circle-outline" size={24} color="#34d399" />
             <View style={{ flex: 1 }}>
               <Text style={[s.verifyTitle, { color: "#34d399" }]}>
-                {fr ? "Prêt à louer" : "Ready to rent"}
+                {pick("Ready to rent", "Prêt à louer")}
               </Text>
               <Text style={[s.verifySub, { color: isDark ? "#6ee7b7" : "#065f46" }]}>
-                {fr ? "Permis et CIN enregistrés." : "License and ID on file."}
+                {pick("License and ID on file.", "Permis et CIN enregistrés.")}
               </Text>
             </View>
           </View>
         )}
 
-        <Text style={s.sectionTitle}>{fr ? "Mes documents" : "My documents"}</Text>
+        <Text style={s.sectionTitle}>{pick("My documents", "Mes documents")}</Text>
         <Text style={[s.sectionHint, { color: isDark ? "#94a3b8" : "#64748b" }]}>
-          {fr
-            ? "Vous pouvez les remplir maintenant, avant de louer ou de vendre."
-            : "You can upload them anytime, before renting or selling."}
+          {pick("You can upload them anytime, before renting or selling.", "Vous pouvez les remplir maintenant, avant de louer ou de vendre.")}
         </Text>
         <ProfileDocumentsSection
           profile={profile}
@@ -196,19 +191,18 @@ export default function CustomerProfileScreen() {
             setProfile(data);
             load();
           }}
-          fr={fr}
           C={C}
           isDark={isDark}
         />
 
-        <Text style={[s.sectionTitle, { marginTop: 8 }]}>{fr ? "Vendre ma voiture" : "Sell my car"}</Text>
+        <Text style={[s.sectionTitle, { marginTop: 8 }]}>{pick("Sell my car", "Vendre ma voiture")}</Text>
         <TouchableOpacity onPress={startSellFlow} activeOpacity={0.9} style={{ marginBottom: 12 }}>
           <LinearGradient colors={ctaGrad} style={s.sellCta}>
             <Ionicons name="pricetag-outline" size={22} color="#fff" />
             <View style={{ flex: 1 }}>
-              <Text style={s.sellCtaTitle}>{fr ? "Publier une annonce de vente" : "Post a car for sale"}</Text>
+              <Text style={s.sellCtaTitle}>{pick("Post a car for sale", "Publier une annonce de vente")}</Text>
               <Text style={s.sellCtaSub}>
-                {fr ? "CIN uniquement · validation admin sous 24–48h" : "CIN only · admin approval within 24–48h"}
+                {pick("CIN only · admin approval within 24–48h", "CIN uniquement · validation admin sous 24–48h")}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#fff" />
@@ -217,9 +211,7 @@ export default function CustomerProfileScreen() {
 
         {hasPendingSale && !hasApprovedSale && (
           <Text style={[s.pendingHint, { color: C.amber || "#f59e0b" }]}>
-            {fr
-              ? "Votre annonce est en attente d'approbation. L'onglet « Mes ventes » apparaîtra une fois validée."
-              : "Your listing is pending approval. The « My cars » tab will appear once approved."}
+            {pick("Your listing is pending approval. The « My cars » tab will appear once approved.", "Votre annonce est en attente d'approbation. L'onglet « Mes ventes » apparaîtra une fois validée.")}
           </Text>
         )}
 
@@ -227,7 +219,7 @@ export default function CustomerProfileScreen() {
           <View style={s.card}>
             <Row
               icon="list-outline"
-              label={fr ? "Mes voitures en vente" : "My cars for sale"}
+              label={pick("My cars for sale", "Mes voitures en vente")}
               onPress={() => (hasApprovedSale ? router.push("/(customer)/my-cars") : router.push("/my-sales"))}
               C={C}
               badge={hasApprovedSale ? "ok" : "warn"}
@@ -235,43 +227,39 @@ export default function CustomerProfileScreen() {
           </View>
         )}
 
-        <Text style={s.sectionTitle}>{fr ? "Réservations" : "Bookings"}</Text>
+        <Text style={s.sectionTitle}>{pick("Bookings", "Réservations")}</Text>
         <View style={s.card}>
-          <Row icon="calendar-outline" label={fr ? "Mes réservations" : "My bookings"} onPress={() => router.push("/(customer)/bookings")} C={C} />
-          <Row icon="chatbubble-outline" label={fr ? "Messages" : "Messages"} onPress={() => router.push(messagesHref(activeMode))} C={C} last />
+          <Row icon="calendar-outline" label={pick("My bookings", "Mes réservations")} onPress={() => router.push("/(customer)/bookings")} C={C} />
+          <Row icon="chatbubble-outline" label={pick("Messages", "Messages")} onPress={() => router.push(messagesHref(activeMode))} C={C} last />
         </View>
 
-        <Text style={s.sectionTitle}>{fr ? "Préférences" : "Preferences"}</Text>
+        <Text style={s.sectionTitle}>{pick("Preferences", "Préférences")}</Text>
         <View style={s.card}>
           <View style={s.row}>
             <View style={[s.rowIcon, { backgroundColor: isDark ? "rgba(124,107,255,0.15)" : "rgba(98,72,232,0.1)" }]}>
               <Ionicons name="moon-outline" size={18} color={C.primary} />
             </View>
-            <Text style={s.rowLabel}>{fr ? "Thème sombre" : "Dark mode"}</Text>
+            <Text style={s.rowLabel}>{pick("Dark mode", "Thème sombre")}</Text>
             <ThemeToggle />
           </View>
-          <TouchableOpacity onPress={toggleLang} style={[s.row, s.rowLast]} activeOpacity={0.8}>
-            <View style={[s.rowIcon, { backgroundColor: isDark ? "rgba(56,189,248,0.15)" : "rgba(2,132,199,0.1)" }]}>
-              <Ionicons name="language-outline" size={18} color={isDark ? "#38bdf8" : "#0284c7"} />
-            </View>
-            <Text style={s.rowLabel}>{fr ? "Langue" : "Language"}</Text>
-            <Text style={[s.rowValue, { color: isDark ? "#94a3b8" : "#64748b" }]}>{fr ? "Français" : "English"}</Text>
-            <Ionicons name="chevron-forward" size={16} color={C.muted} style={{ marginLeft: 4 }} />
-          </TouchableOpacity>
+          <View style={[s.row, s.rowLast, { flexDirection: "column", alignItems: "stretch", gap: 10 }]}>
+            <Text style={s.rowLabel}>{pick("Language", "Langue", "اللغة")}</Text>
+            <LanguageSwitcher variant="full" accent={C.primary} isDark={isDark} />
+          </View>
         </View>
 
         <TouchableOpacity
           onPress={() =>
-            Alert.alert(fr ? "Déconnexion" : "Log out", fr ? "Voulez-vous vous déconnecter ?" : "Are you sure you want to log out?", [
-              { text: fr ? "Annuler" : "Cancel", style: "cancel" },
-              { text: fr ? "Déconnecter" : "Log out", style: "destructive", onPress: logout },
+            Alert.alert(pick("Log out", "Déconnexion"), pick("Are you sure you want to log out?", "Voulez-vous vous déconnecter ?"), [
+              { text: pick("Cancel", "Annuler"), style: "cancel" },
+              { text: pick("Log out", "Déconnecter"), style: "destructive", onPress: logout },
             ])
           }
           activeOpacity={0.85}
           style={s.logoutBtn}
         >
           <Ionicons name="log-out-outline" size={18} color="#f87171" />
-          <Text style={s.logoutText}>{fr ? "Déconnexion" : "Log out"}</Text>
+          <Text style={s.logoutText}>{pick("Log out", "Déconnexion")}</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

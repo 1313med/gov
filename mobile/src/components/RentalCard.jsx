@@ -8,7 +8,7 @@ import { resolveMediaUrl } from "../utils/mediaUrl";
 import FavoriteHeartButton from "./FavoriteHeartButton";
 
 export default function RentalCard({ rental, onPress, onFavorite, isFavorite }) {
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const fr = lang === "fr";
   const { colors: C, isDark } = useTheme();
   const s = useMemo(() => createRentalCardStyles(C, isDark), [C, isDark]);
@@ -43,14 +43,14 @@ export default function RentalCard({ rental, onPress, onFavorite, isFavorite }) 
             <View style={s.dealBadge}>
               <Ionicons name="pricetag" size={12} color="#fef08a" />
               <Text style={s.dealBadgeText}>
-                {activeDealCount > 1 ? (fr ? `${activeDealCount} offres` : `${activeDealCount} deals`) : fr ? "Promo" : "Deal"}
+                {activeDealCount > 1 ? (pick(`${activeDealCount} deals`, `${activeDealCount} offres`)) : pick("Deal", "Promo")}
               </Text>
             </View>
           )}
           {onFavorite && <FavoriteHeartButton active={isFavorite} onPress={onFavorite} size="md" variant="overlay" style={s.fav} />}
           <LinearGradient colors={badgeGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.priceBadge}>
             <Text style={s.priceBadgeText}>
-              {rental.pricePerDay} MAD<Text style={s.priceBadgeSub}>/{fr ? "j" : "d"}</Text>
+              {rental.pricePerDay} MAD<Text style={s.priceBadgeSub}>/{pick("d", "j")}</Text>
             </Text>
           </LinearGradient>
         </View>
@@ -72,13 +72,13 @@ export default function RentalCard({ rental, onPress, onFavorite, isFavorite }) 
           </View>
           <View style={s.bottom}>
             <View>
-              <Text style={s.priceLabel}>{fr ? "À partir de" : "From"}</Text>
+              <Text style={s.priceLabel}>{pick("From", "À partir de")}</Text>
               <Text style={s.price}>
-                {rental.pricePerDay} MAD<Text style={s.perDay}> {fr ? "/ jour" : "/ day"}</Text>
+                {rental.pricePerDay} MAD<Text style={s.perDay}> {pick("/ day", "/ jour")}</Text>
               </Text>
             </View>
             <LinearGradient colors={ctaGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.ctaGrad}>
-              <Text style={s.ctaText}>{fr ? "Réserver" : "Book"}</Text>
+              <Text style={s.ctaText}>{pick("Book", "Réserver")}</Text>
               <Ionicons name="arrow-forward" size={14} color="#fff" />
             </LinearGradient>
           </View>

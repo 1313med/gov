@@ -24,6 +24,7 @@ import ThemeToggle from "../../src/components/ThemeToggle";
 import { getApiErrorMessage } from "../../src/utils/apiErrorMessage";
 import { getRoleTheme, normalizeRoleKey } from "../../src/constants/roleThemes";
 import { saveAuthRoleIntent } from "../../src/utils/authRoleIntent";
+import LanguageSwitcher from "../../src/components/LanguageSwitcher";
 
 function EliteField({
   label,
@@ -80,7 +81,7 @@ function EliteField({
 
 export default function RegisterScreen() {
   const { colors: C, isDark } = useTheme();
-  const { copy, lang } = useAppLang();
+  const { copy, lang, pick } = useAppLang();
   const c = copy.register;
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -88,8 +89,7 @@ export default function RegisterScreen() {
 
   const preselectedRole = normalizeRoleKey(params.role);
   const theme = getRoleTheme(preselectedRole, isDark);
-  const fr = lang === "fr";
-  const roleCopy = fr ? theme.fr : theme.en;
+  const roleCopy = lang === "ar" ? theme.ar : lang === "fr" ? theme.fr : theme.en;
 
   const [form, setForm] = useState({
     name: "",
@@ -126,21 +126,19 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     if (!form.name.trim() || !form.phone.trim() || !form.email.trim() || !form.city.trim() || !form.password) {
-      Alert.alert(fr ? "Champs manquants" : "Missing fields", fr ? "Veuillez remplir tous les champs." : "Please fill in all fields.");
+      Alert.alert(pick("Missing fields", "Champs manquants"), pick("Please fill in all fields.", "Veuillez remplir tous les champs."));
       return;
     }
     setLoading(true);
     try {
       await registerApi(form);
       Alert.alert(
-        fr ? "Vérifiez votre email" : "Verify your email",
-        fr
-          ? "Compte créé. Vérifiez votre email avant de vous connecter."
-          : "Account created. Check your email to verify before logging in.",
+        pick("Verify your email", "Vérifiez votre email"),
+        pick("Account created. Check your email to verify before logging in.", "Compte créé. Vérifiez votre email avant de vous connecter."),
         [{ text: "OK", onPress: () => router.push({ pathname: "/(auth)/login", params: { role: preselectedRole } }) }]
       );
     } catch (e) {
-      Alert.alert(fr ? "Erreur" : "Error", getApiErrorMessage(e, c.regFail));
+      Alert.alert(pick("Error", "Erreur"), getApiErrorMessage(e, c.regFail));
     } finally {
       setLoading(false);
     }
@@ -159,8 +157,9 @@ export default function RegisterScreen() {
           <View style={styles.topBar}>
             <Pressable onPress={() => router.back()} style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.8 }]}>
               <Ionicons name="chevron-back" size={20} color={accent} />
-              <Text style={[styles.backText, { color: accent }]}>{fr ? "Retour" : "Back"}</Text>
+              <Text style={[styles.backText, { color: accent }]}>{pick("Back", "Retour")}</Text>
             </Pressable>
+            <LanguageSwitcher variant="compact" accent={accent} isDark={isDark} />
             <ThemeToggle />
           </View>
 
@@ -173,9 +172,9 @@ export default function RegisterScreen() {
                 <LinearGradient colors={ctaGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.roleChip}>
                   <Text style={styles.roleChipText}>{roleCopy.label.toUpperCase()}</Text>
                 </LinearGradient>
-                <Text style={[styles.title, { color: titleColor }]}>{fr ? "Créer un compte" : "Create account"}</Text>
+                <Text style={[styles.title, { color: titleColor }]}>{pick("Create account", "Créer un compte")}</Text>
                 <Text style={[styles.sub, { color: subColor }]} numberOfLines={2}>
-                  {fr ? `${roleCopy.desc} — rejoignez Goovoiture.` : `${roleCopy.desc} — join Goovoiture.`}
+                  {pick(`${roleCopy.desc} — join Goovoiture.`, `${roleCopy.desc} — rejoignez Goovoiture.`)}
                 </Text>
               </View>
             </View>
@@ -184,7 +183,7 @@ export default function RegisterScreen() {
           <LinearGradient colors={ctaGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.formCardBorder}>
             <View style={[styles.formCard, { backgroundColor: isDark ? "#0a0b12" : "#fafbff" }]}>
             <EliteField
-              label={fr ? "NOM COMPLET" : "FULL NAME"}
+              label={pick("FULL NAME", "NOM COMPLET")}
               icon="person-outline"
               value={form.name}
               onChangeText={(v) => set("name", v)}
@@ -193,7 +192,7 @@ export default function RegisterScreen() {
               isDark={isDark}
             />
             <EliteField
-              label={fr ? "TÉLÉPHONE" : "PHONE"}
+              label={pick("PHONE", "TÉLÉPHONE")}
               icon="call-outline"
               value={form.phone}
               onChangeText={(v) => set("phone", v)}
@@ -213,7 +212,7 @@ export default function RegisterScreen() {
               isDark={isDark}
             />
             <EliteField
-              label={fr ? "VILLE" : "CITY"}
+              label={pick("CITY", "VILLE")}
               icon="location-outline"
               value={form.city}
               onChangeText={(v) => set("city", v)}
@@ -222,7 +221,7 @@ export default function RegisterScreen() {
               isDark={isDark}
             />
             <EliteField
-              label={fr ? "MOT DE PASSE" : "PASSWORD"}
+              label={pick("PASSWORD", "MOT DE PASSE")}
               icon="lock-closed-outline"
               value={form.password}
               onChangeText={(v) => set("password", v)}
@@ -240,7 +239,7 @@ export default function RegisterScreen() {
             <Pressable onPress={handleRegister} disabled={loading} style={({ pressed }) => [{ opacity: loading ? 0.7 : pressed ? 0.92 : 1 }]}>
               <LinearGradient colors={ctaGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.btn, { shadowColor: accent }]}>
                 <Text style={styles.btnText}>
-                  {loading ? (fr ? "Création…" : "Creating…") : fr ? "Créer mon compte" : "Create my account"}
+                  {loading ? (pick("Creating…", "Création…")) : pick("Create my account", "Créer mon compte")}
                 </Text>
                 {!loading && <Ionicons name="arrow-forward-circle" size={22} color="#fff" />}
               </LinearGradient>
@@ -254,8 +253,8 @@ export default function RegisterScreen() {
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             accessibilityRole="link"
           >
-            <Text style={[styles.footerQ, { color: subColor }]}>{fr ? "Déjà un compte ? " : "Have an account? "}</Text>
-            <Text style={[styles.footerLink, { color: accent }]}>{fr ? "Se connecter" : "Sign in"}</Text>
+            <Text style={[styles.footerQ, { color: subColor }]}>{pick("Have an account? ", "Déjà un compte ? ")}</Text>
+            <Text style={[styles.footerLink, { color: accent }]}>{pick("Sign in", "Se connecter")}</Text>
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>

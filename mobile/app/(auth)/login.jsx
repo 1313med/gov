@@ -30,6 +30,7 @@ import { getApiErrorMessage } from "../../src/utils/apiErrorMessage";
 import { clearLoginForm, loadLoginForm, saveLoginForm } from "../../src/utils/authStorage";
 import { getRoleTheme, normalizeRoleKey } from "../../src/constants/roleThemes";
 import { loadAuthRoleIntent, saveAuthRoleIntent } from "../../src/utils/authRoleIntent";
+import LanguageSwitcher from "../../src/components/LanguageSwitcher";
 
 const { width: W } = Dimensions.get("window");
 
@@ -91,7 +92,7 @@ export default function LoginScreen() {
   const { login } = useAuth();
   const { ensureCarOwnerLanding, ensureRentalOwnerLanding } = useActiveMode();
   const { colors: C, isDark } = useTheme();
-  const { copy, lang, setLang } = useAppLang();
+  const { copy, lang, setLang, pick } = useAppLang();
   const c = copy.login;
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -121,7 +122,7 @@ export default function LoginScreen() {
   const titleColor = isDark ? "#f8fafc" : "#0f172a";
   const subColor = isDark ? "#94a3b8" : "#475569";
   const heroGrad = theme.heroGradient;
-  const roleCopy = fr ? theme.fr : theme.en;
+  const roleThemeCopy = lang === "ar" ? theme.ar : lang === "fr" ? theme.fr : theme.en;
 
   const readyToSignIn = Boolean(identifier.trim() && password);
 
@@ -203,7 +204,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!identifier || !password) {
-      Alert.alert(fr ? "Champs requis" : "Required", fr ? "Veuillez remplir tous les champs." : "Please fill in all fields.");
+      Alert.alert(pick("Required", "Champs requis"), pick("Please fill in all fields.", "Veuillez remplir tous les champs."));
       return;
     }
     setLoading(true);
@@ -224,7 +225,7 @@ export default function LoginScreen() {
         await ensureRentalOwnerLanding();
       }
     } catch (e) {
-      Alert.alert(fr ? "Erreur" : "Error", getApiErrorMessage(e, c.invalidCreds));
+      Alert.alert(pick("Error", "Erreur"), getApiErrorMessage(e, c.invalidCreds));
     } finally {
       setLoading(false);
     }
@@ -261,17 +262,12 @@ export default function LoginScreen() {
                   />
                 </View>
                 <Text style={[styles.brandTag, { color: accent }]}>
-                  {fr ? "Mobilité premium · Maroc" : "Premium mobility · Morocco"}
+                  {pick("Premium mobility · Morocco", "Mobilité premium · Maroc")}
                 </Text>
               </View>
             </View>
             <View style={styles.topActions}>
-              <Pressable
-                onPress={() => setLang(fr ? "en" : "fr")}
-                style={[styles.langBtn, { borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(15,23,42,0.08)" }]}
-              >
-                <Text style={{ color: accent, fontWeight: "800", fontSize: 12 }}>{fr ? "EN" : "FR"}</Text>
-              </Pressable>
+              <LanguageSwitcher variant="compact" accent={accent} isDark={isDark} />
               <ThemeToggle />
             </View>
           </View>
@@ -279,9 +275,9 @@ export default function LoginScreen() {
           <Animated.View style={[styles.hero, { opacity: heroOpacity, transform: [{ translateY: heroSlide }] }]}>
             <View style={[styles.roleBadge, { borderColor: theme.chipBorder, backgroundColor: theme.chipBg }]}>
               <Ionicons name={theme.icon} size={12} color={accent} />
-              <Text style={[styles.roleBadgeTxt, { color: accent }]}>{roleCopy.label.toUpperCase()}</Text>
+              <Text style={[styles.roleBadgeTxt, { color: accent }]}>{roleThemeCopy.label.toUpperCase()}</Text>
             </View>
-            <Text style={[styles.kicker, { color: accent }]}>{c.memberPortal || (fr ? "ESPACE MEMBRE" : "MEMBER SPACE")}</Text>
+            <Text style={[styles.kicker, { color: accent }]}>{c.memberPortal || (pick("MEMBER SPACE", "ESPACE MEMBRE"))}</Text>
             <Text style={[styles.heroTitle, { color: titleColor }]}>
               {c.heroL1} {c.heroL2 ? `${c.heroL2} ` : ""}
               <Text style={{ color: accent, fontStyle: "italic" }}>{c.heroEm}</Text>
@@ -337,10 +333,10 @@ export default function LoginScreen() {
                     >
                       {rememberMe ? <Ionicons name="checkmark" size={12} color={accent} /> : null}
                     </View>
-                    <Text style={[styles.rememberText, { color: subColor }]}>{fr ? "Se souvenir de moi" : "Remember me"}</Text>
+                    <Text style={[styles.rememberText, { color: subColor }]}>{pick("Remember me", "Se souvenir de moi")}</Text>
                   </Pressable>
                   <Pressable onPress={() => router.push("/(auth)/forgot-password")} hitSlop={8}>
-                    <Text style={[styles.forgotText, { color: accent }]}>{fr ? "Mot de passe oublié ?" : "Forgot password?"}</Text>
+                    <Text style={[styles.forgotText, { color: accent }]}>{pick("Forgot password?", "Mot de passe oublié ?")}</Text>
                   </Pressable>
                 </View>
 
@@ -360,7 +356,7 @@ export default function LoginScreen() {
 
                 {readyToSignIn ? (
                   <Text style={[styles.readyHint, { color: accent }]}>
-                    {fr ? "✓ Prêt — appuyez pour entrer" : "✓ Ready — tap to enter"}
+                    {pick("✓ Ready — tap to enter", "✓ Prêt — appuyez pour entrer")}
                   </Text>
                 ) : null}
               </View>
@@ -371,7 +367,7 @@ export default function LoginScreen() {
             <View style={styles.dividerRow}>
               <View style={[styles.dividerLine, { backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.08)" }]} />
               <Text style={[styles.dividerText, { color: subColor }]}>
-                {fr ? "Première visite ?" : "First time here?"}
+                {pick("First time here?", "Première visite ?")}
               </Text>
               <View style={[styles.dividerLine, { backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.08)" }]} />
             </View>
@@ -382,7 +378,11 @@ export default function LoginScreen() {
             >
               <View style={[styles.registerSimple, { borderColor: theme.chipBorder, backgroundColor: theme.chipBg }]}>
                 <Text style={[styles.registerSimpleTxt, { color: accent }]}>
-                  {fr ? `Nouveau ? Créer un compte ${roleCopy.label}` : `New here? Join as ${roleCopy.label}`}
+                  {pick(
+                    `New here? Join as ${roleThemeCopy.label}`,
+                    `Nouveau ? Créer un compte ${roleThemeCopy.label}`,
+                    `Jdid? Dir compte ${roleThemeCopy.label}`
+                  )}
                 </Text>
                 <Ionicons name="arrow-forward" size={14} color={accent} />
               </View>
@@ -394,14 +394,12 @@ export default function LoginScreen() {
               hitSlop={8}
             >
               <Text style={[styles.changeRoleTxt, { color: subColor }]}>
-                {fr ? "Changer de parcours" : "Change your path"}
+                {pick("Change your path", "Changer de parcours")}
               </Text>
             </Pressable>
 
             <Text style={[styles.footerNote, { color: isDark ? "#475569" : "#94a3b8" }]}>
-              {fr
-                ? "Vos données sont protégées · Connexion chiffrée"
-                : "Your data is protected · Encrypted sign-in"}
+              {pick("Your data is protected · Encrypted sign-in", "Vos données sont protégées · Connexion chiffrée")}
             </Text>
           </Animated.View>
         </ScrollView>

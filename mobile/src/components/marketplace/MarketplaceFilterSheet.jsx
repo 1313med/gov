@@ -27,6 +27,7 @@ import {
   RENT_PRICE_BANDS,
   YEAR_BANDS,
 } from "../../utils/marketplaceFilters";
+import { useAppLang } from "../../context/AppLangContext";
 
 const DISMISS_DRAG = 88;
 const DISMISS_VELOCITY = 1.1;
@@ -56,13 +57,12 @@ function Chip({ label, active, onPress, accent, isDark }) {
   );
 }
 
-function DateRow({ label, value, onChange, isDark, fr }) {
+function DateRow({ label, value, onChange, isDark }) {
+  const { pick, dateLocale } = useAppLang();
   const [show, setShow] = useState(false);
   const formatted = value
-    ? new Date(value).toLocaleDateString(fr ? "fr-FR" : "en-GB", { day: "2-digit", month: "short", year: "numeric" })
-    : fr
-      ? "Choisir"
-      : "Choose";
+    ? new Date(value).toLocaleDateString(dateLocale, { day: "2-digit", month: "short", year: "numeric" })
+    : pick("Choose", "Choisir");
 
   return (
     <View style={{ flex: 1 }}>
@@ -92,7 +92,8 @@ function DateRow({ label, value, onChange, isDark, fr }) {
   );
 }
 
-export default function MarketplaceFilterSheet({ visible, mode, filters, fr, isDark, accent, onClose, onApply }) {
+export default function MarketplaceFilterSheet({ visible, mode, filters, fr: _fr, isDark, accent, onClose, onApply }) {
+  const { pick } = useAppLang();
   const insets = useSafeAreaInsets();
   const [draft, setDraft] = useState(filters);
   const translateY = useRef(new Animated.Value(0)).current;
@@ -153,7 +154,7 @@ export default function MarketplaceFilterSheet({ visible, mode, filters, fr, isD
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={dismiss}>
       <View style={st.overlay}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={dismiss} accessibilityRole="button" accessibilityLabel={fr ? "Fermer" : "Close"} />
+        <Pressable style={StyleSheet.absoluteFill} onPress={dismiss} accessibilityRole="button" accessibilityLabel={pick("Close", "Fermer")} />
 
         <Animated.View
           style={[
@@ -168,9 +169,9 @@ export default function MarketplaceFilterSheet({ visible, mode, filters, fr, isD
           <View {...panResponder.panHandlers} style={st.dragZone}>
             <View style={st.handle} />
             <Text style={[st.dragHint, { color: isDark ? "#64748b" : "#94a3b8" }]}>
-              {fr ? "Glisser vers le bas pour fermer" : "Swipe down to close"}
+              {pick("Swipe down to close", "Glisser vers le bas pour fermer")}
             </Text>
-            <TouchableOpacity onPress={dismiss} hitSlop={12} style={st.closeBtn} accessibilityLabel={fr ? "Fermer" : "Close"}>
+            <TouchableOpacity onPress={dismiss} hitSlop={12} style={st.closeBtn} accessibilityLabel={pick("Close", "Fermer")}>
               <Ionicons name="chevron-down" size={26} color={isDark ? "#94a3b8" : "#64748b"} />
             </TouchableOpacity>
           </View>
@@ -178,29 +179,25 @@ export default function MarketplaceFilterSheet({ visible, mode, filters, fr, isD
           <View style={st.sheetHead}>
             <View style={{ flex: 1, paddingRight: 8 }}>
               <Text style={[st.sheetTitle, { color: titleColor }]}>
-                {fr ? "Filtres avancés" : "Advanced filters"}
+                {pick("Advanced filters", "Filtres avancés")}
               </Text>
               <Text style={{ color: isDark ? "#64748b" : "#94a3b8", fontSize: 13, marginTop: 4 }}>
                 {mode === "rent"
-                  ? fr
-                    ? "Affinez les locations disponibles"
-                    : "Refine available rentals"
-                  : fr
-                    ? "Trouvez la voiture idéale à acheter"
-                    : "Find your ideal car to buy"}
+                  ? pick("Refine available rentals", "Affinez les locations disponibles")
+                  : pick("Find your ideal car to buy", "Trouvez la voiture idéale à acheter")}
               </Text>
             </View>
             <TouchableOpacity onPress={reset} hitSlop={12}>
-              <Text style={{ color: accent, fontWeight: "800", fontSize: 13 }}>{fr ? "Réinitialiser" : "Reset"}</Text>
+              <Text style={{ color: accent, fontWeight: "800", fontSize: 13 }}>{pick("Reset", "Réinitialiser")}</Text>
             </TouchableOpacity>
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24 }} keyboardShouldPersistTaps="handled">
-            <Section title={fr ? "Ville" : "City"} isDark={isDark}>
+            <Section title={pick("City", "Ville")} isDark={isDark}>
               <TextInput
                 value={draft.city}
                 onChangeText={(v) => setDraft((p) => ({ ...p, city: v }))}
-                placeholder={fr ? "Ex. Casablanca" : "e.g. Casablanca"}
+                placeholder={pick("e.g. Casablanca", "Ex. Casablanca")}
                 placeholderTextColor={isDark ? "#475569" : "#94a3b8"}
                 style={[st.input, { color: titleColor, borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(15,23,42,0.1)", backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "#fff" }]}
               />
@@ -218,11 +215,11 @@ export default function MarketplaceFilterSheet({ visible, mode, filters, fr, isD
               </View>
             </Section>
 
-            <Section title={fr ? "Marque" : "Brand"} isDark={isDark}>
+            <Section title={pick("Brand", "Marque")} isDark={isDark}>
               <TextInput
                 value={draft.brand}
                 onChangeText={(v) => setDraft((p) => ({ ...p, brand: v }))}
-                placeholder={fr ? "Ex. Dacia" : "e.g. Dacia"}
+                placeholder={pick("e.g. Dacia", "Ex. Dacia")}
                 placeholderTextColor={isDark ? "#475569" : "#94a3b8"}
                 style={[st.input, { color: titleColor, borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(15,23,42,0.1)", backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "#fff" }]}
               />
@@ -240,12 +237,12 @@ export default function MarketplaceFilterSheet({ visible, mode, filters, fr, isD
               </View>
             </Section>
 
-            <Section title={fr ? "Carburant" : "Fuel"} isDark={isDark}>
+            <Section title={pick("Fuel", "Carburant")} isDark={isDark}>
               <View style={st.chipWrap}>
                 {FUEL_OPTIONS.map((o) => (
                   <Chip
                     key={o.id || "all"}
-                    label={fr ? o.fr : o.en}
+                    label={pick(o.en, o.fr, o.ar)}
                     active={draft.fuel === o.id}
                     accent={accent}
                     isDark={isDark}
@@ -255,12 +252,12 @@ export default function MarketplaceFilterSheet({ visible, mode, filters, fr, isD
               </View>
             </Section>
 
-            <Section title={fr ? "Boîte de vitesse" : "Gearbox"} isDark={isDark}>
+            <Section title={pick("Gearbox", "Boîte de vitesse")} isDark={isDark}>
               <View style={st.chipWrap}>
                 {GEARBOX_OPTIONS.map((o) => (
                   <Chip
                     key={o.id || "all"}
-                    label={fr ? o.fr : o.en}
+                    label={pick(o.en, o.fr, o.ar)}
                     active={draft.gearbox === o.id}
                     accent={accent}
                     isDark={isDark}
@@ -270,12 +267,19 @@ export default function MarketplaceFilterSheet({ visible, mode, filters, fr, isD
               </View>
             </Section>
 
-            <Section title={mode === "rent" ? (fr ? "Prix par jour (MAD)" : "Price per day (MAD)") : fr ? "Prix de vente (MAD)" : "Sale price (MAD)"} isDark={isDark}>
+            <Section
+              title={
+                mode === "rent"
+                  ? pick("Price per day (MAD)", "Prix par jour (MAD)")
+                  : pick("Sale price (MAD)", "Prix de vente (MAD)")
+              }
+              isDark={isDark}
+            >
               <View style={st.chipWrap}>
                 {priceBands.map((b) => (
                   <Chip
                     key={b.key}
-                    label={fr ? b.fr : b.en}
+                    label={pick(b.en, b.fr, b.ar)}
                     active={draft.priceKey === b.key}
                     accent={accent}
                     isDark={isDark}
@@ -286,12 +290,12 @@ export default function MarketplaceFilterSheet({ visible, mode, filters, fr, isD
             </Section>
 
             {mode === "buy" ? (
-              <Section title={fr ? "Année du véhicule" : "Vehicle year"} isDark={isDark}>
+              <Section title={pick("Vehicle year", "Année du véhicule")} isDark={isDark}>
                 <View style={st.chipWrap}>
                   {YEAR_BANDS.map((b) => (
                     <Chip
                       key={b.key}
-                      label={fr ? b.fr : b.en}
+                      label={pick(b.en, b.fr, b.ar)}
                       active={draft.yearKey === b.key}
                       accent={accent}
                       isDark={isDark}
@@ -302,27 +306,26 @@ export default function MarketplaceFilterSheet({ visible, mode, filters, fr, isD
               </Section>
             ) : (
               <>
-                <Section title={fr ? "Disponibilité" : "Availability"} isDark={isDark}>
+                <Section title={pick("Availability", "Disponibilité")} isDark={isDark}>
                   <View style={{ flexDirection: "row", gap: 10 }}>
                     <DateRow
-                      label={fr ? "Début" : "Start"}
+                      label={pick("Start", "Début")}
                       value={draft.startDate}
                       onChange={(v) => setDraft((p) => ({ ...p, startDate: v }))}
                       isDark={isDark}
-                      fr={fr}
                     />
                     <DateRow
-                      label={fr ? "Fin" : "End"}
+                      label={pick("End", "Fin")}
                       value={draft.endDate}
                       onChange={(v) => setDraft((p) => ({ ...p, endDate: v }))}
                       isDark={isDark}
-                      fr={fr}
                     />
                   </View>
                   <Text style={{ color: isDark ? "#64748b" : "#94a3b8", fontSize: 12, marginTop: 8, lineHeight: 18 }}>
-                    {fr
-                      ? "Masque les voitures déjà réservées sur cette période."
-                      : "Hides cars already booked for these dates."}
+                    {pick(
+                      "Hides cars already booked for these dates.",
+                      "Masque les voitures déjà réservées sur cette période.",
+                    )}
                   </Text>
                 </Section>
                 <View
@@ -333,7 +336,7 @@ export default function MarketplaceFilterSheet({ visible, mode, filters, fr, isD
                 >
                   <Ionicons name="airplane-outline" size={22} color={accent} />
                   <Text style={{ flex: 1, marginLeft: 12, color: titleColor, fontWeight: "700", fontSize: 15 }}>
-                    {fr ? "Livraison aéroport uniquement" : "Airport delivery only"}
+                    {pick("Airport delivery only", "Livraison aéroport uniquement")}
                   </Text>
                   <Switch
                     value={draft.airportOnly}
@@ -349,7 +352,7 @@ export default function MarketplaceFilterSheet({ visible, mode, filters, fr, isD
             <TouchableOpacity onPress={apply} activeOpacity={0.9}>
               <LinearGradient colors={[accent, isDark ? "#4338ca" : "#0369a1"]} style={st.applyBtn}>
                 <Ionicons name="checkmark-circle" size={22} color="#fff" />
-                <Text style={st.applyText}>{fr ? "Voir les résultats" : "Show results"}</Text>
+                <Text style={st.applyText}>{pick("Show results", "Voir les résultats")}</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>

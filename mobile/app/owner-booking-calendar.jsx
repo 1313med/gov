@@ -26,7 +26,7 @@ function normalizeBookingsList(data) {
 }
 
 export default function OwnerBookingCalendarScreen() {
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const { colors: C, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -117,35 +117,33 @@ export default function OwnerBookingCalendarScreen() {
             </LinearGradient>
           </View>
           <Text style={[styles.heroEyebrow, { color: accent }]}>
-            {fr ? "PLANNING FLOTTE" : "FLEET SCHEDULE"}
+            {pick("FLEET SCHEDULE", "PLANNING FLOTTE")}
           </Text>
           <Text style={[styles.heroTitle, { color: titleColor }]}>
-            {fr ? "Calendrier des réservations" : "Booking calendar"}
+            {pick("Booking calendar", "Calendrier des réservations")}
           </Text>
           <Text style={[styles.heroSub, { color: subColor }]}>
-            {fr
-              ? "Visualisez les locations sur la durée, filtrez par jour et ouvrez une réservation en un geste."
-              : "See rentals across time, filter by day, and open any booking in one tap."}
+            {pick("See rentals across time, filter by day, and open any booking in one tap.", "Visualisez les locations sur la durée, filtrez par jour et ouvrez une réservation en un geste.")}
           </Text>
 
           <View style={styles.summaryRow}>
             <SummaryChip
               icon="layers-outline"
-              label={fr ? "Total" : "All"}
+              label={pick("All", "Total")}
               value={String(fleetSummary.total)}
               color={isDark ? "#a78bfa" : "#6248e8"}
               isDark={isDark}
             />
             <SummaryChip
               icon="time-outline"
-              label={fr ? "Attente" : "Pending"}
+              label={pick("Pending", "Attente")}
               value={String(fleetSummary.pending)}
               color="#fbbf24"
               isDark={isDark}
             />
             <SummaryChip
               icon="airplane-outline"
-              label={fr ? "À venir" : "Upcoming"}
+              label={pick("Upcoming", "À venir")}
               value={String(fleetSummary.upcoming)}
               color={accent}
               isDark={isDark}

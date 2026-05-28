@@ -30,6 +30,7 @@ const CHART_PAD = 32;
 const WEEKDAYS = {
   en: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
   fr: ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"],
+  ar: ["أحد", "إثن", "ثل", "أرب", "خم", "جم", "سب"],
 };
 
 const STATUS_COLORS = {
@@ -47,7 +48,8 @@ function statusColor(name) {
 const FLEET_BAR_MAX_W = SCREEN_W - 80;
 
 /** Horizontal bars — fleet revenue share */
-function FleetBars({ items, fmtMoney, C, fr }) {
+function FleetBars({ items, fmtMoney, C }) {
+  const { pick } = useAppLang();
   const maxRev = Math.max(1, ...items.map((f) => f.revenue));
   const slice = items.slice(0, 6);
   const animsRef = useRef(null);
@@ -97,7 +99,7 @@ function FleetBars({ items, fmtMoney, C, fr }) {
               />
             </View>
             <Text style={{ color: C.muted, fontSize: 11, marginTop: 4 }}>
-              {f.bookings} {fr ? "résa." : "book."} · {f.utilization}% {fr ? "occup." : "util."}
+              {f.bookings} {pick("book.", "résa.", "حجز")} · {f.utilization}% {pick("util.", "occup.", "إشغال")}
             </Text>
           </View>
         );
@@ -108,8 +110,18 @@ function FleetBars({ items, fmtMoney, C, fr }) {
 
 /** Stacked status pipeline */
 function StatusPipeline({ rows, C }) {
+  const { pick } = useAppLang();
+  const statusLabel = (name) => {
+    const map = {
+      Confirmed: pick("Confirmed", "Confirmées"),
+      Pending: pick("Pending", "En attente"),
+      Rejected: pick("Rejected", "Refusées"),
+      Cancelled: pick("Cancelled", "Annulées"),
+      Completed: pick("Completed", "Terminées"),
+    };
+    return map[name] || name;
+  };
   const positive = rows.filter((r) => r.value > 0);
-  const total = positive.reduce((s, r) => s + r.value, 0) || 1;
   return (
     <View>
       <View style={{ flexDirection: "row", height: 14, borderRadius: 8, overflow: "hidden", backgroundColor: C.inputBg }}>
@@ -123,7 +135,7 @@ function StatusPipeline({ rows, C }) {
             <View key={r.name} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
               <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: statusColor(r.name) }} />
               <Text style={{ color: C.muted, fontSize: 11 }}>
-                {r.name} <Text style={{ color: C.white, fontWeight: "700" }}>{r.value}</Text>
+                {statusLabel(r.name)} <Text style={{ color: C.white, fontWeight: "700" }}>{r.value}</Text>
               </Text>
             </View>
           ) : null
@@ -135,7 +147,7 @@ function StatusPipeline({ rows, C }) {
 
 function HeatGrid({ heatmap, C, lang }) {
   const enDays = WEEKDAYS.en;
-  const labels = WEEKDAYS[lang === "fr" ? "fr" : "en"];
+  const labels = WEEKDAYS[lang === "fr" ? "fr" : lang === "ar" ? "ar" : "en"];
   const maxD = Math.max(1, ...heatmap.map((h) => h.demand));
   return (
     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "space-between" }}>
@@ -214,7 +226,7 @@ function SectionCard({ title, subtitle, children, C, accent }) {
 }
 
 export default function OwnerAnalyticsScreen() {
-  const { lang } = useAppLang();
+  const { lang, pick, numberLocale, dateLocale } = useAppLang();
   const { colors: C, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const fr = lang === "fr";
@@ -262,7 +274,7 @@ export default function OwnerAnalyticsScreen() {
     });
   }, [period, chipScale]);
 
-  const fmtMoney = (n) => `${Number(n || 0).toLocaleString(fr ? "fr-FR" : "en-US")} MAD`;
+  const fmtMoney = (n) => `${Number(n || 0).toLocaleString(numberLocale)} MAD`;
 
   const monthly = Array.isArray(data?.monthlyRevenue) ? data.monthlyRevenue : [];
   const trends = Array.isArray(data?.bookingTrends) ? data.bookingTrends : [];
@@ -273,7 +285,7 @@ export default function OwnerAnalyticsScreen() {
     return (
       <View style={[styles.center, { backgroundColor: C.bg, padding: 24 }]}>
         <Ionicons name="analytics-outline" size={52} color={C.muted} />
-        <Text style={{ color: C.white, textAlign: "center", marginTop: 16, fontSize: 16 }}>{fr ? "Impossible de charger les statistiques." : "Could not load analytics."}</Text>
+        <Text style={{ color: C.white, textAlign: "center", marginTop: 16, fontSize: 16 }}>{pick("Could not load analytics.", "Impossible de charger les statistiques.")}</Text>
       </View>
     );
   }
@@ -324,8 +336,8 @@ export default function OwnerAnalyticsScreen() {
 
       {Array.isArray(data.bookingStatusData) && data.bookingStatusData.some((x) => x.value > 0) && (
         <SectionCard
-          title={fr ? "Pipeline réservations" : "Booking pipeline"}
-          subtitle={fr ? "Répartition des statuts — d’un coup d’œil." : "Status mix at a glance."}
+          title={pick("Booking pipeline", "Pipeline réservations")}
+          subtitle={pick("Status mix at a glance.", "Répartition des statuts — d’un coup d’œil.")}
           C={C}
           accent="#fbbf24"
         >
@@ -334,21 +346,27 @@ export default function OwnerAnalyticsScreen() {
       )}
 
       <SectionCard
-        title={fr ? "Trésorerie" : "Cash flow"}
-        subtitle={fr ? "Encaissement, attente et coûts." : "Collected, pending & costs."}
+        title={pick("Cash flow", "Trésorerie")}
+        subtitle={pick("Collected, pending & costs.", "Encaissement, attente et coûts.")}
         C={C}
         accent="#34d399"
       >
         <View style={{ gap: 12 }}>
           {[
-            [fr ? "Encaissé" : "Collected", fmtMoney(data.collectedRevenue), "checkmark-circle-outline", "#34d399"],
-            [fr ? "En attente" : "Pending", fmtMoney(data.pendingRevenue), "time-outline", "#fbbf24"],
-            [fr ? "Entretien" : "Maintenance", fmtMoney(data.totalMaintenanceCost), "construct-outline", "#f87171"],
-            [fr ? "Évolution CA" : "Revenue vs prev.", growthStr, growthPositive ? "trending-up-outline" : "remove-outline", growthPositive ? "#34d399" : C.muted],
-            [fr ? "CA moy. / jour" : "Avg. daily", fmtMoney(data.avgDailyRevenue), "bar-chart-outline", C.primary],
-          ].map(([label, val, icon, col]) => (
+            { id: "collected", label: pick("Collected", "Encaissé", "محصّل"), val: fmtMoney(data.collectedRevenue), icon: "checkmark-circle-outline", col: "#34d399" },
+            { id: "pending", label: pick("Pending", "En attente", "قيد الانتظار"), val: fmtMoney(data.pendingRevenue), icon: "time-outline", col: "#fbbf24" },
+            { id: "maintenance", label: pick("Maintenance", "Entretien", "صيانة"), val: fmtMoney(data.totalMaintenanceCost), icon: "construct-outline", col: "#f87171" },
+            {
+              id: "growth",
+              label: pick("Revenue vs prev.", "Évolution CA", "الإيرادات مقارنة بالفترة السابقة"),
+              val: growthStr,
+              icon: growthPositive ? "trending-up-outline" : "remove-outline",
+              col: growthPositive ? "#34d399" : C.muted,
+            },
+            { id: "avg-daily", label: pick("Avg. daily", "CA moy. / jour", "متوسط يومي"), val: fmtMoney(data.avgDailyRevenue), icon: "bar-chart-outline", col: C.primary },
+          ].map((row) => (
             <View
-              key={label}
+              key={row.id}
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -360,9 +378,9 @@ export default function OwnerAnalyticsScreen() {
                 borderColor: C.border,
               }}
             >
-              <Ionicons name={icon} size={22} color={col} style={{ marginRight: 12 }} />
-              <Text style={{ color: C.muted, fontSize: 13, flex: 1 }}>{label}</Text>
-              <Text style={{ color: C.white, fontWeight: "800", fontSize: 14 }}>{val}</Text>
+              <Ionicons name={row.icon} size={22} color={row.col} style={{ marginRight: 12 }} />
+              <Text style={{ color: C.muted, fontSize: 13, flex: 1 }}>{row.label}</Text>
+              <Text style={{ color: C.white, fontWeight: "800", fontSize: 14 }}>{row.val}</Text>
             </View>
           ))}
         </View>
@@ -370,8 +388,8 @@ export default function OwnerAnalyticsScreen() {
 
       {data.mostRentedCar && (
         <SectionCard
-          title={fr ? "Véhicule star" : "Star vehicle"}
-          subtitle={fr ? "Le plus réservé sur la période." : "Most booked this period."}
+          title={pick("Star vehicle", "Véhicule star")}
+          subtitle={pick("Most booked this period.", "Le plus réservé sur la période.")}
           C={C}
           accent="#f472b6"
         >
@@ -404,7 +422,7 @@ export default function OwnerAnalyticsScreen() {
                   {data.mostRentedCar.title}
                 </Text>
                 <Text style={{ color: C.muted, marginTop: 8, fontSize: 14 }}>
-                  {data.mostRentedCar.count} {fr ? "réservations" : "bookings"} · {fr ? "période actuelle" : "current period"}
+                  {data.mostRentedCar.count} {pick("bookings", "réservations")} · {pick("current period", "période actuelle")}
                 </Text>
               </View>
             </View>
@@ -414,8 +432,8 @@ export default function OwnerAnalyticsScreen() {
 
       {Array.isArray(data.fleetPerformance) && data.fleetPerformance.length > 0 && (
         <SectionCard
-          title={fr ? "Performance flotte" : "Fleet leaderboard"}
-          subtitle={fr ? "Part du revenu par véhicule (barres animées)." : "Revenue share per vehicle (animated bars)."}
+          title={pick("Fleet leaderboard", "Performance flotte")}
+          subtitle={pick("Revenue share per vehicle (animated bars).", "Part du revenu par véhicule (barres animées).")}
           C={C}
           accent="#818cf8"
         >
@@ -424,15 +442,14 @@ export default function OwnerAnalyticsScreen() {
             items={data.fleetPerformance}
             fmtMoney={fmtMoney}
             C={C}
-            fr={fr}
           />
         </SectionCard>
       )}
 
       {Array.isArray(data.demandHeatmap) && data.demandHeatmap.length > 0 && (
         <SectionCard
-          title={fr ? "Carte de demande" : "Demand map"}
-          subtitle={fr ? "Jours les plus sollicités (période cumulée)." : "Busiest weekdays (cumulative)."}
+          title={pick("Demand map", "Carte de demande")}
+          subtitle={pick("Busiest weekdays (cumulative).", "Jours les plus sollicités (période cumulée).")}
           C={C}
           accent="#2dd4bf"
         >
@@ -442,15 +459,15 @@ export default function OwnerAnalyticsScreen() {
 
       {Array.isArray(data.upcomingRentals) && data.upcomingRentals.length > 0 && (
         <SectionCard
-          title={fr ? "À venir" : "Upcoming"}
-          subtitle={fr ? "Prochains départs confirmés." : "Next confirmed trips."}
+          title={pick("Upcoming", "À venir")}
+          subtitle={pick("Next confirmed trips.", "Prochains départs confirmés.")}
           C={C}
           accent="#94a3b8"
         >
           <View style={{ gap: 10 }}>
-            {data.upcomingRentals.map((b) => (
+            {data.upcomingRentals.map((b, idx) => (
               <View
-                key={b._id}
+                key={b._id ? String(b._id) : `upcoming-${idx}`}
                 style={{
                   padding: 14,
                   borderRadius: 14,
@@ -463,7 +480,7 @@ export default function OwnerAnalyticsScreen() {
                   {b.rentalId?.title || "—"}
                 </Text>
                 <Text style={{ color: C.muted, fontSize: 12, marginTop: 6 }}>
-                  {new Date(b.startDate).toLocaleDateString(fr ? "fr-FR" : "en-GB")} → {new Date(b.endDate).toLocaleDateString(fr ? "fr-FR" : "en-GB")}
+                  {new Date(b.startDate).toLocaleDateString(dateLocale)} → {new Date(b.endDate).toLocaleDateString(dateLocale)}
                 </Text>
               </View>
             ))}
@@ -473,8 +490,8 @@ export default function OwnerAnalyticsScreen() {
 
       {insights.length > 0 && (
         <SectionCard
-          title={fr ? "Recommandation Goovoiture" : "Goovoiture recommendation"}
-          subtitle={fr ? "Conseils adaptés à votre flotte." : "Tailored tips for your fleet."}
+          title={pick("Goovoiture recommendation", "Recommandation Goovoiture")}
+          subtitle={pick("Tailored tips for your fleet.", "Conseils adaptés à votre flotte.")}
           C={C}
           accent="#fb923c"
         >

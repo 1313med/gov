@@ -3,17 +3,17 @@ const CURRENT_YEAR = new Date().getFullYear();
 export const DEBOUNCE_MS = 640;
 
 export const FUEL_OPTIONS = [
-  { id: "", fr: "Tous carburants", en: "All fuels" },
-  { id: "essence", fr: "Essence", en: "Petrol" },
-  { id: "diesel", fr: "Diesel", en: "Diesel" },
-  { id: "hybride", fr: "Hybride", en: "Hybrid" },
-  { id: "electrique", fr: "Électrique", en: "Electric" },
+  { id: "", fr: "Tous carburants", en: "All fuels", ar: "كل أنواع الوقود" },
+  { id: "essence", fr: "Essence", en: "Petrol", ar: "بنزين" },
+  { id: "diesel", fr: "Diesel", en: "Diesel", ar: "ديزل" },
+  { id: "hybride", fr: "Hybride", en: "Hybrid", ar: "هجين" },
+  { id: "electrique", fr: "Électrique", en: "Electric", ar: "كهربائي" },
 ];
 
 export const GEARBOX_OPTIONS = [
-  { id: "", fr: "Toutes boîtes", en: "All gearboxes" },
-  { id: "manuelle", fr: "Manuelle", en: "Manual" },
-  { id: "automatique", fr: "Automatique", en: "Automatic" },
+  { id: "", fr: "Toutes boîtes", en: "All gearboxes", ar: "كل أنواع ناقل الحركة" },
+  { id: "manuelle", fr: "Manuelle", en: "Manual", ar: "يدوي" },
+  { id: "automatique", fr: "Automatique", en: "Automatic", ar: "أوتوماتيك" },
 ];
 
 export const BRAND_OPTIONS = [

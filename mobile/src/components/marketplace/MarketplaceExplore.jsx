@@ -97,7 +97,7 @@ export default function MarketplaceExplore({
   buyFirst = false,
 }) {
   const { auth } = useAuth();
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const fr = lang === "fr";
   const { colors: C, isDark } = useTheme();
   const insets = useSafeAreaInsets();
@@ -404,16 +404,12 @@ export default function MarketplaceExplore({
           <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
             <View style={{ flex: 1 }}>
               <Text style={{ color: accent, fontSize: 10, fontWeight: "800", letterSpacing: 2.4, textTransform: "uppercase", marginBottom: 6 }}>
-                {fr ? "Collection premium" : "Premium collection"}
+                {pick("Premium collection", "Collection premium")}
               </Text>
               <Text style={{ color: titleColor, fontWeight: "900", fontSize: 30, letterSpacing: -0.8, lineHeight: 36 }}>
                 {variant === "carOwner"
-                  ? fr
-                    ? "Le marché GooVoiture"
-                    : "The GooVoiture market"
-                  : fr
-                    ? "Explorez"
-                    : "Explore"}
+                  ? pick("The GooVoiture market", "Le marché GooVoiture")
+                  : pick("Explore", "Explorez")}
               </Text>
             </View>
             <NotificationHeaderButton
@@ -425,12 +421,8 @@ export default function MarketplaceExplore({
           </View>
           <Text style={{ color: subColor, fontSize: 14, lineHeight: 21, marginTop: 8, fontWeight: "500", maxWidth: 340 }}>
             {mode === "rent"
-              ? fr
-                ? "Locations vérifiées, filtres précis, réservation en quelques taps."
-                : "Verified rentals, precise filters, book in a few taps."
-              : fr
-                ? "Annonces sélectionnées — trouvez votre prochaine voiture au Maroc."
-                : "Curated listings — find your next car in Morocco."}
+              ? pick("Verified rentals, precise filters, book in a few taps.", "Locations vérifiées, filtres précis, réservation en quelques taps.")
+              : pick("Curated listings — find your next car in Morocco.", "Annonces sélectionnées — trouvez votre prochaine voiture au Maroc.")}
           </Text>
           <HeroShimmer color={accent} track={shimmerTrack} />
 
@@ -438,7 +430,7 @@ export default function MarketplaceExplore({
             <TouchableOpacity onPress={() => router.push("/new-sale")} activeOpacity={0.88} style={{ marginTop: 16 }}>
               <LinearGradient colors={ctaGrad} style={styles.sellCta}>
                 <Ionicons name="pricetag" size={18} color="#fff" />
-                <Text style={styles.sellCtaText}>{fr ? "Mettre ma voiture en vente" : "List my car for sale"}</Text>
+                <Text style={styles.sellCtaText}>{pick("List my car for sale", "Mettre ma voiture en vente")}</Text>
                 <Ionicons name="arrow-forward" size={16} color="rgba(255,255,255,0.85)" />
               </LinearGradient>
             </TouchableOpacity>
@@ -468,12 +460,12 @@ export default function MarketplaceExplore({
             />
             {(buyFirst
               ? [
-                  { id: "buy", icon: "diamond-outline", label: fr ? "À vendre" : "For sale" },
-                  { id: "rent", icon: "car-sport", label: fr ? "À louer" : "For rent" },
+                  { id: "buy", icon: "diamond-outline", label: pick("For sale", "À vendre") },
+                  { id: "rent", icon: "car-sport", label: pick("For rent", "À louer") },
                 ]
               : [
-                  { id: "rent", icon: "car-sport", label: fr ? "À louer" : "For rent" },
-                  { id: "buy", icon: "diamond-outline", label: fr ? "À vendre" : "For sale" },
+                  { id: "rent", icon: "car-sport", label: pick("For rent", "À louer") },
+                  { id: "buy", icon: "diamond-outline", label: pick("For sale", "À vendre") },
                 ]
             ).map((tab) => (
               <TouchableOpacity key={tab.id} style={styles.modeBtn} onPress={() => switchMode(tab.id)} activeOpacity={0.85}>
@@ -490,7 +482,7 @@ export default function MarketplaceExplore({
             <TextInput
               value={query}
               onChangeText={setQuery}
-              placeholder={mode === "rent" ? (fr ? "Marque, modèle, ville…" : "Brand, model, city…") : fr ? "Marque, modèle, mots-clés…" : "Brand, model, keywords…"}
+              placeholder={mode === "rent" ? (pick("Brand, model, city…", "Marque, modèle, ville…")) : pick("Brand, model, keywords…", "Marque, modèle, mots-clés…")}
               placeholderTextColor={C.muted}
               style={{ flex: 1, color: titleColor, fontSize: 15, fontWeight: "600", paddingVertical: 14 }}
               autoCapitalize="none"
@@ -527,7 +519,7 @@ export default function MarketplaceExplore({
               ))}
               <TouchableOpacity onPress={() => applyFilters({ ...EMPTY_FILTERS })}>
                 <Text style={{ color: subColor, fontSize: 12, fontWeight: "700", paddingVertical: 8, paddingHorizontal: 4 }}>
-                  {fr ? "Tout effacer" : "Clear all"}
+                  {pick("Clear all", "Tout effacer")}
                 </Text>
               </TouchableOpacity>
             </ScrollView>
@@ -546,7 +538,7 @@ export default function MarketplaceExplore({
             >
               <Ionicons name="earth-outline" size={14} color={!filters.city ? accent : C.muted} />
               <Text style={{ color: !filters.city ? accent : C.muted, fontSize: 12, fontWeight: "700", marginLeft: 4 }}>
-                {fr ? "Maroc" : "Morocco"}
+                {pick("Morocco", "Maroc")}
               </Text>
             </TouchableOpacity>
             {quickCities.map((city) => (
@@ -569,18 +561,18 @@ export default function MarketplaceExplore({
 
       <View style={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8, backgroundColor: C.bg }}>
         <Text style={{ color: accent, fontSize: 10, fontWeight: "800", letterSpacing: 2, textTransform: "uppercase" }}>
-          {mode === "rent" ? (fr ? "Disponibles maintenant" : "Available now") : fr ? "Sélection du moment" : "Featured picks"}
+          {mode === "rent" ? (pick("Available now", "Disponibles maintenant")) : pick("Featured picks", "Sélection du moment")}
         </Text>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 6 }}>
           <Text style={{ color: titleColor, fontWeight: "900", fontSize: 18, letterSpacing: -0.3 }}>
             {loading && items.length === 0 ? "…" : `${items.length}${mode === "buy" && total > items.length ? ` / ${total}` : ""}`}{" "}
-            <Text style={{ fontWeight: "600", fontSize: 15, color: subColor }}>{fr ? "résultats" : "results"}</Text>
+            <Text style={{ fontWeight: "600", fontSize: 15, color: subColor }}>{pick("results", "résultats")}</Text>
           </Text>
           {filterCount > 0 ? (
             <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
               <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: accent }} />
               <Text style={{ color: subColor, fontSize: 12, fontWeight: "700" }}>
-                {filterCount} {fr ? "filtre(s)" : "filter(s)"}
+                {filterCount} {pick("filter(s)", "filtre(s)")}
               </Text>
             </View>
           ) : null}
@@ -636,14 +628,14 @@ export default function MarketplaceExplore({
                   <Ionicons name={mode === "rent" ? "car-sport" : "diamond"} size={48} color={accent} />
                 </LinearGradient>
                 <Text style={{ color: titleColor, fontWeight: "900", fontSize: 20, textAlign: "center", letterSpacing: -0.3 }}>
-                  {mode === "rent" ? (fr ? "Aucune location" : "No rentals") : fr ? "Aucune annonce" : "No listings"}
+                  {mode === "rent" ? (pick("No rentals", "Aucune location")) : pick("No listings", "Aucune annonce")}
                 </Text>
                 <Text style={{ color: subColor, fontSize: 14, marginTop: 10, textAlign: "center", lineHeight: 22 }}>
-                  {fr ? "Élargissez vos filtres ou changez de ville." : "Widen your filters or try another city."}
+                  {pick("Widen your filters or try another city.", "Élargissez vos filtres ou changez de ville.")}
                 </Text>
                 <TouchableOpacity onPress={() => setFilterOpen(true)} style={{ marginTop: 20 }}>
                   <LinearGradient colors={ctaGrad} style={{ paddingHorizontal: 22, paddingVertical: 14, borderRadius: 14 }}>
-                    <Text style={{ color: "#fff", fontWeight: "800", fontSize: 15 }}>{fr ? "Ajuster les filtres" : "Adjust filters"}</Text>
+                    <Text style={{ color: "#fff", fontWeight: "800", fontSize: 15 }}>{pick("Adjust filters", "Ajuster les filtres")}</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </View>

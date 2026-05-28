@@ -10,6 +10,8 @@ import {
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
+import { useAppLang } from "../../context/AppLangContext";
+import { dateLocaleTag } from "../../utils/i18n";
 
 /**
  * Date row + picker that always dismisses after selection (no inline spinner in scroll).
@@ -19,12 +21,13 @@ export function DatePickerField({
   value,
   onChange,
   isDark,
-  fr = true,
   accent = "#0284c7",
   minimumDate,
   maximumDate,
   emptyLabel,
 }) {
+  const { pick, lang } = useAppLang();
+  const dateLocale = dateLocaleTag(lang);
   const [show, setShow] = useState(false);
   const [draft, setDraft] = useState(() => (value ? new Date(value) : new Date()));
 
@@ -32,12 +35,12 @@ export function DatePickerField({
   const muted = isDark ? "#475569" : "#94a3b8";
 
   const formatted = value
-    ? new Date(value).toLocaleDateString(fr ? "fr-FR" : "en-GB", {
+    ? new Date(value).toLocaleDateString(dateLocale, {
         day: "2-digit",
         month: "short",
         year: "numeric",
       })
-    : emptyLabel ?? (fr ? "Non renseigné" : "Not set");
+    : emptyLabel ?? pick("Not set", "Non renseigné", "غير محدد");
 
   useEffect(() => {
     if (show) setDraft(value ? new Date(value) : new Date());
@@ -120,15 +123,15 @@ export function DatePickerField({
             <View style={styles.sheetHead}>
               <TouchableOpacity onPress={close} hitSlop={12}>
                 <Text style={{ color: muted, fontWeight: "700", fontSize: 16 }}>
-                  {fr ? "Annuler" : "Cancel"}
+                  {pick("Cancel", "Annuler", "إلغاء")}
                 </Text>
               </TouchableOpacity>
               <Text style={{ fontWeight: "800", fontSize: 16, color: titleColor }}>
-                {fr ? "Choisir une date" : "Choose date"}
+                {pick("Choose date", "Choisir une date", "اختر التاريخ")}
               </Text>
               <TouchableOpacity onPress={confirm} hitSlop={12}>
                 <Text style={{ color: accent, fontWeight: "800", fontSize: 16 }}>
-                  {fr ? "OK" : "OK"}
+                  OK
                 </Text>
               </TouchableOpacity>
             </View>

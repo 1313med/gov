@@ -540,7 +540,8 @@ function ActionBtn({ label, variant, onPress, ionicon }) {
   );
 }
 
-function BookingMediaPanel({ booking, fr, onUpdated }) {
+function BookingMediaPanel({ booking, onUpdated }) {
+  const { pick, isFr } = useAppLang();
   const { C, m } = useOwnerBookingsStyles();
   const router = useRouter();
   const [tab, setTab] = useState("before");
@@ -563,7 +564,7 @@ function BookingMediaPanel({ booking, fr, onUpdated }) {
   const pickPhotos = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert(fr ? "Permission" : "Permission", fr ? "Accès photos requis" : "Photo access is required");
+      Alert.alert(pick("Permission", "Permission"), pick("Photo access is required", "Accès photos requis"));
       return;
     }
     const r = await ImagePicker.launchImageLibraryAsync({
@@ -581,7 +582,7 @@ function BookingMediaPanel({ booking, fr, onUpdated }) {
       const urls = await uploadListingImages(files);
       setPhotos((p) => [...p, ...urls]);
     } catch {
-      Alert.alert("Error", fr ? "Échec envoi image" : "Upload failed");
+      Alert.alert("Error", pick("Upload failed", "Échec envoi image"));
     }
   };
 
@@ -589,7 +590,7 @@ function BookingMediaPanel({ booking, fr, onUpdated }) {
 
   const addDocImage = async () => {
     if (!docName.trim()) {
-      Alert.alert(fr ? "Nom" : "Name", fr ? "Entrez un nom pour le document" : "Enter a document name");
+      Alert.alert(pick("Name", "Nom"), pick("Enter a document name", "Entrez un nom pour le document"));
       return;
     }
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -604,7 +605,7 @@ function BookingMediaPanel({ booking, fr, onUpdated }) {
         setDocName("");
       }
     } catch {
-      Alert.alert("Error", fr ? "Échec envoi" : "Upload failed");
+      Alert.alert("Error", pick("Upload failed", "Échec envoi"));
     }
   };
 
@@ -618,9 +619,9 @@ function BookingMediaPanel({ booking, fr, onUpdated }) {
         documents: docs,
       });
       onUpdated(data);
-      Alert.alert("", fr ? "Enregistré" : "Saved");
+      Alert.alert("", pick("Saved", "Enregistré"));
     } catch {
-      Alert.alert("Error", fr ? "Échec enregistrement" : "Save failed");
+      Alert.alert("Error", pick("Save failed", "Échec enregistrement"));
     } finally {
       setSaving(false);
     }
@@ -628,13 +629,13 @@ function BookingMediaPanel({ booking, fr, onUpdated }) {
 
   return (
     <View style={m.wrap}>
-      <Text style={m.section}>{fr ? "Photos véhicule" : "Condition photos"}</Text>
+      <Text style={m.section}>{pick("Condition photos", "Photos véhicule")}</Text>
       <View style={m.tabs}>
         <TouchableOpacity onPress={() => setTab("before")} style={[m.tab, tab === "before" && m.tabOn]}>
-          <Text style={[m.tabText, tab === "before" && m.tabTextOn]}>{fr ? "Avant" : "Before"} ({before.length})</Text>
+          <Text style={[m.tabText, tab === "before" && m.tabTextOn]}>{pick("Before", "Avant")} ({before.length})</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => setTab("after")} style={[m.tab, tab === "after" && m.tabOnAfter]}>
-          <Text style={[m.tabText, tab === "after" && m.tabTextOn]}>{fr ? "Après" : "After"} ({after.length})</Text>
+          <Text style={[m.tabText, tab === "after" && m.tabTextOn]}>{pick("After", "Après")} ({after.length})</Text>
         </TouchableOpacity>
       </View>
       <TouchableOpacity
@@ -652,7 +653,7 @@ function BookingMediaPanel({ booking, fr, onUpdated }) {
       >
         <Ionicons name="list-outline" size={16} color={C.primary} />
         <Text style={m.checklistBtnTxt}>
-          {fr ? "Checklist guidée" : "Guided checklist"}
+          {pick("Guided checklist", "Checklist guidée")}
         </Text>
       </TouchableOpacity>
       <View style={m.grid}>
@@ -669,24 +670,24 @@ function BookingMediaPanel({ booking, fr, onUpdated }) {
         </TouchableOpacity>
       </View>
 
-      <Text style={[m.section, { marginTop: 16 }]}>{fr ? "Documents (images)" : "Documents (images)"}</Text>
+      <Text style={[m.section, { marginTop: 16 }]}>{pick("Documents (images)", "Documents (images)")}</Text>
       <View style={m.docRow}>
         <TextInput
           value={docName}
           onChangeText={setDocName}
-          placeholder={fr ? "Nom du document" : "Document name"}
+          placeholder={pick("Document name", "Nom du document")}
           placeholderTextColor={C.muted}
           style={m.docInput}
         />
         <TouchableOpacity onPress={addDocImage} style={m.docBtn}>
-          <Text style={m.docBtnText}>{fr ? "Ajouter" : "Add"}</Text>
+          <Text style={m.docBtnText}>{pick("Add", "Ajouter")}</Text>
         </TouchableOpacity>
       </View>
       {docs.map((doc, i) => (
         <View key={i} style={m.docItem}>
           <Text style={m.docName} numberOfLines={1}>{doc.name}</Text>
-          <TouchableOpacity onPress={() => openExternalUrl(doc.url, { fr })}>
-            <Text style={m.docLink}>{fr ? "Ouvrir" : "Open"}</Text>
+          <TouchableOpacity onPress={() => openExternalUrl(doc.url, { fr: isFr })}>
+            <Text style={m.docLink}>{pick("Open", "Ouvrir")}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => removeDoc(i)}>
             <Ionicons name="trash-outline" size={18} color={C.red} />
@@ -695,13 +696,14 @@ function BookingMediaPanel({ booking, fr, onUpdated }) {
       ))}
 
       <TouchableOpacity onPress={save} disabled={saving} style={[m.save, saving && { opacity: 0.6 }]}>
-        <Text style={m.saveText}>{saving ? "…" : fr ? "Enregistrer fichiers" : "Save photos & docs"}</Text>
+        <Text style={m.saveText}>{saving ? "…" : pick("Save photos & docs", "Enregistrer fichiers")}</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
-function FeedbackModal({ visible, booking, fr, onClose, onSaved }) {
+function FeedbackModal({ visible, booking, onClose, onSaved }) {
+  const { pick } = useAppLang();
   const { C, f } = useOwnerBookingsStyles();
   const [overall, setOverall] = useState(null);
   const [hadDamage, setHadDamage] = useState(null);
@@ -745,10 +747,10 @@ function FeedbackModal({ visible, booking, fr, onClose, onSaved }) {
       <Text style={f.qLabel}>{label}</Text>
       <View style={f.qBtns}>
         <TouchableOpacity onPress={() => setV(true)} style={[f.qBtn, v === true && f.qBtnYes]}>
-          <Text style={[f.qBtnT, v === true && f.qBtnTOn]}>{fr ? "Oui" : "Yes"}</Text>
+          <Text style={[f.qBtnT, v === true && f.qBtnTOn]}>{pick("Yes", "Oui")}</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => setV(false)} style={[f.qBtn, v === false && f.qBtnNo]}>
-          <Text style={[f.qBtnT, v === false && f.qBtnTOn]}>{fr ? "Non" : "No"}</Text>
+          <Text style={[f.qBtnT, v === false && f.qBtnTOn]}>{pick("No", "Non")}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -756,7 +758,7 @@ function FeedbackModal({ visible, booking, fr, onClose, onSaved }) {
 
   const submit = async () => {
     if (overall == null || [hadDamage, returnedOnTime, carReturnedClean, wasRespectful, wouldRentAgain].some((x) => x === null)) {
-      Alert.alert(fr ? "Formulaire" : "Form", fr ? "Répondez à toutes les questions" : "Answer all questions");
+      Alert.alert(pick("Form", "Formulaire"), pick("Answer all questions", "Répondez à toutes les questions"));
       return;
     }
     setSaving(true);
@@ -786,34 +788,34 @@ function FeedbackModal({ visible, booking, fr, onClose, onSaved }) {
     <Modal visible={visible} animationType="slide" transparent>
       <View style={f.overlay}>
         <View style={f.box}>
-          <Text style={f.title}>{fr ? "Avis client" : "Rate customer"}</Text>
+          <Text style={f.title}>{pick("Rate customer", "Avis client")}</Text>
           <Text style={f.sub}>{booking.customerId?.name || "—"}</Text>
           {loading ? (
             <InlineLogoLoader />
           ) : (
             <ScrollView style={{ maxHeight: 420 }} keyboardShouldPersistTaps="handled">
-              <Text style={f.lbl}>{fr ? "Impression globale" : "Overall"}</Text>
+              <Text style={f.lbl}>{pick("Overall", "Impression globale")}</Text>
               <View style={f.row}>
                 <TouchableOpacity onPress={() => setOverall("good")} style={[f.big, overall === "good" && f.bigGood]}>
-                  <Text style={f.bigT}>👍 {fr ? "Bien" : "Good"}</Text>
+                  <Text style={f.bigT}>👍 {pick("Good", "Bien")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => setOverall("bad")} style={[f.big, overall === "bad" && f.bigBad]}>
-                  <Text style={f.bigT}>👎 {fr ? "Mauvais" : "Bad"}</Text>
+                  <Text style={f.bigT}>👎 {pick("Bad", "Mauvais")}</Text>
                 </TouchableOpacity>
               </View>
-              <Q label={fr ? "Dégâts constatés ?" : "Any damage?"} v={hadDamage} setV={setHadDamage} />
-              <Q label={fr ? "Restitué à l'heure ?" : "Returned on time?"} v={returnedOnTime} setV={setReturnedOnTime} />
-              <Q label={fr ? "Véhicule propre ?" : "Car returned clean?"} v={carReturnedClean} setV={setCarReturnedClean} />
-              <Q label={fr ? "Client respectueux ?" : "Respectful customer?"} v={wasRespectful} setV={setWasRespectful} />
-              <Q label={fr ? "Louer à nouveau ?" : "Would rent again?"} v={wouldRentAgain} setV={setWouldRentAgain} />
-              <Text style={f.lbl}>{fr ? "Note (optionnel)" : "Note (optional)"}</Text>
+              <Q label={pick("Any damage?", "Dégâts constatés ?")} v={hadDamage} setV={setHadDamage} />
+              <Q label={pick("Returned on time?", "Restitué à l'heure ?")} v={returnedOnTime} setV={setReturnedOnTime} />
+              <Q label={pick("Car returned clean?", "Véhicule propre ?")} v={carReturnedClean} setV={setCarReturnedClean} />
+              <Q label={pick("Respectful customer?", "Client respectueux ?")} v={wasRespectful} setV={setWasRespectful} />
+              <Q label={pick("Would rent again?", "Louer à nouveau ?")} v={wouldRentAgain} setV={setWouldRentAgain} />
+              <Text style={f.lbl}>{pick("Note (optional)", "Note (optionnel)")}</Text>
               <TextInput value={note} onChangeText={setNote} multiline style={f.note} placeholderTextColor={C.muted} />
             </ScrollView>
           )}
           <View style={f.actions}>
-            <TouchableOpacity onPress={onClose} style={f.cancel}><Text style={f.cancelT}>{fr ? "Fermer" : "Close"}</Text></TouchableOpacity>
+            <TouchableOpacity onPress={onClose} style={f.cancel}><Text style={f.cancelT}>{pick("Close", "Fermer")}</Text></TouchableOpacity>
             <TouchableOpacity onPress={submit} disabled={saving || loading} style={f.ok}>
-              <Text style={f.okT}>{saving ? "…" : fr ? "Envoyer" : "Submit"}</Text>
+              <Text style={f.okT}>{saving ? "…" : pick("Submit", "Envoyer")}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -822,7 +824,8 @@ function FeedbackModal({ visible, booking, fr, onClose, onSaved }) {
   );
 }
 
-function CustomerProfileModal({ visible, booking, fr, ownerId, onClose }) {
+function CustomerProfileModal({ visible, booking, ownerId, onClose }) {
+  const { pick, dateLocale, isFr } = useAppLang();
   const { C, cp } = useOwnerBookingsStyles();
   const customer = booking?.customerId;
   const cid =
@@ -846,10 +849,10 @@ function CustomerProfileModal({ visible, booking, fr, ownerId, onClose }) {
       .then(({ data }) => setFbPayload(data))
       .catch((e) => {
         setFbPayload(null);
-        setFbErr(e?.response?.data?.message || (fr ? "Impossible de charger les avis" : "Could not load reviews"));
+        setFbErr(e?.response?.data?.message || (pick("Could not load reviews", "Impossible de charger les avis")));
       })
       .finally(() => setLoadingFb(false));
-  }, [visible, cid, fr]);
+  }, [visible, cid, pick]);
 
   const otherFeedbacks = useMemo(() => {
     const list = fbPayload?.feedbacks || [];
@@ -885,7 +888,7 @@ function CustomerProfileModal({ visible, booking, fr, ownerId, onClose }) {
   const nid = typeof customer === "object" ? customer?.nationalId : null;
   const licExpiry =
     dl?.expiryDate != null
-      ? new Date(dl.expiryDate).toLocaleDateString(fr ? "fr-FR" : "en-US")
+      ? new Date(dl.expiryDate).toLocaleDateString(dateLocale)
       : "";
 
   return (
@@ -893,7 +896,7 @@ function CustomerProfileModal({ visible, booking, fr, ownerId, onClose }) {
       <View style={cp.overlay}>
         <View style={cp.box}>
           <View style={cp.headRow}>
-            <Text style={cp.title}>{fr ? "Profil client" : "Customer profile"}</Text>
+            <Text style={cp.title}>{pick("Customer profile", "Profil client")}</Text>
             <TouchableOpacity onPress={onClose} hitSlop={12}>
               <Ionicons name="close" size={26} color={C.muted} />
             </TouchableOpacity>
@@ -903,16 +906,14 @@ function CustomerProfileModal({ visible, booking, fr, ownerId, onClose }) {
             <View style={cp.hint}>
               <Ionicons name="information-circle-outline" size={20} color="#fbbf24" />
               <Text style={cp.hintText}>
-                {fr
-                  ? "Vérifiez permis et CIN avant d'approuver ou de refuser."
-                  : "Check license and national ID before you confirm or reject."}
+                {pick("Check license and national ID before you confirm or reject.", "Vérifiez permis et CIN avant d'approuver ou de refuser.")}
               </Text>
             </View>
           )}
 
           {!cid && (
             <Text style={cp.warn}>
-              {fr ? "Données client incomplètes. Tirez pour actualiser." : "Customer data missing. Pull to refresh."}
+              {pick("Customer data missing. Pull to refresh.", "Données client incomplètes. Tirez pour actualiser.")}
             </Text>
           )}
 
@@ -926,62 +927,62 @@ function CustomerProfileModal({ visible, booking, fr, ownerId, onClose }) {
 
                 {cid && (
                   <View style={{ marginTop: 12, marginBottom: 4 }}>
-                    <Text style={cp.section}>{fr ? "Score de confiance" : "Trust score"}</Text>
+                    <Text style={cp.section}>{pick("Trust score", "Score de confiance")}</Text>
                     <TrustPassportCard userId={cid} />
                   </View>
                 )}
 
-                <Text style={cp.section}>{fr ? "Permis de conduire" : "Driving license"}</Text>
+                <Text style={cp.section}>{pick("Driving license", "Permis de conduire")}</Text>
                 {dl?.number || dl?.imageUrl ? (
                   <>
                     <Text style={cp.line}>
-                      {fr ? "N°" : "No."} {dl?.number || "—"}
-                      {licExpiry ? ` · ${fr ? "Exp." : "Exp."} ${licExpiry}` : ""}
-                      {dl?.verified ? ` · ${fr ? "Vérifié" : "Verified"}` : ""}
+                      {pick("No.", "N°")} {dl?.number || "—"}
+                      {licExpiry ? ` · ${pick("Exp.", "Exp.")} ${licExpiry}` : ""}
+                      {dl?.verified ? ` · ${pick("Verified", "Vérifié")}` : ""}
                     </Text>
                     {resolveMediaUrl(dl?.imageUrl) ? (
                       <TouchableOpacity
-                        onPress={() => openExternalUrl(resolveMediaUrl(dl.imageUrl), { fr })}
+                        onPress={() => openExternalUrl(resolveMediaUrl(dl.imageUrl), { fr: isFr })}
                         activeOpacity={0.85}
                       >
                         <Image source={{ uri: resolveMediaUrl(dl.imageUrl) }} style={cp.docImg} resizeMode="cover" />
-                        <Text style={cp.tapHint}>{fr ? "Ouvrir la photo" : "Open photo"}</Text>
+                        <Text style={cp.tapHint}>{pick("Open photo", "Ouvrir la photo")}</Text>
                       </TouchableOpacity>
                     ) : (
-                      <Text style={cp.missing}>{fr ? "Photo manquante" : "No photo"}</Text>
+                      <Text style={cp.missing}>{pick("No photo", "Photo manquante")}</Text>
                     )}
                   </>
                 ) : (
-                  <Text style={cp.missing}>{fr ? "Non renseigné" : "Not provided"}</Text>
+                  <Text style={cp.missing}>{pick("Not provided", "Non renseigné")}</Text>
                 )}
 
-                <Text style={cp.section}>{fr ? "CIN (carte d'identité)" : "National ID (CIN)"}</Text>
+                <Text style={cp.section}>{pick("National ID (CIN)", "CIN (carte d'identité)")}</Text>
                 {nid?.number || nid?.imageUrl ? (
                   <>
                     <Text style={cp.line}>
-                      {fr ? "N°" : "No."} {nid?.number || "—"}
-                      {nid?.verified ? ` · ${fr ? "Vérifié" : "Verified"}` : ""}
+                      {pick("No.", "N°")} {nid?.number || "—"}
+                      {nid?.verified ? ` · ${pick("Verified", "Vérifié")}` : ""}
                     </Text>
                     {resolveMediaUrl(nid?.imageUrl) ? (
                       <TouchableOpacity
-                        onPress={() => openExternalUrl(resolveMediaUrl(nid.imageUrl), { fr })}
+                        onPress={() => openExternalUrl(resolveMediaUrl(nid.imageUrl), { fr: isFr })}
                         activeOpacity={0.85}
                       >
                         <Image source={{ uri: resolveMediaUrl(nid.imageUrl) }} style={cp.docImg} resizeMode="cover" />
-                        <Text style={cp.tapHint}>{fr ? "Ouvrir la photo" : "Open photo"}</Text>
+                        <Text style={cp.tapHint}>{pick("Open photo", "Ouvrir la photo")}</Text>
                       </TouchableOpacity>
                     ) : (
-                      <Text style={cp.missing}>{fr ? "Photo manquante" : "No photo"}</Text>
+                      <Text style={cp.missing}>{pick("No photo", "Photo manquante")}</Text>
                     )}
                   </>
                 ) : (
-                  <Text style={cp.missing}>{fr ? "Non renseigné" : "Not provided"}</Text>
+                  <Text style={cp.missing}>{pick("Not provided", "Non renseigné")}</Text>
                 )}
               </>
             )}
 
             <Text style={cp.section}>
-              {fr ? "Avis d'autres propriétaires" : "Feedback from other owners"}
+              {pick("Feedback from other owners", "Avis d'autres propriétaires")}
             </Text>
             {loadingFb ? (
               <InlineLogoLoader />
@@ -989,47 +990,45 @@ function CustomerProfileModal({ visible, booking, fr, ownerId, onClose }) {
               <Text style={cp.err}>{fbErr}</Text>
             ) : otherSummary.total === 0 ? (
               <Text style={cp.emptyFb}>
-                {fr
-                  ? "Pas encore d'avis d'autres loueurs pour ce client."
-                  : "No reviews from other rental owners yet."}
+                {pick("No reviews from other rental owners yet.", "Pas encore d'avis d'autres loueurs pour ce client.")}
               </Text>
             ) : (
               <>
                 <View style={cp.sumGrid}>
                   <View style={cp.sumCard}>
                     <Text style={cp.sumNum}>{otherSummary.total}</Text>
-                    <Text style={cp.sumLbl}>{fr ? "Avis" : "Reviews"}</Text>
+                    <Text style={cp.sumLbl}>{pick("Reviews", "Avis")}</Text>
                   </View>
                   <View style={cp.sumCard}>
                     <Text style={[cp.sumNum, cp.fbGood]}>{otherSummary.goodCount}</Text>
-                    <Text style={cp.sumLbl}>{fr ? "Positifs" : "Good"}</Text>
+                    <Text style={cp.sumLbl}>{pick("Good", "Positifs")}</Text>
                   </View>
                   <View style={cp.sumCard}>
                     <Text style={[cp.sumNum, cp.fbBad]}>{otherSummary.badCount}</Text>
-                    <Text style={cp.sumLbl}>{fr ? "Négatifs" : "Bad"}</Text>
+                    <Text style={cp.sumLbl}>{pick("Bad", "Négatifs")}</Text>
                   </View>
                   <View style={cp.sumCard}>
                     <Text style={cp.sumNum}>{otherSummary.wouldRentAgainCount}</Text>
-                    <Text style={cp.sumLbl}>{fr ? "Reloueraient" : "Would rent again"}</Text>
+                    <Text style={cp.sumLbl}>{pick("Would rent again", "Reloueraient")}</Text>
                   </View>
                 </View>
                 {(otherSummary.damageCount > 0 || otherSummary.lateCount > 0) && (
                   <Text style={cp.sum}>
                     {[
-                      otherSummary.damageCount ? `${fr ? "Dégâts signalés" : "Damage reports"}: ${otherSummary.damageCount}` : null,
-                      otherSummary.lateCount ? `${fr ? "Retards" : "Late returns"}: ${otherSummary.lateCount}` : null,
+                      otherSummary.damageCount ? `${pick("Damage reports", "Dégâts signalés")}: ${otherSummary.damageCount}` : null,
+                      otherSummary.lateCount ? `${pick("Late returns", "Retards")}: ${otherSummary.lateCount}` : null,
                     ]
                       .filter(Boolean)
                       .join(" · ")}
                   </Text>
                 )}
                 {otherFeedbacks.map((f) => {
-                  const when = f?.createdAt ? new Date(f.createdAt).toLocaleDateString(fr ? "fr-FR" : "en-US") : null;
+                  const when = f?.createdAt ? new Date(f.createdAt).toLocaleDateString(dateLocale) : null;
                   const flags = [
-                    f.hadDamage ? (fr ? "Dégâts" : "Damage") : null,
-                    !f.returnedOnTime ? (fr ? "Retard" : "Late return") : null,
-                    f.wasRespectful === false ? (fr ? "Peu respectueux" : "Not respectful") : null,
-                    f.wouldRentAgain ? (fr ? "Relouerait" : "Would rent again") : (fr ? "Ne relouerait pas" : "Would not rent again"),
+                    f.hadDamage ? (pick("Damage", "Dégâts")) : null,
+                    !f.returnedOnTime ? (pick("Late return", "Retard")) : null,
+                    f.wasRespectful === false ? (pick("Not respectful", "Peu respectueux")) : null,
+                    f.wouldRentAgain ? (pick("Would rent again", "Relouerait")) : (pick("Would not rent again", "Ne relouerait pas")),
                   ].filter(Boolean);
                   return (
                     <View key={f._id} style={cp.fbCard}>
@@ -1040,7 +1039,7 @@ function CustomerProfileModal({ visible, booking, fr, ownerId, onClose }) {
                       <Text style={cp.fbRental} numberOfLines={2}>{f.rentalId?.title || "—"}</Text>
                       <View style={[cp.fbOverallPill, f.overall === "good" ? cp.fbOverallGood : cp.fbOverallBad]}>
                         <Text style={cp.fbOverallT}>
-                          {f.overall === "good" ? (fr ? "Bon locataire" : "Good renter") : (fr ? "Retour négatif" : "Poor experience")}
+                          {f.overall === "good" ? (pick("Good renter", "Bon locataire")) : (pick("Poor experience", "Retour négatif"))}
                         </Text>
                       </View>
                       <View style={cp.flagWrap}>
@@ -1059,7 +1058,7 @@ function CustomerProfileModal({ visible, booking, fr, ownerId, onClose }) {
           </ScrollView>
 
           <TouchableOpacity onPress={onClose} style={cp.closeBtn}>
-            <Text style={cp.closeBtnT}>{fr ? "Fermer" : "Close"}</Text>
+            <Text style={cp.closeBtnT}>{pick("Close", "Fermer")}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -1131,7 +1130,7 @@ function BookingAttentionGlow({ active, primary, children }) {
 export default function OwnerBookingsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { lang } = useAppLang();
+  const { lang, pick, numberLocale, dateLocale } = useAppLang();
   const { auth } = useAuth();
   const { C, s, isDark, a } = useOwnerBookingsStyles();
   const insets = useSafeAreaInsets();
@@ -1197,7 +1196,7 @@ export default function OwnerBookingsScreen() {
       })
       .catch(() => {
         if (!alive) return;
-        Alert.alert("Error", fr ? "Échec chargement" : "Failed to load");
+        Alert.alert("Error", pick("Failed to load", "Échec chargement"));
         setBookings([]);
       })
       .finally(() => {
@@ -1218,7 +1217,7 @@ export default function OwnerBookingsScreen() {
     setLoading(true);
     getOwnerBookings(buildOwnerBookingParams(p, PAGE_SIZE, filter, listScope))
       .then(({ data }) => applyBookingsPayload(data, p))
-      .catch(() => Alert.alert("Error", fr ? "Échec chargement" : "Failed to load"))
+      .catch(() => Alert.alert("Error", pick("Failed to load", "Échec chargement")))
       .finally(() => setLoading(false));
   };
 
@@ -1246,12 +1245,12 @@ export default function OwnerBookingsScreen() {
 
   const archivePress = (item, isRestore) => {
     Alert.alert(
-      isRestore ? (fr ? "Restaurer ?" : "Restore?") : (fr ? "Archiver ?" : "Archive?"),
+      isRestore ? (pick("Restore?", "Restaurer ?")) : (pick("Archive?", "Archiver ?")),
       isRestore
-        ? (fr ? "La réservation réapparaîtra dans l'onglet actif." : "This booking will show again under active bookings.")
-        : (fr ? "Masque cette réservation de la liste principale." : "Hides this booking from your main list."),
+        ? (pick("This booking will show again under active bookings.", "La réservation réapparaîtra dans l'onglet actif."))
+        : (pick("Hides this booking from your main list.", "Masque cette réservation de la liste principale.")),
       [
-        { text: fr ? "Annuler" : "Cancel" },
+        { text: pick("Cancel", "Annuler") },
         {
           text: "OK",
           onPress: async () => {
@@ -1260,7 +1259,7 @@ export default function OwnerBookingsScreen() {
               mergeBooking(data);
               loadPage(page);
             } catch (e) {
-              Alert.alert("Error", e?.response?.data?.message || (fr ? "Échec" : "Failed"));
+              Alert.alert("Error", e?.response?.data?.message || (pick("Failed", "Échec")));
             }
           },
         },
@@ -1270,20 +1269,20 @@ export default function OwnerBookingsScreen() {
 
   const changeStatus = (id, status) => {
     const labels = {
-      confirmed: fr ? "Confirmer cette réservation ?" : "Confirm this booking?",
-      rejected: fr ? "Refuser cette demande ?" : "Reject this request?",
-      completed: fr ? "Marquer comme terminée ?" : "Mark as completed?",
+      confirmed: pick("Confirm this booking?", "Confirmer cette réservation ?"),
+      rejected: pick("Reject this request?", "Refuser cette demande ?"),
+      completed: pick("Mark as completed?", "Marquer comme terminée ?"),
     };
     Alert.alert(labels[status] || "", "", [
-      { text: fr ? "Non" : "No" },
+      { text: pick("No", "Non") },
       {
-        text: fr ? "Oui" : "Yes",
+        text: pick("Yes", "Oui"),
         onPress: async () => {
           try {
             await updateBookingStatus(id, status);
             loadPage(page);
           } catch (e) {
-            Alert.alert("Error", e?.response?.data?.message || (fr ? "Échec" : "Update failed"));
+            Alert.alert("Error", e?.response?.data?.message || (pick("Update failed", "Échec")));
           }
         },
       },
@@ -1291,8 +1290,8 @@ export default function OwnerBookingsScreen() {
   };
 
   const handlePaid = (id) => {
-    Alert.alert(fr ? "Paiement" : "Payment", fr ? "Basculer le statut payé ?" : "Toggle paid status?", [
-      { text: fr ? "Annuler" : "Cancel" },
+    Alert.alert(pick("Payment", "Paiement"), pick("Toggle paid status?", "Basculer le statut payé ?"), [
+      { text: pick("Cancel", "Annuler") },
       {
         text: "OK",
         onPress: async () => {
@@ -1300,7 +1299,7 @@ export default function OwnerBookingsScreen() {
             const { data } = await markBookingPaid(id);
             setBookings((prev) => prev.map((b) => (b._id === id ? { ...b, isPaid: data.isPaid, paidAt: data.paidAt } : b)));
           } catch {
-            Alert.alert("Error", fr ? "Échec" : "Failed");
+            Alert.alert("Error", pick("Failed", "Échec"));
           }
         },
       },
@@ -1309,20 +1308,18 @@ export default function OwnerBookingsScreen() {
 
   const reportVehicleIssue = (item) => {
     Alert.alert(
-      fr ? "Véhicule indisponible ?" : "Vehicle unavailable?",
-      fr
-        ? "Le client sera notifié et pourra demander un remboursement ou une autre voiture de votre flotte (mêmes dates), tant que le départ n’a pas eu lieu."
-        : "The customer will be notified and can request a refund or another car from your fleet (same dates), as long as pickup has not started yet.",
+      pick("Vehicle unavailable?", "Véhicule indisponible ?"),
+      pick("The customer will be notified and can request a refund or another car from your fleet (same dates), as long as pickup has not started yet.", "Le client sera notifié et pourra demander un remboursement ou une autre voiture de votre flotte (mêmes dates), tant que le départ n’a pas eu lieu."),
       [
-        { text: fr ? "Annuler" : "Cancel", style: "cancel" },
+        { text: pick("Cancel", "Annuler"), style: "cancel" },
         {
-          text: fr ? "Notifier le client" : "Notify customer",
+          text: pick("Notify customer", "Notifier le client"),
           onPress: async () => {
             try {
               await declareOwnerVehicleIssue(item._id, { note: "" });
               loadPage(page);
             } catch (e) {
-              Alert.alert("Error", e?.response?.data?.message || (fr ? "Échec" : "Failed"));
+              Alert.alert("Error", e?.response?.data?.message || (pick("Failed", "Échec")));
             }
           },
         },
@@ -1333,21 +1330,19 @@ export default function OwnerBookingsScreen() {
   const confirmOwnerVehicleRefund = (item) => {
     const mad = Number(item.vehicleResolutionRefundMad) || 0;
     Alert.alert(
-      fr ? "Confirmer le remboursement" : "Confirm refund",
-      fr
-        ? `Confirmez avoir remboursé ${mad.toLocaleString("fr-FR")} MAD au client (hors application).`
-        : `Confirm you refunded ${mad.toLocaleString("en-US")} MAD to the customer (outside the app).`,
+      pick("Confirm refund", "Confirmer le remboursement"),
+      pick(`Confirm you refunded ${mad.toLocaleString("en-US")} MAD to the customer (outside the app).`, `Confirmez avoir remboursé ${mad.toLocaleString("fr-FR")} MAD au client (hors application).`),
       [
-        { text: fr ? "Annuler" : "Cancel", style: "cancel" },
+        { text: pick("Cancel", "Annuler"), style: "cancel" },
         {
-          text: fr ? "Confirmer" : "Confirm",
+          text: pick("Confirm", "Confirmer"),
           onPress: async () => {
             try {
               const { data } = await ownerConfirmVehicleRefund(item._id);
               mergeBooking(data);
               loadPage(page);
             } catch (e) {
-              Alert.alert("Error", e?.response?.data?.message || (fr ? "Échec" : "Failed"));
+              Alert.alert("Error", e?.response?.data?.message || (pick("Failed", "Échec")));
             }
           },
         },
@@ -1438,7 +1433,7 @@ export default function OwnerBookingsScreen() {
       const { data } = await ownerAckBookingAlert(id);
       mergeBooking(data);
     } catch (e) {
-      Alert.alert("Error", e?.response?.data?.message || (fr ? "Échec" : "Failed"));
+      Alert.alert("Error", e?.response?.data?.message || (pick("Failed", "Échec")));
     } finally {
       setAckingChangeId(null);
     }
@@ -1450,8 +1445,8 @@ export default function OwnerBookingsScreen() {
       await shareBookingPdf(b, { fr });
     } catch (e) {
       Alert.alert(
-        fr ? "PDF" : "PDF",
-        e?.message || (fr ? "Impossible de créer le PDF." : "Could not create the PDF."),
+        pick("PDF", "PDF"),
+        e?.message || (pick("Could not create the PDF.", "Impossible de créer le PDF.")),
       );
     } finally {
       setPdfForId(null);
@@ -1473,18 +1468,18 @@ export default function OwnerBookingsScreen() {
       <View>
         <View style={[s.listHead, { paddingTop: insets.top + 10 }]}>
           <View style={s.listHeadAccent} />
-          <Text style={s.listHeadTitle}>{fr ? "Réservations" : "Bookings"}</Text>
+          <Text style={s.listHeadTitle}>{pick("Bookings", "Réservations")}</Text>
           <Text style={s.listHeadSub}>
-            {fr ? "Chiffres clés et filtres — même défilement que vos cartes." : "Key stats and filters — one continuous scroll with your cards."}
+            {pick("Key stats and filters — one continuous scroll with your cards.", "Chiffres clés et filtres — même défilement que vos cartes.")}
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.statsScroll} nestedScrollEnabled>
             {[
-              ["total", fr ? "Total" : "Total", stats.total],
-              ["pending", fr ? "Attente" : "Pending", stats.pending],
-              ["confirmed", fr ? "Confirm." : "Live", stats.confirmed],
-              ["expired", fr ? "Expirées" : "Ended", stats.expired ?? 0],
-              ["completed", fr ? "Terminé" : "Done", stats.completed],
-              ["revenue", fr ? "MAD" : "MAD", stats.revenue?.toLocaleString?.(fr ? "fr-FR" : "en-US") ?? stats.revenue],
+              ["total", pick("Total", "Total"), stats.total],
+              ["pending", pick("Pending", "Attente"), stats.pending],
+              ["confirmed", pick("Live", "Confirm."), stats.confirmed],
+              ["expired", pick("Ended", "Expirées"), stats.expired ?? 0],
+              ["completed", pick("Done", "Terminé"), stats.completed],
+              ["revenue", pick("MAD", "MAD"), stats.revenue?.toLocaleString?.(numberLocale) ?? stats.revenue],
             ].map(([k, label, val]) => {
               const isPending = k === "pending";
               const newN = stats.newPending ?? 0;
@@ -1521,7 +1516,7 @@ export default function OwnerBookingsScreen() {
             style={[s.scopeChip, listScope === "active" && s.scopeChipOn]}
           >
             <Text style={[s.scopeChipText, listScope === "active" && s.scopeChipTextOn]}>
-              {fr ? "Actives" : "Active"}
+              {pick("Active", "Actives")}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -1535,7 +1530,7 @@ export default function OwnerBookingsScreen() {
             style={[s.scopeChip, listScope === "archived" && s.scopeChipOn]}
           >
             <Text style={[s.scopeChipText, listScope === "archived" && s.scopeChipTextOn]}>
-              {fr ? "Archives" : "Archive"}
+              {pick("Archive", "Archives")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -1601,15 +1596,13 @@ export default function OwnerBookingsScreen() {
           >
             <Ionicons name="chevron-back" size={22} color={C.primary} />
             <Text style={{ color: C.primary, fontWeight: "800", fontSize: 15 }}>
-              {fr ? "Toutes les réservations" : "All bookings"}
+              {pick("All bookings", "Toutes les réservations")}
             </Text>
           </TouchableOpacity>
           <View style={s.listHeadAccent} />
-          <Text style={s.listHeadTitle}>{fr ? "Évaluer le client" : "Rate your renter"}</Text>
+          <Text style={s.listHeadTitle}>{pick("Rate your renter", "Évaluer le client")}</Text>
           <Text style={s.listHeadSub}>
-            {fr
-              ? "Vous ne voyez que la réservation liée à cette notification."
-              : "You're viewing only the booking from this notification."}
+            {pick("You're viewing only the booking from this notification.", "Vous ne voyez que la réservation liée à cette notification.")}
           </Text>
         </View>
       </View>
@@ -1645,19 +1638,13 @@ export default function OwnerBookingsScreen() {
             >
               <Ionicons name="calendar-outline" size={40} color={C.primary} />
             </View>
-            <Text style={s.emptyTitle}>{fr ? "Aucune réservation" : "No bookings here"}</Text>
+            <Text style={s.emptyTitle}>{pick("No bookings here", "Aucune réservation")}</Text>
             <Text style={s.emptySub}>
               {listScope === "archived"
                 ? filter !== "all"
-                  ? fr
-                    ? "Aucune réservation archivée pour ce filtre. Essayez un autre filtre ci-dessus."
-                    : "No archived bookings match this filter. Try another chip above."
-                  : fr
-                    ? "Aucune réservation archivée pour le moment. Archivage possible pour les locations terminées, refusées ou annulées (onglet Actives)."
-                    : "No archived bookings yet. Archive completed, rejected, or cancelled rentals from the Active tab."
-                : fr
-                  ? "Changez de filtre ou attendez de nouvelles demandes."
-                  : "Try another filter or check back for new requests."}
+                  ? pick("No archived bookings match this filter. Try another chip above.", "Aucune réservation archivée pour ce filtre. Essayez un autre filtre ci-dessus.")
+                  : pick("No archived bookings yet. Archive completed, rejected, or cancelled rentals from the Active tab.", "Aucune réservation archivée pour le moment. Archivage possible pour les locations terminées, refusées ou annulées (onglet Actives).")
+                : pick("Try another filter or check back for new requests.", "Changez de filtre ou attendez de nouvelles demandes.")}
             </Text>
           </View>
         }
@@ -1731,7 +1718,7 @@ export default function OwnerBookingsScreen() {
                     </Text>
                   )}
                   <Text style={s.profileLink}>
-                    {fr ? "Profil, permis, CIN & avis →" : "Profile, ID & owner reviews →"}
+                    {pick("Profile, ID & owner reviews →", "Profil, permis, CIN & avis →")}
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color={C.primary} />
@@ -1744,11 +1731,11 @@ export default function OwnerBookingsScreen() {
 
               <View style={s.datesRow}>
                 <View style={s.dateBox}>
-                  <Text style={s.dateLabel}>{fr ? "Début" : "Start"}</Text>
+                  <Text style={s.dateLabel}>{pick("Start", "Début")}</Text>
                   <Text style={s.dateVal}>{start}</Text>
                 </View>
                 <View style={s.dateBox}>
-                  <Text style={s.dateLabel}>{fr ? "Fin" : "End"}</Text>
+                  <Text style={s.dateLabel}>{pick("End", "Fin")}</Text>
                   <Text style={s.dateVal}>{end}</Text>
                 </View>
                 <View style={s.dateBox}>
@@ -1764,7 +1751,7 @@ export default function OwnerBookingsScreen() {
               {item.isPaid && (
                 <View style={s.paidRow}>
                   <Ionicons name="checkmark-circle" size={14} color={C.green} />
-                  <Text style={s.paidText}>{fr ? "Payé" : "Paid"}</Text>
+                  <Text style={s.paidText}>{pick("Paid", "Payé")}</Text>
                 </View>
               )}
 
@@ -1773,15 +1760,11 @@ export default function OwnerBookingsScreen() {
                 <View style={s.vehicleBanner}>
                   <Text style={s.vehicleBannerT}>
                     {ownerVehiclePhase(item) === "awaiting_owner_refund"
-                      ? fr
-                        ? `Remboursement demandé par le client : ${Number(item.vehicleResolutionRefundMad || 0).toLocaleString("fr-FR")} MAD. Remboursez-le puis confirmez ici.`
-                        : `Customer requested refund: ${Number(item.vehicleResolutionRefundMad || 0).toLocaleString("en-US")} MAD. Refund them, then confirm here.`
-                      : fr
-                        ? `Différence de prix à rembourser : ${Number(item.vehicleResolutionRefundMad || 0).toLocaleString("fr-FR")} MAD.`
-                        : `Price difference to refund: ${Number(item.vehicleResolutionRefundMad || 0).toLocaleString("en-US")} MAD.`}
+                      ? pick(`Customer requested refund: ${Number(item.vehicleResolutionRefundMad || 0).toLocaleString("en-US")} MAD. Refund them, then confirm here.`, `Remboursement demandé par le client : ${Number(item.vehicleResolutionRefundMad || 0).toLocaleString("fr-FR")} MAD. Remboursez-le puis confirmez ici.`)
+                      : pick(`Price difference to refund: ${Number(item.vehicleResolutionRefundMad || 0).toLocaleString("en-US")} MAD.`, `Différence de prix à rembourser : ${Number(item.vehicleResolutionRefundMad || 0).toLocaleString("fr-FR")} MAD.`)}
                   </Text>
                   <TouchableOpacity style={s.vehicleRefundBtn} onPress={() => confirmOwnerVehicleRefund(item)} activeOpacity={0.85}>
-                    <Text style={s.vehicleRefundBtnT}>{fr ? "Confirmer le remboursement" : "Confirm refund done"}</Text>
+                    <Text style={s.vehicleRefundBtnT}>{pick("Confirm refund done", "Confirmer le remboursement")}</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -1789,9 +1772,7 @@ export default function OwnerBookingsScreen() {
               {ownerVehiclePhase(item) === "awaiting_customer" && (
                 <View style={[s.vehicleBanner, { borderColor: "rgba(96,165,250,0.45)", backgroundColor: "rgba(96,165,250,0.1)" }]}>
                   <Text style={[s.vehicleBannerT, { color: "#bae6fd" }]}>
-                    {fr
-                      ? "Le client doit choisir un remboursement ou une autre voiture (mêmes dates)."
-                      : "The customer must choose a refund or another car (same dates)."}
+                    {pick("The customer must choose a refund or another car (same dates).", "Le client doit choisir un remboursement ou une autre voiture (mêmes dates).")}
                   </Text>
                 </View>
               )}
@@ -1804,7 +1785,7 @@ export default function OwnerBookingsScreen() {
               >
                 <Ionicons name="document-text-outline" size={20} color={C.primary} />
                 <Text style={s.pdfRowText}>
-                  {fr ? "Télécharger ou partager le PDF" : "Download or share PDF receipt"}
+                  {pick("Download or share PDF receipt", "Télécharger ou partager le PDF")}
                 </Text>
                 {pdfForId === item._id ? (
                   <ActivityIndicator size="small" color={C.primary} />
@@ -1817,12 +1798,8 @@ export default function OwnerBookingsScreen() {
                 <View style={s.changeNoticeBanner}>
                   <Text style={s.changeNoticeT}>
                     {item.status === "cancelled"
-                      ? fr
-                        ? "Le client a annulé cette réservation. Confirmez que vous avez pris connaissance."
-                        : "The customer cancelled this booking. Confirm you have reviewed it."
-                      : fr
-                        ? "Le client a modifié les dates (une fois). Vérifiez le total et les dates, puis confirmez que vous avez pris connaissance."
-                        : "The customer changed the dates (one-time). Review dates and total, then confirm you have acknowledged the update."}
+                      ? pick("The customer cancelled this booking. Confirm you have reviewed it.", "Le client a annulé cette réservation. Confirmez que vous avez pris connaissance.")
+                      : pick("The customer changed the dates (one-time). Review dates and total, then confirm you have acknowledged the update.", "Le client a modifié les dates (une fois). Vérifiez le total et les dates, puis confirmez que vous avez pris connaissance.")}
                   </Text>
                   <TouchableOpacity
                     disabled={ackingChangeId === item._id}
@@ -1842,7 +1819,7 @@ export default function OwnerBookingsScreen() {
                       <ActivityIndicator color="#34d399" />
                     ) : (
                       <Text style={[a.btnText, { color: "#34d399" }]}>
-                        {fr ? "Confirmer (pris en compte)" : "Confirm — I've reviewed this"}
+                        {pick("Confirm — I've reviewed this", "Confirmer (pris en compte)")}
                       </Text>
                     )}
                   </TouchableOpacity>
@@ -1852,7 +1829,7 @@ export default function OwnerBookingsScreen() {
               <View style={s.actionsRow}>
                 {canReportVehicleIssue(item) && (
                   <ActionBtn
-                    label={fr ? "Véhicule indispo." : "Car unavailable"}
+                    label={pick("Car unavailable", "Véhicule indispo.")}
                     variant="red"
                     ionicon="car-outline"
                     onPress={() => reportVehicleIssue(item)}
@@ -1860,9 +1837,9 @@ export default function OwnerBookingsScreen() {
                 )}
                 {item.status === "pending" && (
                   <>
-                    <ActionBtn label={fr ? "Confirmer" : "Confirm"} variant="green" onPress={() => changeStatus(item._id, "confirmed")} />
+                    <ActionBtn label={pick("Confirm", "Confirmer")} variant="green" onPress={() => changeStatus(item._id, "confirmed")} />
                     <ActionBtn
-                      label={fr ? "Refuser" : "Reject"}
+                      label={pick("Reject", "Refuser")}
                       variant="red"
                       ionicon="close-circle-outline"
                       onPress={() => changeStatus(item._id, "rejected")}
@@ -1871,9 +1848,9 @@ export default function OwnerBookingsScreen() {
                 )}
                 {(item.status === "confirmed" || item.status === "expired") && (
                   <>
-                    <ActionBtn label={fr ? "Terminer" : "Complete"} variant="blue" onPress={() => changeStatus(item._id, "completed")} />
+                    <ActionBtn label={pick("Complete", "Terminer")} variant="blue" onPress={() => changeStatus(item._id, "completed")} />
                     <ActionBtn
-                      label={item.isPaid ? (fr ? "Paiement" : "Payment") : fr ? "Marquer payé" : "Mark paid"}
+                      label={item.isPaid ? (pick("Payment", "Paiement")) : pick("Mark paid", "Marquer payé")}
                       variant="violet"
                       ionicon="wallet-outline"
                       onPress={() => handlePaid(item._id)}
@@ -1884,17 +1861,17 @@ export default function OwnerBookingsScreen() {
                   <>
                     {listScope === "active" &&
                       (rated[item._id] ? (
-                        <Text style={s.rated}>{fr ? "Avis envoyé" : "Review submitted"}</Text>
+                        <Text style={s.rated}>{pick("Review submitted", "Avis envoyé")}</Text>
                       ) : (
                         <ActionBtn
-                          label={fr ? "Noter le client" : "Rate customer"}
+                          label={pick("Rate customer", "Noter le client")}
                           variant="violet"
                           ionicon="star-outline"
                           onPress={() => setFeedbackBooking(item)}
                         />
                       ))}
                     <ActionBtn
-                      label={listScope === "archived" ? (fr ? "Désarchiver" : "Restore") : fr ? "Archiver" : "Archive"}
+                      label={listScope === "archived" ? (pick("Restore", "Désarchiver")) : pick("Archive", "Archiver")}
                       variant="blue"
                       ionicon="archive-outline"
                       onPress={() => archivePress(item, listScope === "archived")}
@@ -1903,7 +1880,7 @@ export default function OwnerBookingsScreen() {
                 )}
                 {(item.status === "rejected" || item.status === "cancelled") && (
                   <ActionBtn
-                    label={listScope === "archived" ? (fr ? "Désarchiver" : "Restore") : fr ? "Archiver" : "Archive"}
+                    label={listScope === "archived" ? (pick("Restore", "Désarchiver")) : pick("Archive", "Archiver")}
                     variant="blue"
                     ionicon="archive-outline"
                     onPress={() => archivePress(item, listScope === "archived")}
@@ -1912,7 +1889,7 @@ export default function OwnerBookingsScreen() {
               </View>
 
               {open && (
-                <BookingMediaPanel key={item._id} booking={item} fr={fr} onUpdated={mergeBooking} />
+                <BookingMediaPanel key={item._id} booking={item} onUpdated={mergeBooking} />
               )}
               </View>
             </View>
@@ -1924,7 +1901,6 @@ export default function OwnerBookingsScreen() {
       <CustomerProfileModal
         visible={!!profileBooking}
         booking={profileBooking}
-        fr={fr}
         ownerId={auth?._id}
         onClose={() => setProfileBooking(null)}
       />
@@ -1932,7 +1908,6 @@ export default function OwnerBookingsScreen() {
       <FeedbackModal
         visible={!!feedbackBooking}
         booking={feedbackBooking}
-        fr={fr}
         onClose={() => setFeedbackBooking(null)}
         onSaved={() => {
           if (feedbackBooking) setRated((r) => ({ ...r, [feedbackBooking._id]: true }));

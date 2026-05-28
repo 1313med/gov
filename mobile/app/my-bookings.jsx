@@ -92,7 +92,7 @@ const ST = {
 };
 
 export default function MyBookingsScreen() {
-  const { lang } = useAppLang();
+  const { lang, pick, numberLocale, dateLocale } = useAppLang();
   const { colors: C, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const s = useMemo(() => createMyBookingsStyles(C, isDark), [C, isDark]);
@@ -229,8 +229,8 @@ export default function MyBookingsScreen() {
     const end = parseYMDToLocalNoon(rEnd);
     if (!start || !end || end <= start) {
       Alert.alert(
-        fr ? "Dates invalides" : "Invalid dates",
-        fr ? "Choisissez une date de fin après le début." : "Pick an end date after the start date."
+        pick("Invalid dates", "Dates invalides"),
+        pick("Pick an end date after the start date.", "Choisissez une date de fin après le début.")
       );
       return;
     }
@@ -244,8 +244,8 @@ export default function MyBookingsScreen() {
       await load();
     } catch (e) {
       Alert.alert(
-        fr ? "Impossible" : "Could not update",
-        e?.response?.data?.message || (fr ? "Réessayez plus tard." : "Try again later.")
+        pick("Could not update", "Impossible"),
+        e?.response?.data?.message || (pick("Try again later.", "Réessayez plus tard."))
       );
     } finally {
       setRSubmitting(false);
@@ -260,7 +260,7 @@ export default function MyBookingsScreen() {
       const { data } = await getAlternativeRentalsForBooking(item._id);
       setSwapAlternatives(Array.isArray(data?.alternatives) ? data.alternatives : []);
     } catch (e) {
-      Alert.alert(fr ? "Impossible" : "Error", e?.response?.data?.message || (fr ? "Réessayez." : "Try again."));
+      Alert.alert(pick("Error", "Impossible"), e?.response?.data?.message || (pick("Try again.", "Réessayez.")));
       setSwapModalBooking(null);
     } finally {
       setSwapLoading(false);
@@ -269,21 +269,19 @@ export default function MyBookingsScreen() {
 
   const pickRefundFromVehicleIssue = (item) => {
     Alert.alert(
-      fr ? "Remboursement" : "Refund",
-      fr
-        ? "Demander le remboursement intégral ? Le propriétaire confirmera une fois le virement effectué."
-        : "Request a full refund? The owner will confirm after paying you back.",
+      pick("Refund", "Remboursement"),
+      pick("Request a full refund? The owner will confirm after paying you back.", "Demander le remboursement intégral ? Le propriétaire confirmera une fois le virement effectué."),
       [
-        { text: fr ? "Non" : "No", style: "cancel" },
+        { text: pick("No", "Non"), style: "cancel" },
         {
-          text: fr ? "Oui" : "Yes",
+          text: pick("Yes", "Oui"),
           style: "destructive",
           onPress: async () => {
             try {
               await chooseVehicleResolution(item._id, { choice: "refund" });
               await load();
             } catch (e) {
-              Alert.alert(fr ? "Impossible" : "Error", e?.response?.data?.message || "");
+              Alert.alert(pick("Error", "Impossible"), e?.response?.data?.message || "");
             }
           },
         },
@@ -299,20 +297,18 @@ export default function MyBookingsScreen() {
         await load();
       })
       .catch((e) => {
-        Alert.alert(fr ? "Impossible" : "Error", e?.response?.data?.message || "");
+        Alert.alert(pick("Error", "Impossible"), e?.response?.data?.message || "");
       })
       .finally(() => setSwapSubmitting(false));
   };
 
   const confirmSwapVehicle = (booking, replacementId) => {
     Alert.alert(
-      fr ? "Changer de voiture" : "Switch car",
-      fr
-        ? "Remplacer cette réservation par le véhicule choisi aux mêmes dates ?"
-        : "Replace this booking with the selected vehicle for the same dates?",
+      pick("Switch car", "Changer de voiture"),
+      pick("Replace this booking with the selected vehicle for the same dates?", "Remplacer cette réservation par le véhicule choisi aux mêmes dates ?"),
       [
-        { text: fr ? "Non" : "No", style: "cancel" },
-        { text: fr ? "Oui" : "Yes", onPress: () => runSwapVehicle(booking, replacementId) },
+        { text: pick("No", "Non"), style: "cancel" },
+        { text: pick("Yes", "Oui"), onPress: () => runSwapVehicle(booking, replacementId) },
       ],
     );
   };
@@ -346,8 +342,8 @@ export default function MyBookingsScreen() {
     const currentEnd = new Date(extensionBooking.endDate);
     if (!newEnd || newEnd <= currentEnd) {
       Alert.alert(
-        fr ? "Date invalide" : "Invalid date",
-        fr ? "Choisissez une date après la fin actuelle." : "Pick a date after the current end date."
+        pick("Invalid date", "Date invalide"),
+        pick("Pick a date after the current end date.", "Choisissez une date après la fin actuelle.")
       );
       return;
     }
@@ -355,13 +351,13 @@ export default function MyBookingsScreen() {
     try {
       await requestBookingExtension(extensionBooking._id, { newEndDate: newEnd.toISOString() });
       Alert.alert(
-        fr ? "Demande envoyée" : "Request sent",
-        fr ? "Le propriétaire recevra votre demande de prolongation." : "The owner will receive your extension request."
+        pick("Request sent", "Demande envoyée"),
+        pick("The owner will receive your extension request.", "Le propriétaire recevra votre demande de prolongation.")
       );
       closeExtension();
       await load();
     } catch (e) {
-      Alert.alert(fr ? "Impossible" : "Could not send", e?.response?.data?.message || (fr ? "Réessayez." : "Try again."));
+      Alert.alert(pick("Could not send", "Impossible"), e?.response?.data?.message || (pick("Try again.", "Réessayez.")));
     } finally {
       setExtSubmitting(false);
     }
@@ -376,7 +372,7 @@ export default function MyBookingsScreen() {
 
   const submitTripFeedback = async () => {
     if (!feedbackBooking || !fbOverall) {
-      Alert.alert(fr ? "Choix requis" : "Required", fr ? "Indiquez si l’expérience était bonne ou mauvaise." : "Pick good or bad overall.");
+      Alert.alert(pick("Required", "Choix requis"), pick("Pick good or bad overall.", "Indiquez si l’expérience était bonne ou mauvaise."));
       return;
     }
     setFbSubmitting(true);
@@ -385,7 +381,7 @@ export default function MyBookingsScreen() {
       closeFeedbackModal();
       await load();
     } catch (e) {
-      Alert.alert(fr ? "Impossible" : "Error", e?.response?.data?.message || (fr ? "Réessayez." : "Try again."));
+      Alert.alert(pick("Error", "Impossible"), e?.response?.data?.message || (pick("Try again.", "Réessayez.")));
     } finally {
       setFbSubmitting(false);
     }
@@ -394,10 +390,8 @@ export default function MyBookingsScreen() {
   const promptCancelBooking = (item) => {
     if (item.customerDateChangeUsed) {
       Alert.alert(
-        fr ? "Annulation indisponible" : "Cancellation unavailable",
-        fr
-          ? "Vous avez déjà utilisé votre modification de dates unique. L’annulation en ligne n’est plus possible."
-          : "You already used your one-time date change. Online cancellation is no longer available."
+        pick("Cancellation unavailable", "Annulation indisponible"),
+        pick("You already used your one-time date change. Online cancellation is no longer available.", "Vous avez déjà utilisé votre modification de dates unique. L’annulation en ligne n’est plus possible.")
       );
       return;
     }
@@ -410,16 +404,16 @@ export default function MyBookingsScreen() {
         await load();
       } catch (e) {
         Alert.alert(
-          fr ? "Annulation" : "Cancellation",
-          e?.response?.data?.message || (fr ? "Échec." : "Failed.")
+          pick("Cancellation", "Annulation"),
+          e?.response?.data?.message || (pick("Failed.", "Échec."))
         );
       }
     };
 
     if (item.status === "pending") {
-      Alert.alert(fr ? "Annuler la réservation" : "Cancel booking", fr ? "Retirer cette demande ?" : "Withdraw this request?", [
-        { text: fr ? "Non" : "No", style: "cancel" },
-        { text: fr ? "Oui" : "Yes", style: "destructive", onPress: runCancel },
+      Alert.alert(pick("Cancel booking", "Annuler la réservation"), pick("Withdraw this request?", "Retirer cette demande ?"), [
+        { text: pick("No", "Non"), style: "cancel" },
+        { text: pick("Yes", "Oui"), style: "destructive", onPress: runCancel },
       ]);
       return;
     }
@@ -427,12 +421,10 @@ export default function MyBookingsScreen() {
     if (item.status === "confirmed" && (h >= HOURS_REFUND_CANCEL_MIN || calDays >= CALENDAR_DAYS_REFUND_CANCEL_MIN)) {
       const paid = Number(item.totalAmount) || 0;
       const est = estimateRefundMad(item.totalAmount);
-      const body = fr
-        ? `Moins ${TX_FEE_PERCENT}% de frais de transaction sur ${paid.toLocaleString("fr-FR")} MAD : remboursement estimé environ ${est.toLocaleString("fr-FR")} MAD. Continuer ?`
-        : `${TX_FEE_PERCENT}% transaction fee on ${paid.toLocaleString("en-US")} MAD paid — estimated refund about ${est.toLocaleString("en-US")} MAD. Continue?`;
-      Alert.alert(fr ? "Annuler la réservation" : "Cancel booking", body, [
-        { text: fr ? "Non" : "No", style: "cancel" },
-        { text: fr ? "Oui, annuler" : "Yes, cancel", style: "destructive", onPress: runCancel },
+      const body = pick(`${TX_FEE_PERCENT}% transaction fee on ${paid.toLocaleString("en-US")} MAD paid — estimated refund about ${est.toLocaleString("en-US")} MAD. Continue?`, `Moins ${TX_FEE_PERCENT}% de frais de transaction sur ${paid.toLocaleString("fr-FR")} MAD : remboursement estimé environ ${est.toLocaleString("fr-FR")} MAD. Continuer ?`);
+      Alert.alert(pick("Cancel booking", "Annuler la réservation"), body, [
+        { text: pick("No", "Non"), style: "cancel" },
+        { text: pick("Yes, cancel", "Oui, annuler"), style: "destructive", onPress: runCancel },
       ]);
     }
   };
@@ -441,9 +433,9 @@ export default function MyBookingsScreen() {
     () => (
       <View style={[s.listHead, { paddingTop: insets.top + 10 }]}>
         <View style={s.listHeadAccent} />
-        <Text style={s.listHeadTitle}>{fr ? "Mes réservations" : "My bookings"}</Text>
+        <Text style={s.listHeadTitle}>{pick("My bookings", "Mes réservations")}</Text>
         <Text style={s.listHeadSub}>
-          {fr ? "Dates, montants et statuts de vos locations." : "Dates, totals, and status for each trip."}
+          {pick("Dates, totals, and status for each trip.", "Dates, montants et statuts de vos locations.")}
         </Text>
       </View>
     ),
@@ -470,11 +462,11 @@ export default function MyBookingsScreen() {
             <View style={s.emptyIconWrap}>
               <Ionicons name="car-outline" size={44} color={C.primary} />
             </View>
-            <Text style={s.emptyTitle}>{fr ? "Aucune réservation" : "No bookings yet"}</Text>
-            <Text style={s.emptyHint}>{fr ? "Explorez le catalogue et réservez votre prochaine voiture." : "Browse the fleet and book your next drive."}</Text>
+            <Text style={s.emptyTitle}>{pick("No bookings yet", "Aucune réservation")}</Text>
+            <Text style={s.emptyHint}>{pick("Browse the fleet and book your next drive.", "Explorez le catalogue et réservez votre prochaine voiture.")}</Text>
             <TouchableOpacity onPress={() => router.push("/(customer)")} activeOpacity={0.9} style={s.cta}>
               <LinearGradient colors={[C.primary, "#6366f1"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.ctaGrad}>
-                <Text style={s.ctaText}>{fr ? "Voir les locations" : "Browse rentals"}</Text>
+                <Text style={s.ctaText}>{pick("Browse rentals", "Voir les locations")}</Text>
                 <Ionicons name="arrow-forward" size={18} color="#fff" />
               </LinearGradient>
             </TouchableOpacity>
@@ -518,9 +510,7 @@ export default function MyBookingsScreen() {
           if (bookingLockedNoFurther) {
             policyEl = (
               <Text style={s.policyLocked}>
-                {fr
-                  ? "Vous avez utilisé votre unique changement de dates. L’annulation en ligne n’est plus disponible ; la réservation reste ferme jusqu’au départ."
-                  : "You used your one-time date change. Online cancellation is no longer available; the booking stands until pickup."}
+                {pick("You used your one-time date change. Online cancellation is no longer available; the booking stands until pickup.", "Vous avez utilisé votre unique changement de dates. L’annulation en ligne n’est plus disponible ; la réservation reste ferme jusqu’au départ.")}
               </Text>
             );
           } else if (item.status === "confirmed" && h > 0) {
@@ -528,9 +518,7 @@ export default function MyBookingsScreen() {
             if (canRefundCancel) {
               policyEl = (
                 <Text style={s.policyHint}>
-                  {fr
-                    ? `Annulation remboursable : plus de 48h avant le départ, ou date de départ au calendrier dans au moins 2 jours — remboursement estimé ≈ ${estimateRefundMad(item.totalAmount).toLocaleString("fr-FR")} MAD (frais ${TX_FEE_PERCENT}%).`
-                    : `Refundable cancel: more than 48h before pickup, or pickup is at least two calendar days away — estimated refund ≈ ${estimateRefundMad(item.totalAmount).toLocaleString("en-US")} MAD after ${TX_FEE_PERCENT}% fee.`}
+                  {pick(`Refundable cancel: more than 48h before pickup, or pickup is at least two calendar days away — estimated refund ≈ ${estimateRefundMad(item.totalAmount).toLocaleString("en-US")} MAD after ${TX_FEE_PERCENT}% fee.`, `Annulation remboursable : plus de 48h avant le départ, ou date de départ au calendrier dans au moins 2 jours — remboursement estimé ≈ ${estimateRefundMad(item.totalAmount).toLocaleString("fr-FR")} MAD (frais ${TX_FEE_PERCENT}%).`)}
                 </Text>
               );
             } else {
@@ -601,19 +589,19 @@ export default function MyBookingsScreen() {
 
                 <View style={s.datesRow}>
                   <View style={s.dateBox}>
-                    <Text style={s.dateLabel}>{fr ? "Début" : "Start"}</Text>
-                    <Text style={s.dateVal}>{new Date(item.startDate).toLocaleDateString(fr ? "fr-FR" : "en-GB")}</Text>
+                    <Text style={s.dateLabel}>{pick("Start", "Début")}</Text>
+                    <Text style={s.dateVal}>{new Date(item.startDate).toLocaleDateString(dateLocale)}</Text>
                   </View>
                   <View style={s.dateBox}>
-                    <Text style={s.dateLabel}>{fr ? "Fin" : "End"}</Text>
-                    <Text style={s.dateVal}>{new Date(item.endDate).toLocaleDateString(fr ? "fr-FR" : "en-GB")}</Text>
+                    <Text style={s.dateLabel}>{pick("End", "Fin")}</Text>
+                    <Text style={s.dateVal}>{new Date(item.endDate).toLocaleDateString(dateLocale)}</Text>
                   </View>
                 </View>
 
                 <View style={s.totalRow}>
-                  <Text style={s.totalLabel}>{fr ? "Total" : "Total"}</Text>
+                  <Text style={s.totalLabel}>{pick("Total", "Total")}</Text>
                   <Text style={s.totalVal}>
-                    {Number(item.totalAmount).toLocaleString(fr ? "fr-FR" : "en-US")} MAD
+                    {Number(item.totalAmount).toLocaleString(numberLocale)} MAD
                   </Text>
                 </View>
 
@@ -621,72 +609,66 @@ export default function MyBookingsScreen() {
 
                 {vPhase === "awaiting_customer" && (item.status === "pending" || item.status === "confirmed") ? (
                   <View style={s.vehicleIssueBox}>
-                    <Text style={s.vehicleIssueTitle}>{fr ? "Véhicule indisponible" : "Vehicle unavailable"}</Text>
+                    <Text style={s.vehicleIssueTitle}>{pick("Vehicle unavailable", "Véhicule indisponible")}</Text>
                     <Text style={s.vehicleIssueBody}>
                       {item.ownerVehicleIssueNote
                         ? item.ownerVehicleIssueNote
-                        : fr
-                          ? "Le propriétaire a signalé un problème avec la voiture. Vous pouvez demander un remboursement ou choisir une autre voiture libre aux mêmes dates dans sa flotte."
-                          : "The owner reported an issue with the car. You can request a refund or pick another available car from their fleet for the same dates."}
+                        : pick("The owner reported an issue with the car. You can request a refund or pick another available car from their fleet for the same dates.", "Le propriétaire a signalé un problème avec la voiture. Vous pouvez demander un remboursement ou choisir une autre voiture libre aux mêmes dates dans sa flotte.")}
                     </Text>
                     <TouchableOpacity style={s.vehicleIssueBtn} onPress={() => pickRefundFromVehicleIssue(item)} activeOpacity={0.85}>
-                      <Text style={s.vehicleIssueBtnTxt}>{fr ? "Demander le remboursement" : "Request full refund"}</Text>
+                      <Text style={s.vehicleIssueBtnTxt}>{pick("Request full refund", "Demander le remboursement")}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={[s.vehicleIssueBtn, s.vehicleIssueBtnAlt]}
                       onPress={() => openSwapAlternatives(item)}
                       activeOpacity={0.85}
                     >
-                      <Text style={s.vehicleIssueBtnTxt}>{fr ? "Choisir une autre voiture" : "Pick another car"}</Text>
+                      <Text style={s.vehicleIssueBtnTxt}>{pick("Pick another car", "Choisir une autre voiture")}</Text>
                     </TouchableOpacity>
                   </View>
                 ) : null}
 
                 {vPhase === "awaiting_owner_refund" ? (
                   <Text style={[s.policyWarn, { marginTop: 8 }]}>
-                    {fr
-                      ? "Remboursement demandé — en attente de confirmation du propriétaire après virement."
-                      : "Refund requested — waiting for the owner to confirm after they pay you back."}
+                    {pick("Refund requested — waiting for the owner to confirm after they pay you back.", "Remboursement demandé — en attente de confirmation du propriétaire après virement.")}
                   </Text>
                 ) : null}
 
                 {vPhase === "awaiting_owner_diff_refund" ? (
                   <Text style={[s.policyWarn, { marginTop: 8 }]}>
-                    {fr
-                      ? `Le propriétaire doit vous rembourser la différence : ${Number(item.vehicleResolutionRefundMad || 0).toLocaleString("fr-FR")} MAD.`
-                      : `The owner should refund you the difference: ${Number(item.vehicleResolutionRefundMad || 0).toLocaleString("en-US")} MAD.`}
+                    {pick(`The owner should refund you the difference: ${Number(item.vehicleResolutionRefundMad || 0).toLocaleString("en-US")} MAD.`, `Le propriétaire doit vous rembourser la différence : ${Number(item.vehicleResolutionRefundMad || 0).toLocaleString("fr-FR")} MAD.`)}
                   </Text>
                 ) : null}
 
                 {vPhase === "resolved_refund" ? (
                   <Text style={[s.policyHint, { marginTop: 8 }]}>
-                    {fr ? "Remboursement confirmé par le propriétaire." : "Refund confirmed by the owner."}
+                    {pick("Refund confirmed by the owner.", "Remboursement confirmé par le propriétaire.")}
                   </Text>
                 ) : null}
 
                 {canOpenReschedule ? (
                   <TouchableOpacity onPress={() => openReschedule(item)} style={s.secondaryBtn} activeOpacity={0.85}>
-                    <Text style={s.secondaryBtnText}>{fr ? "Changer les dates (1×)" : "Change dates (once)"}</Text>
+                    <Text style={s.secondaryBtnText}>{pick("Change dates (once)", "Changer les dates (1×)")}</Text>
                   </TouchableOpacity>
                 ) : null}
 
                 {canCancelBooking ? (
                   <TouchableOpacity onPress={() => promptCancelBooking(item)} style={s.cancelBtn} activeOpacity={0.85}>
-                    <Text style={s.cancelText}>{fr ? "Annuler la réservation" : "Cancel booking"}</Text>
+                    <Text style={s.cancelText}>{pick("Cancel booking", "Annuler la réservation")}</Text>
                   </TouchableOpacity>
                 ) : null}
 
                 {canExtend ? (
                   <TouchableOpacity onPress={() => openExtension(item)} style={s.secondaryBtn} activeOpacity={0.85}>
-                    <Text style={s.secondaryBtnText}>{fr ? "Prolonger la location" : "Extend rental"}</Text>
+                    <Text style={s.secondaryBtnText}>{pick("Extend rental", "Prolonger la location")}</Text>
                   </TouchableOpacity>
                 ) : item.extensionRequest?.status === "pending" ? (
                   <Text style={[s.policyHint, { marginTop: 12 }]}>
-                    {fr ? "Demande de prolongation en attente du propriétaire." : "Extension request pending owner approval."}
+                    {pick("Extension request pending owner approval.", "Demande de prolongation en attente du propriétaire.")}
                   </Text>
                 ) : item.extensionRequest?.status === "approved" ? (
                   <Text style={[s.policyHint, { marginTop: 12, color: "#34d399" }]}>
-                    {fr ? "Prolongation approuvée." : "Extension approved."}
+                    {pick("Extension approved.", "Prolongation approuvée.")}
                   </Text>
                 ) : null}
 
@@ -700,12 +682,12 @@ export default function MyBookingsScreen() {
                     style={[s.secondaryBtn, { marginTop: canCancelBooking ? 10 : 0 }]}
                     activeOpacity={0.85}
                   >
-                    <Text style={s.secondaryBtnText}>{fr ? "Donner un avis sur la location" : "Rate this rental"}</Text>
+                    <Text style={s.secondaryBtnText}>{pick("Rate this rental", "Donner un avis sur la location")}</Text>
                   </TouchableOpacity>
                 ) : null}
                 {item.hasCustomerBookingReview ? (
                   <Text style={[s.policyHint, { marginTop: 10 }]}>
-                    {fr ? "Merci pour votre avis sur cette location." : "Thanks for your rental feedback."}
+                    {pick("Thanks for your rental feedback.", "Merci pour votre avis sur cette location.")}
                   </Text>
                 ) : null}
               </View>
@@ -716,13 +698,11 @@ export default function MyBookingsScreen() {
       <Modal visible={!!rescheduleTarget} transparent animationType="fade" onRequestClose={closeReschedule}>
         <View style={s.modalBackdrop}>
           <View style={[s.modalCard, { alignSelf: "center", width: Math.min(SCREEN_W - 32, 400) }]}>
-            <Text style={s.modalTitle}>{fr ? "Nouvelles dates" : "New dates"}</Text>
+            <Text style={s.modalTitle}>{pick("New dates", "Nouvelles dates")}</Text>
             <Text style={s.modalSub}>
-              {fr
-                ? "Une seule modification par réservation. Touchez une ligne pour ouvrir le calendrier. Les créneaux libres sont vérifiés à l’enregistrement."
-                : "One change per booking. Tap a row to open the calendar. Free slots are checked when you save."}
+              {pick("One change per booking. Tap a row to open the calendar. Free slots are checked when you save.", "Une seule modification par réservation. Touchez une ligne pour ouvrir le calendrier. Les créneaux libres sont vérifiés à l’enregistrement.")}
             </Text>
-            <Text style={s.modalLabel}>{fr ? "Début" : "Start"}</Text>
+            <Text style={s.modalLabel}>{pick("Start", "Début")}</Text>
             <TouchableOpacity
               style={s.modalDateBtn}
               onPress={() => setActivePicker("start")}
@@ -730,11 +710,11 @@ export default function MyBookingsScreen() {
             >
               <Ionicons name="calendar-outline" size={20} color={C.primary} />
               <Text style={s.modalDateBtnTxt}>
-                {rStart ? new Date(parseYMDToLocalNoon(rStart)).toLocaleDateString(fr ? "fr-FR" : "en-GB") : "—"}
+                {rStart ? new Date(parseYMDToLocalNoon(rStart)).toLocaleDateString(dateLocale) : "—"}
               </Text>
               <Ionicons name="chevron-down" size={18} color={C.muted} />
             </TouchableOpacity>
-            <Text style={s.modalLabel}>{fr ? "Fin" : "End"}</Text>
+            <Text style={s.modalLabel}>{pick("End", "Fin")}</Text>
             <TouchableOpacity
               style={s.modalDateBtn}
               onPress={() => setActivePicker("end")}
@@ -742,7 +722,7 @@ export default function MyBookingsScreen() {
             >
               <Ionicons name="calendar-outline" size={20} color={C.primary} />
               <Text style={s.modalDateBtnTxt}>
-                {rEnd ? new Date(parseYMDToLocalNoon(rEnd)).toLocaleDateString(fr ? "fr-FR" : "en-GB") : "—"}
+                {rEnd ? new Date(parseYMDToLocalNoon(rEnd)).toLocaleDateString(dateLocale) : "—"}
               </Text>
               <Ionicons name="chevron-down" size={18} color={C.muted} />
             </TouchableOpacity>
@@ -757,7 +737,7 @@ export default function MyBookingsScreen() {
                   mode="date"
                   display={Platform.OS === "ios" ? "inline" : "default"}
                   themeVariant={isDark ? "dark" : "light"}
-                  locale={fr ? "fr-FR" : "en-GB"}
+                  locale={dateLocale}
                   minimumDate={activePicker === "start" ? startOfLocalTodayMidnight() : minEndForDatePicker}
                   onChange={onModalDateChange}
                 />
@@ -770,14 +750,14 @@ export default function MyBookingsScreen() {
             ) : null}
             <View style={s.modalBtnRow}>
               <TouchableOpacity onPress={closeReschedule} style={s.modalSecondary} disabled={rSubmitting}>
-                <Text style={s.modalSecondaryTxt}>{fr ? "Fermer" : "Close"}</Text>
+                <Text style={s.modalSecondaryTxt}>{pick("Close", "Fermer")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={submitReschedule}
                 style={[s.modalPrimary, rSubmitting && { opacity: 0.6 }]}
                 disabled={rSubmitting}
               >
-                <Text style={s.modalPrimaryTxt}>{rSubmitting ? "…" : fr ? "Enregistrer" : "Save"}</Text>
+                <Text style={s.modalPrimaryTxt}>{rSubmitting ? "…" : pick("Save", "Enregistrer")}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -787,11 +767,9 @@ export default function MyBookingsScreen() {
       <Modal visible={!!swapModalBooking} transparent animationType="fade" onRequestClose={() => !swapSubmitting && setSwapModalBooking(null)}>
         <View style={s.modalBackdrop}>
           <View style={[s.modalCard, { alignSelf: "center", width: Math.min(SCREEN_W - 24, 420), maxHeight: "80%" }]}>
-            <Text style={s.modalTitle}>{fr ? "Autres voitures disponibles" : "Other available cars"}</Text>
+            <Text style={s.modalTitle}>{pick("Other available cars", "Autres voitures disponibles")}</Text>
             <Text style={s.modalSub}>
-              {fr
-                ? "Même propriétaire, mêmes dates. Touchez une ligne pour remplacer votre réservation."
-                : "Same owner, same dates. Tap a row to move your booking to that car."}
+              {pick("Same owner, same dates. Tap a row to move your booking to that car.", "Même propriétaire, mêmes dates. Touchez une ligne pour remplacer votre réservation.")}
             </Text>
             {swapLoading ? (
               <InlineLogoLoader />
@@ -799,7 +777,7 @@ export default function MyBookingsScreen() {
               <ScrollView style={{ maxHeight: 360 }} keyboardShouldPersistTaps="handled">
                 {swapAlternatives.length === 0 ? (
                   <Text style={{ color: C.muted, fontSize: 13, marginBottom: 12 }}>
-                    {fr ? "Aucune autre voiture libre sur ces dates." : "No other car is free on these dates."}
+                    {pick("No other car is free on these dates.", "Aucune autre voiture libre sur ces dates.")}
                   </Text>
                 ) : (
                   swapAlternatives.map((row) => {
@@ -826,7 +804,7 @@ export default function MyBookingsScreen() {
                             {alt?.title || `${alt?.brand || ""} ${alt?.model || ""}`.trim()}
                           </Text>
                           <Text style={s.altMeta}>
-                            {Number(row.totalAmount || 0).toLocaleString(fr ? "fr-FR" : "en-US")} MAD
+                            {Number(row.totalAmount || 0).toLocaleString(numberLocale)} MAD
                             {row.appliedOfferTitle ? ` · ${row.appliedOfferTitle}` : ""}
                           </Text>
                         </View>
@@ -842,7 +820,7 @@ export default function MyBookingsScreen() {
               style={[s.modalSecondary, { marginTop: 12 }]}
               disabled={swapSubmitting}
             >
-              <Text style={s.modalSecondaryTxt}>{fr ? "Fermer" : "Close"}</Text>
+              <Text style={s.modalSecondaryTxt}>{pick("Close", "Fermer")}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -851,23 +829,21 @@ export default function MyBookingsScreen() {
       <Modal visible={!!extensionBooking} transparent animationType="fade" onRequestClose={closeExtension}>
         <View style={s.modalBackdrop}>
           <View style={[s.modalCard, { alignSelf: "center", width: Math.min(SCREEN_W - 32, 400) }]}>
-            <Text style={s.modalTitle}>{fr ? "Prolonger la location" : "Extend rental"}</Text>
+            <Text style={s.modalTitle}>{pick("Extend rental", "Prolonger la location")}</Text>
             <Text style={s.modalSub}>
-              {fr
-                ? "Choisissez une nouvelle date de fin. Le propriétaire devra approuver la demande."
-                : "Pick a new end date. The owner will need to approve the request."}
+              {pick("Pick a new end date. The owner will need to approve the request.", "Choisissez une nouvelle date de fin. Le propriétaire devra approuver la demande.")}
             </Text>
             {extensionBooking ? (
               <Text style={[s.policyHint, { marginBottom: 12 }]}>
-                {fr ? "Fin actuelle : " : "Current end: "}
-                {new Date(extensionBooking.endDate).toLocaleDateString(fr ? "fr-FR" : "en-GB")}
+                {pick("Current end: ", "Fin actuelle : ")}
+                {new Date(extensionBooking.endDate).toLocaleDateString(dateLocale)}
               </Text>
             ) : null}
-            <Text style={s.modalLabel}>{fr ? "Nouvelle date de fin" : "New end date"}</Text>
+            <Text style={s.modalLabel}>{pick("New end date", "Nouvelle date de fin")}</Text>
             <TouchableOpacity style={s.modalDateBtn} onPress={() => setExtActivePicker(true)} activeOpacity={0.85}>
               <Ionicons name="calendar-outline" size={20} color={C.primary} />
               <Text style={s.modalDateBtnTxt}>
-                {extNewEnd ? new Date(parseYMDToLocalNoon(extNewEnd)).toLocaleDateString(fr ? "fr-FR" : "en-GB") : "—"}
+                {extNewEnd ? new Date(parseYMDToLocalNoon(extNewEnd)).toLocaleDateString(dateLocale) : "—"}
               </Text>
               <Ionicons name="chevron-down" size={18} color={C.muted} />
             </TouchableOpacity>
@@ -878,7 +854,7 @@ export default function MyBookingsScreen() {
                   mode="date"
                   display={Platform.OS === "ios" ? "inline" : "default"}
                   themeVariant={isDark ? "dark" : "light"}
-                  locale={fr ? "fr-FR" : "en-GB"}
+                  locale={dateLocale}
                   minimumDate={extensionBooking ? (() => { const d = new Date(extensionBooking.endDate); d.setDate(d.getDate() + 1); return d; })() : startOfLocalTodayMidnight()}
                   onChange={onExtDateChange}
                 />
@@ -891,14 +867,14 @@ export default function MyBookingsScreen() {
             ) : null}
             <View style={s.modalBtnRow}>
               <TouchableOpacity onPress={closeExtension} style={s.modalSecondary} disabled={extSubmitting}>
-                <Text style={s.modalSecondaryTxt}>{fr ? "Annuler" : "Cancel"}</Text>
+                <Text style={s.modalSecondaryTxt}>{pick("Cancel", "Annuler")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={submitExtension}
                 style={[s.modalPrimary, extSubmitting && { opacity: 0.6 }]}
                 disabled={extSubmitting}
               >
-                <Text style={s.modalPrimaryTxt}>{extSubmitting ? "…" : fr ? "Envoyer" : "Send"}</Text>
+                <Text style={s.modalPrimaryTxt}>{extSubmitting ? "…" : pick("Send", "Envoyer")}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -908,11 +884,9 @@ export default function MyBookingsScreen() {
       <Modal visible={!!feedbackBooking} transparent animationType="fade" onRequestClose={closeFeedbackModal}>
         <View style={s.modalBackdrop}>
           <View style={[s.modalCard, { alignSelf: "center", width: Math.min(SCREEN_W - 32, 400) }]}>
-            <Text style={s.modalTitle}>{fr ? "Votre avis" : "Your feedback"}</Text>
+            <Text style={s.modalTitle}>{pick("Your feedback", "Votre avis")}</Text>
             <Text style={s.modalSub}>
-              {fr
-                ? "Comment s’est passée la location ? Un seul envoi par réservation."
-                : "How was the trip? You can submit once per booking."}
+              {pick("How was the trip? You can submit once per booking.", "Comment s’est passée la location ? Un seul envoi par réservation.")}
             </Text>
             <View style={{ flexDirection: "row", gap: 10, marginBottom: 12 }}>
               <TouchableOpacity
@@ -922,7 +896,7 @@ export default function MyBookingsScreen() {
                   { flex: 1, borderColor: fbOverall === "good" ? "#34d399" : undefined, backgroundColor: fbOverall === "good" ? "rgba(52,211,153,0.12)" : undefined },
                 ]}
               >
-                <Text style={[s.modalSecondaryTxt, fbOverall === "good" && { color: "#34d399" }]}>{fr ? "Bien" : "Good"}</Text>
+                <Text style={[s.modalSecondaryTxt, fbOverall === "good" && { color: "#34d399" }]}>{pick("Good", "Bien")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => setFbOverall("bad")}
@@ -931,14 +905,14 @@ export default function MyBookingsScreen() {
                   { flex: 1, borderColor: fbOverall === "bad" ? "#f87171" : undefined, backgroundColor: fbOverall === "bad" ? "rgba(248,113,113,0.12)" : undefined },
                 ]}
               >
-                <Text style={[s.modalSecondaryTxt, fbOverall === "bad" && { color: "#f87171" }]}>{fr ? "Moins bien" : "Poor"}</Text>
+                <Text style={[s.modalSecondaryTxt, fbOverall === "bad" && { color: "#f87171" }]}>{pick("Poor", "Moins bien")}</Text>
               </TouchableOpacity>
             </View>
-            <Text style={s.modalLabel}>{fr ? "Commentaire (optionnel)" : "Comment (optional)"}</Text>
+            <Text style={s.modalLabel}>{pick("Comment (optional)", "Commentaire (optionnel)")}</Text>
             <TextInput
               style={[s.fbNoteInput, { color: C.white }]}
               placeholderTextColor={C.muted}
-              placeholder={fr ? "Détails…" : "Details…"}
+              placeholder={pick("Details…", "Détails…")}
               value={fbNote}
               onChangeText={setFbNote}
               multiline
@@ -946,14 +920,14 @@ export default function MyBookingsScreen() {
             />
             <View style={s.modalBtnRow}>
               <TouchableOpacity onPress={closeFeedbackModal} style={s.modalSecondary} disabled={fbSubmitting}>
-                <Text style={s.modalSecondaryTxt}>{fr ? "Fermer" : "Close"}</Text>
+                <Text style={s.modalSecondaryTxt}>{pick("Close", "Fermer")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={submitTripFeedback}
                 style={[s.modalPrimary, fbSubmitting && { opacity: 0.6 }]}
                 disabled={fbSubmitting}
               >
-                <Text style={s.modalPrimaryTxt}>{fbSubmitting ? "…" : fr ? "Envoyer" : "Send"}</Text>
+                <Text style={s.modalPrimaryTxt}>{fbSubmitting ? "…" : pick("Send", "Envoyer")}</Text>
               </TouchableOpacity>
             </View>
           </View>

@@ -31,18 +31,27 @@ function getVerdict(listingPrice, est) {
 
 const VERDICT_LABELS = {
   opportunity: {
-    fr: { label: "Opportunité",    sub: "Prix bien en dessous du marché" },
-    en: { label: "Good Deal",      sub: "Price well below market" },
+    fr: { label: "Opportunité", sub: "Prix bien en dessous du marché" },
+    en: { label: "Good Deal", sub: "Price well below market" },
+    ar: { label: "صفقة جيدة", sub: "السعر أقل بكثير من السوق" },
   },
   fair: {
     fr: { label: "Prix du marché", sub: "Dans la fourchette estimée" },
-    en: { label: "Market Price",   sub: "Within estimated range" },
+    en: { label: "Market Price", sub: "Within estimated range" },
+    ar: { label: "سعر السوق", sub: "ضمن النطاق المقدّر" },
   },
   high: {
-    fr: { label: "Prix élevé",     sub: "Au-dessus de l'estimation du marché" },
-    en: { label: "High Price",     sub: "Above market estimate" },
+    fr: { label: "Prix élevé", sub: "Au-dessus de l'estimation du marché" },
+    en: { label: "High Price", sub: "Above market estimate" },
+    ar: { label: "سعر مرتفع", sub: "أعلى من تقدير السوق" },
   },
 };
+
+function verdictLabelKey(lang) {
+  if (lang === "fr") return "fr";
+  if (lang === "ar") return "ar";
+  return "en";
+}
 
 // ── Collapsible section ─────────────────────────────────────────────────────
 function Section({ icon, title, color, children, defaultOpen = false, C: colors }) {
@@ -69,7 +78,7 @@ function Section({ icon, title, color, children, defaultOpen = false, C: colors 
 
 // ── Price Analysis Card ─────────────────────────────────────────────────────
 function PriceAnalysisCard({ car, lang, C }) {
-  const fr = lang === "fr";
+  const { pick } = useAppLang();
   const [est, setEst]   = useState(null);
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
@@ -84,7 +93,7 @@ function PriceAnalysisCard({ car, lang, C }) {
   }, [car]);
 
   const verdict = getVerdict(car?.price, est);
-  const verdictText = verdict ? VERDICT_LABELS[verdict.key][fr ? "fr" : "en"] : null;
+  const verdictText = verdict ? VERDICT_LABELS[verdict.key][verdictLabelKey(lang)] : null;
 
   const toggleOpen = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -98,7 +107,7 @@ function PriceAnalysisCard({ car, lang, C }) {
   if (busy) return (
     <View style={{ backgroundColor: C?.card, borderRadius: 16, borderWidth: 1, borderColor, padding: 16, marginBottom: 16, alignItems: "center", flexDirection: "row", gap: 10 }}>
       <ActivityIndicator size="small" color="#7c6bff" />
-      <Text style={{ color: mutedColor, fontSize: 13 }}>{fr ? "Analyse du prix en cours…" : "Analyzing price…"}</Text>
+      <Text style={{ color: mutedColor, fontSize: 13 }}>{pick("Analyzing price…", "Analyse du prix en cours…", "جاري تحليل السعر…")}</Text>
     </View>
   );
 
@@ -117,7 +126,7 @@ function PriceAnalysisCard({ car, lang, C }) {
               <Text style={{ fontSize: 16, fontWeight: "900", color: verdict.color }}>{verdictText.label}</Text>
               <View style={{ backgroundColor: `${verdict.color}22`, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 20 }}>
                 <Text style={{ fontSize: 11, fontWeight: "800", color: verdict.color }}>
-                  {verdict.pct > 0 ? `+${Math.round(verdict.pct)}%` : `${Math.round(verdict.pct)}%`} {fr ? "vs marché" : "vs market"}
+                  {verdict.pct > 0 ? `+${Math.round(verdict.pct)}%` : `${Math.round(verdict.pct)}%`} {pick("vs market", "vs marché", "مقارنة بالسوق")}
                 </Text>
               </View>
             </View>
@@ -129,7 +138,7 @@ function PriceAnalysisCard({ car, lang, C }) {
         {/* Price range bar */}
         <View style={{ gap: 6 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-            <Text style={{ fontSize: 11, color: mutedColor }}>{fr ? "Estimation Goovoiture" : "Goovoiture Estimate"}</Text>
+            <Text style={{ fontSize: 11, color: mutedColor }}>{pick("Goovoiture Estimate", "Estimation Goovoiture", "تقدير Goovoiture")}</Text>
             <Text style={{ fontSize: 12, fontWeight: "700", color: labelColor }}>
               {est.low.toLocaleString()} – {est.high.toLocaleString()} MAD
             </Text>
@@ -145,9 +154,9 @@ function PriceAnalysisCard({ car, lang, C }) {
             })()}
           </View>
           <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-            <Text style={{ fontSize: 10, color: "#22c55e", fontWeight: "700" }}>{fr ? "Bas marché" : "Low market"}</Text>
-            <Text style={{ fontSize: 10, color: labelColor }}>● {Number(car.price).toLocaleString()} MAD ({fr ? "annonce" : "listing"})</Text>
-            <Text style={{ fontSize: 10, color: "#ef4444", fontWeight: "700" }}>{fr ? "Haut marché" : "High market"}</Text>
+            <Text style={{ fontSize: 10, color: "#22c55e", fontWeight: "700" }}>{pick("Low market", "Bas marché", "سوق منخفض")}</Text>
+            <Text style={{ fontSize: 10, color: labelColor }}>● {Number(car.price).toLocaleString()} MAD ({pick("listing", "annonce", "الإعلان")})</Text>
+            <Text style={{ fontSize: 10, color: "#ef4444", fontWeight: "700" }}>{pick("High market", "Haut marché", "سوق مرتفع")}</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -158,10 +167,12 @@ function PriceAnalysisCard({ car, lang, C }) {
           <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 8 }}>
             <Ionicons name="information-circle-outline" size={16} color="#22c55e" style={{ marginTop: 1 }} />
             <Text style={{ flex: 1, fontSize: 12, color: labelColor, lineHeight: 18 }}>
-              <Text style={{ color: "#22c55e", fontWeight: "700" }}>{fr ? "Ce prix semble attractif." : "This price looks attractive."}</Text>
-              {" "}{fr
-                ? "Ne basez pas votre décision uniquement sur le prix estimé — inspectez le véhicule et vérifiez tous les documents avant tout engagement."
-                : "Don't base your decision solely on the estimated price — inspect the vehicle and verify all documents before committing."}
+              <Text style={{ color: "#22c55e", fontWeight: "700" }}>{pick("This price looks attractive.", "Ce prix semble attractif.", "هذا السعر يبدو جذاباً.")}</Text>
+              {" "}{pick(
+                "Don't base your decision solely on the estimated price — inspect the vehicle and verify all documents before committing.",
+                "Ne basez pas votre décision uniquement sur le prix estimé — inspectez le véhicule et vérifiez tous les documents avant tout engagement.",
+                "لا تعتمد على السعر المقدّر فقط — افحص السيارة وتحقق من جميع الوثائق قبل الشراء."
+              )}
             </Text>
           </View>
         </View>
@@ -171,7 +182,7 @@ function PriceAnalysisCard({ car, lang, C }) {
       {open && (
         <View style={{ paddingHorizontal: 16, paddingBottom: 16 }}>
           <Text style={{ fontSize: 11, fontWeight: "800", letterSpacing: 1.2, textTransform: "uppercase", color: mutedColor, marginBottom: 8 }}>
-            {fr ? "Détail de l'estimation" : "Estimate breakdown"}
+            {pick("Estimate breakdown", "Détail de l'estimation", "تفاصيل التقدير")}
           </Text>
           {est.breakdown.map((item, i) => (
             <View key={i} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 6, borderBottomWidth: i < est.breakdown.length - 1 ? 1 : 0, borderBottomColor: borderColor }}>
@@ -180,9 +191,11 @@ function PriceAnalysisCard({ car, lang, C }) {
             </View>
           ))}
           <Text style={{ fontSize: 10, color: mutedColor, marginTop: 10, lineHeight: 15 }}>
-            {fr
-              ? "Estimation basée sur les prix du marché marocain. La valeur réelle dépend de l'état, des options et de la négociation."
-              : "Estimate based on Moroccan market prices. Actual value depends on condition, options and negotiation."}
+            {pick(
+              "Estimate based on Moroccan market prices. Actual value depends on condition, options and negotiation.",
+              "Estimation basée sur les prix du marché marocain. La valeur réelle dépend de l'état, des options et de la négociation.",
+              "تقدير مبني على أسعار السوق المغربي. القيمة الفعلية تعتمد على الحالة والخيارات والتفاوض."
+            )}
           </Text>
         </View>
       )}
@@ -331,11 +344,11 @@ const { width } = Dimensions.get("window");
 export default function CarDetailsScreen() {
   const { id } = useLocalSearchParams();
   const { auth } = useAuth();
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const { colors: C } = useTheme();
   const s = useMemo(() => createCarDetailStyles(C), [C]);
   const router = useRouter();
-  const t = lang === "fr" ? fr : en;
+  const t = lang === "ar" ? ar : lang === "fr" ? fr : en;
 
   const [car, setCar] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -654,6 +667,17 @@ const fr = {
   signInContact:"Connectez-vous", signInContactRest:"pour contacter le vendeur.",
   km:"km", unknownCity:"Ville inconnue", yearNA:"Année N/A",
   favLogin:"Connectez-vous pour sauvegarder", favFail:"Impossible de mettre à jour",
+};
+const ar = {
+  notFound:"لم تُعثر على السيارة.", noImage:"لا توجد صورة",
+  specifications:"المواصفات", brand:"الماركة", model:"الموديل",
+  year:"السنة", mileage:"المسافة المقطوعة", fuel:"الوقود", gearbox:"ناقل الحركة",
+  description:"الوصف", approved:"إعلان معتمد", seller:"البائع",
+  unknownSeller:"بائع غير معروف", verifiedSeller:"بائع موثّق",
+  callSeller:"📞 اتصل بالبائع", whatsapp:"💬 WhatsApp",
+  signInContact:"سجّل الدخول", signInContactRest:"للتواصل مع البائع وعرض بيانات الاتصال.",
+  km:"كم", unknownCity:"مدينة غير معروفة", yearNA:"السنة غير متوفرة",
+  favLogin:"سجّل الدخول لحفظ المفضّلة", favFail:"تعذّر تحديث المفضّلة",
 };
 
 function createCarDetailStyles(C) {

@@ -25,7 +25,7 @@ const FIELDS = [
 ];
 
 export default function NewSaleScreen() {
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const { colors: C } = useTheme();
   const s = useMemo(() => createNewSaleStyles(C), [C]);
   const router = useRouter();
@@ -47,17 +47,15 @@ export default function NewSaleScreen() {
       .then((r) => {
         if (!userHasCinOnFile(r.data)) {
           Alert.alert(
-            fr ? "CIN requis" : "CIN required",
-            fr
-              ? "Ajoutez votre carte d'identité (CIN) avant de vendre une voiture."
-              : "Add your national ID (CIN) before selling a car.",
+            pick("CIN required", "CIN requis"),
+            pick("Add your national ID (CIN) before selling a car.", "Ajoutez votre carte d'identité (CIN) avant de vendre une voiture."),
             [
               {
-                text: fr ? "Ajouter mon CIN" : "Add my CIN",
+                text: pick("Add my CIN", "Ajouter mon CIN"),
                 onPress: () =>
                   router.replace({ pathname: "/verify-cin", params: { purpose: "sell", return: "new-sale" } }),
               },
-              { text: fr ? "Annuler" : "Cancel", style: "cancel", onPress: () => router.back() },
+              { text: pick("Cancel", "Annuler"), style: "cancel", onPress: () => router.back() },
             ]
           );
         }
@@ -93,18 +91,18 @@ export default function NewSaleScreen() {
 
   const handleSubmit = async () => {
     if (!form.title?.trim() || !form.price || !form.brand?.trim() || !form.model?.trim()) {
-      return Alert.alert(fr ? "Champs requis" : "Required fields", fr ? "Remplissez titre, marque, modèle et prix." : "Fill in title, brand, model and price.");
+      return Alert.alert(pick("Required fields", "Champs requis"), pick("Fill in title, brand, model and price.", "Remplissez titre, marque, modèle et prix."));
     }
     if (!form.city?.trim()) {
-      return Alert.alert(fr ? "Ville" : "City", fr ? "La ville est requise." : "City is required.");
+      return Alert.alert(pick("City", "Ville"), pick("City is required.", "La ville est requise."));
     }
     const yearNum = parseInt(String(form.year), 10);
     const priceNum = parseFloat(String(form.price));
     if (!Number.isFinite(yearNum) || yearNum < 1900) {
-      return Alert.alert(fr ? "Année" : "Year", fr ? "Année invalide" : "Invalid year");
+      return Alert.alert(pick("Year", "Année"), pick("Invalid year", "Année invalide"));
     }
     if (!Number.isFinite(priceNum) || priceNum <= 0) {
-      return Alert.alert(fr ? "Prix" : "Price", fr ? "Prix invalide" : "Invalid price");
+      return Alert.alert(pick("Price", "Prix"), pick("Invalid price", "Prix invalide"));
     }
     setLoading(true);
     try {
@@ -131,14 +129,14 @@ export default function NewSaleScreen() {
         images: imageUrls,
       };
       await createSale(payload);
-      Alert.alert(fr ? "Succès" : "Success", fr ? "Annonce soumise pour approbation." : "Listing submitted for approval.", [{ text:"OK", onPress:() => router.back() }]);
+      Alert.alert(pick("Success", "Succès"), pick("Listing submitted for approval.", "Annonce soumise pour approbation."), [{ text:"OK", onPress:() => router.back() }]);
     } catch (e) {
       const msg = e?.response?.data?.message || "Failed to create listing";
       if (String(msg).toLowerCase().includes("national id") || String(msg).toLowerCase().includes("cin")) {
-        Alert.alert(fr ? "CIN requis" : "CIN required", msg, [
-          { text: fr ? "Plus tard" : "Later", style: "cancel" },
+        Alert.alert(pick("CIN required", "CIN requis"), msg, [
+          { text: pick("Later", "Plus tard"), style: "cancel" },
           {
-            text: fr ? "Ajouter CIN" : "Add CIN",
+            text: pick("Add CIN", "Ajouter CIN"),
             onPress: () => router.push({ pathname: "/verify-cin", params: { purpose: "sell" } }),
           },
         ]);
@@ -156,7 +154,7 @@ export default function NewSaleScreen() {
         {/* Photos */}
         <View style={s.section}>
           <Text style={s.sectionTitle}>
-            {fr ? "Photos" : "Photos"} <Text style={s.sectionSub}>({images.length}/6)</Text>
+            {pick("Photos", "Photos")} <Text style={s.sectionSub}>({images.length}/6)</Text>
           </Text>
           <View style={s.photosGrid}>
             {images.map((img, i) => (
@@ -213,7 +211,7 @@ export default function NewSaleScreen() {
         <TouchableOpacity onPress={handleSubmit} disabled={loading} style={[s.submitBtn, loading && { opacity:0.7 }]}>
           {loading
             ? <ActivityIndicator color="#fff" />
-            : <Text style={s.submitBtnText}>{fr ? "Publier l'annonce" : "Publish Listing"}</Text>
+            : <Text style={s.submitBtnText}>{pick("Publish Listing", "Publier l'annonce")}</Text>
           }
         </TouchableOpacity>
       </ScrollView>

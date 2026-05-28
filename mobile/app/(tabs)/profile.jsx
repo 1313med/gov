@@ -26,6 +26,7 @@ import { useAuth } from "../../src/context/AuthContext";
 import { useAppLang } from "../../src/context/AppLangContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import ThemeToggle from "../../src/components/ThemeToggle";
+import LanguageSwitcher from "../../src/components/LanguageSwitcher";
 import QuickActionCard from "../../src/components/QuickActionCard";
 import BrandFooterLogo from "../../src/components/BrandFooterLogo";
 import { useOwnerBookingAttentionCount } from "../../src/hooks/useOwnerBookingAttentionCount";
@@ -36,10 +37,10 @@ import { alpha } from "../../src/theme";
 const { width: SCREEN_W } = Dimensions.get("window");
 
 const ROLES = {
-  customer: { en: "Customer", fr: "Client" },
-  seller: { en: "Seller", fr: "Vendeur" },
-  rental_owner: { en: "Rental Owner", fr: "Propriétaire" },
-  admin: { en: "Admin", fr: "Admin" },
+  customer: { en: "Customer", fr: "Client", ar: "عميل" },
+  seller: { en: "Seller", fr: "Vendeur", ar: "بائع" },
+  rental_owner: { en: "Rental Owner", fr: "Propriétaire", ar: "مالك إيجار" },
+  admin: { en: "Admin", fr: "Admin", ar: "مشرف" },
 };
 
 function GlowOrb({ style, colors, scaleAnim }) {
@@ -174,7 +175,7 @@ export default function ProfileScreen() {
   const { auth, logout } = useAuth();
   const bookingAttentionCount = useOwnerBookingAttentionCount();
   const listingViewAttentionCount = useOwnerListingViewAttentionCount();
-  const { lang, setLang } = useAppLang();
+  const { lang, setLang, pick } = useAppLang();
   const { colors: C, isDark } = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -302,7 +303,7 @@ export default function ProfileScreen() {
       const { data } = await updateMyProfile({ avatar: url });
       setProfile(data);
     } catch {
-      Alert.alert(fr ? "Échec" : "Failed to update avatar");
+      Alert.alert(pick("Failed to update avatar", "Échec"));
     }
   };
 
@@ -319,9 +320,9 @@ export default function ProfileScreen() {
   };
 
   const handleLogout = () =>
-    Alert.alert(fr ? "Déconnexion" : "Logout", fr ? "Êtes-vous sûr ?" : "Are you sure?", [
-      { text: fr ? "Annuler" : "Cancel" },
-      { text: fr ? "Déconnexion" : "Logout", style: "destructive", onPress: logout },
+    Alert.alert(pick("Logout", "Déconnexion"), pick("Are you sure?", "Êtes-vous sûr ?"), [
+      { text: pick("Cancel", "Annuler") },
+      { text: pick("Logout", "Déconnexion"), style: "destructive", onPress: logout },
     ]);
 
   const pickDoc = async (applyUrl) => {
@@ -337,13 +338,13 @@ export default function ProfileScreen() {
       applyUrl(url);
     } catch (e) {
       const serverMsg = e?.response?.data?.message;
-      Alert.alert(fr ? "Échec" : "Failed", serverMsg || (fr ? "Envoi de l'image impossible" : "Could not upload image"));
+      Alert.alert(pick("Failed", "Échec"), serverMsg || (pick("Could not upload image", "Envoi de l'image impossible")));
     }
   };
 
   const saveLicenseDoc = async () => {
     if (!licForm.number?.trim() || !licForm.imageUrl) {
-      Alert.alert(fr ? "Permis incomplet" : "License incomplete", fr ? "Numéro et photo requis." : "Number and photo required.");
+      Alert.alert(pick("License incomplete", "Permis incomplet"), pick("Number and photo required.", "Numéro et photo requis."));
       return;
     }
     setLicSaving(true);
@@ -354,16 +355,16 @@ export default function ProfileScreen() {
         imageUrl: licForm.imageUrl,
       });
       setProfile(data);
-      Alert.alert(fr ? "Enregistré" : "Saved", fr ? "Permis mis à jour." : "License updated.");
+      Alert.alert(pick("Saved", "Enregistré"), pick("License updated.", "Permis mis à jour."));
     } catch (e) {
-      Alert.alert("Error", e?.response?.data?.message || (fr ? "Échec" : "Failed"));
+      Alert.alert("Error", e?.response?.data?.message || (pick("Failed", "Échec")));
     }
     setLicSaving(false);
   };
 
   const saveCinDoc = async () => {
     if (!cinForm.number?.trim() || !cinForm.imageUrl) {
-      Alert.alert(fr ? "CIN incomplet" : "ID incomplete", fr ? "Numéro et photo requis." : "Number and photo required.");
+      Alert.alert(pick("ID incomplete", "CIN incomplet"), pick("Number and photo required.", "Numéro et photo requis."));
       return;
     }
     setCinSaving(true);
@@ -373,9 +374,9 @@ export default function ProfileScreen() {
         imageUrl: cinForm.imageUrl,
       });
       setProfile(data);
-      Alert.alert(fr ? "Enregistré" : "Saved", fr ? "CIN mis à jour." : "National ID updated.");
+      Alert.alert(pick("Saved", "Enregistré"), pick("National ID updated.", "CIN mis à jour."));
     } catch (e) {
-      Alert.alert("Error", e?.response?.data?.message || (fr ? "Échec" : "Failed"));
+      Alert.alert("Error", e?.response?.data?.message || (pick("Failed", "Échec")));
     }
     setCinSaving(false);
   };
@@ -386,10 +387,10 @@ export default function ProfileScreen() {
         <LinearGradient colors={heroGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[s.guestHero, { paddingTop: insets.top + 40 }]}>
           <GlowOrb scaleAnim={orbPulse} colors={orbA} style={{ width: 260, height: 260, top: -60, right: -70 }} />
           <GlowOrb scaleAnim={orbPulse} colors={orbB} style={{ width: 200, height: 200, bottom: 20, left: -80 }} />
-          <Text style={[s.guestEyebrow, { color: C.primary }]}>{fr ? "Espace membre" : "Member space"}</Text>
+          <Text style={[s.guestEyebrow, { color: C.primary }]}>{pick("Member space", "Espace membre")}</Text>
           <Text style={[s.guestTitle, { color: titleColor }]}>Goo<Text style={{ fontStyle: "italic", color: C.primary, fontWeight: "800" }}>voiture</Text></Text>
           <Text style={[s.guestSub, { color: subColor }]}>
-            {fr ? "Connectez-vous pour gérer profil, documents et préférences." : "Sign in to manage your profile, documents, and preferences."}
+            {pick("Sign in to manage your profile, documents, and preferences.", "Connectez-vous pour gérer profil, documents et préférences.")}
           </Text>
           <ProfileShimmer color={C.primary} trackColor={isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.08)"} />
           <View style={{ width: 100, height: 100, borderRadius: 36, alignItems: "center", justifyContent: "center", marginTop: 32, borderWidth: 2, borderColor: isDark ? "rgba(124,107,255,0.35)" : "rgba(98,72,232,0.28)", backgroundColor: isDark ? "rgba(124,107,255,0.08)" : "rgba(98,72,232,0.06)" }}>
@@ -399,7 +400,7 @@ export default function ProfileScreen() {
         <View style={{ padding: 24, paddingBottom: insets.bottom + 24 }}>
           <TouchableOpacity onPress={() => router.push("/(auth)/login")} activeOpacity={0.92}>
             <LinearGradient colors={ctaGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.loginBtn}>
-              <Text style={s.loginBtnText}>{fr ? "Connexion" : "Login"}</Text>
+              <Text style={s.loginBtnText}>{pick("Login", "Connexion")}</Text>
               <Ionicons name="arrow-forward" size={20} color="#fff" />
             </LinearGradient>
           </TouchableOpacity>
@@ -429,7 +430,7 @@ export default function ProfileScreen() {
         <GlowOrb scaleAnim={orbPulse} colors={orbB} style={{ width: 160, height: 160, bottom: -20, left: -70 }} />
         <Animated.View style={{ opacity: heroOpacity, transform: [{ translateY: heroSlide }], alignItems: "center", paddingHorizontal: 20 }}>
           <Text style={{ color: C.primary, fontSize: 9, fontWeight: "800", letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 }}>
-            {fr ? "Votre identité" : "Your identity"}
+            {pick("Your identity", "Votre identité")}
           </Text>
           <View style={{ width: 124, height: 124, alignItems: "center", justifyContent: "center", marginBottom: 2 }}>
             <AvatarBackdrop C={C} spin={avatarSpin} spinReverse={avatarSpinRev} haloScale={avatarHalo} />
@@ -454,7 +455,10 @@ export default function ProfileScreen() {
             style={{ marginTop: 8, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: isDark ? "rgba(124,107,255,0.35)" : "rgba(98,72,232,0.25)" }}
           >
             <Text style={{ color: C.primary, fontSize: 11, fontWeight: "800", textTransform: "capitalize" }}>
-              {ROLES[profile?.role]?.[lang] || profile?.role}
+              {(() => {
+                const r = ROLES[profile?.role];
+                return r ? pick(r.en, r.fr, r.ar) : profile?.role;
+              })()}
             </Text>
           </LinearGradient>
           {profile?.city ? (
@@ -479,11 +483,11 @@ export default function ProfileScreen() {
               <LinearGradient colors={[`${C.primary}40`, `${C.primary}15`]} style={{ width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center" }}>
                 <Ionicons name="create-outline" size={22} color={C.primary} />
               </LinearGradient>
-              <Text style={{ color: titleColor, fontWeight: "800", fontSize: 17 }}>{fr ? "Modifier le profil" : "Edit profile"}</Text>
+              <Text style={{ color: titleColor, fontWeight: "800", fontSize: 17 }}>{pick("Edit profile", "Modifier le profil")}</Text>
             </View>
             {[
-              { k: "name", l: fr ? "Nom" : "Name", ic: "person-outline" },
-              { k: "city", l: fr ? "Ville" : "City", ic: "location-outline" },
+              { k: "name", l: pick("Name", "Nom"), ic: "person-outline" },
+              { k: "city", l: pick("City", "Ville"), ic: "location-outline" },
               { k: "bio", l: "Bio", ic: "document-text-outline", multi: true },
             ].map((f) => (
               <View key={f.k} style={{ marginBottom: 14 }}>
@@ -503,11 +507,11 @@ export default function ProfileScreen() {
             ))}
             <View style={{ flexDirection: "row", gap: 12, marginTop: 6 }}>
               <TouchableOpacity onPress={() => setEditing(false)} style={[s.cancelBtn, { borderColor: C.border, backgroundColor: C.surface }]}>
-                <Text style={[s.cancelText, { color: subColor }]}>{fr ? "Annuler" : "Cancel"}</Text>
+                <Text style={[s.cancelText, { color: subColor }]}>{pick("Cancel", "Annuler")}</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={save} disabled={saving} style={{ flex: 1 }}>
                 <LinearGradient colors={ctaGrad} style={[s.saveBtnGrad, { flex: 1 }, saving && { opacity: 0.65 }]}>
-                  <Text style={s.saveBtnText}>{saving ? "…" : fr ? "Sauvegarder" : "Save"}</Text>
+                  <Text style={s.saveBtnText}>{saving ? "…" : pick("Save", "Sauvegarder")}</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -515,7 +519,7 @@ export default function ProfileScreen() {
         ) : (
           <QuickActionCard
             icon="create-outline"
-            label={fr ? "Modifier le profil" : "Edit profile"}
+            label={pick("Edit profile", "Modifier le profil")}
             onPress={() => setEditing(true)}
             C={C}
             isDark={isDark}
@@ -523,11 +527,9 @@ export default function ProfileScreen() {
           />
         )}
 
-        <Text style={[s.sectionEyebrow, { color: C.primary }]}>{fr ? "Documents location" : "Rental documents"}</Text>
+        <Text style={[s.sectionEyebrow, { color: C.primary }]}>{pick("Rental documents", "Documents location")}</Text>
         <Text style={[s.docHint, { color: subColor }]}>
-          {fr
-            ? "Appuyez sur une carte pour afficher le formulaire (permis et CIN)."
-            : "Tap a card to show the form for your license and national ID."}
+          {pick("Tap a card to show the form for your license and national ID.", "Appuyez sur une carte pour afficher le formulaire (permis et CIN).")}
         </Text>
 
         <ProfileGlassCard isDark={isDark} C={C} sheenProgress={cardSheen} style={glassCard}>
@@ -540,19 +542,13 @@ export default function ProfileScreen() {
                 <Ionicons name="card-outline" size={22} color={C.accent} />
               </LinearGradient>
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={{ color: titleColor, fontWeight: "800", fontSize: 16 }}>{fr ? "Permis de conduire" : "Driving license"}</Text>
+                <Text style={{ color: titleColor, fontWeight: "800", fontSize: 16 }}>{pick("Driving license", "Permis de conduire")}</Text>
                 <Text style={{ color: subColor, fontSize: 12, marginTop: 4, fontWeight: "600" }}>
                   {profile?.driverLicense?.verified
-                    ? fr
-                      ? "Vérifié — touchez pour modifier"
-                      : "Verified — tap to edit"
+                    ? pick("Verified — tap to edit", "Vérifié — touchez pour modifier")
                     : profile?.driverLicense?.number
-                      ? fr
-                        ? "En attente — touchez pour compléter"
-                        : "Pending — tap to update"
-                      : fr
-                        ? "Non renseigné — touchez pour remplir"
-                        : "Not added — tap to fill in"}
+                      ? pick("Pending — tap to update", "En attente — touchez pour compléter")
+                      : pick("Not added — tap to fill in", "Non renseigné — touchez pour remplir")}
                 </Text>
               </View>
               <Ionicons name={licenseExpanded ? "chevron-up" : "chevron-down"} size={22} color={C.muted} />
@@ -567,34 +563,34 @@ export default function ProfileScreen() {
                 borderTopColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.08)",
               }}
             >
-              {!!profile?.driverLicense?.verified && <Text style={[s.docVerified, { marginTop: 14 }]}>{fr ? "✓ Vérifié" : "✓ Verified"}</Text>}
+              {!!profile?.driverLicense?.verified && <Text style={[s.docVerified, { marginTop: 14 }]}>{pick("✓ Verified", "✓ Vérifié")}</Text>}
               {!profile?.driverLicense?.verified && profile?.driverLicense?.number ? (
-                <Text style={[s.docPending, { marginTop: 14 }]}>{fr ? "Vérification en attente" : "Pending verification"}</Text>
+                <Text style={[s.docPending, { marginTop: 14 }]}>{pick("Pending verification", "Vérification en attente")}</Text>
               ) : null}
-              <Text style={[s.fieldLabel, { color: C.label, marginTop: 14 }]}>{fr ? "Numéro" : "Number"}</Text>
+              <Text style={[s.fieldLabel, { color: C.label, marginTop: 14 }]}>{pick("Number", "Numéro")}</Text>
               <View style={[s.inputRow, { borderColor: C.border, backgroundColor: C.inputBg }]}>
                 <Ionicons name="card-outline" size={16} color={C.muted} />
-                <TextInput value={licForm.number} onChangeText={(v) => setLicForm((p) => ({ ...p, number: v }))} style={[s.input, { color: titleColor }]} placeholderTextColor={C.muted} placeholder={fr ? "ex. B-123456" : "e.g. B-123456"} />
+                <TextInput value={licForm.number} onChangeText={(v) => setLicForm((p) => ({ ...p, number: v }))} style={[s.input, { color: titleColor }]} placeholderTextColor={C.muted} placeholder={pick("e.g. B-123456", "ex. B-123456")} />
               </View>
-              <Text style={[s.fieldLabel, { color: C.label, marginTop: 12 }]}>{fr ? "Expiration (optionnel)" : "Expiry (optional)"}</Text>
+              <Text style={[s.fieldLabel, { color: C.label, marginTop: 12 }]}>{pick("Expiry (optional)", "Expiration (optionnel)")}</Text>
               <View style={[s.inputRow, { borderColor: C.border, backgroundColor: C.inputBg }]}>
                 <Ionicons name="calendar-outline" size={16} color={C.muted} />
                 <TextInput value={licForm.expiryDate} onChangeText={(v) => setLicForm((p) => ({ ...p, expiryDate: v }))} style={[s.input, { color: titleColor }]} placeholderTextColor={C.muted} placeholder="YYYY-MM-DD" />
               </View>
-              <Text style={[s.fieldLabel, { color: C.label, marginTop: 12 }]}>{fr ? "Photo du permis" : "License photo"}</Text>
+              <Text style={[s.fieldLabel, { color: C.label, marginTop: 12 }]}>{pick("License photo", "Photo du permis")}</Text>
               <TouchableOpacity onPress={() => pickDoc((url) => setLicForm((p) => ({ ...p, imageUrl: url })))} style={[s.docPick, { borderColor: C.border, backgroundColor: C.surface }]}>
                 {licForm.imageUrl ? (
                   <Image source={{ uri: resolveMediaUrl(licForm.imageUrl) }} style={s.docThumb} />
                 ) : (
                   <View style={{ alignItems: "center", padding: 24 }}>
                     <Ionicons name="image-outline" size={32} color={C.muted} />
-                    <Text style={[s.docPickText, { color: subColor, marginTop: 8 }]}>{fr ? "Choisir une photo" : "Choose photo"}</Text>
+                    <Text style={[s.docPickText, { color: subColor, marginTop: 8 }]}>{pick("Choose photo", "Choisir une photo")}</Text>
                   </View>
                 )}
               </TouchableOpacity>
               <TouchableOpacity onPress={saveLicenseDoc} disabled={licSaving} activeOpacity={0.9}>
                 <LinearGradient colors={ctaGrad} style={[s.saveBtnGrad, { marginTop: 14 }, licSaving && { opacity: 0.65 }]}>
-                  <Text style={s.saveBtnText}>{licSaving ? "…" : fr ? "Enregistrer le permis" : "Save license"}</Text>
+                  <Text style={s.saveBtnText}>{licSaving ? "…" : pick("Save license", "Enregistrer le permis")}</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -611,19 +607,13 @@ export default function ProfileScreen() {
                 <Ionicons name="id-card-outline" size={22} color="#a78bfa" />
               </LinearGradient>
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={{ color: titleColor, fontWeight: "800", fontSize: 16 }}>{fr ? "CIN (carte d'identité)" : "National ID (CIN)"}</Text>
+                <Text style={{ color: titleColor, fontWeight: "800", fontSize: 16 }}>{pick("National ID (CIN)", "CIN (carte d'identité)")}</Text>
                 <Text style={{ color: subColor, fontSize: 12, marginTop: 4, fontWeight: "600" }}>
                   {profile?.nationalId?.verified
-                    ? fr
-                      ? "Vérifié — touchez pour modifier"
-                      : "Verified — tap to edit"
+                    ? pick("Verified — tap to edit", "Vérifié — touchez pour modifier")
                     : profile?.nationalId?.number
-                      ? fr
-                        ? "En attente — touchez pour compléter"
-                        : "Pending — tap to update"
-                      : fr
-                        ? "Non renseigné — touchez pour remplir"
-                        : "Not added — tap to fill in"}
+                      ? pick("Pending — tap to update", "En attente — touchez pour compléter")
+                      : pick("Not added — tap to fill in", "Non renseigné — touchez pour remplir")}
                 </Text>
               </View>
               <Ionicons name={cinExpanded ? "chevron-up" : "chevron-down"} size={22} color={C.muted} />
@@ -638,39 +628,39 @@ export default function ProfileScreen() {
                 borderTopColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.08)",
               }}
             >
-              {!!profile?.nationalId?.verified && <Text style={[s.docVerified, { marginTop: 14 }]}>{fr ? "✓ Vérifié" : "✓ Verified"}</Text>}
+              {!!profile?.nationalId?.verified && <Text style={[s.docVerified, { marginTop: 14 }]}>{pick("✓ Verified", "✓ Vérifié")}</Text>}
               {!profile?.nationalId?.verified && profile?.nationalId?.number ? (
-                <Text style={[s.docPending, { marginTop: 14 }]}>{fr ? "Vérification en attente" : "Pending verification"}</Text>
+                <Text style={[s.docPending, { marginTop: 14 }]}>{pick("Pending verification", "Vérification en attente")}</Text>
               ) : null}
-              <Text style={[s.fieldLabel, { color: C.label, marginTop: 14 }]}>{fr ? "Numéro CIN" : "ID number"}</Text>
+              <Text style={[s.fieldLabel, { color: C.label, marginTop: 14 }]}>{pick("ID number", "Numéro CIN")}</Text>
               <View style={[s.inputRow, { borderColor: C.border, backgroundColor: C.inputBg }]}>
                 <Ionicons name="id-card-outline" size={16} color={C.muted} />
-                <TextInput value={cinForm.number} onChangeText={(v) => setCinForm((p) => ({ ...p, number: v }))} style={[s.input, { color: titleColor }]} placeholderTextColor={C.muted} placeholder={fr ? "ex. AB123456" : "e.g. AB123456"} />
+                <TextInput value={cinForm.number} onChangeText={(v) => setCinForm((p) => ({ ...p, number: v }))} style={[s.input, { color: titleColor }]} placeholderTextColor={C.muted} placeholder={pick("e.g. AB123456", "ex. AB123456")} />
               </View>
-              <Text style={[s.fieldLabel, { color: C.label, marginTop: 12 }]}>{fr ? "Photo CIN" : "ID photo"}</Text>
+              <Text style={[s.fieldLabel, { color: C.label, marginTop: 12 }]}>{pick("ID photo", "Photo CIN")}</Text>
               <TouchableOpacity onPress={() => pickDoc((url) => setCinForm((p) => ({ ...p, imageUrl: url })))} style={[s.docPick, { borderColor: C.border, backgroundColor: C.surface }]}>
                 {cinForm.imageUrl ? (
                   <Image source={{ uri: resolveMediaUrl(cinForm.imageUrl) }} style={s.docThumb} />
                 ) : (
                   <View style={{ alignItems: "center", padding: 24 }}>
                     <Ionicons name="image-outline" size={32} color={C.muted} />
-                    <Text style={[s.docPickText, { color: subColor, marginTop: 8 }]}>{fr ? "Choisir une photo" : "Choose photo"}</Text>
+                    <Text style={[s.docPickText, { color: subColor, marginTop: 8 }]}>{pick("Choose photo", "Choisir une photo")}</Text>
                   </View>
                 )}
               </TouchableOpacity>
               <TouchableOpacity onPress={saveCinDoc} disabled={cinSaving} activeOpacity={0.9}>
                 <LinearGradient colors={ctaGrad} style={[s.saveBtnGrad, { marginTop: 14 }, cinSaving && { opacity: 0.65 }]}>
-                  <Text style={s.saveBtnText}>{cinSaving ? "…" : fr ? "Enregistrer le CIN" : "Save national ID"}</Text>
+                  <Text style={s.saveBtnText}>{cinSaving ? "…" : pick("Save national ID", "Enregistrer le CIN")}</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
           ) : null}
         </ProfileGlassCard>
 
-        <Text style={[s.sectionEyebrow, { color: C.accent, marginTop: 8 }]}>{fr ? "Navigation" : "Shortcuts"}</Text>
+        <Text style={[s.sectionEyebrow, { color: C.accent, marginTop: 8 }]}>{pick("Shortcuts", "Navigation")}</Text>
         <QuickActionCard
           icon="notifications-outline"
-          label={fr ? "Notifications" : "Notifications"}
+          label={pick("Notifications", "Notifications")}
           onPress={() => router.push("/notifications")}
           C={C}
           isDark={isDark}
@@ -678,7 +668,7 @@ export default function ProfileScreen() {
         />
         <QuickActionCard
           icon="car-sport-outline"
-          label={fr ? "Mon Garage" : "My Garage"}
+          label={pick("My Garage", "Mon Garage")}
           onPress={() => router.push("/mon-garage")}
           C={C}
           isDark={isDark}
@@ -687,7 +677,7 @@ export default function ProfileScreen() {
         />
         <QuickActionCard
           icon="calculator-outline"
-          label={fr ? "Estimer ma voiture" : "Estimate my car"}
+          label={pick("Estimate my car", "Estimer ma voiture")}
           onPress={() => router.push("/estimate")}
           C={C}
           isDark={isDark}
@@ -696,7 +686,7 @@ export default function ProfileScreen() {
         />
         <QuickActionCard
           icon="notifications-outline"
-          label={fr ? "Alertes prix" : "Price alerts"}
+          label={pick("Price alerts", "Alertes prix")}
           onPress={() => router.push("/price-alerts")}
           C={C}
           isDark={isDark}
@@ -706,17 +696,17 @@ export default function ProfileScreen() {
         {auth.role === "customer" && (
           <QuickActionCard
             icon="calendar-outline"
-            label={fr ? "Mes réservations" : "My Bookings"}
+            label={pick("My Bookings", "Mes réservations")}
             onPress={() => router.push("/my-bookings")}
             C={C}
             isDark={isDark}
             labelColor={titleColor}
           />
         )}
-        <QuickActionCard icon="list-outline" label={fr ? "Mes annonces" : "My Sales"} onPress={() => router.push("/my-sales")} C={C} isDark={isDark} labelColor={titleColor} />
+        <QuickActionCard icon="list-outline" label={pick("My Sales", "Mes annonces")} onPress={() => router.push("/my-sales")} C={C} isDark={isDark} labelColor={titleColor} />
         <QuickActionCard
           icon="add-circle-outline"
-          label={fr ? "Vendre une voiture" : "Sell a car"}
+          label={pick("Sell a car", "Vendre une voiture")}
           onPress={() => router.push("/new-sale")}
           C={C}
           isDark={isDark}
@@ -727,7 +717,7 @@ export default function ProfileScreen() {
           <>
             <QuickActionCard
               icon="analytics-outline"
-              label={fr ? "Statistiques & analyses" : "Analytics & insights"}
+              label={pick("Analytics & insights", "Statistiques & analyses")}
               onPress={() => router.push("/owner-analytics")}
               C={C}
               isDark={isDark}
@@ -736,7 +726,7 @@ export default function ProfileScreen() {
             />
             <QuickActionCard
               icon="calendar-outline"
-              label={fr ? "Calendrier" : "Calendar"}
+              label={pick("Calendar", "Calendrier")}
               onPress={() => router.push("/owner-booking-calendar")}
               C={C}
               isDark={isDark}
@@ -744,17 +734,17 @@ export default function ProfileScreen() {
             />
             <QuickActionCard
               icon="clipboard-outline"
-              label={fr ? "Réservations" : "Bookings"}
+              label={pick("Bookings", "Réservations")}
               onPress={() => router.push("/owner-bookings")}
               C={C}
               isDark={isDark}
               labelColor={titleColor}
               attentionCount={bookingAttentionCount}
             />
-            <QuickActionCard icon="car-outline" label={fr ? "Mon parc" : "My Fleet"} onPress={() => router.push("/my-fleet")} C={C} isDark={isDark} labelColor={titleColor} />
+            <QuickActionCard icon="car-outline" label={pick("My Fleet", "Mon parc")} onPress={() => router.push("/my-fleet")} C={C} isDark={isDark} labelColor={titleColor} />
             <QuickActionCard
               icon="pulse-outline"
-              label={fr ? "Visibilité des annonces" : "Listing views"}
+              label={pick("Listing views", "Visibilité des annonces")}
               onPress={() => router.push("/owner-listing-views")}
               C={C}
               isDark={isDark}
@@ -762,10 +752,10 @@ export default function ProfileScreen() {
               attentionCount={listingViewAttentionCount}
               attentionWeight="soft"
             />
-            <QuickActionCard icon="construct-outline" label={fr ? "Maintenance" : "Maintenance"} onPress={() => router.push("/maintenance")} C={C} isDark={isDark} labelColor={titleColor} />
+            <QuickActionCard icon="construct-outline" label={pick("Maintenance", "Maintenance")} onPress={() => router.push("/maintenance")} C={C} isDark={isDark} labelColor={titleColor} />
             <QuickActionCard
               icon="add-circle-outline"
-              label={fr ? "Ajouter location" : "Add Rental"}
+              label={pick("Add Rental", "Ajouter location")}
               onPress={() => router.push("/add-rental")}
               C={C}
               isDark={isDark}
@@ -777,7 +767,7 @@ export default function ProfileScreen() {
         {auth.role === "admin" && (
           <QuickActionCard
             icon="shield-checkmark-outline"
-            label={fr ? "Modération admin" : "Admin Moderation"}
+            label={pick("Admin Moderation", "Modération admin")}
             onPress={() => router.push("/admin-moderation")}
             C={C}
             isDark={isDark}
@@ -787,10 +777,10 @@ export default function ProfileScreen() {
         )}
 
         {/* ── Outils & services ── */}
-        <Text style={[s.sectionEyebrow, { color: C.primary, marginTop: 10 }]}>{fr ? "Outils & services" : "Tools & services"}</Text>
+        <Text style={[s.sectionEyebrow, { color: C.primary, marginTop: 10 }]}>{pick("Tools & services", "Outils & services")}</Text>
         <QuickActionCard
           icon="shield-checkmark-outline"
-          label={fr ? "Vérification identité" : "Identity verification"}
+          label={pick("Identity verification", "Vérification identité")}
           onPress={() => router.push("/kyc")}
           C={C}
           isDark={isDark}
@@ -799,7 +789,7 @@ export default function ProfileScreen() {
         />
         <QuickActionCard
           icon="gift-outline"
-          label={fr ? "Mon parrainage" : "My referral"}
+          label={pick("My referral", "Mon parrainage")}
           onPress={() => router.push("/referral")}
           C={C}
           isDark={isDark}
@@ -808,7 +798,7 @@ export default function ProfileScreen() {
         />
         <QuickActionCard
           icon="book-outline"
-          label={fr ? "Guide d'achat Maroc" : "Buying guide Morocco"}
+          label={pick("Buying guide Morocco", "Guide d'achat Maroc")}
           onPress={() => router.push("/buying-guide")}
           C={C}
           isDark={isDark}
@@ -817,7 +807,7 @@ export default function ProfileScreen() {
         />
         <QuickActionCard
           icon="search-outline"
-          label={fr ? "Vérification crédit voiture" : "Car credit check"}
+          label={pick("Car credit check", "Vérification crédit voiture")}
           onPress={() => router.push("/credit-check")}
           C={C}
           isDark={isDark}
@@ -826,7 +816,7 @@ export default function ProfileScreen() {
         />
         <QuickActionCard
           icon="warning-outline"
-          label={fr ? "Urgence & Accident" : "Emergency & Accident"}
+          label={pick("Emergency & Accident", "Urgence & Accident")}
           onPress={() => router.push("/emergency")}
           C={C}
           isDark={isDark}
@@ -837,7 +827,7 @@ export default function ProfileScreen() {
           <>
             <QuickActionCard
               icon="speedometer-outline"
-              label={fr ? "Suivi carburant" : "Fuel tracker"}
+              label={pick("Fuel tracker", "Suivi carburant")}
               onPress={() => router.push("/fuel-tracker")}
               C={C}
               isDark={isDark}
@@ -846,7 +836,7 @@ export default function ProfileScreen() {
             />
             <QuickActionCard
               icon="car-outline"
-              label={fr ? "Assistant accident" : "Accident assistant"}
+              label={pick("Accident assistant", "Assistant accident")}
               onPress={() => router.push("/accident-assistant")}
               C={C}
               isDark={isDark}
@@ -858,7 +848,7 @@ export default function ProfileScreen() {
         {auth.role === "rental_owner" && (
           <QuickActionCard
             icon="people-outline"
-            label={fr ? "Mon équipe" : "My staff"}
+            label={pick("My staff", "Mon équipe")}
             onPress={() => router.push("/staff-management")}
             C={C}
             isDark={isDark}
@@ -867,7 +857,7 @@ export default function ProfileScreen() {
           />
         )}
 
-        <Text style={[s.sectionEyebrow, { color: C.primary, marginTop: 10 }]}>{fr ? "Langue & apparence" : "Language & appearance"}</Text>
+        <Text style={[s.sectionEyebrow, { color: C.primary, marginTop: 10 }]}>{pick("Language & appearance", "Langue & apparence")}</Text>
         <ProfileGlassCard
           isDark={isDark}
           C={C}
@@ -876,30 +866,13 @@ export default function ProfileScreen() {
           lightColors={["#ffffff", "#f1f5f9"]}
         >
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-            <Text style={{ color: titleColor, fontWeight: "700", fontSize: 14 }}>{fr ? "Thème" : "Theme"}</Text>
+            <Text style={{ color: titleColor, fontWeight: "700", fontSize: 14 }}>{pick("Theme", "Thème")}</Text>
             <View style={{ borderRadius: 14, borderWidth: 1, borderColor: isDark ? "rgba(124,107,255,0.25)" : "rgba(98,72,232,0.2)", backgroundColor: isDark ? "rgba(124,107,255,0.08)" : "rgba(98,72,232,0.06)" }}>
               <ThemeToggle />
             </View>
           </View>
-          <Text style={{ color: subColor, fontSize: 12, marginBottom: 10, fontWeight: "600" }}>{fr ? "Langue" : "Language"}</Text>
-          <View style={{ flexDirection: "row", gap: 10 }}>
-            {["en", "fr"].map((l) => {
-              const on = lang === l;
-              return (
-                <TouchableOpacity key={l} onPress={() => setLang(l)} style={{ flex: 1 }} activeOpacity={0.88}>
-                  {on ? (
-                    <LinearGradient colors={ctaGrad} style={{ borderRadius: 14, paddingVertical: 14, alignItems: "center" }}>
-                      <Text style={{ color: "#fff", fontWeight: "800", fontSize: 14 }}>{l === "en" ? "English" : "Français"}</Text>
-                    </LinearGradient>
-                  ) : (
-                    <View style={{ borderRadius: 14, paddingVertical: 14, alignItems: "center", borderWidth: 1, borderColor: C.border, backgroundColor: C.inputBg }}>
-                      <Text style={{ color: subColor, fontWeight: "700", fontSize: 14 }}>{l === "en" ? "English" : "Français"}</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+          <Text style={{ color: subColor, fontSize: 12, marginBottom: 10, fontWeight: "600" }}>{pick("Language", "Langue")}</Text>
+          <LanguageSwitcher variant="full" accent={C.primary} isDark={isDark} style={{ width: "100%" }} />
         </ProfileGlassCard>
 
         <TouchableOpacity onPress={handleLogout} activeOpacity={0.9} style={{ marginTop: 6 }}>
@@ -919,7 +892,7 @@ export default function ProfileScreen() {
             }}
           >
             <Ionicons name="log-out-outline" size={22} color={C.red} />
-            <Text style={{ color: C.red, fontWeight: "800", fontSize: 15 }}>{fr ? "Déconnexion" : "Logout"}</Text>
+            <Text style={{ color: C.red, fontWeight: "800", fontSize: 15 }}>{pick("Logout", "Déconnexion")}</Text>
           </LinearGradient>
         </TouchableOpacity>
 

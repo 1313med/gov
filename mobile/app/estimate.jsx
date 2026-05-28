@@ -16,7 +16,7 @@ const GEARBOX_OPTIONS = ["Manuelle", "Automatique"];
 
 export default function EstimateScreen() {
   const { colors: C, isDark } = useTheme();
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const fr = lang === "fr";
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -46,7 +46,7 @@ export default function EstimateScreen() {
 
   const handleEstimate = useCallback(async () => {
     if (!form.brand.trim() || !form.year.trim()) {
-      Alert.alert(fr ? "Champs requis" : "Required", fr ? "La marque et l'année sont obligatoires." : "Brand and year are required.");
+      Alert.alert(pick("Required", "Champs requis"), pick("Brand and year are required.", "La marque et l'année sont obligatoires."));
       return;
     }
     setLoading(true);
@@ -72,9 +72,8 @@ export default function EstimateScreen() {
         fuelType: form.fuel || undefined,
       });
       Alert.alert(
-        fr ? "Alerte créée ✓" : "Alert created ✓",
-        fr ? `Vous serez notifié dès qu'un ${form.brand} ${form.model || ""} passe sous ${result.mid.toLocaleString()} MAD.`
-           : `You'll be notified when a ${form.brand} ${form.model || ""} drops below ${result.mid.toLocaleString()} MAD.`
+        pick("Alert created ✓", "Alerte créée ✓"),
+        pick(`You'll be notified when a ${form.brand} ${form.model || ""} drops below ${result.mid.toLocaleString()} MAD.`, `Vous serez notifié dès qu'un ${form.brand} ${form.model || ""} passe sous ${result.mid.toLocaleString()} MAD.`)
       );
     } catch (e) {
       Alert.alert("Erreur", e?.response?.data?.message || "Impossible de créer l'alerte");
@@ -101,10 +100,10 @@ export default function EstimateScreen() {
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 11, fontWeight: "800", letterSpacing: 2, textTransform: "uppercase", color: C.primary, marginBottom: 2 }}>
-              {fr ? "Outil gratuit" : "Free tool"}
+              {pick("Free tool", "Outil gratuit")}
             </Text>
             <Text style={{ fontSize: 20, fontWeight: "800", color: titleColor, letterSpacing: -0.4 }}>
-              {fr ? "Estimation de prix" : "Price estimator"}
+              {pick("Price estimator", "Estimation de prix")}
             </Text>
           </View>
         </View>
@@ -116,14 +115,14 @@ export default function EstimateScreen() {
         {/* Form card */}
         <View style={[s.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
           <Text style={{ fontSize: 13, fontWeight: "800", letterSpacing: 1.2, textTransform: "uppercase", color: isDark ? "#94a3b8" : "#64748b", marginBottom: 14 }}>
-            {fr ? "Votre voiture" : "Your car"}
+            {pick("Your car", "Votre voiture")}
           </Text>
 
           {[
-            { key: "brand",   label: fr ? "Marque *" : "Brand *",       ph: "Toyota, Dacia, BMW…" },
-            { key: "model",   label: fr ? "Modèle" : "Model",           ph: "Corolla, Logan, Série 3…" },
-            { key: "year",    label: fr ? "Année *" : "Year *",         ph: "2018", keyboard: "numeric" },
-            { key: "mileage", label: fr ? "Kilométrage" : "Mileage (km)", ph: "85000", keyboard: "numeric" },
+            { key: "brand",   label: pick("Brand *", "Marque *"),       ph: "Toyota, Dacia, BMW…" },
+            { key: "model",   label: pick("Model", "Modèle"),           ph: "Corolla, Logan, Série 3…" },
+            { key: "year",    label: pick("Year *", "Année *"),         ph: "2018", keyboard: "numeric" },
+            { key: "mileage", label: pick("Mileage (km)", "Kilométrage"), ph: "85000", keyboard: "numeric" },
           ].map(({ key, label, ph, keyboard }) => (
             <View key={key} style={{ marginBottom: 12 }}>
               <Text style={{ fontSize: 12, fontWeight: "700", color: subColor, marginBottom: 6 }}>{label}</Text>
@@ -140,7 +139,7 @@ export default function EstimateScreen() {
 
           {/* Fuel selector */}
           <Text style={{ fontSize: 12, fontWeight: "700", color: subColor, marginBottom: 8 }}>
-            {fr ? "Carburant" : "Fuel type"}
+            {pick("Fuel type", "Carburant")}
           </Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
             {FUEL_OPTIONS.map((f) => {
@@ -157,7 +156,7 @@ export default function EstimateScreen() {
 
           {/* Gearbox selector */}
           <Text style={{ fontSize: 12, fontWeight: "700", color: subColor, marginBottom: 8 }}>
-            {fr ? "Boîte de vitesses" : "Gearbox"}
+            {pick("Gearbox", "Boîte de vitesses")}
           </Text>
           <View style={{ flexDirection: "row", gap: 8, marginBottom: 4 }}>
             {GEARBOX_OPTIONS.map((g) => {
@@ -181,7 +180,7 @@ export default function EstimateScreen() {
               : <>
                   <Ionicons name="calculator-outline" size={20} color="#fff" />
                   <Text style={{ color: "#fff", fontWeight: "800", fontSize: 16 }}>
-                    {fr ? "Estimer la valeur" : "Estimate value"}
+                    {pick("Estimate value", "Estimer la valeur")}
                   </Text>
                 </>
             }
@@ -202,7 +201,7 @@ export default function EstimateScreen() {
                   </View>
                   <Text style={{ fontSize: 12, color: subColor }}>{result.age} an{result.age !== 1 ? "s" : ""}</Text>
                 </View>
-                <Text style={{ fontSize: 13, color: subColor, marginBottom: 4 }}>{fr ? "Fourchette estimée" : "Estimated range"}</Text>
+                <Text style={{ fontSize: 13, color: subColor, marginBottom: 4 }}>{pick("Estimated range", "Fourchette estimée")}</Text>
                 <Text style={{ fontSize: 32, fontWeight: "900", color: titleColor, letterSpacing: -1 }}>
                   {result.mid.toLocaleString()} <Text style={{ fontSize: 18 }}>MAD</Text>
                 </Text>
@@ -216,16 +215,16 @@ export default function EstimateScreen() {
                 <LinearGradient colors={["#22c55e", "#eab308", "#ef4444"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1, borderRadius: 4 }} />
               </View>
               <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                <Text style={{ fontSize: 11, color: "#22c55e", fontWeight: "700" }}>{fr ? "Bas" : "Low"}</Text>
-                <Text style={{ fontSize: 11, color: subColor, fontWeight: "700" }}>{fr ? "Moyen" : "Mid"}</Text>
-                <Text style={{ fontSize: 11, color: "#ef4444", fontWeight: "700" }}>{fr ? "Haut" : "High"}</Text>
+                <Text style={{ fontSize: 11, color: "#22c55e", fontWeight: "700" }}>{pick("Low", "Bas")}</Text>
+                <Text style={{ fontSize: 11, color: subColor, fontWeight: "700" }}>{pick("Mid", "Moyen")}</Text>
+                <Text style={{ fontSize: 11, color: "#ef4444", fontWeight: "700" }}>{pick("High", "Haut")}</Text>
               </View>
             </View>
 
             {/* Breakdown */}
             <View style={[s.card, { backgroundColor: cardBg, borderColor: cardBorder, marginTop: 12 }]}>
               <Text style={{ fontSize: 13, fontWeight: "800", letterSpacing: 1.2, textTransform: "uppercase", color: isDark ? "#94a3b8" : "#64748b", marginBottom: 14 }}>
-                {fr ? "Détail du calcul" : "Calculation breakdown"}
+                {pick("Calculation breakdown", "Détail du calcul")}
               </Text>
               {result.breakdown.map((item, i) => (
                 <View key={i} style={{ flexDirection: "row", alignItems: "flex-start", paddingVertical: 12, borderBottomWidth: i < result.breakdown.length - 1 ? 1 : 0, borderBottomColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(15,23,42,0.06)" }}>
@@ -249,9 +248,7 @@ export default function EstimateScreen() {
             {/* Disclaimer */}
             <View style={{ marginTop: 10, paddingHorizontal: 4 }}>
               <Text style={{ fontSize: 11, color: isDark ? "#475569" : "#94a3b8", textAlign: "center", lineHeight: 16 }}>
-                {fr
-                  ? "Estimation basée sur les prix du marché marocain. La valeur réelle dépend de l'état général, des options et de la négociation."
-                  : "Estimate based on the Moroccan market. Actual value depends on condition, options and negotiation."}
+                {pick("Estimate based on the Moroccan market. Actual value depends on condition, options and negotiation.", "Estimation basée sur les prix du marché marocain. La valeur réelle dépend de l'état général, des options et de la négociation.")}
               </Text>
             </View>
 
@@ -262,7 +259,7 @@ export default function EstimateScreen() {
                   : <>
                       <Ionicons name="notifications-outline" size={18} color="#fff" />
                       <Text style={{ color: "#fff", fontWeight: "800", fontSize: 15 }}>
-                        {fr ? "Créer une alerte à ce prix" : "Create alert at this price"}
+                        {pick("Create alert at this price", "Créer une alerte à ce prix")}
                       </Text>
                     </>
                 }
@@ -276,7 +273,7 @@ export default function EstimateScreen() {
               <View style={{ borderRadius: 16, paddingVertical: 14, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8, borderWidth: 1.5, borderColor: isDark ? "rgba(124,107,255,0.4)" : "rgba(98,72,232,0.3)", backgroundColor: isDark ? "rgba(124,107,255,0.08)" : "rgba(98,72,232,0.05)" }}>
                 <Ionicons name="pricetag-outline" size={18} color={C.primary} />
                 <Text style={{ color: C.primary, fontWeight: "800", fontSize: 15 }}>
-                  {fr ? "Vendre ma voiture" : "Sell my car"}
+                  {pick("Sell my car", "Vendre ma voiture")}
                 </Text>
               </View>
             </TouchableOpacity>

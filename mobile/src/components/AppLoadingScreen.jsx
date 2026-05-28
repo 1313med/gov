@@ -264,10 +264,10 @@ function EliteMarkLoader({ preset, message, isDark }) {
 /** Animated logo — use inside flex containers or full screen. */
 export function AppLogoLoader({ variant = "page", message, style }) {
   const { isDark } = useTheme();
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const fr = lang === "fr";
   const showCaption = variant !== "compact";
-  const label = message ?? (showCaption ? (fr ? "Chargement" : "Loading") : null);
+  const label = message ?? (showCaption ? (pick("Loading", "Chargement")) : null);
   const preset = PRESETS[variant] || PRESETS.page;
 
   return (

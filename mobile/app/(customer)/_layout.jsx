@@ -9,7 +9,7 @@ import { userHasApprovedSale } from "../../src/utils/profileDocuments";
 
 export default function CustomerLayout() {
   const { colors: C, isDark } = useTheme();
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const fr = lang === "fr";
   const { auth } = useAuth();
   const [showSellTab, setShowSellTab] = useState(false);
@@ -46,28 +46,28 @@ export default function CustomerLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: fr ? "Explorer" : "Explore",
+          title: pick("Explore", "Explorer"),
           tabBarIcon: ({ color, size }) => <Ionicons name="search-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="bookings"
         options={{
-          title: fr ? "Réservations" : "Bookings",
+          title: pick("Bookings", "Réservations"),
           tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="messages"
         options={{
-          title: fr ? "Messages" : "Messages",
+          title: pick("Messages", "Messages"),
           tabBarIcon: ({ color, size }) => <Ionicons name="chatbubble-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="saved"
         options={{
-          title: fr ? "Favoris" : "Saved",
+          title: pick("Saved", "Favoris"),
           tabBarIcon: ({ color, size }) => <Ionicons name="heart-outline" size={size} color={color} />,
         }}
       />
@@ -75,14 +75,14 @@ export default function CustomerLayout() {
         name="my-cars"
         options={{
           href: showSellTab ? undefined : null,
-          title: fr ? "Mes ventes" : "My cars",
+          title: pick("My cars", "Mes ventes"),
           tabBarIcon: ({ color, size }) => <Ionicons name="pricetag-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: fr ? "Profil" : "Profile",
+          title: pick("Profile", "Profil"),
           tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} />,
         }}
       />

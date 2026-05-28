@@ -13,8 +13,7 @@ import { userCanRentWithDocuments } from "../src/utils/profileDocuments";
 /** Full-screen: CIN + license for renting. */
 export default function ProfileDocumentsScreen() {
   const { colors: C, isDark } = useTheme();
-  const { lang } = useAppLang();
-  const fr = lang === "fr";
+  const { pick } = useAppLang();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams();
@@ -42,12 +41,10 @@ export default function ProfileDocumentsScreen() {
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={[styles.title, { color: C.white }]}>
-            {fr ? "Documents pour louer" : "Documents to rent"}
+            {pick("Documents to rent", "Documents pour louer")}
           </Text>
           <Text style={[styles.sub, { color: C.muted }]}>
-            {fr
-              ? "Permis de conduire et CIN — vous pouvez les ajouter maintenant."
-              : "Driving license and national ID — add them anytime."}
+            {pick("Driving license and national ID — add them anytime.", "Permis de conduire et CIN — vous pouvez les ajouter maintenant.")}
           </Text>
         </View>
       </View>
@@ -56,7 +53,6 @@ export default function ProfileDocumentsScreen() {
         <ProfileDocumentsSection
           profile={profile}
           onProfileChange={setProfile}
-          fr={fr}
           C={C}
           isDark={isDark}
           showLicense
@@ -70,7 +66,7 @@ export default function ProfileDocumentsScreen() {
             onPress={() => router.replace(returnTo)}
             style={[styles.doneBtn, { backgroundColor: C.primary }]}
           >
-            <Text style={styles.doneBtnText}>{fr ? "Continuer la réservation" : "Continue booking"}</Text>
+            <Text style={styles.doneBtnText}>{pick("Continue booking", "Continuer la réservation")}</Text>
           </TouchableOpacity>
         ) : null}
       </ScrollView>

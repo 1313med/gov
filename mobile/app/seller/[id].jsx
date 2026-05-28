@@ -15,7 +15,7 @@ import { useTheme } from "../../src/context/ThemeContext";
 export default function SellerProfileScreen() {
   const { id } = useLocalSearchParams();
   const { auth } = useAuth();
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const { colors: C } = useTheme();
   const s = useMemo(() => createSellerProfileStyles(C), [C]);
   const router = useRouter();
@@ -63,7 +63,7 @@ export default function SellerProfileScreen() {
         <Text style={s.name}>{profile.name}</Text>
         <View style={s.verifiedRow}>
           <Ionicons name="shield-checkmark" size={14} color={C.green} />
-          <Text style={s.verifiedText}>{fr ? "Vendeur vérifié" : "Verified Seller"}</Text>
+          <Text style={s.verifiedText}>{pick("Verified Seller", "Vendeur vérifié")}</Text>
         </View>
         {profile.city && (
           <View style={s.cityRow}>
@@ -75,8 +75,8 @@ export default function SellerProfileScreen() {
 
         <View style={s.statsRow}>
           {[
-            { value: listings.length, label: fr ? "Annonces" : "Listings" },
-            { value: soldCount, label: fr ? "Vendues" : "Sold" },
+            { value: listings.length, label: pick("Listings", "Annonces") },
+            { value: soldCount, label: pick("Sold", "Vendues") },
           ].map((stat) => (
             <View key={stat.label} style={s.statBox}>
               <Text style={s.statVal}>{stat.value}</Text>
@@ -87,16 +87,16 @@ export default function SellerProfileScreen() {
 
         <TouchableOpacity onPress={contactSeller} disabled={contacting} style={[s.contactBtn, contacting && { opacity:0.7 }]}>
           <Ionicons name="chatbubble-outline" size={16} color="#fff" />
-          <Text style={s.contactBtnText}>{contacting ? "Opening…" : fr ? "Contacter" : "Contact"}</Text>
+          <Text style={s.contactBtnText}>{contacting ? "Opening…" : pick("Contact", "Contacter")}</Text>
         </TouchableOpacity>
       </View>
 
       <View style={s.section}>
-        <Text style={s.sectionTitle}>{fr ? "Annonces actives" : "Active Listings"}</Text>
+        <Text style={s.sectionTitle}>{pick("Active Listings", "Annonces actives")}</Text>
         {listings.length === 0 ? (
           <View style={s.empty}>
             <Ionicons name="car-outline" size={48} color="#4b5563" />
-            <Text style={s.emptyText}>{fr ? "Aucune annonce" : "No listings yet"}</Text>
+            <Text style={s.emptyText}>{pick("No listings yet", "Aucune annonce")}</Text>
           </View>
         ) : (
           listings.map((car) => (

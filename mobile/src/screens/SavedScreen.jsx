@@ -27,7 +27,7 @@ import { useTheme } from "../context/ThemeContext";
 
 export default function SavedScreen() {
   const { auth } = useAuth();
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const fr = lang === "fr";
   const { colors: C, isDark } = useTheme();
   const insets = useSafeAreaInsets();
@@ -59,7 +59,7 @@ export default function SavedScreen() {
       setRentals(rList.filter((x) => x && x._id));
       setSales(sList.filter((x) => x && x._id));
     } catch {
-      Alert.alert("Error", fr ? "Échec du chargement" : "Failed to load saved items");
+      Alert.alert("Error", pick("Failed to load saved items", "Échec du chargement"));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -80,7 +80,7 @@ export default function SavedScreen() {
       await removeRentalFavorite(id);
       setRentals((p) => p.filter((x) => String(x._id) !== String(id)));
     } catch {
-      Alert.alert("Error", fr ? "Échec de la suppression" : "Could not remove");
+      Alert.alert("Error", pick("Could not remove", "Échec de la suppression"));
     }
   };
 
@@ -89,7 +89,7 @@ export default function SavedScreen() {
       await removeFavorite(id);
       setSales((p) => p.filter((x) => String(x._id) !== String(id)));
     } catch {
-      Alert.alert("Error", fr ? "Échec de la suppression" : "Could not remove");
+      Alert.alert("Error", pick("Could not remove", "Échec de la suppression"));
     }
   };
 
@@ -101,21 +101,19 @@ export default function SavedScreen() {
         <View style={s.headerInner}>
           <View style={s.titleRow}>
             <View style={s.accent} />
-            <Text style={s.title}>{fr ? "Favoris" : "Saved"}</Text>
+            <Text style={s.title}>{pick("Saved", "Favoris")}</Text>
           </View>
           <Text style={s.sub}>
-            {fr
-              ? "Connectez-vous pour enregistrer des locations et des voitures à acheter."
-              : "Sign in to save rental listings and cars for sale in one place."}
+            {pick("Sign in to save rental listings and cars for sale in one place.", "Connectez-vous pour enregistrer des locations et des voitures à acheter.")}
           </Text>
         </View>
         <View style={s.emptyWrap}>
           <View style={s.emptyIcon}>
             <Ionicons name="heart-dislike-outline" size={44} color={C.primary} />
           </View>
-          <Text style={s.emptyTitle}>{fr ? "Aucun compte" : "Not signed in"}</Text>
+          <Text style={s.emptyTitle}>{pick("Not signed in", "Aucun compte")}</Text>
           <Text style={s.emptySub}>
-            {fr ? "Ouvrez l'onglet Profil pour vous connecter." : "Open the Profile tab to log in."}
+            {pick("Open the Profile tab to log in.", "Ouvrez l'onglet Profil pour vous connecter.")}
           </Text>
         </View>
       </View>
@@ -128,12 +126,10 @@ export default function SavedScreen() {
         <View style={s.headerInner}>
           <View style={s.titleRow}>
             <View style={s.accent} />
-            <Text style={s.title}>{fr ? "Favoris" : "Saved"}</Text>
+            <Text style={s.title}>{pick("Saved", "Favoris")}</Text>
           </View>
           <Text style={s.sub}>
-            {fr
-              ? "Deux listes distinctes : véhicules à louer et à acheter. Touchez le cœur sur une fiche pour l'ajouter ici."
-              : "Two lists: cars to rent and cars to buy. Tap the heart on any listing to add it here."}
+            {pick("Two lists: cars to rent and cars to buy. Tap the heart on any listing to add it here.", "Deux listes distinctes : véhicules à louer et à acheter. Touchez le cœur sur une fiche pour l'ajouter ici.")}
           </Text>
         </View>
 
@@ -149,7 +145,7 @@ export default function SavedScreen() {
               color={segment === "rentals" ? "#fff" : C.muted}
             />
             <Text style={[s.segLabel, segment === "rentals" && s.segLabelOn]}>
-              {fr ? "À louer" : "Rentals"}
+              {pick("Rentals", "À louer")}
             </Text>
             {rentals.length > 0 && (
               <View style={[s.count, segment === "rentals" && s.countOn]}>
@@ -168,7 +164,7 @@ export default function SavedScreen() {
               color={segment === "sales" ? "#fff" : C.muted}
             />
             <Text style={[s.segLabel, segment === "sales" && s.segLabelOn]}>
-              {fr ? "À vendre" : "For sale"}
+              {pick("For sale", "À vendre")}
             </Text>
             {sales.length > 0 && (
               <View style={[s.count, segment === "sales" && s.countOnSale]}>
@@ -182,12 +178,8 @@ export default function SavedScreen() {
           <Ionicons name="information-circle-outline" size={18} color={C.primary} />
           <Text style={s.hintText}>
             {segment === "rentals"
-              ? fr
-                ? "Locations : prix par jour, réservation depuis l'annonce."
-                : "Rentals: per-day pricing — open a card to book."
-              : fr
-                ? "Achat : prix total affiché, contact vendeur sur la fiche."
-                : "Purchase listings: full price shown — open a card for details."}
+              ? pick("Rentals: per-day pricing — open a card to book.", "Locations : prix par jour, réservation depuis l'annonce.")
+              : pick("Purchase listings: full price shown — open a card for details.", "Achat : prix total affiché, contact vendeur sur la fiche.")}
           </Text>
         </View>
       </View>
@@ -231,21 +223,13 @@ export default function SavedScreen() {
               </View>
               <Text style={s.emptyTitle}>
                 {segment === "rentals"
-                  ? fr
-                    ? "Aucune location en favoris"
-                    : "No saved rentals yet"
-                  : fr
-                    ? "Aucune voiture à vendre en favoris"
-                    : "No saved cars for sale yet"}
+                  ? pick("No saved rentals yet", "Aucune location en favoris")
+                  : pick("No saved cars for sale yet", "Aucune voiture à vendre en favoris")}
               </Text>
               <Text style={s.emptySub}>
                 {segment === "rentals"
-                  ? fr
-                    ? "Parcourez l'onglet Locations et touchez le cœur sur les annonces qui vous intéressent."
-                    : "Browse the Rentals tab and tap the heart on listings you like."
-                  : fr
-                    ? "Parcourez l'onglet Cars et enregistrez les véhicules à acheter."
-                    : "Browse the Cars tab and save vehicles you might want to buy."}
+                  ? pick("Browse the Rentals tab and tap the heart on listings you like.", "Parcourez l'onglet Locations et touchez le cœur sur les annonces qui vous intéressent.")
+                  : pick("Browse the Cars tab and save vehicles you might want to buy.", "Parcourez l'onglet Cars et enregistrez les véhicules à acheter.")}
               </Text>
             </View>
           }

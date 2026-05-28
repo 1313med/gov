@@ -133,7 +133,8 @@ const OCC_SEGMENTS = 36;
 const OCC_SIZE = 96;
 
 /** Radial tick ring — fills sequentially, no spinning halo */
-function OccupancyGauge({ percent, accent, isDark, fr }) {
+function OccupancyGauge({ percent, accent, isDark }) {
+  const { pick } = useAppLang();
   const p = Math.min(100, Math.max(0, percent));
   const litCount = Math.round((p / 100) * OCC_SEGMENTS);
   const segAnims = useRef(Array.from({ length: OCC_SEGMENTS }, () => new Animated.Value(0))).current;
@@ -215,7 +216,7 @@ function OccupancyGauge({ percent, accent, isDark, fr }) {
       <View style={[s.occCore, { backgroundColor: isDark ? "#0c1210" : "#f8fafc", borderColor: `${accent}35` }]}>
         <Text style={[s.occPercent, { color: isDark ? "#f8fafc" : "#0f172a" }]}>{Math.round(displayPct)}%</Text>
         <Text style={[s.occLabel, { color: isDark ? "#64748b" : "#94a3b8" }]}>
-          {fr ? "Occupation" : "Occupancy"}
+          {pick("Occupancy", "Occupation", "الإشغال")}
         </Text>
       </View>
     </Animated.View>
@@ -280,6 +281,17 @@ function MiniSparkline({ data, valueKey, color, isDark, height = 52 }) {
 }
 
 function StatusPipelineBar({ rows, isDark }) {
+  const { pick } = useAppLang();
+  const statusLabel = (name) => {
+    const map = {
+      Confirmed: pick("Confirmed", "Confirmées"),
+      Pending: pick("Pending", "En attente"),
+      Rejected: pick("Rejected", "Refusées"),
+      Cancelled: pick("Cancelled", "Annulées"),
+      Completed: pick("Completed", "Terminées"),
+    };
+    return map[name] || name;
+  };
   const positive = rows.filter((r) => r.value > 0);
   const total = positive.reduce((sum, r) => sum + r.value, 0);
   if (!total) {
@@ -302,7 +314,7 @@ function StatusPipelineBar({ rows, isDark }) {
             <View key={r.name} style={s.pipelineLegendItem}>
               <View style={[s.pipelineLegendDot, { backgroundColor: statusColor(r.name) }]} />
               <Text style={{ color: isDark ? "#94a3b8" : "#64748b", fontSize: 10, fontWeight: "700" }}>
-                {r.name}{" "}
+                {statusLabel(r.name)}{" "}
                 <Text style={{ color: isDark ? "#f1f5f9" : "#0f172a" }}>{r.value}</Text>
               </Text>
             </View>
@@ -401,7 +413,6 @@ function PremiumMetricCard({
 
 function MetricsElitePanel({
   stats,
-  fr,
   isDark,
   titleColor,
   glassBorder,
@@ -415,6 +426,7 @@ function MetricsElitePanel({
   formatMad,
   router,
 }) {
+  const { pick } = useAppLang();
   const netProfit = stats?.netProfit ?? 0;
   const collected = stats?.collectedRevenue ?? 0;
   const pendingRev = stats?.pendingRevenue ?? 0;
@@ -434,10 +446,10 @@ function MetricsElitePanel({
         <View style={s.metricsDeckHead}>
           <View>
             <Text style={[s.metricsDeckEyebrow, { color: accent }]}>
-              {fr ? "INTELLIGENCE FLOTTE" : "FLEET INTELLIGENCE"}
+              {pick("FLEET INTELLIGENCE", "INTELLIGENCE FLOTTE")}
             </Text>
             <Text style={[s.metricsDeckTitle, { color: titleColor }]}>
-              {fr ? "Performance & répartition" : "Performance & breakdown"}
+              {pick("Performance & breakdown", "Performance & répartition")}
             </Text>
           </View>
           <TouchableOpacity onPress={() => router.push("/owner-analytics")} style={[s.deckLink, { borderColor: `${accent}45` }]}>
@@ -446,14 +458,14 @@ function MetricsElitePanel({
         </View>
 
         <Text style={[s.deckChartLabel, { color: isDark ? "#64748b" : "#94a3b8" }]}>
-          {fr ? "Revenus mensuels" : "Monthly revenue"}
+          {pick("Monthly revenue", "Revenus mensuels")}
         </Text>
         <MiniSparkline data={monthly} valueKey="revenue" color={accent} isDark={isDark} height={56} />
 
         <View style={[s.deckDivider, { backgroundColor: glassBorder }]} />
 
         <Text style={[s.deckChartLabel, { color: isDark ? "#64748b" : "#94a3b8", marginBottom: 10 }]}>
-          {fr ? "Statuts des réservations" : "Booking status mix"}
+          {pick("Booking status mix", "Statuts des réservations")}
         </Text>
         <StatusPipelineBar rows={statusRows} isDark={isDark} />
       </LinearGradient>
@@ -468,17 +480,13 @@ function MetricsElitePanel({
           wide
           anim={kpiAnims[0]}
           icon="wallet"
-          kicker={fr ? "RÉSULTAT" : "BOTTOM LINE"}
-          label={fr ? "Profit net (30 j.)" : "Net profit (30d)"}
+          kicker={pick("BOTTOM LINE", "RÉSULTAT")}
+          label={pick("Net profit (30d)", "Profit net (30 j.)")}
           value={formatMad(netProfit)}
           sub={
             netProfit >= 0
-              ? fr
-                ? "Après coûts d'entretien"
-                : "After maintenance costs"
-              : fr
-                ? "Entretien > revenus sur la période"
-                : "Maintenance exceeded revenue"
+              ? pick("After maintenance costs", "Après coûts d'entretien")
+              : pick("Maintenance exceeded revenue", "Entretien > revenus sur la période")
           }
           colors={netProfit >= 0 ? ["#34d399", "#10b981"] : ["#f87171", "#ef4444"]}
           isDark={isDark}
@@ -489,10 +497,10 @@ function MetricsElitePanel({
         <PremiumMetricCard
           anim={kpiAnims[1]}
           icon="checkmark-circle"
-          kicker={fr ? "ENCAISSÉ" : "COLLECTED"}
-          label={fr ? "Revenus encaissés" : "Collected revenue"}
+          kicker={pick("COLLECTED", "ENCAISSÉ")}
+          label={pick("Collected revenue", "Revenus encaissés")}
           value={formatMad(collected)}
-          sub={fr ? "Réservations payées" : "Paid bookings"}
+          sub={pick("Paid bookings", "Réservations payées")}
           colors={["#38bdf8", "#0ea5e9"]}
           isDark={isDark}
           titleColor={titleColor}
@@ -501,10 +509,10 @@ function MetricsElitePanel({
         <PremiumMetricCard
           anim={kpiAnims[2]}
           icon="hourglass"
-          kicker={fr ? "PIPELINE" : "PIPELINE"}
-          label={fr ? "Revenus en attente" : "Pending revenue"}
+          kicker={pick("PIPELINE", "PIPELINE")}
+          label={pick("Pending revenue", "Revenus en attente")}
           value={formatMad(pendingRev)}
-          sub={fr ? "Confirmées, non payées" : "Confirmed, unpaid"}
+          sub={pick("Confirmed, unpaid", "Confirmées, non payées")}
           colors={[violet, "#5b4ddb"]}
           isDark={isDark}
           titleColor={titleColor}
@@ -513,10 +521,10 @@ function MetricsElitePanel({
         <PremiumMetricCard
           anim={kpiAnims[3]}
           icon="calendar"
-          kicker={fr ? "VOLUME" : "VOLUME"}
-          label={fr ? "Réservations totales" : "Total bookings"}
+          kicker={pick("VOLUME", "VOLUME")}
+          label={pick("Total bookings", "Réservations totales")}
           value={String(bookings)}
-          sub={fr ? "Tous statuts confondus" : "All statuses combined"}
+          sub={pick("All statuses combined", "Tous statuts confondus")}
           colors={[violet, "#7c6bff"]}
           isDark={isDark}
           titleColor={titleColor}
@@ -526,10 +534,10 @@ function MetricsElitePanel({
         <PremiumMetricCard
           anim={kpiAnims[4]}
           icon="car-sport"
-          kicker={fr ? "ACTIF" : "LIVE"}
-          label={fr ? "Confirmées" : "Confirmed"}
+          kicker={pick("LIVE", "ACTIF")}
+          label={pick("Confirmed", "Confirmées")}
           value={String(confirmed)}
-          sub={fr ? "En cours ou à venir" : "Active or upcoming"}
+          sub={pick("Active or upcoming", "En cours ou à venir")}
           colors={[cyan, "#0284c7"]}
           isDark={isDark}
           titleColor={titleColor}
@@ -538,17 +546,13 @@ function MetricsElitePanel({
         <PremiumMetricCard
           anim={kpiAnims[5]}
           icon="flash"
-          kicker={listingViewAttentionCount > 0 ? (fr ? "SIGNAL" : "SIGNAL") : undefined}
-          label={fr ? "Vues & demandes" : "Views & requests"}
+          kicker={listingViewAttentionCount > 0 ? (pick("SIGNAL", "SIGNAL")) : undefined}
+          label={pick("Views & requests", "Vues & demandes")}
           value={listingViewAttentionCount > 0 ? `+${listingViewAttentionCount}` : String(pendingCount)}
           sub={
             listingViewAttentionCount > 0
-              ? fr
-                ? "Nouvelles vues sur vos annonces"
-                : "New listing views"
-              : fr
-                ? `${pendingCount} en attente d'approbation`
-                : `${pendingCount} awaiting approval`
+              ? pick("New listing views", "Nouvelles vues sur vos annonces")
+              : pick(`${pendingCount} awaiting approval`, `${pendingCount} en attente d'approbation`)
           }
           colors={[gold, "#f59e0b"]}
           isDark={isDark}
@@ -565,7 +569,8 @@ function MetricsElitePanel({
   );
 }
 
-function PipelineCard({ booking, onPress, anim, accent, isDark, C, fr }) {
+function PipelineCard({ booking, onPress, anim, accent, isDark, C }) {
+  const { numberLocale, dateLocale } = useAppLang();
   const title =
     booking.rentalId?.title ||
     `${booking.rentalId?.brand || ""} ${booking.rentalId?.model || ""}`.trim() ||
@@ -589,13 +594,13 @@ function PipelineCard({ booking, onPress, anim, accent, isDark, C, fr }) {
               </Text>
             </View>
             <Text style={{ color: C.muted, fontSize: 12, fontWeight: "600", marginTop: 4 }}>
-              {new Date(booking.startDate).toLocaleDateString(fr ? "fr-FR" : "en-GB")} →{" "}
-              {new Date(booking.endDate).toLocaleDateString(fr ? "fr-FR" : "en-GB")}
+              {new Date(booking.startDate).toLocaleDateString(dateLocale)} →{" "}
+              {new Date(booking.endDate).toLocaleDateString(dateLocale)}
             </Text>
           </View>
           <View style={s.pipelineEnd}>
             <Text style={[s.pipelineAmount, { color: accent }]}>
-              {Number(booking.totalAmount).toLocaleString(fr ? "fr-FR" : "en-US")}
+              {Number(booking.totalAmount).toLocaleString(numberLocale)}
             </Text>
             <Text style={{ color: C.muted, fontSize: 10, fontWeight: "700" }}>MAD</Text>
             <Ionicons name="arrow-forward-circle" size={22} color={accent} style={{ marginTop: 6 }} />
@@ -626,8 +631,7 @@ function DashboardSkeleton({ isDark, accent }) {
 
 export default function RentalOwnerDashboard() {
   const { auth } = useAuth();
-  const { lang } = useAppLang();
-  const fr = lang === "fr";
+  const { lang, pick, numberLocale, dateLocale } = useAppLang();
   const { colors: C, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -741,7 +745,7 @@ export default function RentalOwnerDashboard() {
   });
 
   const formatMad = (n) =>
-    `${Math.round(n).toLocaleString(fr ? "fr-FR" : "en-US")} MAD`;
+    `${Math.round(n).toLocaleString(numberLocale)} MAD`;
 
   if (loading && !stats) return <PageLoader />;
 
@@ -771,7 +775,7 @@ export default function RentalOwnerDashboard() {
                       Goo<Text style={{ color: accent, fontStyle: "italic" }}>voiture</Text>
                     </Text>
                     <Text style={[s.brandTag, { color: subColor }]}>
-                      {fr ? "Suite propriétaire loueur" : "Rental owner suite"}
+                      {pick("Rental owner suite", "Suite propriétaire loueur")}
                     </Text>
                   </View>
                 </View>
@@ -797,26 +801,24 @@ export default function RentalOwnerDashboard() {
                 <Animated.View style={[s.liveDotWrap, { transform: [{ scale: livePulse }] }]}>
                   <View style={[s.liveDot, { backgroundColor: accent }]} />
                 </Animated.View>
-                <Text style={[s.liveText, { color: accent }]}>{fr ? "Flotte en direct" : "Fleet live"}</Text>
+                <Text style={[s.liveText, { color: accent }]}>{pick("Fleet live", "Flotte en direct")}</Text>
                 <View style={[s.liveDivider, { backgroundColor: glassBorder }]} />
-                <Text style={[s.liveSub, { color: subColor }]}>{fr ? "30 derniers jours" : "Last 30 days"}</Text>
+                <Text style={[s.liveSub, { color: subColor }]}>{pick("Last 30 days", "30 derniers jours")}</Text>
               </View>
 
               <Text style={[s.heroGreeting, { color: titleColor }]}>
-                {fr ? "Bonjour" : "Welcome back"}
+                {pick("Welcome back", "Bonjour")}
                 {firstName ? `, ${firstName}` : ""}
               </Text>
               <Text style={[s.heroPitch, { color: subColor }]}>
-                {fr
-                  ? "Pilotez revenus, réservations et visibilité depuis un seul cockpit premium."
-                  : "Command revenue, bookings, and visibility from one premium cockpit."}
+                {pick("Command revenue, bookings, and visibility from one premium cockpit.", "Pilotez revenus, réservations et visibilité depuis un seul cockpit premium.")}
               </Text>
 
               {!loading && canViewAnalytics && (
                 <LinearGradient colors={glassGrad} style={[s.revenueGlass, { borderColor: glassBorder }]}>
                   <View style={s.revenueRow}>
                     <View style={{ flex: 1 }}>
-                      <Text style={[s.revenueEyebrow, { color: accent }]}>{fr ? "REVENUS" : "REVENUE"}</Text>
+                      <Text style={[s.revenueEyebrow, { color: accent }]}>{pick("REVENUE", "REVENUS")}</Text>
                       <AnimatedNumber value={revenue30d} formatter={formatMad} textColor={titleColor} />
                       <ShimmerBar isDark={isDark} />
                       <View style={s.revenueMeta}>
@@ -827,11 +829,11 @@ export default function RentalOwnerDashboard() {
                         />
                         <Text style={{ color: subColor, fontSize: 12, fontWeight: "600", marginLeft: 6 }}>
                           {revenueGrowth >= 0 ? "+" : ""}
-                          {revenueGrowth}% {fr ? "vs période préc." : "vs prior period"}
+                          {revenueGrowth}% {pick("vs prior period", "vs période préc.")}
                         </Text>
                       </View>
                     </View>
-                    <OccupancyGauge percent={occupancy} accent={accent} isDark={isDark} fr={fr} />
+                    <OccupancyGauge percent={occupancy} accent={accent} isDark={isDark} />
                   </View>
                   <TouchableOpacity
                     onPress={() => router.push("/owner-analytics")}
@@ -840,7 +842,7 @@ export default function RentalOwnerDashboard() {
                   >
                     <LinearGradient colors={ctaGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.analyticsCtaInner}>
                       <Ionicons name="analytics" size={18} color="#fff" />
-                      <Text style={s.analyticsCtaText}>{fr ? "Ouvrir les analytiques" : "Open analytics"}</Text>
+                      <Text style={s.analyticsCtaText}>{pick("Open analytics", "Ouvrir les analytiques")}</Text>
                       <Ionicons name="arrow-forward" size={16} color="rgba(255,255,255,0.9)" />
                     </LinearGradient>
                   </TouchableOpacity>
@@ -853,13 +855,12 @@ export default function RentalOwnerDashboard() {
         <Animated.View style={{ opacity: contentFade, paddingHorizontal: 20, paddingTop: 4 }}>
             {canViewAnalytics && (
               <>
-                <Text style={[s.sectionEyebrow, { color: accent }]}>{fr ? "Indicateurs" : "Metrics"}</Text>
+                <Text style={[s.sectionEyebrow, { color: accent }]}>{pick("Metrics", "Indicateurs")}</Text>
                 <Text style={[s.sectionTitle, { color: titleColor, marginBottom: 12 }]}>
-                  {fr ? "Vue d'ensemble" : "At a glance"}
+                  {pick("At a glance", "Vue d'ensemble")}
                 </Text>
                 <MetricsElitePanel
                   stats={stats}
-                  fr={fr}
                   isDark={isDark}
                   titleColor={titleColor}
                   glassBorder={glassBorder}
@@ -880,14 +881,14 @@ export default function RentalOwnerDashboard() {
             <View style={s.sectionHead}>
               <View>
                 <Text style={[s.sectionEyebrow, { color: gold, marginBottom: 4 }]}>
-                  {fr ? "Pipeline" : "Pipeline"}
+                  {pick("Pipeline", "Pipeline")}
                 </Text>
                 <Text style={[s.sectionTitle, { color: titleColor, marginBottom: 0 }]}>
-                  {fr ? "Demandes à valider" : "Awaiting approval"}
+                  {pick("Awaiting approval", "Demandes à valider")}
                 </Text>
               </View>
               <TouchableOpacity onPress={() => router.push("/owner-bookings")} style={[s.seeAllBtn, { borderColor: glassBorder }]}>
-                <Text style={{ color: accent, fontSize: 12, fontWeight: "800" }}>{fr ? "Tout voir" : "See all"}</Text>
+                <Text style={{ color: accent, fontSize: 12, fontWeight: "800" }}>{pick("See all", "Tout voir")}</Text>
               </TouchableOpacity>
             </View>
 
@@ -900,10 +901,10 @@ export default function RentalOwnerDashboard() {
                   <Ionicons name="checkmark-done" size={28} color="#fff" />
                 </LinearGradient>
                 <Text style={[s.emptyTitle, { color: titleColor }]}>
-                  {fr ? "Pipeline à jour" : "Pipeline clear"}
+                  {pick("Pipeline clear", "Pipeline à jour")}
                 </Text>
                 <Text style={{ color: subColor, fontSize: 13, textAlign: "center", lineHeight: 20, marginTop: 6 }}>
-                  {fr ? "Aucune réservation en attente — votre flotte tourne à plein régime." : "No pending bookings — your fleet is running smoothly."}
+                  {pick("No pending bookings — your fleet is running smoothly.", "Aucune réservation en attente — votre flotte tourne à plein régime.")}
                 </Text>
               </LinearGradient>
             ) : (
@@ -915,7 +916,6 @@ export default function RentalOwnerDashboard() {
                   accent={accent}
                   isDark={isDark}
                   C={C}
-                  fr={fr}
                   onPress={() =>
                     router.push({
                       pathname: "/(rental-owner)/bookings",
@@ -926,12 +926,10 @@ export default function RentalOwnerDashboard() {
               ))
             )}
 
-            <Text style={[s.sectionEyebrow, { color: violet, marginTop: 28 }]}>{fr ? "Outils" : "Toolbox"}</Text>
-            <Text style={[s.sectionTitle, { color: titleColor }]}>{fr ? "Boîte à outils" : "Fleet toolbox"}</Text>
+            <Text style={[s.sectionEyebrow, { color: violet, marginTop: 28 }]}>{pick("Toolbox", "Outils")}</Text>
+            <Text style={[s.sectionTitle, { color: titleColor }]}>{pick("Fleet toolbox", "Boîte à outils")}</Text>
             <Text style={{ color: subColor, fontSize: 13, marginBottom: 14, lineHeight: 20 }}>
-              {fr
-                ? "Calendrier, visibilité, entretien et nouvelles annonces — en un geste."
-                : "Calendar, visibility, maintenance, and new listings — one tap away."}
+              {pick("Calendar, visibility, maintenance, and new listings — one tap away.", "Calendrier, visibilité, entretien et nouvelles annonces — en un geste.")}
             </Text>
 
             <View style={s.quickStack}>
@@ -941,10 +939,10 @@ export default function RentalOwnerDashboard() {
                   node: (
                     <QuickActionCard
                       featured
-                      featuredKicker={fr ? "PLANNING" : "SCHEDULE"}
-                      featuredSubtitle={fr ? "Disponibilités & réservations" : "Availability & bookings"}
+                      featuredKicker={pick("SCHEDULE", "PLANNING")}
+                      featuredSubtitle={pick("Availability & bookings", "Disponibilités & réservations")}
                       icon="calendar-outline"
-                      label={fr ? "Calendrier" : "Calendar"}
+                      label={pick("Calendar", "Calendrier")}
                       onPress={() => router.push("/owner-booking-calendar")}
                       C={C}
                       isDark={isDark}
@@ -958,10 +956,10 @@ export default function RentalOwnerDashboard() {
                   node: (
                     <QuickActionCard
                       elevated
-                      elevatedKicker={fr ? "SIGNAL" : "SIGNAL"}
-                      elevatedSubtitle={fr ? "Intérêt sur vos annonces" : "Interest on your listings"}
+                      elevatedKicker={pick("SIGNAL", "SIGNAL")}
+                      elevatedSubtitle={pick("Interest on your listings", "Intérêt sur vos annonces")}
                       icon="pulse-outline"
-                      label={fr ? "Vues des annonces" : "Listing views"}
+                      label={pick("Listing views", "Vues des annonces")}
                       onPress={() => router.push("/owner-listing-views")}
                       C={C}
                       isDark={isDark}
@@ -976,7 +974,7 @@ export default function RentalOwnerDashboard() {
                   node: (
                     <QuickActionCard
                       icon="construct-outline"
-                      label={fr ? "Maintenance" : "Maintenance"}
+                      label={pick("Maintenance", "Maintenance")}
                       onPress={() => router.push("/maintenance")}
                       C={C}
                       isDark={isDark}
@@ -989,7 +987,7 @@ export default function RentalOwnerDashboard() {
                   node: (
                     <QuickActionCard
                       icon="add-circle-outline"
-                      label={fr ? "Ajouter location" : "Add rental"}
+                      label={pick("Add rental", "Ajouter location")}
                       onPress={() => router.push("/add-rental")}
                       C={C}
                       isDark={isDark}
@@ -1017,7 +1015,7 @@ export default function RentalOwnerDashboard() {
             >
               <Ionicons name="sparkles" size={20} color={violet} />
               <Text style={[s.footerText, { color: titleColor }]}>
-                {fr ? "Flotte premium — vous êtes aux commandes." : "Premium fleet — you're in command."}
+                {pick("Premium fleet — you're in command.", "Flotte premium — vous êtes aux commandes.")}
               </Text>
             </LinearGradient>
           </Animated.View>

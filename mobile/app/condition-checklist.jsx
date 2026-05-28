@@ -40,7 +40,7 @@ export default function ConditionChecklistScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors: C, isDark } = useTheme();
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const fr = lang === "fr";
   const CHECKPOINTS = fr ? CHECKPOINTS_FR : CHECKPOINTS_EN;
 
@@ -61,7 +61,7 @@ export default function ConditionChecklistScreen() {
       ? await ImagePicker.requestCameraPermissionsAsync()
       : await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert(fr ? "Permission requise" : "Permission required", fr ? "Accès caméra/galerie requis." : "Camera/gallery access is required.");
+      Alert.alert(pick("Permission required", "Permission requise"), pick("Camera/gallery access is required.", "Accès caméra/galerie requis."));
       return;
     }
     const r = fromCamera
@@ -73,7 +73,7 @@ export default function ConditionChecklistScreen() {
       const urls = await uploadListingImages(files);
       setPhotos((prev) => ({ ...prev, [current.id]: [...(prev[current.id] || []), ...urls] }));
     } catch {
-      Alert.alert("Error", fr ? "Échec de l'envoi." : "Upload failed.");
+      Alert.alert("Error", pick("Upload failed.", "Échec de l'envoi."));
     }
   };
 
@@ -93,12 +93,12 @@ export default function ConditionChecklistScreen() {
       else after = [...after, ...allPhotos];
       await updateBookingMedia(bookingId, { conditionPhotos: { before, after } });
       Alert.alert(
-        fr ? "Enregistré" : "Saved",
-        fr ? "Photos de condition enregistrées." : "Condition photos saved.",
+        pick("Saved", "Enregistré"),
+        pick("Condition photos saved.", "Photos de condition enregistrées."),
         [{ text: "OK", onPress: () => router.back() }]
       );
     } catch (e) {
-      Alert.alert("Error", e?.response?.data?.message || (fr ? "Échec." : "Failed."));
+      Alert.alert("Error", e?.response?.data?.message || (pick("Failed.", "Échec.")));
     } finally {
       setSaving(false);
     }
@@ -117,11 +117,11 @@ export default function ConditionChecklistScreen() {
             {fr ? (phase === "before" ? "Checklist départ" : "Checklist retour") : (phase === "before" ? "Pre-rental checklist" : "Post-rental checklist")}
           </Text>
           <Text style={s.headerSub}>
-            {doneCount}/{CHECKPOINTS.length} {fr ? "complétés" : "completed"}
+            {doneCount}/{CHECKPOINTS.length} {pick("completed", "complétés")}
           </Text>
         </View>
         <TouchableOpacity onPress={save} disabled={saving} style={s.saveBtn} activeOpacity={0.85}>
-          {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={s.saveBtnTxt}>{fr ? "Enreg." : "Save"}</Text>}
+          {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={s.saveBtnTxt}>{pick("Save", "Enreg.")}</Text>}
         </TouchableOpacity>
       </View>
 
@@ -151,9 +151,7 @@ export default function ConditionChecklistScreen() {
           <Text style={s.stepTitle}>{current.label}</Text>
         </View>
         <Text style={s.stepHint}>
-          {fr
-            ? `Photographiez : ${current.label.toLowerCase()}. Appuyez sur un bouton ci-dessous pour ajouter une photo.`
-            : `Photograph: ${current.label.toLowerCase()}. Tap a button below to add a photo.`}
+          {pick(`Photograph: ${current.label.toLowerCase()}. Tap a button below to add a photo.`, `Photographiez : ${current.label.toLowerCase()}. Appuyez sur un bouton ci-dessous pour ajouter une photo.`)}
         </Text>
 
         {/* Photo grid */}
@@ -172,11 +170,11 @@ export default function ConditionChecklistScreen() {
         <View style={s.actions}>
           <TouchableOpacity onPress={() => pickPhoto(true)} style={s.actionBtn} activeOpacity={0.85}>
             <Ionicons name="camera-outline" size={20} color={C.primary} />
-            <Text style={s.actionTxt}>{fr ? "Prendre une photo" : "Take photo"}</Text>
+            <Text style={s.actionTxt}>{pick("Take photo", "Prendre une photo")}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => pickPhoto(false)} style={s.actionBtn} activeOpacity={0.85}>
             <Ionicons name="images-outline" size={20} color={C.primary} />
-            <Text style={s.actionTxt}>{fr ? "Choisir depuis galerie" : "Choose from gallery"}</Text>
+            <Text style={s.actionTxt}>{pick("Choose from gallery", "Choisir depuis galerie")}</Text>
           </TouchableOpacity>
         </View>
 
@@ -185,7 +183,7 @@ export default function ConditionChecklistScreen() {
           {step > 0 ? (
             <TouchableOpacity onPress={() => setStep((p) => p - 1)} style={s.navBtn} activeOpacity={0.85}>
               <Ionicons name="arrow-back" size={18} color={C.white} />
-              <Text style={s.navTxt}>{fr ? "Précédent" : "Previous"}</Text>
+              <Text style={s.navTxt}>{pick("Previous", "Précédent")}</Text>
             </TouchableOpacity>
           ) : <View style={{ flex: 1 }} />}
           {isLast ? (
@@ -193,13 +191,13 @@ export default function ConditionChecklistScreen() {
               {saving ? <ActivityIndicator color="#fff" size="small" /> : (
                 <>
                   <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
-                  <Text style={s.navTxtPrimary}>{fr ? "Terminer & enregistrer" : "Finish & save"}</Text>
+                  <Text style={s.navTxtPrimary}>{pick("Finish & save", "Terminer & enregistrer")}</Text>
                 </>
               )}
             </TouchableOpacity>
           ) : (
             <TouchableOpacity onPress={() => setStep((p) => p + 1)} style={s.navBtnPrimary} activeOpacity={0.85}>
-              <Text style={s.navTxtPrimary}>{fr ? "Suivant" : "Next"}</Text>
+              <Text style={s.navTxtPrimary}>{pick("Next", "Suivant")}</Text>
               <Ionicons name="arrow-forward" size={18} color="#fff" />
             </TouchableOpacity>
           )}

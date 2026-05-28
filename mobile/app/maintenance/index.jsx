@@ -61,13 +61,12 @@ function carHasDueSoon(carRecords) {
 
 export default function MaintenanceScreen() {
   const { auth } = useAuth();
-  const { lang, copy } = useAppLang();
+  const { lang, copy, pick, numberLocale } = useAppLang();
   const t = copy.maintenance;
   const { colors: C, isDark } = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const fr = lang === "fr";
-  const numLocale = fr ? "fr-FR" : "en-US";
   const s = useMemo(() => createStyles(C, isDark), [C, isDark]);
 
   const titleColor = isDark ? "#f8fafc" : "#0f172a";
@@ -184,12 +183,12 @@ export default function MaintenanceScreen() {
 
   const handleSave = async () => {
     if (!form.rentalId || !form.date || form.cost === "" || form.cost === undefined) {
-      Alert.alert("Error", fr ? "Date et coût requis." : "Date and cost are required.");
+      Alert.alert("Error", pick("Date and cost are required.", "Date et coût requis."));
       return;
     }
     const costNum = Number(form.cost);
     if (Number.isNaN(costNum) || costNum < 0) {
-      Alert.alert("Error", fr ? "Coût invalide." : "Invalid cost.");
+      Alert.alert("Error", pick("Invalid cost.", "Coût invalide."));
       return;
     }
     setSaving(true);
@@ -241,7 +240,7 @@ export default function MaintenanceScreen() {
   const statPills = [
     [cars.length, t.summary.cars, C.primary],
     [records.length, t.summary.records, C.accent],
-    [Number(totalCost).toLocaleString(numLocale), t.summary.total, C.primary],
+    [Number(totalCost).toLocaleString(numberLocale), t.summary.total, C.primary],
     [dueSoonCount, t.summary.dueSoon, dueSoonCount > 0 ? "#f59e0b" : subColor],
   ];
 
@@ -280,7 +279,7 @@ export default function MaintenanceScreen() {
           <TextInput
             value={fleetSearch}
             onChangeText={setFleetSearch}
-            placeholder={fr ? "Rechercher véhicule, ville…" : "Search vehicle, city…"}
+            placeholder={pick("Search vehicle, city…", "Rechercher véhicule, ville…")}
             placeholderTextColor={C.label}
             style={[s.searchInput, { color: titleColor }]}
           />
@@ -290,7 +289,7 @@ export default function MaintenanceScreen() {
             </TouchableOpacity>
           )}
         </View>
-        <Text style={[s.filterLabel, { color: subColor }]}>{fr ? "Filtrer le parc" : "Filter fleet"}</Text>
+        <Text style={[s.filterLabel, { color: subColor }]}>{pick("Filter fleet", "Filtrer le parc")}</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipsRow}>
           {FLEET_FILTERS.map((key) => {
             const on = fleetFilter === key;
@@ -313,7 +312,7 @@ export default function MaintenanceScreen() {
         {filterActive && (
           <TouchableOpacity onPress={() => { setFleetFilter("all"); setFleetSearch(""); }} style={s.clearFilters}>
             <Text style={[s.clearFiltersText, { color: C.primary }]}>
-              {fr ? "Réinitialiser filtres" : "Clear filters"}
+              {pick("Clear filters", "Réinitialiser filtres")}
             </Text>
           </TouchableOpacity>
         )}
@@ -343,7 +342,7 @@ export default function MaintenanceScreen() {
                   <Text style={[s.emptyFleetText, { color: subColor }]}>{t.emptyFleet}</Text>
                   <TouchableOpacity onPress={() => router.push("/add-rental")} activeOpacity={0.9}>
                     <LinearGradient colors={ctaGrad} style={s.emptyFleetBtn}>
-                      <Text style={s.emptyFleetBtnText}>{fr ? "Ajouter une location" : "Add rental"}</Text>
+                      <Text style={s.emptyFleetBtnText}>{pick("Add rental", "Ajouter une location")}</Text>
                       <Ionicons name="arrow-forward" size={18} color="#fff" />
                     </LinearGradient>
                   </TouchableOpacity>
@@ -353,9 +352,9 @@ export default function MaintenanceScreen() {
             {cars.length > 0 && filteredCars.length === 0 && (
               <View style={s.noMatch}>
                 <Ionicons name="funnel-outline" size={36} color={C.muted} />
-                <Text style={[s.noMatchTitle, { color: titleColor }]}>{fr ? "Aucun résultat" : "No matches"}</Text>
+                <Text style={[s.noMatchTitle, { color: titleColor }]}>{pick("No matches", "Aucun résultat")}</Text>
                 <Text style={[s.noMatchSub, { color: subColor }]}>
-                  {fr ? "Ajustez la recherche ou les filtres." : "Try a different search or filter."}
+                  {pick("Try a different search or filter.", "Ajustez la recherche ou les filtres.")}
                 </Text>
               </View>
             )}
@@ -392,7 +391,7 @@ export default function MaintenanceScreen() {
                     {due && (
                       <View style={s.dueBadge}>
                         <Ionicons name="alert-circle" size={12} color="#f59e0b" />
-                        <Text style={s.dueBadgeText}>{fr ? "7j" : "7d"}</Text>
+                        <Text style={s.dueBadgeText}>{pick("7d", "7j")}</Text>
                       </View>
                     )}
                   </View>
@@ -408,7 +407,7 @@ export default function MaintenanceScreen() {
                     {carRecords.length > 0 && (
                       <View style={[s.miniPill, { backgroundColor: isDark ? "rgba(124,107,255,0.15)" : "rgba(98,72,232,0.1)" }]}>
                         <Text style={[s.miniPillText, { color: C.primary }]}>
-                          {Number(carCost).toLocaleString(numLocale)} {t.mad}
+                          {Number(carCost).toLocaleString(numberLocale)} {t.mad}
                         </Text>
                       </View>
                     )}
@@ -558,7 +557,7 @@ export default function MaintenanceScreen() {
                   </LinearGradient>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={closeModal} style={s.cancelBtn}>
-                  <Text style={[s.cancelBtnText, { color: subColor }]}>{fr ? "Annuler" : "Cancel"}</Text>
+                  <Text style={[s.cancelBtnText, { color: subColor }]}>{pick("Cancel", "Annuler")}</Text>
                 </TouchableOpacity>
               </ScrollView>
             </View>

@@ -14,14 +14,17 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { tierColor, trackStatusLabel, formatTrackDate } from "../../utils/garageStatus";
+import { useAppLang } from "../../context/AppLangContext";
+import { dateLocaleTag, formatNumber } from "../../utils/i18n";
 
 const TABS = [
-  { id: "today", fr: "À faire", en: "To do", icon: "today-outline" },
-  { id: "car", fr: "Ma voiture", en: "My car", icon: "car-outline" },
-  { id: "more", fr: "Plus", en: "More", icon: "grid-outline" },
+  { id: "today", fr: "À faire", en: "To do", ar: "المهام", icon: "today-outline" },
+  { id: "car", fr: "Ma voiture", en: "My car", ar: "سيارتي", icon: "car-outline" },
+  { id: "more", fr: "Plus", en: "More", ar: "المزيد", icon: "grid-outline" },
 ];
 
-export function GarageTabBar({ active, fr, accent, isDark, onChange }) {
+export function GarageTabBar({ active, accent, isDark, onChange }) {
+  const { pick } = useAppLang();
   return (
     <View style={[ui.tabBar, { backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(15,23,42,0.05)" }]}>
       {TABS.map((tab) => {
@@ -35,7 +38,7 @@ export function GarageTabBar({ active, fr, accent, isDark, onChange }) {
           >
             <Ionicons name={tab.icon} size={18} color={on ? accent : isDark ? "#64748b" : "#94a3b8"} />
             <Text style={[ui.tabLabel, { color: on ? accent : isDark ? "#94a3b8" : "#64748b", fontWeight: on ? "800" : "600" }]}>
-              {fr ? tab.fr : tab.en}
+              {pick(tab.en, tab.fr, tab.ar)}
             </Text>
           </TouchableOpacity>
         );
@@ -45,7 +48,8 @@ export function GarageTabBar({ active, fr, accent, isDark, onChange }) {
 }
 
 /** Plain-language status for everyone */
-export function GarageStatusCard({ alertCount, nextDue, fr, isDark, onFix }) {
+export function GarageStatusCard({ alertCount, nextDue, isDark, onFix }) {
+  const { pick } = useAppLang();
   const urgent = alertCount > 0;
   return (
     <View
@@ -63,26 +67,30 @@ export function GarageStatusCard({ alertCount, nextDue, fr, isDark, onFix }) {
       <View style={{ flex: 1, marginLeft: 12 }}>
         <Text style={[ui.statusTitle, { color: isDark ? "#f1f5f9" : "#0f172a" }]}>
           {urgent
-            ? fr
-              ? `${alertCount} chose${alertCount > 1 ? "s" : ""} à renouveler`
-              : `${alertCount} thing${alertCount > 1 ? "s" : ""} to renew`
-            : fr
-              ? "Tout va bien pour l'instant"
-              : "You're all good for now"}
+            ? pick(
+                `${alertCount} thing${alertCount > 1 ? "s" : ""} to renew`,
+                `${alertCount} chose${alertCount > 1 ? "s" : ""} à renouveler`,
+                `${alertCount} عنصر${alertCount > 1 ? "" : ""} للتجديد`
+              )
+            : pick("You're all good for now", "Tout va bien pour l'instant", "كل شيء على ما يرام حالياً")}
         </Text>
         <Text style={[ui.statusSub, { color: isDark ? "#94a3b8" : "#64748b" }]}>
           {urgent && nextDue
-            ? fr
-              ? `En premier : ${nextDue.label} (${nextDue.status})`
-              : `First up: ${nextDue.label} (${nextDue.status})`
-            : fr
-              ? "On vous préviendra avant chaque échéance."
-              : "We'll remind you before each deadline."}
+            ? pick(
+                `First up: ${nextDue.label} (${nextDue.status})`,
+                `En premier : ${nextDue.label} (${nextDue.status})`,
+                `أولاً: ${nextDue.label} (${nextDue.status})`
+              )
+            : pick(
+                "We'll remind you before each deadline.",
+                "On vous préviendra avant chaque échéance.",
+                "سنذكّرك قبل كل موعد."
+              )}
         </Text>
       </View>
       {urgent ? (
         <TouchableOpacity onPress={onFix} style={[ui.statusBtn, { backgroundColor: "#ef4444" }]}>
-          <Text style={ui.statusBtnText}>{fr ? "Voir" : "View"}</Text>
+          <Text style={ui.statusBtnText}>{pick("View", "Voir", "عرض")}</Text>
         </TouchableOpacity>
       ) : null}
     </View>
@@ -90,13 +98,14 @@ export function GarageStatusCard({ alertCount, nextDue, fr, isDark, onFix }) {
 }
 
 /** Simple flat to-do list (no timeline rails) */
-export function GarageTodoList({ events, fr, isDark, onPress }) {
+export function GarageTodoList({ events, isDark, onPress }) {
+  const { pick } = useAppLang();
   if (!events?.length) {
     return (
       <View style={[ui.emptyBox, { borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.08)" }]}>
         <Ionicons name="happy-outline" size={32} color="#22c55e" />
         <Text style={[ui.emptyText, { color: isDark ? "#94a3b8" : "#64748b" }]}>
-          {fr ? "Rien d'urgent ce mois-ci." : "Nothing urgent this month."}
+          {pick("Nothing urgent this month.", "Rien d'urgent ce mois-ci.", "لا شيء عاجل هذا الشهر.")}
         </Text>
       </View>
     );
@@ -125,7 +134,9 @@ export function GarageTodoList({ events, fr, isDark, onPress }) {
               <Text style={[ui.todoSub, { color: isDark ? "#64748b" : "#94a3b8" }]}>{ev.subtitle}</Text>
             </View>
             <Text style={[ui.todoWhen, { color }]}>
-              {ev.daysUntil <= 0 ? (fr ? "Maintenant" : "Now") : fr ? `Dans ${ev.daysUntil} j` : `In ${ev.daysUntil}d`}
+              {ev.daysUntil <= 0
+                ? pick("Now", "Maintenant", "الآن")
+                : pick(`In ${ev.daysUntil}d`, `Dans ${ev.daysUntil} j`, `خلال ${ev.daysUntil} ي`)}
             </Text>
             <Ionicons name="chevron-forward" size={18} color={isDark ? "#475569" : "#cbd5e1"} />
           </TouchableOpacity>
@@ -135,21 +146,23 @@ export function GarageTodoList({ events, fr, isDark, onPress }) {
   );
 }
 
-export function GarageSimpleRow({ item, fr, isDark, onPress }) {
+export function GarageSimpleRow({ item, lang, pick, isDark, onPress }) {
   const color = tierColor(item.tier, { green: "#22c55e", muted: "#94a3b8" });
-  const status = trackStatusLabel(item.value, item.type, fr);
+  const status = trackStatusLabel(item.value, item.type, lang);
   const sub =
     item.type === "km"
-      ? fr
-        ? `Prochaine vidange vers ${Number(item.expiry || 0).toLocaleString()} km`
-        : `Next oil change around ${Number(item.expiry || 0).toLocaleString()} km`
+      ? pick(
+          `Next oil change around ${formatNumber(item.expiry || 0, lang)} km`,
+          `Prochaine vidange vers ${formatNumber(item.expiry || 0, lang)} km`,
+          `تغيير الزيت التالي عند ${formatNumber(item.expiry || 0, lang)} كم`
+        )
       : item.expiry
-        ? fr
-          ? `Expire le ${formatTrackDate(item.expiry, fr)}`
-          : `Expires ${formatTrackDate(item.expiry, fr)}`
-        : fr
-          ? "Date non renseignée — appuyez pour ajouter"
-          : "No date yet — tap to add";
+        ? pick(
+            `Expires ${formatTrackDate(item.expiry, lang)}`,
+            `Expire le ${formatTrackDate(item.expiry, lang)}`,
+            `ينتهي ${formatTrackDate(item.expiry, lang)}`
+          )
+        : pick("No date yet — tap to add", "Date non renseignée — appuyez pour ajouter", "لا يوجد تاريخ — اضغط للإضافة");
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.85} style={[ui.simpleRow, { borderBottomColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(15,23,42,0.06)" }]}>
@@ -180,15 +193,16 @@ export function GarageGroupCard({ title, subtitle, icon, children, isDark }) {
   );
 }
 
-export function GarageMileageSimple({ car, fr, accent, isDark, onBump, saving }) {
+export function GarageMileageSimple({ car, accent, isDark, onBump, saving }) {
+  const { pick, lang } = useAppLang();
   return (
     <View style={[ui.groupCard, { backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "#fff", borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.08)" }]}>
       <Text style={[ui.groupTitle, { color: isDark ? "#f8fafc" : "#0f172a" }]}>
-        {fr ? "Kilométrage du compteur" : "Odometer"}
+        {pick("Odometer", "Kilométrage du compteur", "عداد المسافة")}
       </Text>
-      <Text style={[ui.kmBig, { color: accent }]}>{(car.currentMileage || 0).toLocaleString()} km</Text>
+      <Text style={[ui.kmBig, { color: accent }]}>{formatNumber(car.currentMileage || 0, lang)} km</Text>
       <Text style={[ui.groupSub, { color: isDark ? "#64748b" : "#94a3b8", marginBottom: 12 }]}>
-        {fr ? "Appuyez si vous avez roulé récemment :" : "Tap if you drove recently:"}
+        {pick("Tap if you drove recently:", "Appuyez si vous avez roulé récemment :", "اضغط إذا قدت مؤخراً:")}
       </Text>
       <View style={{ flexDirection: "row", gap: 8 }}>
         {[100, 500, 1000].map((km) => (
@@ -206,12 +220,13 @@ export function GarageMileageSimple({ car, fr, accent, isDark, onBump, saving })
   );
 }
 
-export function GarageRemindersSimple({ enabled, fr, accent, isDark, onToggle }) {
+export function GarageRemindersSimple({ enabled, accent, isDark, onToggle }) {
+  const { pick } = useAppLang();
   return (
     <View style={[ui.reminderSimple, { backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "#fff", borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.08)" }]}>
       <Ionicons name="notifications-outline" size={22} color={accent} />
       <Text style={[ui.reminderSimpleText, { color: isDark ? "#f1f5f9" : "#0f172a", flex: 1, marginLeft: 10 }]}>
-        {fr ? "Me rappeler avant les échéances" : "Remind me before deadlines"}
+        {pick("Remind me before deadlines", "Me rappeler avant les échéances", "ذكّرني قبل المواعيد")}
       </Text>
       <Switch value={enabled} onValueChange={onToggle} trackColor={{ false: "#cbd5e1", true: accent }} />
     </View>
@@ -233,20 +248,21 @@ export function GarageActionGrid({ actions, isDark }) {
   );
 }
 
-export function GarageBudgetSimple({ costs, fr, isDark, accent }) {
+export function GarageBudgetSimple({ costs, isDark, accent }) {
+  const { pick, lang } = useAppLang();
   return (
     <View style={[ui.groupCard, { backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "#fff", borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.08)" }]}>
       <Text style={[ui.groupTitle, { color: isDark ? "#f8fafc" : "#0f172a" }]}>
-        {fr ? "Dépenses estimées" : "Estimated spending"}
+        {pick("Estimated spending", "Dépenses estimées", "النفقات التقديرية")}
       </Text>
       <Text style={[ui.kmBig, { color: accent, marginVertical: 8 }]}>
-        ~{costs.perMonth.toLocaleString()} MAD
-        <Text style={{ fontSize: 16, fontWeight: "600" }}> {fr ? "/ mois" : "/ month"}</Text>
+        ~{formatNumber(costs.perMonth, lang)} MAD
+        <Text style={{ fontSize: 16, fontWeight: "600" }}> {pick("/ month", "/ mois", "/ شهر")}</Text>
       </Text>
       {costs.breakdown.map((row) => (
         <View key={row.key} style={ui.budgetRow}>
           <Text style={{ color: isDark ? "#94a3b8" : "#64748b", flex: 1, fontSize: 14 }}>{row.label}</Text>
-          <Text style={{ color: isDark ? "#f1f5f9" : "#0f172a", fontWeight: "800", fontSize: 14 }}>{row.value.toLocaleString()} MAD</Text>
+          <Text style={{ color: isDark ? "#f1f5f9" : "#0f172a", fontWeight: "800", fontSize: 14 }}>{formatNumber(row.value, lang)} MAD</Text>
         </View>
       ))}
       <Text style={{ color: isDark ? "#64748b" : "#94a3b8", fontSize: 12, marginTop: 10, lineHeight: 18 }}>{costs.funFact}</Text>
@@ -254,22 +270,24 @@ export function GarageBudgetSimple({ costs, fr, isDark, accent }) {
   );
 }
 
-export function GarageServiceSimple({ logs, fr, accent, isDark, onAdd, onDelete }) {
+export function GarageServiceSimple({ logs, accent, isDark, onAdd, onDelete }) {
+  const { pick, lang } = useAppLang();
+  const dateLocale = dateLocaleTag(lang);
   return (
     <View style={[ui.groupCard, { backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "#fff", borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.08)" }]}>
       <Text style={[ui.groupTitle, { color: isDark ? "#f8fafc" : "#0f172a" }]}>
-        {fr ? "Historique d'entretien" : "Service history"}
+        {pick("Service history", "Historique d'entretien", "سجل الصيانة")}
       </Text>
       <Text style={[ui.groupSub, { color: isDark ? "#64748b" : "#94a3b8", marginBottom: 12 }]}>
-        {fr ? "Garage, vidange, réparations…" : "Garage, oil change, repairs…"}
+        {pick("Garage, oil change, repairs…", "Garage, vidange, réparations…", "كراج، تغيير زيت، إصلاحات…")}
       </Text>
       <TouchableOpacity onPress={onAdd} style={[ui.addBtn, { backgroundColor: accent }]}>
         <Ionicons name="add" size={20} color="#fff" />
-        <Text style={ui.addBtnText}>{fr ? "Ajouter une ligne" : "Add entry"}</Text>
+        <Text style={ui.addBtnText}>{pick("Add entry", "Ajouter une ligne", "إضافة سطر")}</Text>
       </TouchableOpacity>
       {!logs?.length ? (
         <Text style={{ textAlign: "center", color: isDark ? "#64748b" : "#94a3b8", marginTop: 16, fontSize: 14 }}>
-          {fr ? "Aucun entretien enregistré." : "No services logged yet."}
+          {pick("No services logged yet.", "Aucun entretien enregistré.", "لا توجد صيانة مسجّلة.")}
         </Text>
       ) : (
         logs.slice(0, 8).map((log) => (
@@ -277,10 +295,10 @@ export function GarageServiceSimple({ logs, fr, accent, isDark, onAdd, onDelete 
             <View style={{ flex: 1 }}>
               <Text style={{ color: isDark ? "#f1f5f9" : "#0f172a", fontWeight: "700", fontSize: 14 }}>{log.title}</Text>
               <Text style={{ color: isDark ? "#64748b" : "#94a3b8", fontSize: 12, marginTop: 2 }}>
-                {new Date(log.date).toLocaleDateString(fr ? "fr-FR" : "en-GB")}
+                {new Date(log.date).toLocaleDateString(dateLocale)}
               </Text>
             </View>
-            <Text style={{ color: accent, fontWeight: "800", marginRight: 8 }}>{Number(log.cost || 0).toLocaleString()} MAD</Text>
+            <Text style={{ color: accent, fontWeight: "800", marginRight: 8 }}>{formatNumber(log.cost || 0, lang)} MAD</Text>
             <TouchableOpacity onPress={() => onDelete(log)} hitSlop={12}>
               <Ionicons name="close-circle-outline" size={20} color="#94a3b8" />
             </TouchableOpacity>
@@ -291,7 +309,8 @@ export function GarageServiceSimple({ logs, fr, accent, isDark, onAdd, onDelete 
   );
 }
 
-export function GarageTipsSimple({ tips, fr, isDark, onEstimate }) {
+export function GarageTipsSimple({ tips, isDark, onEstimate }) {
+  const { pick } = useAppLang();
   const [expanded, setExpanded] = useState(false);
   const shown = expanded ? tips : tips.slice(0, 2);
   if (!tips.length) return null;
@@ -299,7 +318,7 @@ export function GarageTipsSimple({ tips, fr, isDark, onEstimate }) {
   return (
     <View style={[ui.groupCard, { backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "#fff", borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.08)" }]}>
       <Text style={[ui.groupTitle, { color: isDark ? "#f8fafc" : "#0f172a" }]}>
-        {fr ? "Conseils pour votre voiture" : "Tips for your car"}
+        {pick("Tips for your car", "Conseils pour votre voiture", "نصائح لسيارتك")}
       </Text>
       {shown.map((rec, i) => (
         <TouchableOpacity
@@ -318,7 +337,9 @@ export function GarageTipsSimple({ tips, fr, isDark, onEstimate }) {
       {tips.length > 2 ? (
         <TouchableOpacity onPress={() => setExpanded(!expanded)} style={{ paddingVertical: 12 }}>
           <Text style={{ color: isDark ? "#38bdf8" : "#0284c7", fontWeight: "700", textAlign: "center" }}>
-            {expanded ? (fr ? "Moins" : "Less") : fr ? `Voir ${tips.length - 2} autres conseils` : `See ${tips.length - 2} more tips`}
+            {expanded
+              ? pick("Less", "Moins", "أقل")
+              : pick(`See ${tips.length - 2} more tips`, `Voir ${tips.length - 2} autres conseils`, `عرض ${tips.length - 2} نصائح أخرى`)}
           </Text>
         </TouchableOpacity>
       ) : null}
@@ -327,21 +348,22 @@ export function GarageTipsSimple({ tips, fr, isDark, onEstimate }) {
 }
 
 const SERVICE_TYPES = [
-  { id: "oil_change", icon: "water-outline", fr: "Vidange", en: "Oil change" },
-  { id: "tires", icon: "disc-outline", fr: "Pneus", en: "Tyres" },
-  { id: "brakes", icon: "stop-circle-outline", fr: "Freins", en: "Brakes" },
-  { id: "repair", icon: "hammer-outline", fr: "Réparation", en: "Repair" },
-  { id: "other", icon: "ellipsis-horizontal", fr: "Autre", en: "Other" },
+  { id: "oil_change", icon: "water-outline", fr: "Vidange", en: "Oil change", ar: "تغيير الزيت" },
+  { id: "tires", icon: "disc-outline", fr: "Pneus", en: "Tyres", ar: "الإطارات" },
+  { id: "brakes", icon: "stop-circle-outline", fr: "Freins", en: "Brakes", ar: "الفرامل" },
+  { id: "repair", icon: "hammer-outline", fr: "Réparation", en: "Repair", ar: "إصلاح" },
+  { id: "other", icon: "ellipsis-horizontal", fr: "Autre", en: "Other", ar: "أخرى" },
 ];
 
-export function AddServiceLogModal({ visible, fr, accent, isDark, car, onClose, onSave, saving }) {
+export function AddServiceLogModal({ visible, accent, isDark, car, onClose, onSave, saving }) {
+  const { pick } = useAppLang();
   const [type, setType] = useState("oil_change");
   const [title, setTitle] = useState("");
   const [cost, setCost] = useState("");
   const [provider, setProvider] = useState("");
 
   const submit = () => {
-    const t = title.trim() || (fr ? "Entretien" : "Service");
+    const t = title.trim() || pick("Service", "Entretien", "صيانة");
     onSave({
       type,
       title: t,
@@ -357,10 +379,10 @@ export function AddServiceLogModal({ visible, fr, accent, isDark, car, onClose, 
       <View style={ui.modalOverlay}>
         <View style={[ui.modalSheet, { backgroundColor: isDark ? "#0f172a" : "#fff" }]}>
           <Text style={[ui.modalTitle, { color: isDark ? "#f8fafc" : "#0f172a" }]}>
-            {fr ? "Ajouter un entretien" : "Add service"}
+            {pick("Add service", "Ajouter un entretien", "إضافة صيانة")}
           </Text>
           <Text style={{ color: isDark ? "#94a3b8" : "#64748b", marginBottom: 16, fontSize: 14 }}>
-            {fr ? "Exemple : Vidange chez Total, 450 MAD" : "e.g. Oil change at garage, 450 MAD"}
+            {pick("e.g. Oil change at garage, 450 MAD", "Exemple : Vidange chez Total, 450 MAD", "مثال: تغيير زيت في الكراج، 450 درهم")}
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
             {SERVICE_TYPES.map((t) => (
@@ -368,18 +390,18 @@ export function AddServiceLogModal({ visible, fr, accent, isDark, car, onClose, 
                 key={t.id}
                 onPress={() => {
                   setType(t.id);
-                  if (!title) setTitle(fr ? t.fr : t.en);
+                  if (!title) setTitle(pick(t.en, t.fr, t.ar));
                 }}
                 style={[ui.typeChip, type === t.id && { borderColor: accent, backgroundColor: `${accent}15` }]}
               >
-                <Text style={{ fontWeight: "700", color: type === t.id ? accent : "#64748b", fontSize: 13 }}>{fr ? t.fr : t.en}</Text>
+                <Text style={{ fontWeight: "700", color: type === t.id ? accent : "#64748b", fontSize: 13 }}>{pick(t.en, t.fr, t.ar)}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
           <TextInput
             value={title}
             onChangeText={setTitle}
-            placeholder={fr ? "Qu'est-ce que vous avez fait ?" : "What did you do?"}
+            placeholder={pick("What did you do?", "Qu'est-ce que vous avez fait ?", "ماذا فعلت؟")}
             placeholderTextColor="#94a3b8"
             style={[ui.input, { color: isDark ? "#fff" : "#0f172a", borderColor: isDark ? "rgba(255,255,255,0.15)" : "#e2e8f0" }]}
           />
@@ -387,24 +409,24 @@ export function AddServiceLogModal({ visible, fr, accent, isDark, car, onClose, 
             value={cost}
             onChangeText={setCost}
             keyboardType="numeric"
-            placeholder={fr ? "Montant en MAD" : "Amount in MAD"}
+            placeholder={pick("Amount in MAD", "Montant en MAD", "المبلغ بالدرهم")}
             placeholderTextColor="#94a3b8"
             style={[ui.input, { color: isDark ? "#fff" : "#0f172a", borderColor: isDark ? "rgba(255,255,255,0.15)" : "#e2e8f0" }]}
           />
           <TextInput
             value={provider}
             onChangeText={setProvider}
-            placeholder={fr ? "Garage (optionnel)" : "Shop (optional)"}
+            placeholder={pick("Shop (optional)", "Garage (optionnel)", "الكراج (اختياري)")}
             placeholderTextColor="#94a3b8"
             style={[ui.input, { color: isDark ? "#fff" : "#0f172a", borderColor: isDark ? "rgba(255,255,255,0.15)" : "#e2e8f0" }]}
           />
           <TouchableOpacity disabled={saving} onPress={submit} style={{ marginTop: 8 }}>
             <LinearGradient colors={[accent, isDark ? "#0284c7" : "#0369a1"]} style={ui.modalSave}>
-              {saving ? <ActivityIndicator color="#fff" /> : <Text style={ui.modalSaveText}>{fr ? "Enregistrer" : "Save"}</Text>}
+              {saving ? <ActivityIndicator color="#fff" /> : <Text style={ui.modalSaveText}>{pick("Save", "Enregistrer", "حفظ")}</Text>}
             </LinearGradient>
           </TouchableOpacity>
           <TouchableOpacity onPress={onClose} style={{ padding: 16 }}>
-            <Text style={{ textAlign: "center", color: "#64748b", fontWeight: "600" }}>{fr ? "Annuler" : "Cancel"}</Text>
+            <Text style={{ textAlign: "center", color: "#64748b", fontWeight: "600" }}>{pick("Cancel", "Annuler", "إلغاء")}</Text>
           </TouchableOpacity>
         </View>
       </View>

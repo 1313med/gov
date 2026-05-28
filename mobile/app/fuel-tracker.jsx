@@ -9,7 +9,7 @@ import { useAppLang } from "../src/context/AppLangContext";
 
 export default function FuelTrackerScreen() {
   const { colors: C } = useTheme();
-  const { lang } = useAppLang();
+  const { lang, pick, numberLocale, dateLocale } = useAppLang();
   const fr = lang === "fr";
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -47,7 +47,7 @@ export default function FuelTrackerScreen() {
 
   const handleAdd = async () => {
     if (!form.liters || !form.pricePerLiter || !form.kmAtFillup) {
-      Alert.alert(fr ? "Erreur" : "Error", fr ? "Remplissez tous les champs." : "Fill all required fields.");
+      Alert.alert(pick("Error", "Erreur"), pick("Fill all required fields.", "Remplissez tous les champs."));
       return;
     }
     setSaving(true);
@@ -57,9 +57,9 @@ export default function FuelTrackerScreen() {
       setLogs(data.logs || []);
       setStats(data.stats);
       setForm({ liters: "", pricePerLiter: "", kmAtFillup: "", fuelType: "essence" });
-      Alert.alert(fr ? "Succès" : "Saved", fr ? "Plein enregistré !" : "Fillup recorded!");
+      Alert.alert(pick("Saved", "Succès"), pick("Fillup recorded!", "Plein enregistré !"));
     } catch (e) {
-      Alert.alert(fr ? "Erreur" : "Error", e?.response?.data?.message || (fr ? "Enregistrement échoué." : "Failed."));
+      Alert.alert(pick("Error", "Erreur"), e?.response?.data?.message || (pick("Failed.", "Enregistrement échoué.")));
     } finally {
       setSaving(false);
     }
@@ -77,8 +77,8 @@ export default function FuelTrackerScreen() {
         <Ionicons name="chevron-back" size={26} color={C.white} />
       </TouchableOpacity>
       <Text style={{ fontSize: 48, marginBottom: 12 }}>⛽</Text>
-      <Text style={{ color: C.white, fontSize: 18, fontWeight: "700", marginBottom: 8 }}>{fr ? "Suivi de carburant" : "Fuel Tracker"}</Text>
-      <Text style={{ color: C.muted, fontSize: 13, textAlign: "center" }}>{fr ? "Ajoutez une voiture dans Mon Garage pour commencer." : "Add a vehicle in My Garage to get started."}</Text>
+      <Text style={{ color: C.white, fontSize: 18, fontWeight: "700", marginBottom: 8 }}>{pick("Fuel Tracker", "Suivi de carburant")}</Text>
+      <Text style={{ color: C.muted, fontSize: 13, textAlign: "center" }}>{pick("Add a vehicle in My Garage to get started.", "Ajoutez une voiture dans Mon Garage pour commencer.")}</Text>
     </View>
   );
 
@@ -92,7 +92,7 @@ export default function FuelTrackerScreen() {
         <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-back" size={26} color={C.white} />
         </TouchableOpacity>
-        <Text style={{ color: C.white, fontWeight: "800", fontSize: 16 }}>⛽ {fr ? "Suivi carburant" : "Fuel Tracker"}</Text>
+        <Text style={{ color: C.white, fontWeight: "800", fontSize: 16 }}>⛽ {pick("Fuel Tracker", "Suivi carburant")}</Text>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 40 }}>
@@ -113,19 +113,19 @@ export default function FuelTrackerScreen() {
               <Text style={[s.statLabel, { color: C.muted }]}>L/100km</Text>
             </View>
             <View style={[s.stat, { backgroundColor: C.card, borderColor: C.border }]}>
-              <Text style={[s.statVal, { color: "#34d399" }]}>{stats.totalFuelSpentMad?.toLocaleString(fr ? "fr-FR" : "en-US")}</Text>
-              <Text style={[s.statLabel, { color: C.muted }]}>{fr ? "MAD dépensés" : "MAD spent"}</Text>
+              <Text style={[s.statVal, { color: "#34d399" }]}>{stats.totalFuelSpentMad?.toLocaleString(numberLocale)}</Text>
+              <Text style={[s.statLabel, { color: C.muted }]}>{pick("MAD spent", "MAD dépensés")}</Text>
             </View>
             <View style={[s.stat, { backgroundColor: C.card, borderColor: C.border }]}>
               <Text style={[s.statVal, { color: C.primary }]}>{stats.totalFillups}</Text>
-              <Text style={[s.statLabel, { color: C.muted }]}>{fr ? "Pleins" : "Fillups"}</Text>
+              <Text style={[s.statLabel, { color: C.muted }]}>{pick("Fillups", "Pleins")}</Text>
             </View>
           </View>
         )}
 
         {/* Tabs */}
         <View style={{ flexDirection: "row", gap: 8, marginBottom: 16 }}>
-          {[[fr ? "Historique" : "History", "logs"], [fr ? "+ Ajouter" : "+ Add", "add"], [fr ? "Coûts" : "Costs", "costs"]].map(([l, t]) => (
+          {[[pick("History", "Historique"), "logs"], [pick("+ Add", "+ Ajouter"), "add"], [pick("Costs", "Coûts"), "costs"]].map(([l, t]) => (
             <TouchableOpacity key={t} onPress={() => setTab(t)} style={[s.tabBtn, { borderColor: C.border, backgroundColor: tab === t ? C.primary : C.card }]}>
               <Text style={[s.tabTxt, { color: tab === t ? "#fff" : C.muted }]}>{l}</Text>
             </TouchableOpacity>
@@ -136,27 +136,27 @@ export default function FuelTrackerScreen() {
           <View style={[s.formBox, { backgroundColor: C.card, borderColor: C.border }]}>
             <TextInput style={[s.input, { color: C.white, borderColor: C.border, backgroundColor: C.inputBg }]}
               value={form.liters} onChangeText={(v) => setForm((p) => ({ ...p, liters: v }))}
-              placeholder={fr ? "Litres (ex: 45.5)" : "Liters (e.g. 45.5)"} placeholderTextColor={C.muted} keyboardType="decimal-pad" />
+              placeholder={pick("Liters (e.g. 45.5)", "Litres (ex: 45.5)")} placeholderTextColor={C.muted} keyboardType="decimal-pad" />
             <TextInput style={[s.input, { color: C.white, borderColor: C.border, backgroundColor: C.inputBg }]}
               value={form.pricePerLiter} onChangeText={(v) => setForm((p) => ({ ...p, pricePerLiter: v }))}
-              placeholder={fr ? "Prix/litre MAD (ex: 14.50)" : "Price/liter MAD"} placeholderTextColor={C.muted} keyboardType="decimal-pad" />
+              placeholder={pick("Price/liter MAD", "Prix/litre MAD (ex: 14.50)")} placeholderTextColor={C.muted} keyboardType="decimal-pad" />
             <TextInput style={[s.input, { color: C.white, borderColor: C.border, backgroundColor: C.inputBg }]}
               value={form.kmAtFillup} onChangeText={(v) => setForm((p) => ({ ...p, kmAtFillup: v }))}
-              placeholder={fr ? "Kilométrage actuel" : "Current mileage"} placeholderTextColor={C.muted} keyboardType="number-pad" />
-            {totalCost && <View style={[s.totalBox, { backgroundColor: C.surface }]}><Text style={{ color: C.primary, fontWeight: "600", fontSize: 14 }}>{fr ? `Total : ${totalCost} MAD` : `Total: ${totalCost} MAD`}</Text></View>}
+              placeholder={pick("Current mileage", "Kilométrage actuel")} placeholderTextColor={C.muted} keyboardType="number-pad" />
+            {totalCost && <View style={[s.totalBox, { backgroundColor: C.surface }]}><Text style={{ color: C.primary, fontWeight: "600", fontSize: 14 }}>{pick(`Total: ${totalCost} MAD`, `Total : ${totalCost} MAD`)}</Text></View>}
             <TouchableOpacity style={[s.btn, { backgroundColor: C.primary }, saving && { opacity: 0.6 }]} onPress={handleAdd} disabled={saving}>
-              {saving ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>{fr ? "Enregistrer le plein" : "Save fillup"}</Text>}
+              {saving ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>{pick("Save fillup", "Enregistrer le plein")}</Text>}
             </TouchableOpacity>
           </View>
         )}
 
         {tab === "logs" && (
           <View>
-            {!logs.length && <Text style={{ color: C.muted, textAlign: "center", marginVertical: 20 }}>{fr ? "Aucun plein. Ajoutez votre premier !" : "No fillups yet. Add your first!"}</Text>}
+            {!logs.length && <Text style={{ color: C.muted, textAlign: "center", marginVertical: 20 }}>{pick("No fillups yet. Add your first!", "Aucun plein. Ajoutez votre premier !")}</Text>}
             {logs.map((log) => (
               <View key={log._id} style={[s.logCard, { backgroundColor: C.card, borderColor: C.border }]}>
                 <Text style={{ color: C.white, fontSize: 14, fontWeight: "600" }}>{log.liters}L — {log.totalCost?.toFixed(2)} MAD</Text>
-                <Text style={{ color: C.muted, fontSize: 11, marginTop: 2 }}>{new Date(log.date).toLocaleDateString(fr ? "fr-FR" : "en-GB")} · {log.kmAtFillup?.toLocaleString(fr ? "fr-FR" : "en-US")} km · {log.pricePerLiter} MAD/L</Text>
+                <Text style={{ color: C.muted, fontSize: 11, marginTop: 2 }}>{new Date(log.date).toLocaleDateString(dateLocale)} · {log.kmAtFillup?.toLocaleString(numberLocale)} km · {log.pricePerLiter} MAD/L</Text>
               </View>
             ))}
           </View>
@@ -166,17 +166,17 @@ export default function FuelTrackerScreen() {
           <View style={{ gap: 10 }}>
             <View style={{ flexDirection: "row", gap: 10 }}>
               <View style={[s.cooCard, { backgroundColor: C.card, borderColor: C.border, flex: 1 }]}>
-                <Text style={{ color: C.muted, fontSize: 12 }}>{fr ? "Carburant" : "Fuel"}</Text>
-                <Text style={{ color: "#60a5fa", fontWeight: "700", fontSize: 18, marginTop: 4 }}>{coo.totals.fuel.toLocaleString(fr ? "fr-FR" : "en-US")} MAD</Text>
+                <Text style={{ color: C.muted, fontSize: 12 }}>{pick("Fuel", "Carburant")}</Text>
+                <Text style={{ color: "#60a5fa", fontWeight: "700", fontSize: 18, marginTop: 4 }}>{coo.totals.fuel.toLocaleString(numberLocale)} MAD</Text>
               </View>
               <View style={[s.cooCard, { backgroundColor: C.card, borderColor: C.border, flex: 1 }]}>
-                <Text style={{ color: C.muted, fontSize: 12 }}>{fr ? "Entretien" : "Maintenance"}</Text>
-                <Text style={{ color: "#fb923c", fontWeight: "700", fontSize: 18, marginTop: 4 }}>{coo.totals.maintenance.toLocaleString(fr ? "fr-FR" : "en-US")} MAD</Text>
+                <Text style={{ color: C.muted, fontSize: 12 }}>{pick("Maintenance", "Entretien")}</Text>
+                <Text style={{ color: "#fb923c", fontWeight: "700", fontSize: 18, marginTop: 4 }}>{coo.totals.maintenance.toLocaleString(numberLocale)} MAD</Text>
               </View>
             </View>
             <View style={[s.cooCard, { backgroundColor: C.card, borderColor: C.border }]}>
-              <Text style={{ color: C.muted, fontSize: 12 }}>{fr ? "Coût mensuel moyen" : "Monthly average cost"}</Text>
-              <Text style={{ color: C.primary, fontWeight: "700", fontSize: 24, marginTop: 4 }}>{coo.totals.monthlyAvg.toLocaleString(fr ? "fr-FR" : "en-US")} MAD/mois</Text>
+              <Text style={{ color: C.muted, fontSize: 12 }}>{pick("Monthly average cost", "Coût mensuel moyen")}</Text>
+              <Text style={{ color: C.primary, fontWeight: "700", fontSize: 24, marginTop: 4 }}>{coo.totals.monthlyAvg.toLocaleString(numberLocale)} MAD/mois</Text>
             </View>
           </View>
         )}

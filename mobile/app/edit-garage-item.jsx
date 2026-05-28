@@ -38,7 +38,7 @@ export default function EditGarageItemScreen() {
   const { field: fieldParam } = useLocalSearchParams();
   const field = Array.isArray(fieldParam) ? fieldParam[0] : fieldParam;
   const { colors: C, isDark } = useTheme();
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const fr = lang === "fr";
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -89,7 +89,7 @@ export default function EditGarageItemScreen() {
       syncGarageLocalReminders(updated, fr, on).catch(() => {});
       router.back();
     } catch (e) {
-      Alert.alert(fr ? "Erreur" : "Error", e?.response?.data?.message || (fr ? "Impossible d'enregistrer." : "Could not save."));
+      Alert.alert(pick("Error", "Erreur"), e?.response?.data?.message || (pick("Could not save.", "Impossible d'enregistrer.")));
     } finally {
       setSaving(false);
     }
@@ -116,10 +116,10 @@ export default function EditGarageItemScreen() {
     return (
       <View style={{ flex: 1, backgroundColor: bgColor, padding: 24, justifyContent: "center" }}>
         <Text style={{ color: titleColor, textAlign: "center", fontWeight: "700" }}>
-          {fr ? "Élément inconnu." : "Unknown item."}
+          {pick("Unknown item.", "Élément inconnu.")}
         </Text>
         <TouchableOpacity onPress={() => router.back()} style={{ marginTop: 16 }}>
-          <Text style={{ color: accent, textAlign: "center", fontWeight: "800" }}>{fr ? "Retour" : "Back"}</Text>
+          <Text style={{ color: accent, textAlign: "center", fontWeight: "800" }}>{pick("Back", "Retour")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -164,7 +164,7 @@ export default function EditGarageItemScreen() {
       >
         {!car ? (
           <Text style={{ color: subColor, textAlign: "center", marginTop: 24 }}>
-            {fr ? "Aucune voiture enregistrée." : "No car registered."}
+            {pick("No car registered.", "Aucune voiture enregistrée.")}
           </Text>
         ) : (
           cfg.fields.map((f) => {
@@ -179,7 +179,7 @@ export default function EditGarageItemScreen() {
                   isDark={isDark}
                   fr={fr}
                   accent={isDark ? "#38bdf8" : "#0284c7"}
-                  emptyLabel={fr ? "Appuyez pour choisir" : "Tap to choose"}
+                  emptyLabel={pick("Tap to choose", "Appuyez pour choisir")}
                   maximumDate={new Date()}
                 />
               );
@@ -228,7 +228,7 @@ export default function EditGarageItemScreen() {
           <TouchableOpacity onPress={handleSave} disabled={saving} activeOpacity={0.88}>
             <LinearGradient colors={[accent, isDark ? "#0284c7" : "#0369a1"]} style={st.saveBtn}>
               {saving ? <ActivityIndicator color="#fff" /> : <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />}
-              <Text style={st.saveText}>{fr ? "Enregistrer" : "Save"}</Text>
+              <Text style={st.saveText}>{pick("Save", "Enregistrer")}</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>

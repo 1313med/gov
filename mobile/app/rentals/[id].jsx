@@ -16,6 +16,10 @@ import { useAuth } from "../../src/context/AuthContext";
 import { useAppLang } from "../../src/context/AppLangContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import { resolveMediaUrl } from "../../src/utils/mediaUrl";
+import { pickLang, numberLocaleTag, dateLocaleTag } from "../../src/utils/i18n";
+import { arOverrides } from "../../src/locales/arOverrides";
+
+const p = (lang, en, fr, ar) => pickLang(lang, en, fr, ar, arOverrides);
 
 const { width } = Dimensions.get("window");
 
@@ -67,9 +71,9 @@ function rentalBillableDays(startStr, endStr) {
   return Math.floor((b - a) / 86400000) + 1;
 }
 
-function formatMad(amount, locale) {
+function formatMad(amount, lang) {
   const n = Math.round(Number(amount) || 0);
-  return `${n.toLocaleString(locale === "fr" ? "fr-FR" : "en-US", { maximumFractionDigits: 0 })} MAD`;
+  return `${n.toLocaleString(numberLocaleTag(lang), { maximumFractionDigits: 0 })} MAD`;
 }
 
 /** Match server `createBooking` offer math (free_days, percent_discount only). */
@@ -101,18 +105,24 @@ function listActiveOffers(rental) {
   return rental.offers.filter((o) => o.isActive && (!o.expiresAt || new Date(o.expiresAt) > now));
 }
 
-function offerLineSummary(o, fr) {
+function offerLineSummary(o, lang) {
   if (o.type === "free_days") {
-    return fr
-      ? `À partir de ${o.minDays || 1} j. · +${o.freeExtraDays || 0} j. offert(s)`
-      : `From ${o.minDays || 1} days · +${o.freeExtraDays || 0} free day(s)`;
+    return p(
+      lang,
+      `From ${o.minDays || 1} days · +${o.freeExtraDays || 0} free day(s)`,
+      `À partir de ${o.minDays || 1} j. · +${o.freeExtraDays || 0} j. offert(s)`,
+      `من ${o.minDays || 1} أيام · +${o.freeExtraDays || 0} يوم مجاني`
+    );
   }
   if (o.type === "percent_discount") {
-    return fr
-      ? `À partir de ${o.minDays || 1} j. · −${o.discountPercent || 0} %`
-      : `From ${o.minDays || 1} days · −${o.discountPercent || 0}%`;
+    return p(
+      lang,
+      `From ${o.minDays || 1} days · −${o.discountPercent || 0}%`,
+      `À partir de ${o.minDays || 1} j. · −${o.discountPercent || 0} %`,
+      `من ${o.minDays || 1} أيام · −${o.discountPercent || 0}%`
+    );
   }
-  return o.description?.trim() || (fr ? "Offre personnalisée (voir détails)" : "Custom offer — see details");
+  return o.description?.trim() || p(lang, "Custom offer — see details", "Offre personnalisée (voir détails)", "عرض مخصص — انظر التفاصيل");
 }
 
 function createRentalDetailScreenStyles(C) {
@@ -198,7 +208,7 @@ export default function RentalDetailsScreen() {
   const { C, s } = useRentalDetailSheets();
   const { isDark } = useTheme();
   const router = useRouter();
-  const t = lang === "fr" ? fr : en;
+  const t = lang === "ar" ? ar : lang === "fr" ? fr : en;
 
   const [rental, setRental] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -387,7 +397,7 @@ export default function RentalDetailsScreen() {
           <Text style={s.priceBadgeText}>{rental.pricePerDay} MAD/day</Text>
           {activeOffersList.length > 0 && (
             <Text style={{ color: "#fde68a", fontSize: 10, fontWeight: "800", marginTop: 2 }}>
-              {lang === "fr" ? `${activeOffersList.length} promo(s)` : `${activeOffersList.length} deal(s)`}
+              {p(lang, `${activeOffersList.length} deal(s)`, `${activeOffersList.length} promo(s)`, `${activeOffersList.length} عرض`)}
             </Text>
           )}
         </View>
@@ -418,7 +428,7 @@ export default function RentalDetailsScreen() {
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={s.cardTitle}>{t.airportTitle}</Text>
               <Text style={s.descText}>
-                {t.airportBody(Number(rental.airportDeliveryFeeMad).toLocaleString(lang === "fr" ? "fr-FR" : "en-US"))}
+                {t.airportBody(Number(rental.airportDeliveryFeeMad).toLocaleString(numberLocaleTag(lang)))}
               </Text>
             </View>
           </View>
@@ -463,11 +473,12 @@ export default function RentalDetailsScreen() {
                   <Ionicons name="pricetag-outline" size={18} color="#fbbf24" />
                   <Text style={s.offerItemTitle}>{o.title}</Text>
                 </View>
-                <Text style={s.offerItemMeta}>{offerLineSummary(o, lang === "fr")}</Text>
+                <Text style={s.offerItemMeta}>{offerLineSummary(o, lang)}</Text>
                 {o.description ? <Text style={s.offerItemDesc}>{o.description}</Text> : null}
                 {o.expiresAt ? (
                   <Text style={s.offerItemExp}>
-                    {lang === "fr" ? "Expire le" : "Expires"} {new Date(o.expiresAt).toLocaleDateString(lang === "fr" ? "fr-FR" : "en-GB")}
+                    {p(lang, "Expires", "Expire le", "ينتهي في")}{" "}
+                    {new Date(o.expiresAt).toLocaleDateString(dateLocaleTag(lang))}
                   </Text>
                 ) : null}
               </View>
@@ -682,6 +693,25 @@ const fr = {
   clearDates:"Effacer",
   airportTitle:"Livraison aéroport",
   airportBody:(fee) => `Le propriétaire peut amener le véhicule à l'aéroport. Supplément unique : ${fee} MAD — à confirmer avec lui lors de la réservation.`,
+};
+const ar = {
+  notFound:"لم يُعثر على الإيجار", specifications:"المواصفات",
+  brand:"الماركة", model:"الموديل", year:"السنة", fuel:"الوقود",
+  gearbox:"ناقل الحركة", city:"المدينة", selectDates:"اختر التواريخ",
+  start:"تاريخ البداية", end:"تاريخ النهاية", pricePerDay:"السعر لليوم",
+  days:"أيام", subtotal:"المجموع الفرعي", promotion:"عرض", appliedLabel:"مُطبَّق",
+  promotions:"العروض", total:"الإجمالي", booking:"جارٍ الحجز…", bookNow:"احجز الآن",
+  logIn:"تسجيل الدخول للحجز", needAuth:"يرجى تسجيل الدخول للمتابعة.",
+  bookSuccess:"تم إرسال طلب الحجز! بانتظار تأكيد المالك.",
+  datesFail:"السيارة غير متاحة في التواريخ المحددة.", selectDatesError:"يرجى اختيار التاريخين.",
+  documentsTitle:"مستندات مطلوبة",
+  documentsLater:"ليس الآن",
+  documentsProfile:"ملفي الشخصي",
+  errorTitle:"خطأ",
+  unavailableRange:"هذه السيارة غير متاحة في التواريخ المحددة. اختر تواريخاً أخرى.",
+  clearDates:"مسح",
+  airportTitle:"توصيل المطار",
+  airportBody:(fee) => `يمكن للمالك إحضار السيارة إلى المطار. رسوم إضافية: ${fee} درهم — يُؤكَّد مع المالك عند الحجز.`,
 };
 
 

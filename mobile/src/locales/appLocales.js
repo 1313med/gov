@@ -1,4 +1,5 @@
 import { home2Dict } from "./home2";
+import { arLocale } from "./appLocalesAr";
 
 const commonEn = {
   browseCars: "Browse Cars",
@@ -616,5 +617,9 @@ export const appLocales = {
     rentalDetails: rentalDetailsFr,
     maintenance: maintenanceFr,
     screenTitles: screenTitlesFr,
+  },
+  ar: {
+    home: home2Dict.ar,
+    ...arLocale,
   },
 };

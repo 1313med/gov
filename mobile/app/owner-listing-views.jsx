@@ -35,10 +35,10 @@ const PERIODS = [
 
 function statusLabel(status, fr) {
   const s = String(status || "").toLowerCase();
-  if (s === "approved") return fr ? "En ligne" : "Live";
-  if (s === "pending") return fr ? "En attente" : "Pending";
-  if (s === "rejected") return fr ? "Refusé" : "Rejected";
-  if (s === "unavailable") return fr ? "Indisponible" : "Unavailable";
+  if (s === "approved") return pick("Live", "En ligne");
+  if (s === "pending") return pick("Pending", "En attente");
+  if (s === "rejected") return pick("Rejected", "Refusé");
+  if (s === "unavailable") return pick("Unavailable", "Indisponible");
   return s;
 }
 
@@ -189,7 +189,7 @@ function createStyles(C, isDark) {
 }
 
 export default function OwnerListingViewsScreen() {
-  const { lang } = useAppLang();
+  const { lang, pick, numberLocale } = useAppLang();
   const { colors: C, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const fr = lang === "fr";
@@ -229,7 +229,7 @@ export default function OwnerListingViewsScreen() {
   }, [data]);
 
   if (fetching && data === null) {
-    return <PageLoader message={fr ? "Chargement des statistiques…" : "Loading visibility stats…"} />;
+    return <PageLoader message={pick("Loading visibility stats…", "Chargement des statistiques…")} />;
   }
 
   const total = data?.totalViews ?? 0;
@@ -287,15 +287,13 @@ export default function OwnerListingViewsScreen() {
           <View style={s.boardHeader}>
             <View style={s.headerRow}>
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={s.kicker}>{fr ? "INSIGHT" : "INSIGHT"}</Text>
-                <Text style={s.h1}>{fr ? "Portée de vos annonces" : "Listing reach"}</Text>
+                <Text style={s.kicker}>{pick("INSIGHT", "INSIGHT")}</Text>
+                <Text style={s.h1}>{pick("Listing reach", "Portée de vos annonces")}</Text>
               </View>
               {fetching && data ? <InlineLogoLoader /> : null}
             </View>
             <Text style={s.sub}>
-              {fr
-                ? "Les vues comptent une ouverture de fiche (dédupliquée par visiteur sur quelques minutes)."
-                : "Views count a detail-page open, deduplicated per visitor within a short window."}
+              {pick("Views count a detail-page open, deduplicated per visitor within a short window.", "Les vues comptent une ouverture de fiche (dédupliquée par visiteur sur quelques minutes).")}
             </Text>
           </View>
 
@@ -306,44 +304,40 @@ export default function OwnerListingViewsScreen() {
               end={{ x: 1, y: 1 }}
               style={[s.metricCell, { borderColor: C.primary + "44" }]}
             >
-              <Text style={[s.metricVal, { color: C.white }]}>{total.toLocaleString(fr ? "fr-FR" : "en-US")}</Text>
-              <Text style={s.metricLab}>{fr ? "VUES" : "VIEWS"}</Text>
+              <Text style={[s.metricVal, { color: C.white }]}>{total.toLocaleString(numberLocale)}</Text>
+              <Text style={s.metricLab}>{pick("VIEWS", "VUES")}</Text>
             </LinearGradient>
             <View style={[s.metricCell, { borderColor: C.border, backgroundColor: isDark ? "rgba(0,0,0,0.25)" : "rgba(255,255,255,0.6)" }]}>
               <Text style={s.metricVal}>{String(count)}</Text>
-              <Text style={s.metricLab}>{fr ? "ANNONCES" : "LISTINGS"}</Text>
+              <Text style={s.metricLab}>{pick("LISTINGS", "ANNONCES")}</Text>
             </View>
             <View style={[s.metricCell, { borderColor: C.border, backgroundColor: isDark ? "rgba(0,0,0,0.25)" : "rgba(255,255,255,0.6)" }]}>
               <Text style={s.metricVal}>{String(avg)}</Text>
-              <Text style={s.metricLab}>{fr ? "MOY." : "AVG"}</Text>
+              <Text style={s.metricLab}>{pick("AVG", "MOY.")}</Text>
             </View>
           </View>
 
           <Text style={s.footnote}>
             {period === "all"
-              ? fr
-                ? "Les onglets ou rafraîchissements rapides ne gonflent plus le total grâce à la déduplication."
-                : "Rapid tab switches or refreshes no longer inflate totals thanks to deduplication."
-              : fr
-                ? "Les périodes utilisent le fuseau de votre appareil. Les totaux comptent les vues enregistrées depuis le suivi horodaté (le « Total » reste le cumul sur l’annonce)."
-                : "Periods use your device’s time zone. Totals count timestamped views since tracking shipped; “All time” still uses each listing’s lifetime counter."}
+              ? pick("Rapid tab switches or refreshes no longer inflate totals thanks to deduplication.", "Les onglets ou rafraîchissements rapides ne gonflent plus le total grâce à la déduplication.")
+              : pick("Periods use your device’s time zone. Totals count timestamped views since tracking shipped; “All time” still uses each listing’s lifetime counter.", "Les périodes utilisent le fuseau de votre appareil. Les totaux comptent les vues enregistrées depuis le suivi horodaté (le « Total » reste le cumul sur l’annonce).")}
           </Text>
         </View>
       </View>
 
       <View style={s.sectionHead}>
-        <Text style={s.sectionTitle}>{fr ? "Classement" : "Leaderboard"}</Text>
-        <Text style={s.sectionMeta}>{fr ? "par vues" : "by views"}</Text>
+        <Text style={s.sectionTitle}>{pick("Leaderboard", "Classement")}</Text>
+        <Text style={s.sectionMeta}>{pick("by views", "par vues")}</Text>
       </View>
 
       {vehicles.length === 0 ? (
         <View style={[s.empty, { borderColor: C.border }]}>
           <Ionicons name="analytics-outline" size={36} color={C.muted} />
           <Text style={{ color: C.white, fontWeight: "800", marginTop: 14, textAlign: "center", fontSize: 16 }}>
-            {fr ? "Aucune donnée encore" : "No data yet"}
+            {pick("No data yet", "Aucune donnée encore")}
           </Text>
           <Text style={{ color: C.muted, fontSize: 13, marginTop: 8, textAlign: "center", lineHeight: 19 }}>
-            {fr ? "Publiez une annonce approuvée pour voir les vues ici." : "Publish an approved listing to see views here."}
+            {pick("Publish an approved listing to see views here.", "Publiez une annonce approuvée pour voir les vues ici.")}
           </Text>
         </View>
       ) : (
@@ -351,8 +345,8 @@ export default function OwnerListingViewsScreen() {
           <View style={s.th}>
             <Text style={[s.thTxt, { width: 36, textAlign: "center" }]}>#</Text>
             <View style={{ width: 44 }} />
-            <Text style={[s.thTxt, { flex: 1 }]}>{fr ? "Véhicule" : "Vehicle"}</Text>
-            <Text style={[s.thTxt, { width: 56, textAlign: "right" }]}>{fr ? "Vues" : "Views"}</Text>
+            <Text style={[s.thTxt, { flex: 1 }]}>{pick("Vehicle", "Véhicule")}</Text>
+            <Text style={[s.thTxt, { width: 56, textAlign: "right" }]}>{pick("Views", "Vues")}</Text>
           </View>
           {vehicles.map((v, idx) => {
             const rank = idx + 1;
@@ -398,7 +392,7 @@ export default function OwnerListingViewsScreen() {
                 </View>
                 <View style={s.viewsCol}>
                   <Text style={s.viewsNum}>{v.views ?? 0}</Text>
-                  <Text style={s.viewsLab}>{fr ? "vues" : "views"}</Text>
+                  <Text style={s.viewsLab}>{pick("views", "vues")}</Text>
                 </View>
               </View>
             );

@@ -11,7 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 export default function KycScreen() {
   const { colors: C } = useTheme();
-  const { lang } = useAppLang();
+  const { lang, pick } = useAppLang();
   const fr = lang === "fr";
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -39,7 +39,7 @@ export default function KycScreen() {
   const pickImage = async (field) => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert(fr ? "Permission requise" : "Permission required");
+      Alert.alert(pick("Permission required", "Permission requise"));
       return;
     }
     const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: "images", quality: 0.85 });
@@ -49,7 +49,7 @@ export default function KycScreen() {
       const urls = await uploadListingImages([{ uri: res.assets[0].uri, name: "doc.jpg", type: "image/jpeg" }]);
       if (urls[0]) setForm((p) => ({ ...p, [field]: urls[0] }));
     } catch {
-      Alert.alert("Error", fr ? "Échec de l'envoi." : "Upload failed.");
+      Alert.alert("Error", pick("Upload failed.", "Échec de l'envoi."));
     } finally {
       setUploading(null);
     }
@@ -60,20 +60,20 @@ export default function KycScreen() {
     try {
       await api.put("/kyc/me", form);
       Alert.alert(
-        fr ? "Succès" : "Success",
-        fr ? "Vos documents ont été soumis pour vérification." : "Your documents have been submitted for review."
+        pick("Success", "Succès"),
+        pick("Your documents have been submitted for review.", "Vos documents ont été soumis pour vérification.")
       );
     } catch (e) {
-      Alert.alert(fr ? "Erreur" : "Error", e?.response?.data?.message || (fr ? "Envoi échoué. Réessayez." : "Submission failed. Try again."));
+      Alert.alert(pick("Error", "Erreur"), e?.response?.data?.message || (pick("Submission failed. Try again.", "Envoi échoué. Réessayez.")));
     } finally {
       setSaving(false);
     }
   };
 
   const badge = (verified, submitted) =>
-    verified   ? <Text style={[s.badge, s.badgeGreen]}>{fr ? "✓ Vérifié" : "✓ Verified"}</Text>
-    : submitted ? <Text style={[s.badge, s.badgeYellow]}>{fr ? "⏳ En attente" : "⏳ Pending"}</Text>
-               : <Text style={[s.badge, s.badgeGray]}>{fr ? "Non soumis" : "Not submitted"}</Text>;
+    verified   ? <Text style={[s.badge, s.badgeGreen]}>{pick("✓ Verified", "✓ Vérifié")}</Text>
+    : submitted ? <Text style={[s.badge, s.badgeYellow]}>{pick("⏳ Pending", "⏳ En attente")}</Text>
+               : <Text style={[s.badge, s.badgeGray]}>{pick("Not submitted", "Non soumis")}</Text>;
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
@@ -82,14 +82,14 @@ export default function KycScreen() {
           <Ionicons name="chevron-back" size={26} color={C.white} />
         </TouchableOpacity>
         <View>
-          <Text style={{ color: C.white, fontWeight: "800", fontSize: 16 }}>{fr ? "Vérification d'identité" : "Identity Verification"}</Text>
-          <Text style={{ color: C.muted, fontSize: 12, marginTop: 2 }}>{fr ? "CIN et permis de conduire" : "National ID & driving license"}</Text>
+          <Text style={{ color: C.white, fontWeight: "800", fontSize: 16 }}>{pick("Identity Verification", "Vérification d'identité")}</Text>
+          <Text style={{ color: C.muted, fontSize: 12, marginTop: 2 }}>{pick("National ID & driving license", "CIN et permis de conduire")}</Text>
         </View>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 40 }}>
         <Text style={{ color: C.muted, fontSize: 13, lineHeight: 20, marginBottom: 20 }}>
-          {fr ? "Soumettez votre CIN et permis pour louer et renforcer votre profil de confiance." : "Submit your national ID and driving license to rent and boost your trust profile."}
+          {pick("Submit your national ID and driving license to rent and boost your trust profile.", "Soumettez votre CIN et permis pour louer et renforcer votre profil de confiance.")}
         </Text>
 
         {kyc && (
@@ -99,7 +99,7 @@ export default function KycScreen() {
               {badge(kyc.nationalId?.verified, !!(kyc.nationalId?.number || kyc.nationalId?.imageUrl))}
             </View>
             <View style={[s.statusCard, { backgroundColor: C.card, borderColor: C.border }]}>
-              <Text style={[s.statusLabel, { color: C.muted }]}>{fr ? "Permis" : "License"}</Text>
+              <Text style={[s.statusLabel, { color: C.muted }]}>{pick("License", "Permis")}</Text>
               {badge(kyc.driverLicense?.verified, !!(kyc.driverLicense?.number || kyc.driverLicense?.imageUrl))}
             </View>
           </View>
@@ -107,33 +107,33 @@ export default function KycScreen() {
 
         {/* CIN */}
         <View style={[s.section, { backgroundColor: C.card, borderColor: C.border }]}>
-          <Text style={[s.sectionTitle, { color: C.white }]}>{fr ? "Carte Nationale (CIN)" : "National ID (CIN)"}</Text>
+          <Text style={[s.sectionTitle, { color: C.white }]}>{pick("National ID (CIN)", "Carte Nationale (CIN)")}</Text>
           <TextInput style={[s.input, { color: C.white, borderColor: C.border, backgroundColor: C.inputBg }]}
             value={form.cinNumber} onChangeText={(v) => setForm((p) => ({ ...p, cinNumber: v }))}
-            placeholder={fr ? "Numéro CIN" : "National ID number"} placeholderTextColor={C.muted} />
+            placeholder={pick("National ID number", "Numéro CIN")} placeholderTextColor={C.muted} />
           {form.cinImageUrl ? <Image source={{ uri: form.cinImageUrl }} style={s.preview} /> : null}
           <TouchableOpacity style={[s.uploadBtn, { backgroundColor: C.surface }]} onPress={() => pickImage("cinImageUrl")} disabled={!!uploading}>
-            {uploading === "cinImageUrl" ? <ActivityIndicator color={C.primary} size="small" /> : <Text style={[s.uploadText, { color: C.primary }]}>{fr ? "📷 Photo de la CIN" : "📷 Photo of national ID"}</Text>}
+            {uploading === "cinImageUrl" ? <ActivityIndicator color={C.primary} size="small" /> : <Text style={[s.uploadText, { color: C.primary }]}>{pick("📷 Photo of national ID", "📷 Photo de la CIN")}</Text>}
           </TouchableOpacity>
         </View>
 
         {/* Permis */}
         <View style={[s.section, { backgroundColor: C.card, borderColor: C.border }]}>
-          <Text style={[s.sectionTitle, { color: C.white }]}>{fr ? "Permis de conduire" : "Driving License"}</Text>
+          <Text style={[s.sectionTitle, { color: C.white }]}>{pick("Driving License", "Permis de conduire")}</Text>
           <TextInput style={[s.input, { color: C.white, borderColor: C.border, backgroundColor: C.inputBg }]}
             value={form.permisNumber} onChangeText={(v) => setForm((p) => ({ ...p, permisNumber: v }))}
-            placeholder={fr ? "Numéro du permis" : "License number"} placeholderTextColor={C.muted} />
+            placeholder={pick("License number", "Numéro du permis")} placeholderTextColor={C.muted} />
           <TextInput style={[s.input, { color: C.white, borderColor: C.border, backgroundColor: C.inputBg }]}
             value={form.permisExpiryDate} onChangeText={(v) => setForm((p) => ({ ...p, permisExpiryDate: v }))}
-            placeholder={fr ? "Expiration (AAAA-MM-JJ)" : "Expiry date (YYYY-MM-DD)"} placeholderTextColor={C.muted} />
+            placeholder={pick("Expiry date (YYYY-MM-DD)", "Expiration (AAAA-MM-JJ)")} placeholderTextColor={C.muted} />
           {form.permisImageUrl ? <Image source={{ uri: form.permisImageUrl }} style={s.preview} /> : null}
           <TouchableOpacity style={[s.uploadBtn, { backgroundColor: C.surface }]} onPress={() => pickImage("permisImageUrl")} disabled={!!uploading}>
-            {uploading === "permisImageUrl" ? <ActivityIndicator color={C.primary} size="small" /> : <Text style={[s.uploadText, { color: C.primary }]}>{fr ? "📷 Photo du permis" : "📷 Photo of license"}</Text>}
+            {uploading === "permisImageUrl" ? <ActivityIndicator color={C.primary} size="small" /> : <Text style={[s.uploadText, { color: C.primary }]}>{pick("📷 Photo of license", "📷 Photo du permis")}</Text>}
           </TouchableOpacity>
         </View>
 
         <TouchableOpacity style={[s.btn, { backgroundColor: C.primary }, saving && { opacity: 0.6 }]} onPress={handleSubmit} disabled={saving}>
-          {saving ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>{fr ? "Soumettre pour vérification" : "Submit for review"}</Text>}
+          {saving ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>{pick("Submit for review", "Soumettre pour vérification")}</Text>}
         </TouchableOpacity>
       </ScrollView>
     </View>

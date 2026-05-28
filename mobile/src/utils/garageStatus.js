@@ -1,3 +1,8 @@
+import { pickLang, dateLocaleTag, formatNumber } from "./i18n";
+import { arOverrides } from "../locales/arOverrides";
+
+const p = (lang, en, fr, ar) => pickLang(lang, en, fr, ar, arOverrides);
+
 const CURRENT_YEAR = new Date().getFullYear();
 
 export function daysLeft(dateStr) {
@@ -66,25 +71,25 @@ export function tierIcon(tier) {
   return "ellipse-outline";
 }
 
-export function formatTrackDate(dateStr, fr) {
-  if (!dateStr) return fr ? "Non renseigné" : "Not set";
-  return new Date(dateStr).toLocaleDateString(fr ? "fr-FR" : "en-GB", {
+export function formatTrackDate(dateStr, lang) {
+  if (!dateStr) return p(lang, "Not set", "Non renseigné", "Ma m3tach");
+  return new Date(dateStr).toLocaleDateString(dateLocaleTag(lang), {
     day: "2-digit",
     month: "short",
     year: "numeric",
   });
 }
 
-export function trackStatusLabel(value, type, fr) {
+export function trackStatusLabel(value, type, lang) {
   if (type === "km") {
-    if (value === null) return fr ? "À renseigner" : "Add data";
-    if (value <= 0) return fr ? "Dépassé" : "Overdue";
-    return `${value.toLocaleString()} km`;
+    if (value === null) return p(lang, "Add data", "À renseigner", "Zid m3lomat");
+    if (value <= 0) return p(lang, "Overdue", "Dépassé", "T3ada");
+    return `${formatNumber(value, lang)} km`;
   }
-  if (value === null) return fr ? "À renseigner" : "Add data";
-  if (value <= 0) return fr ? "Expiré" : "Expired";
-  if (value === 1) return fr ? "1 jour" : "1 day";
-  return fr ? `${value} j` : `${value} d`;
+  if (value === null) return p(lang, "Add data", "À renseigner", "Zid m3lomat");
+  if (value <= 0) return p(lang, "Expired", "Expiré", "Sala");
+  if (value === 1) return p(lang, "1 day", "1 jour", "nhar wa7ed");
+  return lang === "ar" ? `${value} ي` : lang === "fr" ? `${value} j` : `${value} d`;
 }
 
 export function progressRatio(value, type, intervalKm = 10000) {
@@ -102,15 +107,15 @@ function mechanicalDueDate(lastChangeDate, years) {
   return d.toISOString();
 }
 
-export function buildTrackItems(car, statuses, fr) {
+export function buildTrackItems(car, statuses, lang) {
   if (!car || !statuses) return [];
 
   const items = [
     {
       id: "assurance",
       category: "papers",
-      label: fr ? "Assurance" : "Insurance",
-      hint: fr ? "Couverture obligatoire" : "Mandatory coverage",
+      label: p(lang, "Insurance", "Assurance", "Assurance"),
+      hint: p(lang, "Mandatory coverage", "Couverture obligatoire", "Tghliya wajiba"),
       icon: "shield-checkmark-outline",
       color: "#f97316",
       value: statuses.assurance,
@@ -120,8 +125,8 @@ export function buildTrackItems(car, statuses, fr) {
     {
       id: "visite",
       category: "papers",
-      label: fr ? "Visite technique" : "Technical inspection",
-      hint: fr ? "Contrôle légal" : "Legal inspection",
+      label: p(lang, "Technical inspection", "Visite technique", "Visite technique"),
+      hint: p(lang, "Legal inspection", "Contrôle légal", "Control qanouni"),
       icon: "clipboard-outline",
       color: "#fb923c",
       value: statuses.visiteTechnique,
@@ -131,8 +136,8 @@ export function buildTrackItems(car, statuses, fr) {
     {
       id: "vignette",
       category: "papers",
-      label: fr ? "Vignette" : "Road tax",
-      hint: fr ? "Taxe annuelle" : "Annual tax",
+      label: p(lang, "Road tax", "Vignette", "Vignette"),
+      hint: p(lang, "Annual tax", "Taxe annuelle", "Dariba snaouya"),
       icon: "receipt-outline",
       color: "#eab308",
       value: statuses.vignette,
@@ -142,8 +147,8 @@ export function buildTrackItems(car, statuses, fr) {
     {
       id: "permis",
       category: "papers",
-      label: fr ? "Permis de conduire" : "Driving licence",
-      hint: fr ? "Validité personnelle" : "Personal validity",
+      label: p(lang, "Driving licence", "Permis de conduire", "Permis"),
+      hint: p(lang, "Personal validity", "Validité personnelle", "Sahl dyalek"),
       icon: "card-outline",
       color: "#a78bfa",
       value: statuses.permis,
@@ -153,8 +158,8 @@ export function buildTrackItems(car, statuses, fr) {
     {
       id: "vidange",
       category: "mechanical",
-      label: fr ? "Vidange" : "Oil change",
-      hint: fr ? "Moteur & filtres" : "Engine & filters",
+      label: p(lang, "Oil change", "Vidange", "Vidange"),
+      hint: p(lang, "Engine & filters", "Moteur & filtres", "Moteur w filtres"),
       icon: "water-outline",
       color: "#38bdf8",
       value: statuses.vidange,
@@ -165,8 +170,8 @@ export function buildTrackItems(car, statuses, fr) {
     {
       id: "pneus",
       category: "mechanical",
-      label: fr ? "Pneus" : "Tyres",
-      hint: fr ? "Adhérence & sécurité" : "Grip & safety",
+      label: p(lang, "Tyres", "Pneus", "Pneus"),
+      hint: p(lang, "Grip & safety", "Adhérence & sécurité", "Lissk a aman"),
       icon: "disc-outline",
       color: "#22d3ee",
       value: statuses.pneus,
@@ -176,8 +181,8 @@ export function buildTrackItems(car, statuses, fr) {
     {
       id: "freins",
       category: "mechanical",
-      label: fr ? "Freins" : "Brakes",
-      hint: fr ? "Disques & plaquettes" : "Pads & discs",
+      label: p(lang, "Brakes", "Freins", "Freins"),
+      hint: p(lang, "Pads & discs", "Disques & plaquettes", "Disques w plaquettes"),
       icon: "stop-circle-outline",
       color: "#f87171",
       value: statuses.freins,
@@ -187,8 +192,8 @@ export function buildTrackItems(car, statuses, fr) {
     {
       id: "batterie",
       category: "mechanical",
-      label: fr ? "Batterie" : "Battery",
-      hint: fr ? "Démarrage fiable" : "Reliable starts",
+      label: p(lang, "Battery", "Batterie", "Batterie"),
+      hint: p(lang, "Reliable starts", "Démarrage fiable", "Demarrage mzyan"),
       icon: "battery-charging-outline",
       color: "#4ade80",
       value: statuses.batterie,
@@ -200,8 +205,8 @@ export function buildTrackItems(car, statuses, fr) {
   items.push({
     id: "chain",
     category: "mechanical",
-    label: fr ? "Chaîne de distribution" : "Timing chain",
-    hint: fr ? "Composant critique" : "Critical component",
+    label: p(lang, "Timing chain", "Chaîne de distribution", "Chaine distribution"),
+    hint: p(lang, "Critical component", "Composant critique", "Piece mohima"),
     icon: "cog-outline",
     color: "#c084fc",
     value: car.chainDistribution?.lastChangeDate ? statuses.chainDistribution : null,
@@ -239,13 +244,13 @@ export function countAlerts(trackItems) {
   return trackItems.filter((i) => i.tier === "critical" || i.tier === "warning").length;
 }
 
-export function soonestDeadline(trackItems, fr) {
+export function soonestDeadline(trackItems, lang) {
   const urgent = trackItems.filter((i) => i.tier === "critical" || i.tier === "warning");
   if (!urgent.length) return null;
   const first = urgent[0];
   return {
     label: first.label,
-    status: trackStatusLabel(first.value, first.type, fr),
+    status: trackStatusLabel(first.value, first.type, lang),
     tier: first.tier,
   };
 }

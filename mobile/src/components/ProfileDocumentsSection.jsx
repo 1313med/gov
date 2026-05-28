@@ -16,11 +16,11 @@ import { updateDriverLicense, updateNationalId } from "../api/user";
 import { uploadListingImages } from "../api/upload";
 import { resolveMediaUrl } from "../utils/mediaUrl";
 import { userHasCinOnFile, userHasLicenseOnFile } from "../utils/profileDocuments";
+import { useAppLang } from "../context/AppLangContext";
 
 export default function ProfileDocumentsSection({
   profile,
   onProfileChange,
-  fr,
   C,
   isDark,
   showLicense = true,
@@ -28,6 +28,7 @@ export default function ProfileDocumentsSection({
   expandLicense = false,
   expandCin = false,
 }) {
+  const { pick } = useAppLang();
   const titleColor = isDark ? "#f8fafc" : "#0f172a";
   const subColor = isDark ? "#94a3b8" : "#64748b";
   const ctaGrad = isDark ? ["#7c6bff", "#5b4ddb"] : ["#6248e8", "#4f46e5"];
@@ -54,7 +55,7 @@ export default function ProfileDocumentsSection({
     });
   }, [profile]);
 
-  const pickDoc = async (applyUrl) => {
+  const chooseDocImage = async (applyUrl) => {
     const r = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: "images",
       allowsEditing: true,
@@ -69,8 +70,8 @@ export default function ProfileDocumentsSection({
       applyUrl(url);
     } catch (e) {
       Alert.alert(
-        fr ? "Échec" : "Failed",
-        e?.response?.data?.message || (fr ? "Envoi impossible" : "Upload failed")
+        pick("Failed", "Échec", "فشل"),
+        e?.response?.data?.message || pick("Upload failed", "Envoi impossible", "تعذّر الرفع")
       );
     }
   };
@@ -78,8 +79,8 @@ export default function ProfileDocumentsSection({
   const saveLicenseDoc = async () => {
     if (!licForm.number?.trim() || !licForm.imageUrl) {
       Alert.alert(
-        fr ? "Permis incomplet" : "License incomplete",
-        fr ? "Numéro et photo requis." : "Number and photo required."
+        pick("License incomplete", "Permis incomplet", "رخصة غير مكتملة"),
+        pick("Number and photo required.", "Numéro et photo requis.", "الرقم والصورة مطلوبان.")
       );
       return;
     }
@@ -91,9 +92,15 @@ export default function ProfileDocumentsSection({
         imageUrl: licForm.imageUrl,
       });
       onProfileChange?.(data);
-      Alert.alert(fr ? "Enregistré" : "Saved", fr ? "Permis enregistré." : "License saved.");
+      Alert.alert(
+        pick("Saved", "Enregistré", "تم الحفظ"),
+        pick("License saved.", "Permis enregistré.", "تم حفظ الرخصة.")
+      );
     } catch (e) {
-      Alert.alert("Error", e?.response?.data?.message || (fr ? "Échec" : "Failed"));
+      Alert.alert(
+        pick("Error", "Erreur", "خطأ"),
+        e?.response?.data?.message || pick("Failed", "Échec", "فشل")
+      );
     }
     setLicSaving(false);
   };
@@ -101,8 +108,8 @@ export default function ProfileDocumentsSection({
   const saveCinDoc = async () => {
     if (!cinForm.number?.trim() || !cinForm.imageUrl) {
       Alert.alert(
-        fr ? "CIN incomplet" : "ID incomplete",
-        fr ? "Numéro et photo requis." : "Number and photo required."
+        pick("ID incomplete", "CIN incomplet", "البطاقة غير مكتملة"),
+        pick("Number and photo required.", "Numéro et photo requis.", "الرقم والصورة مطلوبان.")
       );
       return;
     }
@@ -113,9 +120,15 @@ export default function ProfileDocumentsSection({
         imageUrl: cinForm.imageUrl,
       });
       onProfileChange?.(data);
-      Alert.alert(fr ? "Enregistré" : "Saved", fr ? "CIN enregistré." : "National ID saved.");
+      Alert.alert(
+        pick("Saved", "Enregistré", "تم الحفظ"),
+        pick("National ID saved.", "CIN enregistré.", "تم حفظ البطاقة الوطنية.")
+      );
     } catch (e) {
-      Alert.alert("Error", e?.response?.data?.message || (fr ? "Échec" : "Failed"));
+      Alert.alert(
+        pick("Error", "Erreur", "خطأ"),
+        e?.response?.data?.message || pick("Failed", "Échec", "فشل")
+      );
     }
     setCinSaving(false);
   };
@@ -132,28 +145,28 @@ export default function ProfileDocumentsSection({
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.cardTitle, { color: titleColor }]}>
-                {fr ? "Permis de conduire" : "Driving license"}
+                {pick("Driving license", "Permis de conduire", "رخصة القيادة")}
               </Text>
               <Text style={[styles.cardSub, { color: subColor }]}>
                 {userHasLicenseOnFile(profile)
-                  ? fr ? "Ajouté — touchez pour modifier" : "On file — tap to edit"
-                  : fr ? "Requis pour louer" : "Required to rent"}
+                  ? pick("On file — tap to edit", "Ajouté — touchez pour modifier", "مسجّلة — اضغط للتعديل")
+                  : pick("Required to rent", "Requis pour louer", "مطلوبة للتأجير")}
               </Text>
             </View>
             <Ionicons name={licenseExpanded ? "chevron-up" : "chevron-down"} size={22} color={C.muted} />
           </Pressable>
           {licenseExpanded && (
             <View style={styles.cardBody}>
-              <Text style={[styles.label, { color: C.label }]}>{fr ? "Numéro" : "Number"}</Text>
+              <Text style={[styles.label, { color: C.label }]}>{pick("Number", "Numéro", "الرقم")}</Text>
               <TextInput
                 value={licForm.number}
                 onChangeText={(v) => setLicForm((p) => ({ ...p, number: v }))}
                 style={[styles.input, { color: titleColor, borderColor: C.border, backgroundColor: C.inputBg }]}
-                placeholder={fr ? "ex. B-123456" : "e.g. B-123456"}
+                placeholder={pick("e.g. B-123456", "ex. B-123456", "مثال: B-123456")}
                 placeholderTextColor={C.muted}
               />
               <Text style={[styles.label, { color: C.label, marginTop: 10 }]}>
-                {fr ? "Expiration (optionnel)" : "Expiry (optional)"}
+                {pick("Expiry (optional)", "Expiration (optionnel)", "تاريخ الانتهاء (اختياري)")}
               </Text>
               <TextInput
                 value={licForm.expiryDate}
@@ -163,22 +176,22 @@ export default function ProfileDocumentsSection({
                 placeholderTextColor={C.muted}
               />
               <Text style={[styles.label, { color: C.label, marginTop: 10 }]}>
-                {fr ? "Photo du permis" : "License photo"}
+                {pick("License photo", "Photo du permis", "صورة الرخصة")}
               </Text>
               <TouchableOpacity
-                onPress={() => pickDoc((url) => setLicForm((p) => ({ ...p, imageUrl: url })))}
+                onPress={() => chooseDocImage((url) => setLicForm((p) => ({ ...p, imageUrl: url })))}
                 style={[styles.photoPick, { borderColor: C.border, backgroundColor: C.surface }]}
               >
                 {licForm.imageUrl ? (
                   <Image source={{ uri: resolveMediaUrl(licForm.imageUrl) }} style={styles.photo} />
                 ) : (
-                  <Text style={{ color: subColor }}>{fr ? "Choisir une photo" : "Choose photo"}</Text>
+                  <Text style={{ color: subColor }}>{pick("Choose photo", "Choisir une photo", "اختر صورة")}</Text>
                 )}
               </TouchableOpacity>
               <TouchableOpacity onPress={saveLicenseDoc} disabled={licSaving} activeOpacity={0.9}>
                 <LinearGradient colors={ctaGrad} style={[styles.saveBtn, licSaving && { opacity: 0.65 }]}>
                   <Text style={styles.saveBtnText}>
-                    {licSaving ? "…" : fr ? "Enregistrer le permis" : "Save license"}
+                    {licSaving ? "…" : pick("Save license", "Enregistrer le permis", "حفظ الرخصة")}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -195,46 +208,46 @@ export default function ProfileDocumentsSection({
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.cardTitle, { color: titleColor }]}>
-                {fr ? "Carte nationale (CIN)" : "National ID (CIN)"}
+                {pick("National ID (CIN)", "Carte nationale (CIN)", "البطاقة الوطنية (CIN)")}
               </Text>
               <Text style={[styles.cardSub, { color: subColor }]}>
                 {userHasCinOnFile(profile)
                   ? profile?.nationalId?.verified
-                    ? fr ? "Vérifié" : "Verified"
-                    : fr ? "En attente de validation" : "Pending admin review"
-                  : fr ? "Requis pour louer ou vendre" : "Required to rent or sell"}
+                    ? pick("Verified", "Vérifié", "موثّقة")
+                    : pick("Pending admin review", "En attente de validation", "قيد المراجعة")
+                  : pick("Required to rent or sell", "Requis pour louer ou vendre", "مطلوبة للتأجير أو البيع")}
               </Text>
             </View>
             <Ionicons name={cinExpanded ? "chevron-up" : "chevron-down"} size={22} color={C.muted} />
           </Pressable>
           {cinExpanded && (
             <View style={styles.cardBody}>
-              <Text style={[styles.label, { color: C.label }]}>{fr ? "Numéro CIN" : "ID number"}</Text>
+              <Text style={[styles.label, { color: C.label }]}>{pick("ID number", "Numéro CIN", "رقم البطاقة")}</Text>
               <TextInput
                 value={cinForm.number}
                 onChangeText={(v) => setCinForm((p) => ({ ...p, number: v }))}
                 style={[styles.input, { color: titleColor, borderColor: C.border, backgroundColor: C.inputBg }]}
-                placeholder={fr ? "ex. AB123456" : "e.g. AB123456"}
+                placeholder={pick("e.g. AB123456", "ex. AB123456", "مثال: AB123456")}
                 placeholderTextColor={C.muted}
                 autoCapitalize="characters"
               />
               <Text style={[styles.label, { color: C.label, marginTop: 10 }]}>
-                {fr ? "Photo CIN" : "ID photo"}
+                {pick("ID photo", "Photo CIN", "صورة البطاقة")}
               </Text>
               <TouchableOpacity
-                onPress={() => pickDoc((url) => setCinForm((p) => ({ ...p, imageUrl: url })))}
+                onPress={() => chooseDocImage((url) => setCinForm((p) => ({ ...p, imageUrl: url })))}
                 style={[styles.photoPick, { borderColor: C.border, backgroundColor: C.surface }]}
               >
                 {cinForm.imageUrl ? (
                   <Image source={{ uri: resolveMediaUrl(cinForm.imageUrl) }} style={styles.photo} />
                 ) : (
-                  <Text style={{ color: subColor }}>{fr ? "Choisir une photo" : "Choose photo"}</Text>
+                  <Text style={{ color: subColor }}>{pick("Choose photo", "Choisir une photo", "اختر صورة")}</Text>
                 )}
               </TouchableOpacity>
               <TouchableOpacity onPress={saveCinDoc} disabled={cinSaving} activeOpacity={0.9}>
                 <LinearGradient colors={ctaGrad} style={[styles.saveBtn, cinSaving && { opacity: 0.65 }]}>
                   <Text style={styles.saveBtnText}>
-                    {cinSaving ? "…" : fr ? "Enregistrer le CIN" : "Save national ID"}
+                    {cinSaving ? "…" : pick("Save national ID", "Enregistrer le CIN", "حفظ البطاقة")}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
