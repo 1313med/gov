@@ -2,7 +2,6 @@ import { Link, useLocation } from "react-router-dom";
 import { LayoutDashboard, ClipboardList, CarFront, Users } from "lucide-react";
 
 const ADM_STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Mono:wght@400;500&display=swap');
 
   .adm-shell {
     display: flex;
@@ -12,7 +11,7 @@ const ADM_STYLES = `
     overflow-x: hidden;
     background: #09090f;
     color: #e8e8f0;
-    font-family: 'Syne', sans-serif;
+    font-family: 'Poppins', sans-serif;
   }
 
   .adm-side {

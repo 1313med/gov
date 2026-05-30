@@ -23,7 +23,6 @@ import {
    STYLES
 ───────────────────────────────────────────────────────────────────── */
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap');
 
   .oa {
     /* LIGHT defaults */
@@ -45,7 +44,7 @@ const STYLES = `
     --tip-lbl:  #64748b;
     --grid:     rgba(15,23,42,0.08);
     --hover-vi: rgba(124,108,252,0.06);
-    --head:     'Syne', sans-serif;
+    --head:     'Poppins', sans-serif;
     --mono:     'DM Mono', monospace;
 
     font-family: var(--head);
@@ -179,6 +178,15 @@ const STYLES = `
 
   .oa-loading { display: flex; align-items: center; justify-content: center; min-height: 50vh; padding: 24px; }
   .oa-spin { width: 44px; height: 44px; border-radius: 50%; margin: 0 auto 14px; border: 2px solid rgba(124,108,252,.25); border-top-color: #7c6cfc; animation: oa-spin .9s linear infinite; }
+
+  /* ── HEADER CONTROLS ── */
+  .oa-topbar { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-bottom: 18px; }
+  .oa-lang-group { display: flex; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .oa-lang-btn { padding: 6px 13px; background: none; border: none; cursor: pointer; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; color: var(--muted); transition: all .2s; }
+  .oa-lang-btn.active { background: rgba(124,108,252,.15); color: var(--violet); }
+  .oa-lang-btn:hover:not(.active) { background: var(--s2); color: var(--txt); }
+  .oa-theme-btn { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--border); background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; transition: all .2s; color: var(--muted); }
+  .oa-theme-btn:hover { border-color: var(--bhi); background: var(--s2); color: var(--txt); }
 `;
 
 /* ─────────────────────────────────────────────────────────────────────
@@ -265,8 +273,8 @@ function InsightCard({ insight, gainLabel }) {
    MAIN PAGE
 ───────────────────────────────────────────────────────────────────── */
 export default function OwnerAnalytics() {
-  const { dark } = useTheme();
-  const { copy, lang } = useAppLang();
+  const { dark, toggle } = useTheme();
+  const { copy, lang, setLang } = useAppLang();
   const t = copy.ownerAnalytics;
   const oaCls = `oa${dark ? " dark" : ""}`;
   const [analytics, setAnalytics]     = useState(null);
@@ -334,7 +342,19 @@ export default function OwnerAnalytics() {
 
       <div className={oaCls}>
         {/* ── HEADER ── */}
-        <header className="oa-header oa-fade">
+        {/* ── TOP BAR: lang + theme ── */}
+        <div className="oa-topbar oa-fade">
+          <div className="oa-lang-group">
+            <button className={`oa-lang-btn${lang === "fr" ? " active" : ""}`} onClick={() => setLang("fr")}>FR</button>
+            <button className={`oa-lang-btn${lang === "en" ? " active" : ""}`} onClick={() => setLang("en")}>EN</button>
+          </div>
+          <button className="oa-theme-btn" onClick={toggle} title={dark ? "Mode clair" : "Mode sombre"}>
+            {dark ? "☀️" : "🌙"}
+          </button>
+        </div>
+
+        {/* ── HEADER: title + time filter ── */}
+        <header className="oa-header oa-fade" style={{ animationDelay: "40ms" }}>
           <div>
             <span className="oa-label">{t.eyebrowDashboard}</span>
             <h1 className="oa-title">{t.title}</h1>

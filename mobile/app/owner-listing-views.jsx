@@ -25,20 +25,20 @@ import { resolveMediaUrl } from "../src/utils/mediaUrl";
 const { width: W } = Dimensions.get("window");
 
 const PERIODS = [
-  { id: "all", en: "All time", fr: "Total" },
-  { id: "today", en: "Today", fr: "Aujourd'hui" },
-  { id: "yesterday", en: "Yesterday", fr: "Hier" },
-  { id: "last_week", en: "Last 7 days", fr: "7 derniers j." },
-  { id: "last_month", en: "Last month", fr: "Mois dernier" },
-  { id: "year", en: "This year", fr: "Cette année" },
+  { id: "all", en: "All time", fr: "Total", ar: "كل الوقت" },
+  { id: "today", en: "Today", fr: "Aujourd'hui", ar: "اليوم" },
+  { id: "yesterday", en: "Yesterday", fr: "Hier", ar: "أمس" },
+  { id: "last_week", en: "Last 7 days", fr: "7 derniers j.", ar: "آخر 7 أيام" },
+  { id: "last_month", en: "Last month", fr: "Mois dernier", ar: "الشهر الماضي" },
+  { id: "year", en: "This year", fr: "Cette année", ar: "هذه السنة" },
 ];
 
-function statusLabel(status, fr) {
+function statusLabel(status, pick) {
   const s = String(status || "").toLowerCase();
-  if (s === "approved") return pick("Live", "En ligne");
-  if (s === "pending") return pick("Pending", "En attente");
-  if (s === "rejected") return pick("Rejected", "Refusé");
-  if (s === "unavailable") return pick("Unavailable", "Indisponible");
+  if (s === "approved") return pick("Live", "En ligne", "منشور");
+  if (s === "pending") return pick("Pending", "En attente", "قيد الانتظار");
+  if (s === "rejected") return pick("Rejected", "Refusé", "مرفوض");
+  if (s === "unavailable") return pick("Unavailable", "Indisponible", "غير متاح");
   return s;
 }
 
@@ -189,10 +189,9 @@ function createStyles(C, isDark) {
 }
 
 export default function OwnerListingViewsScreen() {
-  const { lang, pick, numberLocale } = useAppLang();
+  const { pick, numberLocale } = useAppLang();
   const { colors: C, isDark } = useTheme();
   const insets = useSafeAreaInsets();
-  const fr = lang === "fr";
   const s = useMemo(() => createStyles(C, isDark), [C, isDark]);
   const [data, setData] = useState(null);
   const [fetching, setFetching] = useState(true);
@@ -269,7 +268,7 @@ export default function OwnerListingViewsScreen() {
                 style={[s.chip, active && s.chipActive]}
                 disabled={fetching}
               >
-                <Text style={[s.chipTxt, active && s.chipTxtActive]}>{fr ? p.fr : p.en}</Text>
+                <Text style={[s.chipTxt, active && s.chipTxtActive]}>{pick(p.en, p.fr, p.ar)}</Text>
               </Pressable>
             );
           })}
@@ -379,7 +378,7 @@ export default function OwnerListingViewsScreen() {
                     {v.subtitle || "—"} · {v.city || ""}
                   </Text>
                   <View style={[s.pill, { borderColor: stColor + "55", backgroundColor: stColor + "14" }]}>
-                    <Text style={[s.pillTxt, { color: stColor }]}>{statusLabel(v.status, fr)}</Text>
+                    <Text style={[s.pillTxt, { color: stColor }]}>{statusLabel(v.status, pick)}</Text>
                   </View>
                   <View style={s.shareTrack}>
                     <LinearGradient

@@ -21,9 +21,9 @@
   --ink3: rgba(11, 22, 61, 0.52);
   --ink4: rgba(11, 22, 61, 0.32);
   --danger: #dc2626;
-  --sans: "Inter", sans-serif;
-  --display: "Syne", sans-serif;
-  --mono: "Space Mono", monospace;
+  --sans: "Outfit", sans-serif;
+  --display: "Poppins", sans-serif;
+  --mono: "DM Mono", monospace;
 }
 
 html.dark .gv-auth {

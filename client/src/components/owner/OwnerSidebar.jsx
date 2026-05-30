@@ -4,7 +4,6 @@ import { useTheme } from "../../context/ThemeContext";
 import { useAppLang } from "../../context/AppLangContext";
 
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap');
 
   .osb {
     /* LIGHT defaults */
@@ -90,7 +89,7 @@ const STYLES = `
     margin-bottom: 4px;
   }
   .osb-brand-title {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Poppins', sans-serif;
     font-size: 17px;
     font-weight: 800;
     letter-spacing: -.03em;
@@ -202,7 +201,7 @@ const STYLES = `
     margin-bottom: 3px;
   }
   .osb-footer-name {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Poppins', sans-serif;
     font-size: 13px;
     font-weight: 700;
     color: var(--osb-footer-name);

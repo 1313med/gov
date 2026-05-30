@@ -8,10 +8,9 @@ import { Plus, X, Pencil, Check, Trash2, ImagePlus, CalendarOff, Tag, ToggleLeft
 
 
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap');
 
   .mf-wrap { background:#09090f; min-height:100vh; padding:36px 32px; box-sizing:border-box; color:#e8e8f0; font-family:'DM Mono',monospace; }
-  .mf-heading { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; letter-spacing:-.04em; color:#e8e8f0; margin:0 0 6px; }
+  .mf-heading { font-family:'Poppins',sans-serif; font-size:28px; font-weight:800; letter-spacing:-.04em; color:#e8e8f0; margin:0 0 6px; }
   .mf-sub { color:#3a3a52; font-size:12px; margin:0 0 32px; }
 
   .mf-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:20px; }
@@ -21,7 +20,7 @@ const STYLES = `
   .mf-card-img { width:100%; height:180px; object-fit:cover; background:#1a1a24; }
   .mf-card-img-placeholder { width:100%; height:180px; background:#1a1a24; display:flex; align-items:center; justify-content:center; color:#3a3a52; font-size:12px; }
   .mf-card-body { padding:16px; flex:1; display:flex; flex-direction:column; gap:6px; }
-  .mf-card-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:800; color:#e8e8f0; letter-spacing:-.02em; margin:0; }
+  .mf-card-title { font-family:'Poppins',sans-serif; font-size:15px; font-weight:800; color:#e8e8f0; letter-spacing:-.02em; margin:0; }
   .mf-card-meta { color:#4a4a62; font-size:11px; }
   .mf-card-price { font-size:13px; color:#7c6cfc; font-weight:500; margin-top:4px; }
   .mf-card-badges { display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
@@ -44,7 +43,7 @@ const STYLES = `
   .mf-modal::-webkit-scrollbar { width:4px; }
   .mf-modal::-webkit-scrollbar-thumb { background:#2a2a3a; border-radius:4px; }
   .mf-modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
-  .mf-modal-title { font-family:'Syne',sans-serif; font-size:18px; font-weight:800; color:#e8e8f0; margin:0; letter-spacing:-.03em; }
+  .mf-modal-title { font-family:'Poppins',sans-serif; font-size:18px; font-weight:800; color:#e8e8f0; margin:0; letter-spacing:-.03em; }
   .mf-modal-close { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08); border-radius:8px; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#5a5a72; transition:all .2s; }
   .mf-modal-close:hover { color:#e8e8f0; background:rgba(255,255,255,.1); }
 
@@ -73,7 +72,7 @@ const STYLES = `
   .mf-offer-item { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06); border-radius:12px; padding:14px; display:flex; flex-direction:column; gap:6px; transition:border-color .2s; }
   .mf-offer-item.active { border-color:rgba(251,191,36,.25); }
   .mf-offer-item-header { display:flex; align-items:center; gap:8px; }
-  .mf-offer-item-title { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; color:#e8e8f0; flex:1; }
+  .mf-offer-item-title { font-family:'Poppins',sans-serif; font-size:13px; font-weight:700; color:#e8e8f0; flex:1; }
   .mf-offer-item-desc { font-size:11px; color:#5a5a72; }
   .mf-offer-item-meta { font-size:10px; color:#fbbf24; }
   .mf-offer-toggle { background:none; border:none; cursor:pointer; padding:0; display:flex; align-items:center; transition:color .2s; }
@@ -88,7 +87,7 @@ const STYLES = `
   .mf-pill.selected { background:rgba(124,108,252,.2); border-color:#7c6cfc; color:#c4baff; }
 
   .mf-divider { height:1px; background:rgba(255,255,255,.05); margin:20px 0; }
-  .mf-save-btn { width:100%; padding:12px; background:linear-gradient(135deg,#7c6cfc,#9b8cff); border:none; border-radius:12px; color:#fff; font-family:'Syne',sans-serif; font-size:14px; font-weight:700; cursor:pointer; transition:opacity .2s; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:20px; }
+  .mf-save-btn { width:100%; padding:12px; background:linear-gradient(135deg,#7c6cfc,#9b8cff); border:none; border-radius:12px; color:#fff; font-family:'Poppins',sans-serif; font-size:14px; font-weight:700; cursor:pointer; transition:opacity .2s; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:20px; }
   .mf-save-btn:disabled { opacity:.5; cursor:not-allowed; }
   .mf-empty { text-align:center; padding:80px 20px; color:#3a3a52; font-size:13px; }
   .mf-empty-icon { font-size:40px; margin-bottom:12px; opacity:.3; }

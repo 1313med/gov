@@ -24,7 +24,6 @@ const locales = { "en-US": enUS, fr };
 const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
 
 const UI_STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Mono:wght@400;500&display=swap');
 
   .obc-root { position: relative; z-index: 1; }
 
@@ -83,7 +82,7 @@ const UI_STYLES = `
   .obc-tb-btn:active { transform: scale(0.98); }
 
   .obc-tb-label {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Poppins', sans-serif;
     font-size: clamp(15px, 2.5vw, 18px);
     font-weight: 700;
     letter-spacing: -.03em;
@@ -136,7 +135,7 @@ const UI_STYLES = `
   }
   .obc-day-pill .w { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: #5a5a72; }
   .obc-day-pill.sel .w { color: #9b8cff; }
-  .obc-day-pill .n { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; color: #8a8a9e; margin-top: 4px; }
+  .obc-day-pill .n { font-family: 'Poppins', sans-serif; font-size: 17px; font-weight: 700; color: #8a8a9e; margin-top: 4px; }
   .obc-day-pill.sel .n { color: #e8e8f0; }
   .obc-day-dot { width: 5px; height: 5px; border-radius: 50%; margin-top: 5px; background: #5a5a72; }
   .obc-day-pill.sel .obc-day-dot { background: #7c6cfc; box-shadow: 0 0 8px #7c6cfc; }
@@ -152,7 +151,7 @@ const UI_STYLES = `
   }
   .obc-m-card:hover { background: rgba(255,255,255,.07); border-color: rgba(124,108,252,.2); transform: translateY(-1px); }
   .obc-m-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-  .obc-m-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: #e8e8f0; }
+  .obc-m-title { font-family: 'Poppins', sans-serif; font-size: 15px; font-weight: 700; color: #e8e8f0; }
   .obc-m-empty { text-align: center; padding: 44px 16px; font-family: 'DM Mono', monospace; font-size: 12px; color: #4a4a62; }
   .obc-m-date { color: #5a5a72; }
   html.light .obc-m-date { color: #64748b; }
@@ -195,7 +194,7 @@ const UI_STYLES = `
   .obc-modal-x:hover { background: rgba(124,108,252,.15); border-color: rgba(124,108,252,.3); color: #e8e8f0; }
   .obc-modal-x svg { width: 14px; height: 14px; }
   .obc-modal-k { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #5a5a72; }
-  .obc-modal-h { font-family: 'Syne', sans-serif; font-size: 21px; font-weight: 800; letter-spacing: -.03em; margin: 8px 0 0; color: #e8e8f0; line-height: 1.2; }
+  .obc-modal-h { font-family: 'Poppins', sans-serif; font-size: 21px; font-weight: 800; letter-spacing: -.03em; margin: 8px 0 0; color: #e8e8f0; line-height: 1.2; }
   .obc-modal-row {
     display: flex; align-items: baseline; gap: 12px;
     padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,.06);

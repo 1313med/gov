@@ -3,7 +3,6 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 import { useAppLang } from "../../context/AppLangContext";
 
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;600&display=swap');
 
   .rpc-legend {
     display: flex;

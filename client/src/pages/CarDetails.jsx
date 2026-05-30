@@ -92,15 +92,12 @@ export default function CarDetails() {
     <div className={pageClass}>
       <ListingDetailAmbient />
 
-      <nav className="ld-nav">
-        <Link to="/" className="ld-nav-logo">
-          Goo<em>voiture</em>
-        </Link>
+      <div className="ld-nav">
         <Link to="/cars" className="ld-back">
           <ArrowLeft size={16} />
           {copy.carDetails.back}
         </Link>
-      </nav>
+      </div>
 
       <div className="ld-body">
         <div className="ld-main">

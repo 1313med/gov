@@ -10,8 +10,7 @@ const FUEL_KEYS = ["Diesel", "Petrol", "Hybrid", "Electric"];
 const GEARBOX_KEYS = ["Manual", "Automatic"];
 
 const S = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Mono:wght@400;500&display=swap');
-  .ar { --bg:#09090f; --s1:#111118; --s2:#16161f; --border:rgba(255,255,255,0.07); --txt:#e8e8f0; --muted:#5a5a72; --dim:#3a3a52; --violet:#7c6cfc; --head:'Syne',sans-serif; --mono:'DM Mono',monospace; padding:40px 44px 60px; min-height:100vh; background:var(--bg); color:var(--txt); font-family:var(--head); width:100%; box-sizing:border-box; }
+  .ar { --bg:#09090f; --s1:#111118; --s2:#16161f; --border:rgba(255,255,255,0.07); --txt:#e8e8f0; --muted:#5a5a72; --dim:#3a3a52; --violet:#7c6cfc; --head:'Poppins',sans-serif; --mono:'DM Mono',monospace; padding:40px 44px 60px; min-height:100vh; background:var(--bg); color:var(--txt); font-family:var(--head); width:100%; box-sizing:border-box; }
   .ar-header { margin-bottom:36px; }
   .ar-eyebrow { font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
   .ar-title { font-size:32px; font-weight:800; letter-spacing:-.04em; line-height:1; }

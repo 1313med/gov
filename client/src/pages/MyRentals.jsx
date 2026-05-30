@@ -5,7 +5,6 @@ import OwnerLayout from "../components/owner/OwnerLayout";
 import { useAppLang } from "../context/AppLangContext";
 
 const S = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Mono:wght@400;500&display=swap');
 
   .mr {
     --bg:     #09090f;
@@ -21,7 +20,7 @@ const S = `
     --teal:   #2af5c0;
     --amber:  #f5a623;
     --danger: #fc6c6c;
-    --head:   'Syne', sans-serif;
+    --head:   'Poppins', sans-serif;
     --mono:   'DM Mono', monospace;
 
     padding: 40px 44px 60px;

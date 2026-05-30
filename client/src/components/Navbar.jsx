@@ -16,7 +16,6 @@ import { hasUserRole } from "../utils/userRoles";
      light  → rgba(255,255,255,.92) backdrop-blur
 ───────────────────────────────────────────────────────── */
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
 
   .gn {
     position: sticky;

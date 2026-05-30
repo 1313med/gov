@@ -4,7 +4,6 @@ import { api } from "../api/axios";
 import { useAppLang } from "../context/AppLangContext";
 
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap');
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 .ve-root { min-height:100vh; background:var(--bg0); display:flex; align-items:center; justify-content:center; font-family:var(--sans); position:relative; overflow:hidden; padding:24px; }
 .ve-bg { position:fixed; inset:0; z-index:0; pointer-events:none; background:radial-gradient(ellipse 80% 70% at 10% 20%,rgba(124,107,255,0.18) 0%,transparent 60%),radial-gradient(ellipse 60% 60% at 90% 80%,rgba(56,189,248,0.12) 0%,transparent 60%),var(--bg0); }

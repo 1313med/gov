@@ -347,13 +347,12 @@ function exportBookingPDF(b) {
 
 /* ─── styles ──────────────────────────────────────────────────────────── */
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap');
 
   .obl { background:#09090f; min-height:100vh; padding:40px 36px; box-sizing:border-box; font-family:'DM Mono',monospace; color:#e8e8f0; }
 
   /* ── header ── */
   .obl-header { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:32px; }
-  .obl-heading { font-family:'Syne',sans-serif; font-size:30px; font-weight:800; letter-spacing:-.04em; color:#e8e8f0; margin:0 0 4px; }
+  .obl-heading { font-family:'Poppins',sans-serif; font-size:30px; font-weight:800; letter-spacing:-.04em; color:#e8e8f0; margin:0 0 4px; }
   .obl-sub { color:#3a3a52; font-size:12px; margin:0; }
   .obl-export-row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
 
@@ -373,7 +372,7 @@ const STYLES = `
   .obl-stat.completed::before{ background:#7c6cfc; }
   .obl-stat.revenue::before  { background:linear-gradient(90deg,#7c6cfc,#2af5c0); }
   .obl-stat-icon { width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; margin-bottom:12px; }
-  .obl-stat-val  { font-family:'Syne',sans-serif; font-size:24px; font-weight:800; line-height:1; margin-bottom:5px; }
+  .obl-stat-val  { font-family:'Poppins',sans-serif; font-size:24px; font-weight:800; line-height:1; margin-bottom:5px; }
   .obl-stat-lbl  { font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:#3a3a52; }
 
   /* ── toolbar ── */
@@ -401,7 +400,7 @@ const STYLES = `
 
   .obl-car-img { width:44px; height:34px; border-radius:7px; object-fit:cover; border:1px solid rgba(255,255,255,.07); flex-shrink:0; }
   .obl-car-placeholder { width:44px; height:34px; border-radius:7px; background:rgba(124,108,252,.08); border:1px dashed rgba(124,108,252,.2); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-  .obl-car-name { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; color:#e8e8f0; margin:0; letter-spacing:-.02em; }
+  .obl-car-name { font-family:'Poppins',sans-serif; font-size:13px; font-weight:700; color:#e8e8f0; margin:0; letter-spacing:-.02em; }
   .obl-car-city { font-size:10px; color:#3a3a52; margin:2px 0 0; }
 
   .obl-customer-name    { font-weight:500; color:#c8c8d8; margin:0; }
@@ -410,7 +409,7 @@ const STYLES = `
   .obl-dates-main { color:#c8c8d8; margin:0; }
   .obl-dates-days { font-size:10px; color:#4a4a62; margin:2px 0 0; }
 
-  .obl-total { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:#7c6cfc; margin:0; }
+  .obl-total { font-family:'Poppins',sans-serif; font-size:14px; font-weight:700; color:#7c6cfc; margin:0; }
   .obl-offer { font-size:10px; color:#fbbf24; margin:2px 0 0; }
 
   /* ── badges ── */
@@ -479,7 +478,7 @@ const STYLES = `
   .obl-doc-upload-row > div { flex:1; }
   .obl-panel-input { width:100%; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.07); border-radius:8px; color:#e8e8f0; font-family:'DM Mono',monospace; font-size:12px; padding:8px 12px; box-sizing:border-box; outline:none; transition:border-color .2s; }
   .obl-panel-input:focus { border-color:#7c6cfc; }
-  .obl-media-save-btn { margin-top:14px; grid-column:1/-1; width:100%; padding:10px; background:linear-gradient(135deg,#7c6cfc,#9b8cff); border:none; border-radius:10px; color:#fff; font-family:'Syne',sans-serif; font-size:13px; font-weight:700; cursor:pointer; transition:opacity .2s; }
+  .obl-media-save-btn { margin-top:14px; grid-column:1/-1; width:100%; padding:10px; background:linear-gradient(135deg,#7c6cfc,#9b8cff); border:none; border-radius:10px; color:#fff; font-family:'Poppins',sans-serif; font-size:13px; font-weight:700; cursor:pointer; transition:opacity .2s; }
   .obl-media-save-btn:disabled { opacity:.45; cursor:not-allowed; }
   .obl-media-saved { font-size:11px; color:#4ade80; margin-top:8px; grid-column:1/-1; text-align:center; }
 
@@ -506,7 +505,7 @@ const STYLES = `
     border-bottom:1px solid rgba(255,255,255,.06);
     display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
   }
-  .fbk-title { font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#e8e8f0;margin:0 0 3px; }
+  .fbk-title { font-family:'Poppins',sans-serif;font-size:17px;font-weight:800;color:#e8e8f0;margin:0 0 3px; }
   .fbk-sub   { font-size:11px;color:#3a3a52;margin:0; }
   .fbk-close {
     background:none;border:none;cursor:pointer;color:#3a3a52;
@@ -520,7 +519,7 @@ const STYLES = `
   .fbk-big-btn {
     padding:14px 10px;border-radius:14px;border:1.5px solid rgba(255,255,255,.08);
     background:rgba(255,255,255,.03);cursor:pointer;
-    font-family:'Syne',sans-serif;font-size:15px;font-weight:800;
+    font-family:'Poppins',sans-serif;font-size:15px;font-weight:800;
     color:#5a5a72;transition:all .2s;text-align:center;
   }
   .fbk-big-btn.good.active { background:rgba(74,222,128,.12);border-color:rgba(74,222,128,.4);color:#4ade80; }
@@ -559,7 +558,7 @@ const STYLES = `
   .fbk-submit {
     flex:1;padding:12px;border:none;border-radius:12px;
     background:linear-gradient(135deg,#7c6cfc,#9b8cff);
-    color:#fff;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;
+    color:#fff;font-family:'Poppins',sans-serif;font-size:14px;font-weight:800;
     cursor:pointer;transition:opacity .2s;
   }
   .fbk-submit:disabled{ opacity:.4;cursor:not-allowed; }

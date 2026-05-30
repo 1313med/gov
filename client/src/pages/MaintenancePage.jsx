@@ -5,14 +5,13 @@ import { useAppLang } from "../context/AppLangContext";
 import { Wrench, Plus, Trash2, X, Car, MapPin, Calendar, AlertTriangle } from "lucide-react";
 
 const S = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Mono:wght@400;500&display=swap');
 
   .mx {
     --bg:#09090f; --s1:#111118; --s2:#16161f;
     --border:rgba(255,255,255,0.07); --bhi:rgba(255,255,255,0.13);
     --txt:#e8e8f0; --txt2:#c0c0d0; --muted:#5a5a72; --dim:#3a3a52;
     --violet:#7c6cfc; --amber:#f5a623; --danger:#fc6c6c; --green:#34d399;
-    --head:'Syne',sans-serif; --mono:'DM Mono',monospace;
+    --head:'Poppins',sans-serif; --mono:'DM Mono',monospace;
     padding:40px 44px 80px; min-height:100vh; background:var(--bg);
     color:var(--txt); font-family:var(--head); box-sizing:border-box;
   }
@@ -87,7 +86,7 @@ const S = `
   .mx-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   @media(max-width:480px){ .mx-grid-2{grid-template-columns:1fr;} }
 
-  .mx-submit-btn { width:100%; padding:12px; background:linear-gradient(135deg,#7c6cfc,#9b8cff); border:none; border-radius:12px; color:#fff; font-family:'Syne',sans-serif; font-size:14px; font-weight:700; cursor:pointer; transition:opacity .2s; margin-top:8px; }
+  .mx-submit-btn { width:100%; padding:12px; background:linear-gradient(135deg,#7c6cfc,#9b8cff); border:none; border-radius:12px; color:#fff; font-family:'Poppins',sans-serif; font-size:14px; font-weight:700; cursor:pointer; transition:opacity .2s; margin-top:8px; }
   .mx-submit-btn:disabled { opacity:.5; cursor:not-allowed; }
 
   .mx-no-cars { text-align:center; padding:60px 20px; font-family:var(--mono); font-size:13px; color:var(--muted); background:var(--s1); border:1px solid var(--border); border-radius:18px; }

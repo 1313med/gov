@@ -5,7 +5,6 @@ import { useAppLang } from "../../context/AppLangContext";
 const COLORS = ["#2af5c0", "#f5a623", "#fc6c6c", "#7c6cfc"];
 
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;600&display=swap');
 
   .bsc-layout {
     display: flex;

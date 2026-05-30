@@ -9,7 +9,6 @@ const FILTER_KEYS = [
 ];
 
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap');
 
   .tf-scroll {
     width: 100%;
