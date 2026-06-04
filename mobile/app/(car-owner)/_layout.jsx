@@ -42,6 +42,15 @@ export default function CarOwnerLayout() {
         }}
       />
       <Tabs.Screen
+        name="mechanic"
+        options={{
+          title: pick("Mechanic", "Mécanicien"),
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "construct" : "construct-outline"} size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="messages"
         options={{
           title: pick("Messages", "Messages"),

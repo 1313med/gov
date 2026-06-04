@@ -9,16 +9,28 @@ cd goovoiture/mobile
 npm install
 ```
 
-## ⚠️ Important: Set your server IP
+## ⚠️ Wi‑Fi changed? Update API URL
 
-Before running on a **physical device**, open [src/config/index.js](src/config/index.js) and replace `localhost` with your computer's local IP address:
+On a **physical phone** (Expo Go), the app cannot use `localhost`. After every Wi‑Fi change:
 
-```js
-// Find your IP: run `ipconfig` on Windows
-export const SERVER_URL = "http://192.168.X.X:5000";
-```
+1. On Windows, run `ipconfig` and note **IPv4** for your Wi‑Fi adapter (e.g. `192.168.1.37`).
+2. Edit `mobile/.env`:
+   ```env
+   EXPO_PUBLIC_DEV_API_URL=http://YOUR_IPV4:5000
+   ```
+   No trailing slash. Example: `http://192.168.1.37:5000`
+3. Start the **backend** (`goovoiture/server`, port 5000).
+4. **Stop Expo completely** (Ctrl+C), then restart with a clean cache:
+   ```bash
+   npm run start:clear
+   ```
+   Do **not** combine `--offline` and `--lan` (Expo forbids it). Offline mode already uses LAN by default for the QR code.
+5. In **Expo Go**, scan the **new** QR code (the LAN IP in the terminal changes with Wi‑Fi too).
+6. Phone and PC must be on the **same** Wi‑Fi (not guest network / mobile data only).
 
-Simulators/emulators can use `localhost` — physical phones cannot.
+In Metro logs you should see: `[Goovoiture] API: http://192.168.x.x:5000/api (from .env)`
+
+Test API from the PC browser: `http://YOUR_IPV4:5000/api/health` → should show `{"ok":true,...}`.
 
 ## Run
 

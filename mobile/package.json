@@ -4,7 +4,10 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start --offline",
+    "start:clear": "expo start --offline --clear",
+    "start:fresh": "powershell -ExecutionPolicy Bypass -File scripts/kill-metro-ports.ps1 && expo start --offline --clear",
     "start:online": "expo start",
+    "start:tunnel": "expo start --tunnel --clear",
     "android": "expo start --offline --android",
     "ios": "expo start --offline --ios",
     "build:android": "eas build --platform android",
