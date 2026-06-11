@@ -1,8 +1,25 @@
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAppLang } from "../context/AppLangContext";
+import { buildSeoPath, parseSeoPath, isPublicSeoPath } from "../seo/seoPaths";
 
-/** Compact FR | EN toggle — reuse Home2 `.hx-lang` when inside `.hx`, else `.ls` */
+/** Compact FR | EN | AR toggle */
 export default function LangSwitch({ className = "" }) {
   const { lang, setLang } = useAppLang();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const pick = (next) => {
+    if (isPublicSeoPath(location.pathname)) {
+      setLang(next);
+    } else {
+      setLang(next);
+      const { basePath } = parseSeoPath(location.pathname);
+      if (basePath !== location.pathname) {
+        navigate(buildSeoPath(next, basePath));
+      }
+    }
+  };
+
   return (
     <div
       className={`ls-lang ${className}`.trim()}
@@ -20,11 +37,11 @@ export default function LangSwitch({ className = "" }) {
           flex-shrink: 0;
         }
         .ls-lang button {
-          padding: 7px 11px;
+          padding: 7px 9px;
           font-family: ui-monospace, monospace;
           font-size: 10px;
           font-weight: 600;
-          letter-spacing: .1em;
+          letter-spacing: .08em;
           text-transform: uppercase;
           border: none;
           background: transparent;
@@ -39,22 +56,17 @@ export default function LangSwitch({ className = "" }) {
           box-shadow: inset 0 0 0 1px rgba(124,107,255,.25);
         }
       `}</style>
-      <button
-        type="button"
-        className={lang === "fr" ? "on" : ""}
-        onClick={() => setLang("fr")}
-        aria-pressed={lang === "fr"}
-      >
-        FR
-      </button>
-      <button
-        type="button"
-        className={lang === "en" ? "on" : ""}
-        onClick={() => setLang("en")}
-        aria-pressed={lang === "en"}
-      >
-        EN
-      </button>
+      {["fr", "en", "ar"].map((code) => (
+        <button
+          key={code}
+          type="button"
+          className={lang === code ? "on" : ""}
+          onClick={() => pick(code)}
+          aria-pressed={lang === code}
+        >
+          {code.toUpperCase()}
+        </button>
+      ))}
     </div>
   );
 }

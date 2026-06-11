@@ -5,6 +5,7 @@ import { getRentalFavorites, addRentalFavorite, removeRentalFavorite } from "../
 import { loadAuth } from "../utils/authStorage";
 import { useAppLang } from "../context/AppLangContext";
 import { useTheme } from "../context/ThemeContext";
+import SeoContentBlock from "../components/SeoContentBlock";
 
 /* ─────────────────────────────────────────────────────────────────────────── */
 /*  STYLES                                                                     */
@@ -1222,6 +1223,7 @@ export default function Rentals() {
           </div>
         </div>
       )}
+      <SeoContentBlock />
     </div>
   );
 }

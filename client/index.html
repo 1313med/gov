@@ -13,14 +13,20 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Goovoiture" />
 
-    <!-- SEO (French — updated per route by SeoHead) -->
+    <!-- SEO — fr / en / ar (per-route via SeoHead) -->
     <meta name="description" content="Location de voiture et marketplace automobile au Maroc. Louez ou achetez votre voiture sur Goovoiture." />
+    <meta name="keywords" content="location voiture maroc, car rental morocco, تأجير سيارات المغرب, vente voiture maroc" />
     <meta name="robots" content="index, follow" />
+    <meta name="geo.region" content="MA" />
+    <meta name="geo.placename" content="Morocco" />
     <meta property="og:locale" content="fr_MA" />
+    <meta property="og:locale:alternate" content="en_MA" />
+    <meta property="og:locale:alternate" content="ar_MA" />
     <meta property="og:site_name" content="Goovoiture" />
     <meta property="og:title" content="Goovoiture — Location de voiture & vente auto au Maroc" />
     <meta property="og:description" content="Location de voiture et achat/vente de voitures au Maroc." />
     <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://goovoiture.ma/og-default.svg" />
 
     <!-- Icons -->
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
@@ -31,7 +37,6 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-    <!-- Register service worker (production only — dev HMR breaks with SW caching) -->
     <script>
       if ('serviceWorker' in navigator && location.hostname !== 'localhost' && !location.hostname.startsWith('192.168.')) {
         window.addEventListener('load', () => {

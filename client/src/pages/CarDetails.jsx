@@ -15,10 +15,13 @@ import ListingDetailAmbient from "../components/listing/ListingDetailAmbient";
 import ListingGallery from "../components/listing/ListingGallery";
 import ListingSpecGrid from "../components/listing/ListingSpecGrid";
 import SeoHead from "../components/SeoHead";
+import { buildSaleListingSeo, getSiteUrl } from "../seo/seoLocales";
+import { buildSeoPath } from "../seo/seoPaths";
+import { productJsonLd } from "../seo/jsonLd";
 import "../styles/listing-detail.css";
 
 export default function CarDetails() {
-  const { copy } = useAppLang();
+  const { copy, lang } = useAppLang();
   const { dark } = useTheme();
   const { id } = useParams();
   const navigate = useNavigate();
@@ -89,16 +92,27 @@ export default function CarDetails() {
     { key: "city", label: copy.carDetails.city, value: car.city },
   ];
 
+  const listingSeo = buildSaleListingSeo(lang, car);
+  const siteUrl = getSiteUrl();
+
   return (
     <div className={pageClass}>
       <SeoHead
         override={{
-          title: `${car.brand} ${car.model} ${car.year} à vendre — ${car.city} | Goovoiture`,
-          description:
-            (car.description || `${car.brand} ${car.model} ${car.year} à ${car.city}. Prix: ${Number(car.price).toLocaleString("fr-MA")} MAD.`).slice(0, 160),
+          title: listingSeo.title,
+          description: listingSeo.description,
           image: images[0] || undefined,
           type: "product",
+          canonical: `${siteUrl}${buildSeoPath(lang, `/cars/${id}`)}`,
         }}
+        jsonLdExtra={productJsonLd({
+          name: `${car.brand} ${car.model} ${car.year}`,
+          description: listingSeo.description,
+          image: images[0],
+          price: car.price,
+          url: `${siteUrl}${buildSeoPath(lang, `/cars/${id}`)}`,
+          city: car.city,
+        })}
       />
       <ListingDetailAmbient />
 

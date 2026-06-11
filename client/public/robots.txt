@@ -1,13 +1,18 @@
-# Goovoiture — SEO (pages publiques)
+# Goovoiture — SEO trilingue (fr / en / ar)
 User-agent: *
 Allow: /
+Allow: /en/
+Allow: /ar/
 Allow: /cars
 Allow: /rentals
+Allow: /location-voiture/
+Allow: /location-voiture-occasion/
 Allow: /buying-guide
 Allow: /mechanic-prices
 Allow: /community
 Allow: /afford-car
 Allow: /emergency
+Allow: /vendre-ma-voiture
 
 Disallow: /admin
 Disallow: /owner

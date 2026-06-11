@@ -15,6 +15,9 @@ import ListingGallery from "../components/listing/ListingGallery";
 import ListingSpecGrid from "../components/listing/ListingSpecGrid";
 import RentalBookingCalendar from "../components/listing/RentalBookingCalendar";
 import SeoHead from "../components/SeoHead";
+import { buildRentalListingSeo, getSiteUrl } from "../seo/seoLocales";
+import { buildSeoPath } from "../seo/seoPaths";
+import { productJsonLd } from "../seo/jsonLd";
 import "../styles/listing-detail.css";
 
 export default function RentalDetails() {
@@ -232,18 +235,27 @@ export default function RentalDetails() {
 
   const activeOffers = (rental.offers || []).filter((o) => o.isActive);
 
+  const listingSeo = buildRentalListingSeo(lang, rental);
+  const siteUrl = getSiteUrl();
+
   return (
     <div className={pageClass}>
       <SeoHead
         override={{
-          title: `Location ${rental.brand} ${rental.model} ${rental.year} — ${rental.city} | Goovoiture`,
-          description:
-            (rental.description ||
-              `Louez une ${rental.brand} ${rental.model} à ${rental.city}. À partir de ${Number(rental.pricePerDay).toLocaleString("fr-MA")} MAD/jour.`
-            ).slice(0, 160),
+          title: listingSeo.title,
+          description: listingSeo.description,
           image: rental.images?.[0] || undefined,
           type: "product",
+          canonical: `${siteUrl}${buildSeoPath(lang, `/rentals/${id}`)}`,
         }}
+        jsonLdExtra={productJsonLd({
+          name: `${rental.brand} ${rental.model} ${rental.year}`,
+          description: listingSeo.description,
+          image: rental.images?.[0],
+          price: rental.pricePerDay,
+          url: `${siteUrl}${buildSeoPath(lang, `/rentals/${id}`)}`,
+          city: rental.city,
+        })}
       />
       <ListingDetailAmbient />
 

@@ -3,6 +3,7 @@ import { loadAuth, clearAuth } from "../utils/authStorage";
 import { useState, useEffect, useRef } from "react";
 import { useAppLang } from "../context/AppLangContext";
 import { useTheme } from "../context/ThemeContext";
+import SeoContentBlock from "../components/SeoContentBlock";
 import { getApprovedSales } from "../api/sale";
 import { getApprovedRentals } from "../api/rental";
 import { hasUserRole, isAdminOnlyUser } from "../utils/userRoles";
@@ -1453,6 +1454,14 @@ function HomeInner() {
             >
               EN
             </button>
+            <button
+              type="button"
+              className={lang === "ar" ? "on" : ""}
+              onClick={() => setLang("ar")}
+              aria-pressed={lang === "ar"}
+            >
+              AR
+            </button>
           </div>
           {auth ? (
             <div className="hx-profile-wrap" ref={profileRef}>
@@ -2042,6 +2051,7 @@ function HomeInner() {
       </section>
 
       {/* ═══ FOOTER ═══ */}
+      <SeoContentBlock />
       <footer className="hx-ft">
         <div className="hx-ft-inner">
           <div className="hx-ft-top">
@@ -2055,6 +2065,7 @@ function HomeInner() {
               <p className="hx-ft-ch">{copy.home.footer.platform}</p>
               <Link to="/cars"    className="hx-ft-link">{copy.home.footer.buyCars}</Link>
               <Link to="/rentals" className="hx-ft-link">{copy.home.footer.rentCars}</Link>
+              <Link to="/vendre-ma-voiture" className="hx-ft-link">{lang === "fr" ? "Vendre ma voiture" : lang === "ar" ? "بيع سيارتي" : "Sell my car"}</Link>
               <Link to="/login"   className="hx-ft-link">{copy.home.footer.signIn}</Link>
             </div>
             <div>

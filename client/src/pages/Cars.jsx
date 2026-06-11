@@ -5,6 +5,7 @@ import { addFavorite, removeFavorite, getFavorites } from "../api/user";
 import { loadAuth } from "../utils/authStorage";
 import { useAppLang } from "../context/AppLangContext";
 import { useTheme } from "../context/ThemeContext";
+import SeoContentBlock from "../components/SeoContentBlock";
 
 /* ─────────────────────────────────────────────────────────────────────────
    STYLES — light default, dark via .cp.dark
@@ -1072,6 +1073,8 @@ export default function Cars() {
           </div>
         </div>
       )}
+
+      <SeoContentBlock />
     </div>
   );
 }

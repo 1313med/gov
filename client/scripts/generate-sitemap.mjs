@@ -1,8 +1,5 @@
 /**
- * Build-time sitemap + robots.txt for public French SEO pages.
- * Run: node scripts/generate-sitemap.mjs (before vite build)
- *
- * Env (Vercel): VITE_SITE_URL, VITE_API_URL
+ * Build-time sitemap + robots.txt — trilingual public SEO (fr / en / ar).
  */
 import { writeFileSync } from "fs";
 import { dirname, join } from "path";
@@ -14,6 +11,14 @@ const publicDir = join(__dirname, "..", "public");
 const SITE_URL = (process.env.VITE_SITE_URL || "https://goovoiture.ma").replace(/\/+$/, "");
 const API_BASE = (process.env.VITE_API_URL || "https://goovoiture-api.onrender.com/api").replace(/\/+$/, "");
 
+const LANGS = [
+  { code: "fr", prefix: "" },
+  { code: "en", prefix: "/en" },
+  { code: "ar", prefix: "/ar" },
+];
+
+const HREFLANG = { fr: "fr-MA", en: "en-MA", ar: "ar-MA" };
+
 const STATIC_PAGES = [
   { path: "/", priority: "1.0", changefreq: "daily" },
   { path: "/rentals", priority: "0.9", changefreq: "daily" },
@@ -23,9 +28,17 @@ const STATIC_PAGES = [
   { path: "/community", priority: "0.5", changefreq: "weekly" },
   { path: "/afford-car", priority: "0.4", changefreq: "monthly" },
   { path: "/emergency", priority: "0.4", changefreq: "monthly" },
+  { path: "/vendre-ma-voiture", priority: "0.9", changefreq: "daily" },
 ];
 
+const CITIES = ["casablanca", "rabat", "marrakech", "fes", "tanger", "agadir", "meknes", "oujda"];
+
 const today = new Date().toISOString().slice(0, 10);
+
+function localizedPath(prefix, path) {
+  if (!prefix) return path;
+  return path === "/" ? prefix : `${prefix}${path}`;
+}
 
 async function fetchWithRetry(url, opts = {}, retries = 3) {
   for (let i = 0; i < retries; i += 1) {
@@ -70,13 +83,30 @@ function xmlEscape(s) {
     .replace(/"/g, "&quot;");
 }
 
-function urlEntry(loc, priority, changefreq) {
+function hreflangLinks(basePath) {
+  return LANGS.map(({ code, prefix }) => {
+    const loc = `${SITE_URL}${localizedPath(prefix, basePath)}`;
+    return `    <xhtml:link rel="alternate" hreflang="${HREFLANG[code]}" href="${xmlEscape(loc)}" />`;
+  }).join("\n");
+}
+
+function urlEntry(basePath, priority, changefreq) {
+  const loc = `${SITE_URL}${basePath}`;
   return `  <url>
     <loc>${xmlEscape(loc)}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>${changefreq}</changefreq>
     <priority>${priority}</priority>
+${hreflangLinks(basePath)}
+    <xhtml:link rel="alternate" hreflang="x-default" href="${xmlEscape(loc)}" />
   </url>`;
+}
+
+function listingUrlEntry(basePath, priority, changefreq) {
+  return LANGS.map(({ prefix }) => {
+    const p = localizedPath(prefix, basePath);
+    return urlEntry(p, priority, changefreq);
+  }).join("\n");
 }
 
 async function main() {
@@ -89,35 +119,46 @@ async function main() {
   const urls = [];
 
   for (const p of STATIC_PAGES) {
-    urls.push(urlEntry(`${SITE_URL}${p.path}`, p.priority, p.changefreq));
+    urls.push(urlEntry(p.path, p.priority, p.changefreq));
+  }
+
+  for (const slug of CITIES) {
+    urls.push(urlEntry(`/location-voiture/${slug}`, "0.8", "weekly"));
+    urls.push(urlEntry(`/location-voiture-occasion/${slug}`, "0.75", "weekly"));
   }
 
   for (const s of sales) {
-    if (s._id) urls.push(urlEntry(`${SITE_URL}/cars/${s._id}`, "0.7", "weekly"));
+    if (s._id) urls.push(listingUrlEntry(`/cars/${s._id}`, "0.7", "weekly"));
   }
 
   for (const r of rentals) {
-    if (r._id) urls.push(urlEntry(`${SITE_URL}/rentals/${r._id}`, "0.7", "weekly"));
+    if (r._id) urls.push(listingUrlEntry(`/rentals/${r._id}`, "0.7", "weekly"));
   }
 
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${urls.join("\n")}
 </urlset>
 `;
 
   writeFileSync(join(publicDir, "sitemap.xml"), sitemap, "utf8");
 
-  const robots = `# Goovoiture — SEO (pages publiques)
+  const robots = `# Goovoiture — SEO trilingue (fr / en / ar)
 User-agent: *
 Allow: /
+Allow: /en/
+Allow: /ar/
 Allow: /cars
 Allow: /rentals
+Allow: /location-voiture/
+Allow: /location-voiture-occasion/
 Allow: /buying-guide
 Allow: /mechanic-prices
 Allow: /community
 Allow: /afford-car
 Allow: /emergency
+Allow: /vendre-ma-voiture
 
 Disallow: /admin
 Disallow: /owner
@@ -154,7 +195,7 @@ Sitemap: ${SITE_URL}/sitemap.xml
 `;
 
   writeFileSync(join(publicDir, "robots.txt"), robots, "utf8");
-  console.log(`[sitemap] Wrote sitemap.xml (${urls.length} URLs) and robots.txt`);
+  console.log(`[sitemap] Wrote sitemap.xml (${urls.length} URL entries) and robots.txt`);
 }
 
 main().catch((err) => {
