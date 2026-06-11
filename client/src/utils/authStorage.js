@@ -7,6 +7,7 @@ const KEY = "goovoiture_auth";
 const PERSIST_KEYS = [
   "_id", "name", "role", "roles", "phone", "city", "avatar",
   "staffForOwnerId", "staffPermissions",
+  "token", // Bearer fallback when web + API are on different domains (Vercel + Render)
 ];
 
 function notifyAuthChange() {
