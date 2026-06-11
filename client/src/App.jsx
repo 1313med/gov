@@ -55,6 +55,7 @@ import VerifyCinPage from "./pages/VerifyCinPage";
 import ProfileDocumentsPage from "./pages/ProfileDocumentsPage";
 import ConditionChecklistPage from "./pages/ConditionChecklistPage";
 import DocScannerPage from "./pages/DocScannerPage";
+import SeoHead from "./components/SeoHead";
 
 /* Paths where Navbar should not render (they have their own full-page nav) */
 const NO_NAV_PREFIXES = [
@@ -76,6 +77,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-[#05060f] dark:text-gray-100 transition-colors duration-300">
+      <SeoHead />
       {showNav && <Navbar />}
 
       <Routes>

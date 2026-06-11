@@ -14,6 +14,7 @@ import ReportListingModal from "../components/ReportListingModal";
 import ListingDetailAmbient from "../components/listing/ListingDetailAmbient";
 import ListingGallery from "../components/listing/ListingGallery";
 import ListingSpecGrid from "../components/listing/ListingSpecGrid";
+import SeoHead from "../components/SeoHead";
 import "../styles/listing-detail.css";
 
 export default function CarDetails() {
@@ -90,6 +91,15 @@ export default function CarDetails() {
 
   return (
     <div className={pageClass}>
+      <SeoHead
+        override={{
+          title: `${car.brand} ${car.model} ${car.year} à vendre — ${car.city} | Goovoiture`,
+          description:
+            (car.description || `${car.brand} ${car.model} ${car.year} à ${car.city}. Prix: ${Number(car.price).toLocaleString("fr-MA")} MAD.`).slice(0, 160),
+          image: images[0] || undefined,
+          type: "product",
+        }}
+      />
       <ListingDetailAmbient />
 
       <div className="ld-nav">

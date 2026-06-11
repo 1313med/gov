@@ -14,6 +14,7 @@ import ListingDetailAmbient from "../components/listing/ListingDetailAmbient";
 import ListingGallery from "../components/listing/ListingGallery";
 import ListingSpecGrid from "../components/listing/ListingSpecGrid";
 import RentalBookingCalendar from "../components/listing/RentalBookingCalendar";
+import SeoHead from "../components/SeoHead";
 import "../styles/listing-detail.css";
 
 export default function RentalDetails() {
@@ -233,6 +234,17 @@ export default function RentalDetails() {
 
   return (
     <div className={pageClass}>
+      <SeoHead
+        override={{
+          title: `Location ${rental.brand} ${rental.model} ${rental.year} — ${rental.city} | Goovoiture`,
+          description:
+            (rental.description ||
+              `Louez une ${rental.brand} ${rental.model} à ${rental.city}. À partir de ${Number(rental.pricePerDay).toLocaleString("fr-MA")} MAD/jour.`
+            ).slice(0, 160),
+          image: rental.images?.[0] || undefined,
+          type: "product",
+        }}
+      />
       <ListingDetailAmbient />
 
       <nav className="ld-nav">
