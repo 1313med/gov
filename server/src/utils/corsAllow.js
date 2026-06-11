@@ -13,7 +13,17 @@ function loadAllowedOrigins() {
 function isOriginAllowed(origin, allowedOrigins) {
   if (!origin || origin === "null") return true;
   if (allowedOrigins.includes(origin)) return true;
-  if (process.env.NODE_ENV === "production") return false;
+  if (process.env.NODE_ENV === "production") {
+    try {
+      const { hostname, protocol } = new URL(origin);
+      if (protocol === "https:" && (hostname.endsWith(".vercel.app") || hostname === "vercel.app")) {
+        return true;
+      }
+    } catch {
+      return false;
+    }
+    return false;
+  }
   try {
     const { hostname } = new URL(origin);
     if (hostname === "localhost" || hostname === "127.0.0.1") return true;
