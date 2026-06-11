@@ -11,10 +11,13 @@ const {
 const emailService    = require("../utils/emailService");
 const whatsappService = require("../utils/whatsappService");
 
+// "none" (not "strict") in production: the web client and the API may live on
+// different domains (e.g. vercel.app + onrender.com), and "strict"/"lax" cookies
+// are never sent cross-site. Requires secure: true. CORS still restricts origins.
 const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
 
@@ -142,7 +145,7 @@ exports.logout = asyncHandler(async (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   });
   res.json({ message: "Logged out successfully" });
 });
