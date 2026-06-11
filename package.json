@@ -2,6 +2,6 @@
   "name": "goovoiture",
   "private": true,
   "scripts": {
-    "build": "npm ci --prefix client && npm run build --prefix client"
+    "build": "npm ci --prefix client --include=dev && npm run build --prefix client"
   }
 }
