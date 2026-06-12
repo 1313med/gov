@@ -1221,10 +1221,9 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   position:relative;justify-self:end;
   width:min(400px,44vw);max-width:100%;
 }
-
-/* ── Light: image already has its own card ── */
-.hx-app-phones--light .hx-app-phones-float{
+.hx-app-phones-float{
   animation:hxAppFloat 7s ease-in-out infinite;
+  border-radius:26px;
 }
 .hx-app-phones--light .hx-app-phones-img{
   display:block;width:100%;height:auto;
@@ -1232,81 +1231,28 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   filter:drop-shadow(0 22px 48px rgba(7,14,45,.12));
   pointer-events:none;user-select:none;
 }
-
-/* ── Dark: animated ring + seamless black fill ── */
-.hx-app-phones--dark{width:min(380px,42vw);}
-.hx-app-phones--dark .hx-app-phones-card{
-  position:relative;width:100%;aspect-ratio:1/1;
-  animation:hxAppFloat 7s ease-in-out infinite;
-}
-.hx-app-phones--dark .hx-app-phones-card-ring{
-  position:absolute;inset:-1px;border-radius:28px;z-index:0;
-  background:linear-gradient(135deg,var(--gold),var(--gold2),rgba(124,107,255,.55),var(--gold2));
-  background-size:300% 300%;
-  animation:hxAppRing 5s ease infinite;
-  opacity:.9;
-}
-.hx-app-phones--dark .hx-app-phones-card-inner{
-  position:absolute;inset:1px;z-index:1;
-  border-radius:26px;overflow:hidden;
-  background:#050508;
-  display:flex;align-items:center;justify-content:center;
-}
-.hx-app-phones--dark .hx-app-phones-card-glow{
-  position:absolute;border-radius:50%;pointer-events:none;
-  filter:blur(52px);opacity:.7;
-}
-.hx-app-phones--dark .hx-app-phones-card-glow--teal{
-  width:55%;height:55%;top:-12%;left:-10%;
-  background:rgba(56,189,248,.45);
-  animation:hxAppGlowTeal 8s ease-in-out infinite;
-}
-.hx-app-phones--dark .hx-app-phones-card-glow--purple{
-  width:60%;height:60%;bottom:-14%;right:-12%;
-  background:rgba(124,107,255,.40);
-  animation:hxAppGlowPurple 9s ease-in-out infinite;
-}
-.hx-app-phones--dark .hx-app-phones-card-shine{
-  position:absolute;top:0;left:-60%;width:40%;height:100%;z-index:2;pointer-events:none;
-  background:linear-gradient(105deg,transparent,rgba(124,107,255,.10),transparent);
-  transform:skewX(-18deg);
-  animation:hxAppShine 6s ease-in-out infinite;
+/* Dark: gradient card like light mockup; screen blend removes image black bg */
+.hx-app-phones--dark .hx-app-phones-float{
+  aspect-ratio:1/1;overflow:hidden;
+  background:
+    radial-gradient(ellipse 78% 58% at 72% 86%, rgba(124,107,255,.26), transparent 58%),
+    radial-gradient(ellipse 58% 48% at 14% 16%, rgba(56,189,248,.18), transparent 52%),
+    linear-gradient(155deg, #0c1024 0%, #121830 50%, #080c18 100%);
+  box-shadow:0 24px 52px rgba(0,0,0,.48), inset 0 1px 0 rgba(255,255,255,.05);
+  isolation:isolate;
 }
 .hx-app-phones--dark .hx-app-phones-img{
-  position:relative;z-index:3;
   display:block;width:100%;height:100%;
   object-fit:contain;object-position:center center;
+  mix-blend-mode:screen;
   pointer-events:none;user-select:none;
-  filter:drop-shadow(0 8px 24px rgba(0,0,0,.4));
 }
-
 @keyframes hxAppFloat{
   0%,100%{transform:translateY(0);}
   50%{transform:translateY(-8px);}
 }
-@keyframes hxAppRing{
-  0%,100%{background-position:0% 50%;}
-  50%{background-position:100% 50%;}
-}
-@keyframes hxAppShine{
-  0%,100%{left:-60%;opacity:0;}
-  12%{opacity:1;}
-  38%{left:120%;opacity:0;}
-}
-@keyframes hxAppGlowTeal{
-  0%,100%{transform:translate(0,0) scale(1);}
-  50%{transform:translate(6px,8px) scale(1.06);}
-}
-@keyframes hxAppGlowPurple{
-  0%,100%{transform:translate(0,0) scale(1);}
-  50%{transform:translate(-8px,-6px) scale(1.05);}
-}
 @media (prefers-reduced-motion:reduce){
-  .hx-app-phones-float,
-  .hx-app-phones--dark .hx-app-phones-card,
-  .hx-app-phones--dark .hx-app-phones-card-ring,
-  .hx-app-phones--dark .hx-app-phones-card-shine,
-  .hx-app-phones--dark .hx-app-phones-card-glow{animation:none !important;}
+  .hx-app-phones-float{animation:none !important;}
 }
 
 .hx-final{
@@ -1397,7 +1343,6 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-app{padding:64px 40px;}
   .hx-app-grid{grid-template-columns:1fr;}
   .hx-app-phones{justify-self:center;margin-top:16px;width:min(340px,86vw);}
-  .hx-app-phones--dark{width:min(320px,84vw);}
   .hx-final{margin:0 40px 80px;}
   .hx-ft{padding:56px 40px 24px;}
   .hx-ft-top{grid-template-columns:1fr 1fr;}
@@ -1503,7 +1448,6 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-svc-body{padding:28px;}
   .hx-app{padding:52px 24px;}
   .hx-app-phones{width:min(300px,90vw);}
-  .hx-app-phones--dark{width:min(290px,88vw);}
   .hx-stats-inner{grid-template-columns:repeat(2,1fr);gap:16px 12px;}
   .hx-stat-n{font-size:30px;}
   .hx-how-cell{flex:0 0 min(260px,84vw);}
