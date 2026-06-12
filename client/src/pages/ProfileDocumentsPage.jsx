@@ -37,8 +37,9 @@ export default function ProfileDocumentsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const upload = (setter) => {
-    if (!window.cloudinary) return;
+  const upload = async (setter) => {
+    const { loadCloudinary } = await import("../utils/loadCloudinary");
+    await loadCloudinary();
     window.cloudinary.openUploadWidget(
       { cloudName: "daqihsmib", uploadPreset: "goovoiture", sources: ["local", "camera"], multiple: false },
       (error, result) => {

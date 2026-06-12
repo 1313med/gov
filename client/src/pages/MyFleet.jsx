@@ -172,8 +172,9 @@ export default function MyFleet() {
   function closeEdit() { setEditing(null); }
   function removeImage(idx) { setImages((p) => p.filter((_, i) => i !== idx)); }
 
-  function openCloudinary() {
-    if (!window.cloudinary) return;
+  async function openCloudinary() {
+    const { loadCloudinary } = await import("../utils/loadCloudinary");
+    await loadCloudinary();
     window.cloudinary.openUploadWidget(
       { cloudName: "daqihsmib", uploadPreset: "goovoiture", sources: ["local", "camera"], multiple: true, maxFiles: 10, cropping: false },
       (error, result) => { if (!error && result?.event === "success") setImages((p) => [...p, result.info.secure_url]); }

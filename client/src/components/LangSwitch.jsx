@@ -23,7 +23,7 @@ export default function LangSwitch({ className = "" }) {
   return (
     <div
       className={`ls-lang ${className}`.trim()}
-      role="group"
+      role="radiogroup"
       aria-label="Language"
     >
       <style>{`
@@ -60,9 +60,10 @@ export default function LangSwitch({ className = "" }) {
         <button
           key={code}
           type="button"
+          role="radio"
           className={lang === code ? "on" : ""}
           onClick={() => pick(code)}
-          aria-pressed={lang === code}
+          aria-checked={lang === code}
         >
           {code.toUpperCase()}
         </button>

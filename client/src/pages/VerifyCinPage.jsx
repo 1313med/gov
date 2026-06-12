@@ -41,8 +41,9 @@ export default function VerifyCinPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const uploadCin = () => {
-    if (!window.cloudinary) return;
+  const uploadCin = async () => {
+    const { loadCloudinary } = await import("../utils/loadCloudinary");
+    await loadCloudinary();
     window.cloudinary.openUploadWidget(
       { cloudName: "daqihsmib", uploadPreset: "goovoiture", sources: ["local", "camera"], multiple: false },
       (error, result) => {

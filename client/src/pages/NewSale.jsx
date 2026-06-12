@@ -62,7 +62,9 @@ const NewSale = () => {
   };
 
   // ================= CLOUDINARY =================
-  const openCloudinaryWidget = () => {
+  const openCloudinaryWidget = async () => {
+    const { loadCloudinary } = await import("../utils/loadCloudinary");
+    await loadCloudinary();
     window.cloudinary.openUploadWidget(
       {
         cloudName: "daqihsmib",

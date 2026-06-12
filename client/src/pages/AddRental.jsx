@@ -115,7 +115,9 @@ export default function AddRental() {
   const toggleFeature = (f) =>
     setFeatures((prev) => prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f]);
 
-  const openCloudinaryWidget = () => {
+  const openCloudinaryWidget = async () => {
+    const { loadCloudinary } = await import("../utils/loadCloudinary");
+    await loadCloudinary();
     window.cloudinary.openUploadWidget(
       { cloudName: "daqihsmib", uploadPreset: "goovoiture", multiple: true },
       (err, result) => {

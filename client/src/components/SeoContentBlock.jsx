@@ -39,12 +39,14 @@ export default function SeoContentBlock() {
   };
   const L = labels[lang] || labels.fr;
 
+  const headingId = "seo-content-heading";
+
   return (
     <section
       className="seo-content mx-auto max-w-4xl px-4 py-10 text-sm leading-relaxed text-gray-600 dark:text-gray-400 border-t border-gray-200/60 dark:border-white/10"
-      aria-label="SEO"
+      aria-labelledby={headingId}
     >
-      <TitleTag className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">{seo.h1}</TitleTag>
+      <TitleTag id={headingId} className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">{seo.h1}</TitleTag>
       <p className="mb-4">{seo.intro}</p>
 
       {seo.darija && (lang === "fr" || lang === "ar") && (

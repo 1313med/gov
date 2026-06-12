@@ -370,7 +370,9 @@ export default function Profile() {
     load();
   }, []);
 
-  const openAvatarWidget = () => {
+  const openAvatarWidget = async () => {
+    const { loadCloudinary } = await import("../utils/loadCloudinary");
+    await loadCloudinary();
     window.cloudinary.openUploadWidget(
       { cloudName: "daqihsmib", uploadPreset: "goovoiture", multiple: false, cropping: true },
       (err, result) => {
@@ -380,7 +382,9 @@ export default function Profile() {
     );
   };
 
-  const openLicenseWidget = () => {
+  const openLicenseWidget = async () => {
+    const { loadCloudinary } = await import("../utils/loadCloudinary");
+    await loadCloudinary();
     window.cloudinary.openUploadWidget(
       {
         cloudName: "daqihsmib", uploadPreset: "goovoiture",
@@ -393,7 +397,9 @@ export default function Profile() {
     );
   };
 
-  const openCinWidget = () => {
+  const openCinWidget = async () => {
+    const { loadCloudinary } = await import("../utils/loadCloudinary");
+    await loadCloudinary();
     window.cloudinary.openUploadWidget(
       {
         cloudName: "daqihsmib", uploadPreset: "goovoiture",

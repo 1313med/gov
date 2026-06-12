@@ -148,7 +148,9 @@ export default function EditSale() {
           <button
             type="button"
             className="px-4 py-2 bg-black dark:bg-violet-600 text-white rounded-lg hover:opacity-90"
-            onClick={() => {
+            onClick={async () => {
+              const { loadCloudinary } = await import("../utils/loadCloudinary");
+              await loadCloudinary();
               window.cloudinary.openUploadWidget(
                 { cloudName: "daqihsmib", uploadPreset: "goovoiture", multiple: true },
                 (err, result) => {

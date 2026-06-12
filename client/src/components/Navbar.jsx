@@ -649,7 +649,14 @@ export default function Navbar() {
             )}
 
             {/* Mobile burger */}
-            <button className="gn-burger" onClick={() => setMenuOpen(o => !o)} aria-label="Menu">
+            <button
+              type="button"
+              className="gn-burger"
+              onClick={() => setMenuOpen(o => !o)}
+              aria-label="Menu"
+              aria-expanded={menuOpen}
+              aria-controls="gn-mobile-drawer"
+            >
               <span /><span /><span />
             </button>
           </div>
@@ -657,7 +664,11 @@ export default function Navbar() {
       </header>
 
       {/* Mobile drawer — sits outside header so it can overlay */}
-      <div className={`gn-drawer${menuOpen ? " open" : ""}${dark ? " dark" : ""}`}>
+      <div
+        id="gn-mobile-drawer"
+        className={`gn-drawer${menuOpen ? " open" : ""}${dark ? " dark" : ""}`}
+        aria-hidden={!menuOpen}
+      >
         <Link to="/cars"          className="gn-drawer-link" onClick={() => setMenuOpen(false)}>{copy.common.browseCars}</Link>
         <Link to="/rentals"       className="gn-drawer-link" onClick={() => setMenuOpen(false)}>{copy.common.rentCars}</Link>
         <Link to="/buying-guide"  className="gn-drawer-link" onClick={() => setMenuOpen(false)}>📖 Guide d'achat</Link>

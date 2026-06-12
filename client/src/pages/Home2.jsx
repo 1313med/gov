@@ -9,6 +9,10 @@ import AppStoreBadges from "../components/AppStoreBadges";
 import GarageFeatureShowcase from "../components/GarageFeatureShowcase";
 import HomeMobilePitch from "../components/HomeMobilePitch";
 import HeroMobileVisual from "../components/HeroMobileVisual";
+import { useMediaQuery } from "../hooks/useMediaQuery";
+
+const HERO_IMG =
+  "https://images.unsplash.com/photo-1549924231-f129b911e442?w=960&q=75&auto=format&fit=crop&fm=webp";
 import { getApprovedSales } from "../api/sale";
 import { getApprovedRentals } from "../api/rental";
 import { hasUserRole, isAdminOnlyUser } from "../utils/userRoles";
@@ -490,11 +494,7 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
 .hx-hero-img {
   position:absolute;inset:0;z-index:0;
   width:100%;height:100%;object-fit:cover;object-position:center 42%;
-  opacity:0;transition:opacity 1.2s ease, transform 1.4s ease;
-  will-change:opacity,transform;
-  transform:scale(1.03);
 }
-.hx-hero-img.ldd{opacity:1;transform:scale(1);}
 
 .hx-hero-veil {
   position:absolute;inset:0;z-index:1;
@@ -1796,20 +1796,13 @@ function HomeInner() {
   const [liveRentals, setLiveRentals] = useState([]);
   const [liveLoading, setLiveLoading] = useState(true);
 
-  const heroImgRef   = useRef(null);
+  const isDesktopHero = useMediaQuery("(min-width: 769px)");
   const svcHdrRef    = useReveal(0.08);
   const rentRef      = useReveal(0.08);
   const sellRef      = useReveal(0.08);
   const howHdrRef    = useReveal(0.08);
   const statsRef     = useReveal(0.1);
   const dashRef      = useReveal(0.08);
-
-  // Lazy-load hero image with fade-in
-  useEffect(() => {
-    const img = new Image();
-    img.src = "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1800&q=80&auto=format&fit=crop";
-    img.onload = () => { if (heroImgRef.current) heroImgRef.current.classList.add("ldd"); };
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -1865,28 +1858,31 @@ function HomeInner() {
         </div>
 
         <div className="hx-nav-end">
-          <div className="hx-lang" role="group" aria-label="Language">
+          <div className="hx-lang" role="radiogroup" aria-label="Language">
             <button
               type="button"
+              role="radio"
               className={lang === "fr" ? "on" : ""}
               onClick={() => setLang("fr")}
-              aria-pressed={lang === "fr"}
+              aria-checked={lang === "fr"}
             >
               FR
             </button>
             <button
               type="button"
+              role="radio"
               className={lang === "en" ? "on" : ""}
               onClick={() => setLang("en")}
-              aria-pressed={lang === "en"}
+              aria-checked={lang === "en"}
             >
               EN
             </button>
             <button
               type="button"
+              role="radio"
               className={lang === "ar" ? "on" : ""}
               onClick={() => setLang("ar")}
-              aria-pressed={lang === "ar"}
+              aria-checked={lang === "ar"}
             >
               AR
             </button>
@@ -1894,9 +1890,12 @@ function HomeInner() {
           {auth ? (
             <div className="hx-profile-wrap" ref={profileRef}>
               <button
+                type="button"
                 className="hx-av-btn"
                 onClick={() => setProfileOpen(o => !o)}
                 aria-label="Profile menu"
+                aria-expanded={profileOpen}
+                aria-haspopup="menu"
               >
                 {auth.avatar
                   ? <img src={auth.avatar} alt={auth.name} />
@@ -1904,7 +1903,7 @@ function HomeInner() {
               </button>
 
               {profileOpen && (
-                <div className="hx-drop">
+                <div className="hx-drop" role="menu">
                   <div className="hx-drop-head">
                     <div className="hx-drop-av">
                       {auth.avatar
@@ -1983,14 +1982,25 @@ function HomeInner() {
           >
             {dark ? "☀" : "☾"}
           </button>
-          <button className="hx-burger" onClick={() => setMenu(m => !m)} aria-label={copy.home.nav.menu}>
+          <button
+            type="button"
+            className="hx-burger"
+            onClick={() => setMenu(m => !m)}
+            aria-label={copy.home.nav.menu}
+            aria-expanded={menu}
+            aria-controls="hx-mobile-drawer"
+          >
             <span/><span/><span/>
           </button>
         </div>
       </nav>
 
       {/* Mobile drawer */}
-      <div className={`hx-drawer${menu ? " open" : ""}`}>
+      <div
+        id="hx-mobile-drawer"
+        className={`hx-drawer${menu ? " open" : ""}`}
+        aria-hidden={!menu}
+      >
         <Link to="/cars"    className="hx-dlink" onClick={() => setMenu(false)}>{copy.home.drawer.buyCars}</Link>
         <Link to="/rentals" className="hx-dlink" onClick={() => setMenu(false)}>{copy.home.drawer.rentCar}</Link>
         {auth ? (
@@ -2064,18 +2074,21 @@ function HomeInner() {
           </div>
           </div>
 
-          <div className="hx-hero-right rv rv-r vis">
-            <img
-              ref={heroImgRef}
-              src="https://images.unsplash.com/photo-1549924231-f129b911e442?w=1400&q=82&auto=format&fit=crop"
-              alt={copy.home.hero.heroAlt}
-              className="hx-hero-img"
-              fetchPriority="high"
-              loading="eager"
-              decoding="async"
-            />
-            <div className="hx-hero-veil" />
-          </div>
+          {isDesktopHero && (
+            <div className="hx-hero-right rv rv-r vis">
+              <img
+                src={HERO_IMG}
+                alt={copy.home.hero.heroAlt}
+                className="hx-hero-img"
+                fetchPriority="high"
+                loading="eager"
+                decoding="async"
+                width={960}
+                height={640}
+              />
+              <div className="hx-hero-veil" />
+            </div>
+          )}
         </div>
 
         <div className="hx-scroll-ind" aria-hidden="true">
@@ -2312,7 +2325,7 @@ function HomeInner() {
           {/* ── RENT ── */}
           <div ref={rentRef} className="hx-svc rent rv rv-l">
             <img
-              src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=900&q=75&auto=format&fit=crop"
+              src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&q=70&auto=format&fit=crop&fm=webp"
               alt={copy.home.services.rentAlt}
               className="hx-svc-img"
               loading="lazy"
@@ -2343,7 +2356,7 @@ function HomeInner() {
           {/* ── SELL ── */}
           <div ref={sellRef} className="hx-svc sell rv rv-r">
             <img
-              src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=900&q=75&auto=format&fit=crop"
+              src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&q=70&auto=format&fit=crop&fm=webp"
               alt={copy.home.services.sellAlt}
               className="hx-svc-img"
               loading="lazy"
@@ -2398,7 +2411,7 @@ function HomeInner() {
       {/* ═══ EXPERIENCE STORY ═══ */}
       <section className="hx-exp rv rv-s vis">
         <img
-          src="https://images.unsplash.com/photo-1494905998402-395d579af36f?w=1800&q=75&auto=format&fit=crop"
+          src="https://images.unsplash.com/photo-1494905998402-395d579af36f?w=1200&q=70&auto=format&fit=crop&fm=webp"
           alt={copy.home.experience.alt}
           className="hx-exp-img"
           loading="lazy"

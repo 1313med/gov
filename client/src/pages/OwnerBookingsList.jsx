@@ -634,8 +634,9 @@ function BookingMediaPanel({ booking, onSaved }) {
   const [saving, setSaving]   = useState(false);
   const [saved, setSaved]     = useState(false);
 
-  function openPhotoUpload() {
-    if (!window.cloudinary) return;
+  async function openPhotoUpload() {
+    const { loadCloudinary } = await import("../utils/loadCloudinary");
+    await loadCloudinary();
     window.cloudinary.openUploadWidget(
       { cloudName: "daqihsmib", uploadPreset: "goovoiture", sources: ["local", "camera"], multiple: true, maxFiles: 10, cropping: false },
       (error, result) => {
@@ -648,9 +649,10 @@ function BookingMediaPanel({ booking, onSaved }) {
     );
   }
 
-  function openDocUpload() {
-    if (!window.cloudinary) return;
+  async function openDocUpload() {
     if (!docName.trim()) { alert(tm.docNameRequired); return; }
+    const { loadCloudinary } = await import("../utils/loadCloudinary");
+    await loadCloudinary();
     window.cloudinary.openUploadWidget(
       { cloudName: "daqihsmib", uploadPreset: "goovoiture", sources: ["local"], multiple: false, resourceType: "auto", clientAllowedFormats: ["pdf", "jpg", "jpeg", "png", "webp"] },
       (error, result) => {
