@@ -266,6 +266,11 @@ export const home2Dict = {
       "/my-sales/new": "Add Car for Sale",
       "/admin": "Admin Dashboard",
     },
+    garage: {
+      aria: "My Garage — track your car, deadlines, alerts and mechanics",
+      cta: "Open My Garage",
+      ctaGuest: "Create Free Account",
+    },
     app: {
       eyebrow: "Mobile App",
       title1: "Elite Access,",
@@ -571,6 +576,11 @@ export const home2Dict = {
       "/my-sales": "Mes annonces",
       "/my-sales/new": "Vendre une voiture",
       "/admin": "Tableau d’administration",
+    },
+    garage: {
+      aria: "Mon Garage — suivez votre voiture, échéances, alertes et mécaniciens",
+      cta: "Ouvrir Mon Garage",
+      ctaGuest: "Créer un compte gratuit",
     },
     app: {
       eyebrow: "Application mobile",

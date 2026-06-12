@@ -5,6 +5,7 @@ import { useAppLang } from "../context/AppLangContext";
 import { useTheme } from "../context/ThemeContext";
 import SeoContentBlock from "../components/SeoContentBlock";
 import AppPhoneShowcase from "../components/AppPhoneShowcase";
+import GarageFeatureShowcase from "../components/GarageFeatureShowcase";
 import { getApprovedSales } from "../api/sale";
 import { getApprovedRentals } from "../api/rental";
 import { hasUserRole, isAdminOnlyUser } from "../utils/userRoles";
@@ -1210,6 +1211,24 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
 .hx-tr h4{font-size:18px;color:var(--ink);margin:10px 0 8px;}
 .hx-tr p{font-size:13px;line-height:1.75;color:var(--mut);}
 
+/* ════ MY GARAGE FEATURE ════ */
+.hx-gfeat{
+  padding:72px 64px 64px;
+  background:var(--bg);
+  transition:background .4s;
+}
+.hx-gfeat-visual{
+  max-width:1180px;margin:0 auto;
+}
+.hx-gfeat-img{
+  display:block;width:100%;height:auto;
+  pointer-events:none;user-select:none;
+}
+.hx-gfeat-actions{
+  display:flex;justify-content:center;
+  margin-top:28px;
+}
+
 /* ════ APP & FINAL CTA ════ */
 /* App download — light: mockup image only; dark: ring card on black */
 .hx-app{padding:92px 64px;background:var(--bg);}
@@ -1332,7 +1351,7 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-stats-inner{grid-template-columns:repeat(2,1fr);}
   .hx-stat-n{font-size:44px;}
   .hx-dash-sec{padding:80px 40px;}
-  .hx-fsec,.hx-ben-sec,.hx-tsec,.hx-trust,.hx-app{padding-left:40px;padding-right:40px;}
+  .hx-fsec,.hx-ben-sec,.hx-tsec,.hx-trust,.hx-app,.hx-gfeat{padding-left:40px;padding-right:40px;}
   .hx-frail{grid-template-columns:repeat(2,1fr);}
   .hx-ben-grid{grid-template-columns:repeat(3,1fr);}
   .hx-tgrid,.hx-tr-grid{grid-template-columns:repeat(2,1fr);}
@@ -1412,6 +1431,7 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-tgrid::-webkit-scrollbar{display:none;}
   .hx-tgrid>.hx-tm{flex:0 0 min(280px,80vw);scroll-snap-align:start;}
   .hx-dash-sec{padding:64px 24px;}
+  .hx-gfeat{padding:56px 24px 48px;}
   .hx-fsec,.hx-ben-sec,.hx-tsec,.hx-trust,.hx-app{padding-left:24px;padding-right:24px;}
   .hx-vault-head,.hx-vault-band-h{padding-left:24px;padding-right:24px;}
   .hx-vrail,.hx-vskel-wrap{padding-left:24px;padding-right:24px;}
@@ -1454,6 +1474,7 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-svc-body{padding:28px;}
   .hx-app{padding:52px 24px;}
   .hx-app-phones{width:100%;}
+  .hx-gfeat-actions{margin-top:20px;}
   .hx-stats-inner{grid-template-columns:repeat(2,1fr);gap:16px 12px;}
   .hx-stat-n{font-size:30px;}
   .hx-how-cell{flex:0 0 min(260px,84vw);}
@@ -2089,6 +2110,18 @@ function HomeInner() {
             <h4>{copy.home.trust.cards[2].title}</h4>
             <p>{copy.home.trust.cards[2].desc}</p>
           </article>
+        </div>
+      </section>
+
+      {/* ═══ MY GARAGE — deadlines, alerts, mechanics ═══ */}
+      <section className="hx-gfeat" aria-label={copy.home.garage.aria}>
+        <GarageFeatureShowcase className="rv rv-u vis" />
+        <div className="hx-gfeat-actions rv rv-u vis" style={{ transitionDelay: "0.08s" }}>
+          {auth ? (
+            <Link to="/garage" className="hx-hbtn prim">{copy.home.garage.cta}</Link>
+          ) : (
+            <Link to="/register" className="hx-hbtn prim">{copy.home.garage.ctaGuest}</Link>
+          )}
         </div>
       </section>
 
