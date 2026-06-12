@@ -1,6 +1,6 @@
 import { useTheme } from "../context/ThemeContext";
 
-/** Homepage app download — desktop square mockup; mobile dark uses full-width banner. */
+/** Homepage app download — desktop square mockup; mobile uses full-width banner. */
 export default function AppPhoneShowcase({ className = "" }) {
   const { dark } = useTheme();
 
@@ -20,17 +20,15 @@ export default function AppPhoneShowcase({ className = "" }) {
           height={1024}
         />
       </div>
-      {dark ? (
-        <img
-          src="/images/app-mobile-dark-banner.png"
-          alt=""
-          className="hx-app-phones-banner"
-          loading="lazy"
-          decoding="async"
-          width={1536}
-          height={1024}
-        />
-      ) : null}
+      <img
+        src="/images/app-mobile-dark-banner.png"
+        alt=""
+        className="hx-app-phones-banner"
+        loading="lazy"
+        decoding="async"
+        width={1536}
+        height={1024}
+      />
     </div>
   );
 }

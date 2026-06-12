@@ -1434,9 +1434,9 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-ft{padding:48px 24px 24px;}
   .hx-ft-top{grid-template-columns:1fr;gap:24px;}
   .hx-ft-top>div:first-child{grid-column:1;}
-  .hx.dark .hx-app-phones-float{display:none;}
-  .hx.dark .hx-app-phones{width:100%;max-width:none;margin-top:12px;}
-  .hx.dark .hx-app-phones-banner{
+  .hx-app-phones-float{display:none;}
+  .hx-app-phones{width:100%;max-width:none;margin-top:12px;}
+  .hx-app-phones-banner{
     display:block;width:100%;height:auto;
     mix-blend-mode:screen;
     animation:hxAppFloat 7s ease-in-out infinite;
@@ -1452,8 +1452,7 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-svc-title{font-size:52px;}
   .hx-svc-body{padding:28px;}
   .hx-app{padding:52px 24px;}
-  .hx-app-phones{width:min(300px,90vw);}
-  .hx.dark .hx-app-phones{width:100%;}
+  .hx-app-phones{width:100%;}
   .hx-stats-inner{grid-template-columns:repeat(2,1fr);gap:16px 12px;}
   .hx-stat-n{font-size:30px;}
   .hx-how-cell{flex:0 0 min(260px,84vw);}
