@@ -6,6 +6,7 @@ import { useTheme } from "../context/ThemeContext";
 import SeoContentBlock from "../components/SeoContentBlock";
 import AppPhoneShowcase from "../components/AppPhoneShowcase";
 import GarageFeatureShowcase from "../components/GarageFeatureShowcase";
+import HeroMobileVisual from "../components/HeroMobileVisual";
 import { getApprovedSales } from "../api/sale";
 import { getApprovedRentals } from "../api/rental";
 import { hasUserRole, isAdminOnlyUser } from "../utils/userRoles";
@@ -534,6 +535,215 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   color:var(--mut);max-width:520px;margin-bottom:36px;
   opacity:0;animation:hUp .6s ease .42s forwards;
   transition:color .4s;
+}
+.hx-hero-mobile-visual{display:none;}
+.hx-hero-graph{
+  display:none;
+  width:100%;margin:0 0 18px;
+}
+.hx-hero-story{
+  display:flex;flex-direction:column;gap:12px;
+  --story-panel-fill:rgba(255,255,255,0.92);
+  --story-panel-shine:rgba(255,255,255,0.55);
+  --story-img:rgba(124,107,255,0.12);
+  --story-line:rgba(11,22,61,0.18);
+  --story-line-dim:rgba(11,22,61,0.08);
+  --story-bar-bg:rgba(11,22,61,0.07);
+  --story-chip:rgba(124,107,255,0.08);
+  --story-doc:rgba(241,244,255,0.95);
+  --story-doc-ico:rgba(124,107,255,0.15);
+  --story-date-bg:rgba(11,22,61,0.05);
+  --story-date-sel:rgba(124,107,255,0.14);
+  --story-map:rgba(124,107,255,0.08);
+  --story-map-stroke:rgba(124,107,255,0.28);
+  --story-chat:rgba(11,22,61,0.04);
+  --story-stat:rgba(11,22,61,0.04);
+  --story-divider:rgba(11,22,61,0.1);
+  --story-pill:rgba(56,189,248,0.12);
+  --story-badge:rgba(56,189,248,0.14);
+  --story-alert:rgba(251,191,36,0.14);
+  --story-avatar:linear-gradient(135deg,#7c6bff,#38bdf8);
+}
+.hx.dark .hx-hero-story{
+  --story-panel-fill:rgba(16,20,38,0.88);
+  --story-panel-shine:rgba(255,255,255,0.04);
+  --story-img:rgba(124,107,255,0.18);
+  --story-line:rgba(255,255,255,0.22);
+  --story-line-dim:rgba(255,255,255,0.1);
+  --story-bar-bg:rgba(255,255,255,0.06);
+  --story-chip:rgba(124,107,255,0.12);
+  --story-doc:rgba(20,27,52,0.95);
+  --story-doc-ico:rgba(124,107,255,0.22);
+  --story-date-bg:rgba(255,255,255,0.05);
+  --story-date-sel:rgba(124,107,255,0.22);
+  --story-map:rgba(124,107,255,0.1);
+  --story-map-stroke:rgba(124,107,255,0.35);
+  --story-chat:rgba(255,255,255,0.05);
+  --story-stat:rgba(255,255,255,0.04);
+  --story-divider:rgba(255,255,255,0.1);
+  --story-pill:rgba(56,189,248,0.14);
+  --story-badge:rgba(56,189,248,0.18);
+  --story-alert:rgba(251,191,36,0.18);
+}
+.hx-hero-story-head{
+  display:flex;flex-direction:column;gap:4px;
+}
+.hx-hero-story-tag{
+  font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--gold2);
+}
+.hx-hero-story-title{
+  font-size:22px;font-weight:700;line-height:1.15;color:var(--ink);
+}
+.hx-hero-story-desc{
+  font-size:13px;line-height:1.5;color:var(--mut);
+}
+.hx-hero-story-stage{
+  position:relative;width:100%;
+  aspect-ratio:320/156;
+  border-radius:16px;overflow:hidden;
+  border:1px solid var(--gbd);
+  background:
+    radial-gradient(ellipse 85% 75% at 50% 110%, var(--gbg) 0%, transparent 62%),
+    linear-gradient(168deg, var(--sur) 0%, var(--sur2) 100%);
+  box-shadow:0 14px 36px rgba(11,22,61,0.08), inset 0 1px 0 rgba(255,255,255,0.65);
+}
+.hx.dark .hx-hero-story-stage{
+  box-shadow:0 16px 40px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.05);
+  background:
+    radial-gradient(ellipse 85% 75% at 50% 110%, rgba(124,107,255,0.12) 0%, transparent 62%),
+    radial-gradient(ellipse 55% 45% at 15% 15%, rgba(56,189,248,0.08) 0%, transparent 55%),
+    linear-gradient(168deg, rgba(16,20,38,0.96) 0%, rgba(8,12,26,0.9) 100%);
+}
+.hx-hero-story-scene{
+  position:absolute;inset:0;padding:2px;
+  opacity:0;transform:translateY(8px);
+  transition:opacity .5s cubic-bezier(.22,1,.36,1), transform .5s cubic-bezier(.22,1,.36,1);
+  pointer-events:none;
+}
+.hx-hero-story-scene.is-active{
+  opacity:1;transform:none;pointer-events:auto;
+}
+.hx-story-svg{display:block;width:100%;height:100%;}
+.hx-story-panel{fill:var(--story-panel-fill);stroke:var(--gbd);stroke-width:1;}
+.hx-story-panel-shine{fill:url(#hxStoryShine);stroke:none;opacity:.55;}
+.hx-story-img{fill:var(--story-img);}
+.hx-story-line{fill:var(--story-line);}
+.hx-story-line-dim{fill:var(--story-line-dim);}
+.hx-story-bar-bg{fill:var(--story-bar-bg);}
+.hx-story-bar-fill{fill:url(#hxStoryGrad);}
+.hx-story-bar-fill2{fill:var(--gold2);opacity:.75;}
+.hx-story-badge{fill:var(--story-badge);stroke:rgba(56,189,248,0.35);stroke-width:.6;}
+.hx-story-pill{fill:var(--story-pill);stroke:rgba(56,189,248,0.35);stroke-width:.6;}
+.hx-story-dot{fill:var(--gold);}
+.hx-story-divider{stroke:var(--story-divider);stroke-width:1;}
+.hx-story-map{fill:var(--story-map);stroke:var(--story-map-stroke);stroke-width:1;}
+.hx-story-pin-ring{fill:rgba(56,189,248,0.15);stroke:rgba(56,189,248,0.45);stroke-width:.8;}
+.hx-story-pin-dot{fill:var(--gold2);}
+.hx-story-date-bg{fill:var(--story-date-bg);}
+.hx-story-date-sel{fill:var(--story-date-sel);stroke:rgba(124,107,255,0.35);stroke-width:.6;}
+.hx-story-chip{fill:var(--story-chip);stroke:var(--gbd);stroke-width:.6;}
+.hx-story-cta{fill:url(#hxStoryGrad);}
+.hx-story-doc{fill:var(--story-doc);stroke:var(--gbd);stroke-width:.6;}
+.hx-story-doc-ico{fill:var(--story-doc-ico);}
+.hx-story-check{stroke:var(--gold2);fill:none;}
+.hx-story-alert-ico{fill:#f59e0b;}
+.hx-story-alert-bar{fill:#f59e0b;}
+.hx-story-avatar{fill:url(#hxStoryGrad);}
+.hx-story-chat{fill:var(--story-chat);stroke:var(--gbd);stroke-width:.6;}
+.hx-story-typing{fill:var(--gold);}
+.hx-story-stat{fill:var(--story-stat);stroke:var(--gbd);stroke-width:.6;}
+.hx-story-txt-muted{fill:var(--ink);font-family:system-ui,sans-serif;}
+.hx-story-txt-dim{fill:var(--mut);font-family:system-ui,sans-serif;}
+.hx-story-txt-ink{fill:var(--ink);font-family:system-ui,sans-serif;}
+.hx-story-txt-accent{fill:var(--gold2);font-family:system-ui,sans-serif;}
+.hx-story-enter{opacity:0;transform:translateY(6px);}
+.hx-hero-story-scene.is-active .hx-story-enter{
+  animation:hxStoryEnter .55s cubic-bezier(.22,1,.36,1) forwards;
+}
+.hx-hero-story-scene.is-active .hx-story-d1{animation-delay:.05s;}
+.hx-hero-story-scene.is-active .hx-story-d2{animation-delay:.12s;}
+.hx-hero-story-scene.is-active .hx-story-d3{animation-delay:.19s;}
+.hx-hero-story-scene.is-active .hx-story-d4{animation-delay:.26s;}
+.hx-story-map-pin{opacity:0;transform-origin:center;transform-box:fill-box;}
+.hx-hero-story-scene.is-active .hx-story-bar-anim{
+  opacity:0;
+  animation:hxStoryBarFade 1s ease .35s forwards;
+}
+.hx-hero-story-scene.is-active .hx-story-date-pulse{
+  animation:hxStoryDatePulse 2.4s ease-in-out infinite .4s;
+}
+.hx-hero-story-scene.is-active .hx-story-cta-pulse{
+  animation:hxStoryCtaPulse 2.6s ease-in-out infinite .5s;
+}
+.hx-hero-story-scene.is-active .hx-story-alert-panel{
+  animation:hxStoryAlertSlide .6s cubic-bezier(.22,1,.36,1) .15s forwards;
+}
+.hx-hero-story-scene.is-active .hx-story-map-pin{animation:hxStoryPinPop .5s cubic-bezier(.22,1,.36,1) forwards;}
+.hx-hero-story-scene.is-active .hx-story-pin-0{animation-delay:.2s;}
+.hx-hero-story-scene.is-active .hx-story-pin-1{animation-delay:.32s;}
+.hx-hero-story-scene.is-active .hx-story-pin-2{animation-delay:.44s;}
+.hx-hero-story-scene.is-active .hx-story-pin-3{animation-delay:.56s;}
+.hx-hero-story-scene.is-active .hx-story-typing-1{animation:hxStoryTyping 1.2s ease-in-out infinite;}
+.hx-hero-story-scene.is-active .hx-story-typing-2{animation:hxStoryTyping 1.2s ease-in-out .15s infinite;}
+.hx-hero-story-scene.is-active .hx-story-typing-3{animation:hxStoryTyping 1.2s ease-in-out .3s infinite;}
+.hx-hero-story-steps{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+}
+.hx-hero-story-step{
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  padding:10px 6px;border-radius:12px;
+  background:var(--gbg);
+  border:1px solid var(--gbd);
+  color:var(--mut);cursor:pointer;
+  transition:background .25s,border-color .25s,color .25s,box-shadow .25s;
+}
+.hx-hero-story-step.is-active{
+  background:rgba(124,107,255,0.14);
+  border-color:rgba(124,107,255,0.45);
+  color:var(--ink);
+  box-shadow:0 4px 16px rgba(124,107,255,0.12);
+}
+.hx-hero-story-step.is-done .hx-hero-story-step-n{
+  background:linear-gradient(135deg,#7c6bff,#38bdf8);
+  color:#fff;border-color:transparent;
+}
+.hx-hero-story-step-n{
+  width:22px;height:22px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;
+  border:1px solid var(--gbd);
+  color:var(--gold);
+  background:var(--sur);
+}
+.hx-hero-story-step-l{
+  font-size:9px;line-height:1.2;text-align:center;font-weight:600;
+  letter-spacing:.02em;
+}
+@keyframes hxStoryEnter{
+  from{opacity:0;transform:translateY(6px);}
+  to{opacity:1;transform:none;}
+}
+@keyframes hxStoryBarFade{to{opacity:1;}}
+@keyframes hxStoryDatePulse{
+  0%,100%{opacity:1;}
+  50%{opacity:.7;filter:brightness(1.08);}
+}
+@keyframes hxStoryCtaPulse{
+  0%,100%{opacity:1;transform:scale(1);}
+  50%{opacity:.92;transform:scale(1.02);}
+}
+@keyframes hxStoryAlertSlide{
+  from{opacity:0;transform:translateX(-8px);}
+  to{opacity:1;transform:none;}
+}
+@keyframes hxStoryPinPop{
+  from{opacity:0;transform:scale(0);}
+  to{opacity:1;transform:scale(1);}
+}
+@keyframes hxStoryTyping{
+  0%,100%{opacity:.35;transform:translateY(0);}
+  50%{opacity:1;transform:translateY(-2px);}
 }
 .hx-hero-btns {
   display:flex;gap:12px;flex-wrap:wrap;
@@ -1404,6 +1614,11 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-hero-stats,
   .hx-scroll-ind{display:none !important;}
   .hx-hero-btns{flex-direction:row;flex-wrap:wrap;}
+  .hx-hero-p{display:none;}
+  .hx-hero-graph{
+    display:block;
+    opacity:0;animation:hUp .6s ease .42s forwards;
+  }
   .hx-hbtn{justify-content:center;flex:1;min-width:140px;}
   .hx-vault{
     padding:40px 0 48px;
@@ -1772,6 +1987,7 @@ function HomeInner() {
           <p className="hx-hero-p">
             {copy.home.hero.body}
           </p>
+          <HeroMobileVisual />
           <div className="hx-hero-pillrow">
             <span className="hx-hero-pill">{copy.home.hero.intent}</span>
           </div>
