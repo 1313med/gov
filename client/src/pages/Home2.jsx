@@ -1327,12 +1327,21 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-nav-links{display:none;}
   .hx-npill.gh{display:none;}
   .hx-burger{display:flex;}
-  .hx-hero{padding:92px 24px 36px;min-height:auto;}
-  .hx-hero-inner{max-width:100%;}
-  .hx-hero-right{min-height:340px;border-radius:18px;}
-  .hx-hero-stats{gap:20px;flex-wrap:wrap;}
-  .hx-hero-btns{flex-direction:column;}
-  .hx-hbtn{justify-content:center;}
+  .hx-hero{padding:88px 24px 20px;min-height:auto;}
+  .hx-hero-inner{max-width:100%;display:block;}
+  .hx-hero-right,
+  .hx-hero-stats,
+  .hx-scroll-ind{display:none !important;}
+  .hx-hero-btns{flex-direction:row;flex-wrap:wrap;}
+  .hx-hbtn{justify-content:center;flex:1;min-width:140px;}
+  .hx-vault{
+    padding:40px 0 48px;
+    border-top:none;
+    border-bottom:1px solid var(--bdr);
+  }
+  .hx-vault-head{padding:0 24px 20px;}
+  .hx-vault-sub{font-size:14px;}
+  .hx-svc-wrap{border-top:none;}
   .hx-svc-header{padding:48px 24px 0;flex-direction:column;align-items:flex-start;}
   .hx-svc-header .hx-h2-sub{text-align:left !important;max-width:100% !important;}
   .hx-svc-grid{grid-template-columns:1fr;padding:32px 24px 48px;}
@@ -1406,9 +1415,8 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
 @media(max-width:480px){
   .hx-lang button{padding:6px 8px;font-size:9px;}
   .hx-npill.sl{display:none;}
-  .hx-hero-h1{font-size:42px;}
-  .hx-hero-p{font-size:15px;line-height:1.75;}
-  .hx-hero-right{min-height:300px;}
+  .hx-hero-h1{font-size:38px;}
+  .hx-hero-p{font-size:15px;line-height:1.75;margin-bottom:20px;}
   .hx-svc{height:390px;}
   .hx-svc-title{font-size:52px;}
   .hx-svc-body{padding:28px;}
@@ -1733,88 +1741,7 @@ function HomeInner() {
         </div>
       </div>
 
-      {/* ═══════════════════════
-          SERVICES — MAIN FOCUS
-      ═══════════════════════ */}
-      <div className="hx-svc-wrap">
-        <div className="hx-svc-header">
-          <div ref={svcHdrRef} className="rv rv-u">
-            <div className="hx-ey">{copy.home.services.eyebrow}</div>
-            <h2 className="hx-h2">{copy.home.services.title1}<br/><em>{copy.home.services.title2}</em></h2>
-          </div>
-          <p className="hx-h2-sub" style={{ maxWidth: 280, textAlign: "right" }}>
-            {copy.home.services.sub}
-          </p>
-        </div>
-
-        <div className="hx-svc-grid">
-
-          {/* ── RENT ── */}
-          <div ref={rentRef} className="hx-svc rent rv rv-l">
-            <img
-              src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=900&q=75&auto=format&fit=crop"
-              alt={copy.home.services.rentAlt}
-              className="hx-svc-img"
-              loading="lazy"
-            />
-            <div className="hx-svc-veil" />
-            <div className="hx-svc-num" aria-hidden="true">01</div>
-            <div className="hx-svc-body">
-              <div>
-                <div className="hx-svc-tag">{copy.home.services.rentTag}</div>
-                <div className="hx-svc-title">{copy.home.services.rentTitle}</div>
-                <p className="hx-svc-desc">
-                  {copy.home.services.rentDesc}
-                </p>
-              </div>
-              <div>
-                <div className="hx-svc-feats">
-                  {copy.home.services.rentFeats.map((f, i) => (
-                    <div key={i} className="hx-svc-feat">{f}</div>
-                  ))}
-                </div>
-                <Link to="/rentals" className="hx-svc-btn">
-                  {copy.home.services.rentCta} <span className="hx-svc-arr">→</span>
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          {/* ── SELL ── */}
-          <div ref={sellRef} className="hx-svc sell rv rv-r">
-            <img
-              src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=900&q=75&auto=format&fit=crop"
-              alt={copy.home.services.sellAlt}
-              className="hx-svc-img"
-              loading="lazy"
-            />
-            <div className="hx-svc-veil" />
-            <div className="hx-svc-num" aria-hidden="true">02</div>
-            <div className="hx-svc-body">
-              <div>
-                <div className="hx-svc-tag">{copy.home.services.sellTag}</div>
-                <div className="hx-svc-title">{copy.home.services.sellTitle}</div>
-                <p className="hx-svc-desc">
-                  {copy.home.services.sellDesc}
-                </p>
-              </div>
-              <div>
-                <div className="hx-svc-feats">
-                  {copy.home.services.sellFeats.map((f, i) => (
-                    <div key={i} className="hx-svc-feat">{f}</div>
-                  ))}
-                </div>
-                <Link to="/cars" className="hx-svc-btn">
-                  {copy.home.services.sellCta} <span className="hx-svc-arr">→</span>
-                </Link>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      {/* ═══ LIVE SHOWCASE — SALES + RENTALS ═══ */}
+      {/* ═══ LIVE SHOWCASE — SALES + RENTALS (before services on mobile) ═══ */}
       <section className="hx-vault">
         <div className="hx-vault-head rv rv-u vis">
           <div className="hx-ey">{copy.home.showcase.eyebrow}</div>
@@ -1937,6 +1864,87 @@ function HomeInner() {
           </div>
         </div>
       </section>
+
+      {/* ═══════════════════════
+          SERVICES — MAIN FOCUS
+      ═══════════════════════ */}
+      <div className="hx-svc-wrap">
+        <div className="hx-svc-header">
+          <div ref={svcHdrRef} className="rv rv-u">
+            <div className="hx-ey">{copy.home.services.eyebrow}</div>
+            <h2 className="hx-h2">{copy.home.services.title1}<br/><em>{copy.home.services.title2}</em></h2>
+          </div>
+          <p className="hx-h2-sub" style={{ maxWidth: 280, textAlign: "right" }}>
+            {copy.home.services.sub}
+          </p>
+        </div>
+
+        <div className="hx-svc-grid">
+
+          {/* ── RENT ── */}
+          <div ref={rentRef} className="hx-svc rent rv rv-l">
+            <img
+              src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=900&q=75&auto=format&fit=crop"
+              alt={copy.home.services.rentAlt}
+              className="hx-svc-img"
+              loading="lazy"
+            />
+            <div className="hx-svc-veil" />
+            <div className="hx-svc-num" aria-hidden="true">01</div>
+            <div className="hx-svc-body">
+              <div>
+                <div className="hx-svc-tag">{copy.home.services.rentTag}</div>
+                <div className="hx-svc-title">{copy.home.services.rentTitle}</div>
+                <p className="hx-svc-desc">
+                  {copy.home.services.rentDesc}
+                </p>
+              </div>
+              <div>
+                <div className="hx-svc-feats">
+                  {copy.home.services.rentFeats.map((f, i) => (
+                    <div key={i} className="hx-svc-feat">{f}</div>
+                  ))}
+                </div>
+                <Link to="/rentals" className="hx-svc-btn">
+                  {copy.home.services.rentCta} <span className="hx-svc-arr">→</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* ── SELL ── */}
+          <div ref={sellRef} className="hx-svc sell rv rv-r">
+            <img
+              src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=900&q=75&auto=format&fit=crop"
+              alt={copy.home.services.sellAlt}
+              className="hx-svc-img"
+              loading="lazy"
+            />
+            <div className="hx-svc-veil" />
+            <div className="hx-svc-num" aria-hidden="true">02</div>
+            <div className="hx-svc-body">
+              <div>
+                <div className="hx-svc-tag">{copy.home.services.sellTag}</div>
+                <div className="hx-svc-title">{copy.home.services.sellTitle}</div>
+                <p className="hx-svc-desc">
+                  {copy.home.services.sellDesc}
+                </p>
+              </div>
+              <div>
+                <div className="hx-svc-feats">
+                  {copy.home.services.sellFeats.map((f, i) => (
+                    <div key={i} className="hx-svc-feat">{f}</div>
+                  ))}
+                </div>
+                <Link to="/cars" className="hx-svc-btn">
+                  {copy.home.services.sellCta} <span className="hx-svc-arr">→</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
 
       {/* ═══ ELITE BENEFITS ═══ */}
       <section className="hx-ben-sec">
