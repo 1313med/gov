@@ -21,7 +21,7 @@ export default function AppPhoneShowcase({ className = "" }) {
         />
       </div>
       <img
-        src="/images/app-mobile-dark-banner.png"
+        src={dark ? "/images/app-mobile-dark-banner.png" : "/images/app-mobile-light-banner.png"}
         alt=""
         className="hx-app-phones-banner"
         loading="lazy"
