@@ -1211,70 +1211,30 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
 .hx-tr p{font-size:13px;line-height:1.75;color:var(--mut);}
 
 /* ════ APP & FINAL CTA ════ */
+/* App download — phone mockup (image includes its own backdrop) */
 .hx-app{padding:92px 64px;background:var(--bg);}
 .hx-app-grid{
   max-width:1280px;margin:0 auto;display:grid;grid-template-columns:1.1fr .9fr;
   gap:26px;align-items:center;
 }
-/* App download — phone mockup with theme-aware backdrop */
 .hx-app-phones{
   position:relative;justify-self:end;
-  width:min(480px,100%);aspect-ratio:1/1;
+  width:min(340px,42vw);max-width:100%;
+  aspect-ratio:1/1;
   display:flex;align-items:center;justify-content:center;
 }
-.hx-app-phones-bg{
-  position:absolute;inset:0;border-radius:28px;
-  background:
-    radial-gradient(ellipse 80% 60% at 70% 85%, rgba(124,107,255,.16), transparent 60%),
-    radial-gradient(ellipse 60% 50% at 15% 20%, rgba(56,189,248,.14), transparent 55%),
-    linear-gradient(155deg, var(--sur) 0%, var(--bg2) 48%, var(--sur2) 100%);
-  border:1px solid var(--bdr2);
-  box-shadow:0 22px 54px rgba(7,14,45,.10);
-  transition:background .4s,border-color .4s,box-shadow .4s;
-}
-.hx.dark .hx-app-phones-bg{
-  background:
-    radial-gradient(ellipse 80% 60% at 70% 90%, rgba(124,107,255,.30), transparent 58%),
-    radial-gradient(ellipse 55% 45% at 12% 18%, rgba(56,189,248,.24), transparent 52%),
-    linear-gradient(155deg, #0c1024 0%, var(--bg2) 45%, #060810 100%);
-  box-shadow:0 28px 64px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04);
-}
-.hx-app-phones-glow{
-  position:absolute;border-radius:50%;pointer-events:none;
-  filter:blur(44px);opacity:.65;transition:opacity .4s;
-}
-.hx.dark .hx-app-phones-glow{opacity:1;}
-.hx-app-phones-glow--teal{
-  width:150px;height:150px;top:10%;left:8%;
-  background:rgba(56,189,248,.38);
-}
-.hx-app-phones-glow--purple{
-  width:190px;height:190px;bottom:8%;right:10%;
-  background:rgba(124,107,255,.34);
-}
-.hx-app-phones-grid{
-  position:absolute;inset:0;border-radius:28px;opacity:.32;pointer-events:none;
-  background-image:
-    linear-gradient(rgba(124,107,255,.09) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(124,107,255,.09) 1px, transparent 1px);
-  background-size:28px 28px;
-  mask-image:radial-gradient(ellipse 85% 75% at 50% 50%, #000 30%, transparent 100%);
-}
-.hx.dark .hx-app-phones-grid{opacity:.20;}
 .hx-app-phones-img{
-  position:relative;z-index:2;
-  width:100%;height:auto;max-width:none;
-  object-fit:contain;
+  display:block;width:100%;height:100%;
+  object-fit:contain;object-position:center center;
   pointer-events:none;user-select:none;
-  border-radius:28px;
-  transition:filter .4s,opacity .35s;
+  border-radius:22px;
+  transition:filter .35s,opacity .35s;
 }
 .hx-app-phones--light .hx-app-phones-img{
-  filter:drop-shadow(0 20px 44px rgba(7,14,45,.12));
+  filter:drop-shadow(0 16px 36px rgba(7,14,45,.10));
 }
 .hx-app-phones--dark .hx-app-phones-img{
-  width:92%;
-  filter:drop-shadow(0 24px 48px rgba(0,0,0,.55));
+  filter:drop-shadow(0 18px 40px rgba(0,0,0,.35));
 }
 
 .hx-final{
@@ -1362,8 +1322,9 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-ben-grid{grid-template-columns:repeat(3,1fr);}
   .hx-tgrid,.hx-tr-grid{grid-template-columns:repeat(2,1fr);}
   .hx-exp{margin:70px 40px;min-height:440px;}
+  .hx-app{padding:64px 40px;}
   .hx-app-grid{grid-template-columns:1fr;}
-  .hx-app-phones{justify-self:center;margin-top:12px;width:min(420px,100%);}
+  .hx-app-phones{justify-self:center;margin-top:8px;width:min(300px,78vw);}
   .hx-final{margin:0 40px 80px;}
   .hx-ft{padding:56px 40px 24px;}
   .hx-ft-top{grid-template-columns:1fr 1fr;}
@@ -1467,8 +1428,8 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-svc{height:390px;}
   .hx-svc-title{font-size:52px;}
   .hx-svc-body{padding:28px;}
-  .hx-app-phones{width:min(360px,100%);}
-  .hx-app-phones--dark .hx-app-phones-img{width:94%;}
+  .hx-app{padding:48px 24px;}
+  .hx-app-phones{width:min(268px,74vw);}
   .hx-stats-inner{grid-template-columns:repeat(2,1fr);gap:16px 12px;}
   .hx-stat-n{font-size:30px;}
   .hx-how-cell{flex:0 0 min(260px,84vw);}
