@@ -1263,15 +1263,17 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
 .hx.dark .hx-app-phones-grid{opacity:.20;}
 .hx-app-phones-img{
   position:relative;z-index:2;
-  width:92%;height:auto;max-width:none;
+  width:100%;height:auto;max-width:none;
   object-fit:contain;
   pointer-events:none;user-select:none;
-  mix-blend-mode:screen;
-  filter:drop-shadow(0 18px 40px rgba(7,14,45,.18));
-  transition:filter .4s,mix-blend-mode .4s;
+  border-radius:28px;
+  transition:filter .4s,opacity .35s;
 }
-.hx.dark .hx-app-phones-img{
-  mix-blend-mode:normal;
+.hx-app-phones--light .hx-app-phones-img{
+  filter:drop-shadow(0 20px 44px rgba(7,14,45,.12));
+}
+.hx-app-phones--dark .hx-app-phones-img{
+  width:92%;
   filter:drop-shadow(0 24px 48px rgba(0,0,0,.55));
 }
 
@@ -1466,7 +1468,7 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-svc-title{font-size:52px;}
   .hx-svc-body{padding:28px;}
   .hx-app-phones{width:min(360px,100%);}
-  .hx-app-phones-img{width:94%;}
+  .hx-app-phones--dark .hx-app-phones-img{width:94%;}
   .hx-stats-inner{grid-template-columns:repeat(2,1fr);gap:16px 12px;}
   .hx-stat-n{font-size:30px;}
   .hx-how-cell{flex:0 0 min(260px,84vw);}
