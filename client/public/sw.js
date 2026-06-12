@@ -40,7 +40,7 @@ self.addEventListener("push", (e) => {
   e.waitUntil(
     self.registration.showNotification(data.title || "Goovoiture", {
       body: data.body || "",
-      icon: "/og-default.svg",
+      icon: "/app-icon.svg",
     })
   );
 });
