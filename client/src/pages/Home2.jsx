@@ -693,7 +693,7 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
 .hx-vrail::-webkit-scrollbar{height:6px;}
 .hx-vrail::-webkit-scrollbar-thumb{background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:99px;}
 .hx-vcard{
-  flex:0 0 min(280px,78vw);
+  flex:0 0 min(300px,82vw);
   scroll-snap-align:start;
   position:relative;display:flex;flex-direction:column;
   border-radius:20px;overflow:hidden;
@@ -707,7 +707,15 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
 }
 .hx-vcard-sale:hover{border-color:rgba(124,107,255,.45);}
 .hx-vcard-rent:hover{border-color:rgba(56,189,248,.45);}
-.hx-vcard-img-wrap{position:relative;height:168px;overflow:hidden;}
+.hx-vcard-img-wrap{position:relative;height:188px;overflow:hidden;}
+.hx-vcard-badge{
+  position:absolute;top:10px;left:10px;z-index:2;
+  font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  padding:5px 10px;border-radius:8px;font-weight:600;
+  background:rgba(6,14,43,.78);color:#fff;backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.12);
+}
+.hx-vcard-badge-rent{background:rgba(2,132,199,.82);border-color:rgba(255,255,255,.15);}
 .hx-vcard-img{width:100%;height:100%;object-fit:cover;transition:transform .65s cubic-bezier(.22,1,.36,1);}
 .hx-vcard:hover .hx-vcard-img{transform:scale(1.07);}
 .hx-vcard-ph{
@@ -720,27 +728,45 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   background:linear-gradient(to top,rgba(6,14,43,.75),transparent 55%);
   pointer-events:none;
 }
-.hx-vcard-body{padding:16px 18px 18px;}
+.hx-vcard-body{padding:16px 18px 18px;display:flex;flex-direction:column;flex:1;}
 .hx-vcard-city{
   font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);
+  display:flex;align-items:center;gap:4px;
 }
+.hx-vcard-city svg{width:11px;height:11px;opacity:.7;}
 .hx-vcard-title{
-  font-family:var(--disp);font-size:18px;font-weight:700;letter-spacing:-.03em;
-  color:var(--ink);margin:6px 0 8px;line-height:1.15;
+  font-family:var(--disp);font-size:19px;font-weight:700;letter-spacing:-.03em;
+  color:var(--ink);margin:6px 0 8px;line-height:1.2;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
 }
-.hx-vcard-price{font-size:15px;font-weight:700;color:var(--gold);}
+.hx-vcard-sub{
+  font-size:12px;color:var(--mut);margin:-4px 0 10px;line-height:1.35;
+}
+.hx-vcard-meta{
+  display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;
+}
+.hx-vcard-tag{
+  font-family:var(--mono);font-size:9px;letter-spacing:.05em;
+  padding:4px 8px;border-radius:6px;
+  background:var(--sur2);color:var(--mut);border:1px solid var(--bdr);
+}
+.hx-vcard-foot{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;
+  padding-top:10px;border-top:1px solid var(--bdr);
+}
+.hx-vcard-price{font-size:17px;font-weight:700;color:var(--gold);line-height:1;}
 .hx-vcard-price-rent{color:#0284c7;}
 .dark .hx-vcard-price-rent{color:var(--gold2);}
 .hx-vcard-cta{
-  display:inline-block;margin-top:12px;font-size:11px;font-weight:700;letter-spacing:.08em;
+  font-size:10px;font-weight:700;letter-spacing:.1em;
   text-transform:uppercase;color:var(--mut);transition:color .2s,transform .2s;
+  white-space:nowrap;
 }
 .hx-vcard:hover .hx-vcard-cta{color:var(--gold);transform:translateX(3px);}
 .hx-vault-empty{padding:24px 64px;font-size:14px;color:var(--mut);max-width:1280px;margin:0 auto;}
 .hx-vskel-wrap{display:flex;gap:16px;padding:8px 64px;}
 .hx-vskel{
-  flex:0 0 min(280px,78vw);height:280px;border-radius:20px;
+  flex:0 0 min(300px,82vw);height:300px;border-radius:20px;
   background:linear-gradient(110deg,var(--sur2) 25%,var(--sur) 50%,var(--sur2) 75%);
   background-size:200% 100%;animation:hxShine 1.4s ease infinite;
 }
@@ -1314,18 +1340,57 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-svc-num{font-size:130px;}
   .hx-sec{padding:64px 24px;}
   .hx-sec-sm{padding:48px 24px;}
-  .hx-how-grid{grid-template-columns:1fr;}
-  .hx-how-cell{border-right:none;border-bottom:1px solid var(--bdr);}
-  .hx-how-cell:last-child{border-bottom:none;}
-  .hx-stats{padding:48px 24px;}
-  .hx-stats-inner{grid-template-columns:1fr 1fr;gap:28px;}
-  .hx-stat-n{font-size:40px;}
+  .hx-how-grid{
+    display:flex;overflow-x:auto;gap:14px;
+    scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
+    border:none;border-radius:0;margin-top:28px;
+    padding:4px 2px 12px;
+    scrollbar-width:none;
+  }
+  .hx-how-grid::-webkit-scrollbar{display:none;}
+  .hx-how-cell{
+    flex:0 0 min(272px,78vw);scroll-snap-align:start;
+    border:1px solid var(--bdr);border-radius:16px;
+    padding:22px 18px;border-right:1px solid var(--bdr);
+  }
+  .hx-how-cell:last-child{border-bottom:1px solid var(--bdr);}
+  .hx-how-icon{width:32px;height:32px;margin-bottom:12px;}
+  .hx-how-title{font-size:20px;margin-bottom:8px;}
+  .hx-how-desc{font-size:13px;line-height:1.6;}
+  .hx-stats{padding:36px 20px;}
+  .hx-stats-inner{grid-template-columns:repeat(2,1fr);gap:20px 14px;}
+  .hx-stat-n{font-size:34px;}
+  .hx-stat-n em{font-size:24px;}
+  .hx-stat-l{font-size:9px;letter-spacing:.1em;}
+  .hx-stat-line{width:22px;margin-top:8px;}
+  .hx-ben-grid{
+    display:flex;overflow-x:auto;gap:12px;
+    scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
+    padding:0 24px 8px;margin-top:20px;
+    scrollbar-width:none;
+  }
+  .hx-ben-grid::-webkit-scrollbar{display:none;}
+  .hx-ben{flex:0 0 min(240px,72vw);scroll-snap-align:start;padding:18px;}
+  .hx-tgrid{
+    display:flex;overflow-x:auto;gap:14px;
+    scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
+    padding:0 24px 8px;
+    scrollbar-width:none;
+  }
+  .hx-tgrid::-webkit-scrollbar{display:none;}
+  .hx-tgrid>.hx-tm{flex:0 0 min(280px,80vw);scroll-snap-align:start;}
   .hx-dash-sec{padding:64px 24px;}
   .hx-fsec,.hx-ben-sec,.hx-tsec,.hx-trust,.hx-app{padding-left:24px;padding-right:24px;}
   .hx-vault-head,.hx-vault-band-h{padding-left:24px;padding-right:24px;}
   .hx-vrail,.hx-vskel-wrap{padding-left:24px;padding-right:24px;}
   .hx-vault-empty{padding-left:24px;padding-right:24px;}
-  .hx-frail,.hx-ben-grid,.hx-tgrid,.hx-tr-grid{grid-template-columns:1fr;}
+  .hx-frail,.hx-tr-grid{grid-template-columns:1fr;}
+  .hx-vcard{flex:0 0 min(320px,88vw);}
+  .hx-vcard-img-wrap{height:210px;}
+  .hx-vcard-body{padding:18px 20px 20px;}
+  .hx-vcard-title{font-size:20px;}
+  .hx-vcard-price{font-size:18px;}
+  .hx-vskel{flex:0 0 min(320px,88vw);height:310px;}
   .hx-exp{margin:56px 24px;min-height:380px;border-radius:18px;}
   .hx-exp-body{padding:26px;}
   .hx-final{margin:0 24px 64px;padding:28px;border-radius:18px;}
@@ -1348,7 +1413,9 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-svc-title{font-size:52px;}
   .hx-svc-body{padding:28px;}
   .hx-phone{height:500px;}
-  .hx-stats-inner{grid-template-columns:1fr;}
+  .hx-stats-inner{grid-template-columns:repeat(2,1fr);gap:16px 12px;}
+  .hx-stat-n{font-size:30px;}
+  .hx-how-cell{flex:0 0 min(260px,84vw);}
   .hx-auth-btns{flex-direction:column;}
   .hx-auth-btns a,.hx-auth-btns button{justify-content:center;}
 }
@@ -1775,10 +1842,12 @@ function HomeInner() {
                 liveSales.map((c) => {
                   const img = c.images?.[0];
                   const title = c.title || `${c.brand || ""} ${c.model || ""}`.trim() || "—";
+                  const subtitle = [c.brand, c.model].filter(Boolean).join(" · ");
                   const price = c.price != null ? `${Number(c.price).toLocaleString()} ${copy.home.showcase.mad}` : "—";
                   return (
                     <Link key={c._id} to={`/cars/${c._id}`} className="hx-vcard hx-vcard-sale">
                       <div className="hx-vcard-img-wrap">
+                        {c.year && <span className="hx-vcard-badge">{c.year}</span>}
                         {img ? (
                           <img src={img} alt="" className="hx-vcard-img" loading="lazy" decoding="async" />
                         ) : (
@@ -1787,10 +1856,21 @@ function HomeInner() {
                         <span className="hx-vcard-shade" />
                       </div>
                       <div className="hx-vcard-body">
-                        <div className="hx-vcard-city">{c.city || "—"}</div>
+                        <div className="hx-vcard-city">{ICON.pin}{c.city || "—"}</div>
                         <h3 className="hx-vcard-title">{title}</h3>
-                        <div className="hx-vcard-price">{price}</div>
-                        <span className="hx-vcard-cta">{copy.home.showcase.view}</span>
+                        {subtitle && title !== subtitle && <p className="hx-vcard-sub">{subtitle}</p>}
+                        <div className="hx-vcard-meta">
+                          {c.year && <span className="hx-vcard-tag">{c.year}</span>}
+                          {c.fuel && <span className="hx-vcard-tag">{c.fuel}</span>}
+                          {c.gearbox && <span className="hx-vcard-tag">{c.gearbox}</span>}
+                          {c.mileage != null && (
+                            <span className="hx-vcard-tag">{Number(c.mileage).toLocaleString()} km</span>
+                          )}
+                        </div>
+                        <div className="hx-vcard-foot">
+                          <div className="hx-vcard-price">{price}</div>
+                          <span className="hx-vcard-cta">{copy.home.showcase.view} →</span>
+                        </div>
                       </div>
                     </Link>
                   );
@@ -1820,10 +1900,12 @@ function HomeInner() {
                 liveRentals.map((r) => {
                   const img = r.images?.[0];
                   const title = r.title || `${r.brand || ""} ${r.model || ""}`.trim() || "—";
+                  const subtitle = [r.brand, r.model].filter(Boolean).join(" · ");
                   const ppd = r.pricePerDay != null ? `${Number(r.pricePerDay).toLocaleString()} ${copy.home.showcase.mad}${copy.home.showcase.perDay}` : "—";
                   return (
                     <Link key={r._id} to={`/rentals/${r._id}`} className="hx-vcard hx-vcard-rent">
                       <div className="hx-vcard-img-wrap">
+                        {r.year && <span className="hx-vcard-badge hx-vcard-badge-rent">{r.year}</span>}
                         {img ? (
                           <img src={img} alt="" className="hx-vcard-img" loading="lazy" decoding="async" />
                         ) : (
@@ -1832,10 +1914,18 @@ function HomeInner() {
                         <span className="hx-vcard-shade" />
                       </div>
                       <div className="hx-vcard-body">
-                        <div className="hx-vcard-city">{r.city || "—"}</div>
+                        <div className="hx-vcard-city">{ICON.pin}{r.city || "—"}</div>
                         <h3 className="hx-vcard-title">{title}</h3>
-                        <div className="hx-vcard-price hx-vcard-price-rent">{ppd}</div>
-                        <span className="hx-vcard-cta">{copy.home.showcase.view}</span>
+                        {subtitle && title !== subtitle && <p className="hx-vcard-sub">{subtitle}</p>}
+                        <div className="hx-vcard-meta">
+                          {r.year && <span className="hx-vcard-tag">{r.year}</span>}
+                          {r.fuel && <span className="hx-vcard-tag">{r.fuel}</span>}
+                          {r.gearbox && <span className="hx-vcard-tag">{r.gearbox}</span>}
+                        </div>
+                        <div className="hx-vcard-foot">
+                          <div className="hx-vcard-price hx-vcard-price-rent">{ppd}</div>
+                          <span className="hx-vcard-cta">{copy.home.showcase.view} →</span>
+                        </div>
                       </div>
                     </Link>
                   );
