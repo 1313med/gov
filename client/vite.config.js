@@ -11,14 +11,11 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (!id.includes('node_modules')) return;
-          if (/[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id)) {
-            return 'vendor-react';
+          // Only split heavy libs with no React dependency — splitting React
+          // into a separate chunk breaks forwardRef for react-* packages.
+          if (id.includes('jspdf') || id.includes('html2canvas')) {
+            return 'vendor-pdf';
           }
-          if (/[\\/]node_modules[\\/](recharts|d3-|victory)[\\/]/.test(id)) return 'vendor-charts';
-          if (/[\\/]node_modules[\\/](jspdf|html2canvas)[\\/]/.test(id)) return 'vendor-pdf';
-          if (/[\\/]node_modules[\\/](socket\.io-client)[\\/]/.test(id)) return 'vendor-socket';
-          return 'vendor';
         },
       },
     },
