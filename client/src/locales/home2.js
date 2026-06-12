@@ -298,6 +298,10 @@ export const home2Dict = {
         "Browse cars, book rentals, manage listings, and get real-time alerts — one app for every kind of user. Coming soon on iOS and Android.",
       download: "Download App",
       waitlist: "Join Waitlist",
+      appStoreSmall: "Download on the",
+      appStoreBig: "App Store",
+      playStoreSmall: "Get it on",
+      playStoreBig: "Google Play",
       phoneTitle: "Goovoiture Elite",
       phoneCards: [
         { strong: "S-Class Reserved", span: "Pickup: 10:30 AM - Algiers" },
@@ -628,6 +632,10 @@ export const home2Dict = {
         "Parcourez, réservez, publiez et recevez des alertes — une app pour chaque profil. Bientôt sur iOS et Android.",
       download: "Télécharger l’app",
       waitlist: "Rejoindre la liste d’attente",
+      appStoreSmall: "Télécharger dans l’",
+      appStoreBig: "App Store",
+      playStoreSmall: "Disponible sur",
+      playStoreBig: "Google Play",
       phoneTitle: "Goovoiture Élite",
       phoneCards: [
         { strong: "Classe S réservée", span: "Retrait : 10h30 - Alger" },

@@ -5,6 +5,7 @@ import { useAppLang } from "../context/AppLangContext";
 import { useTheme } from "../context/ThemeContext";
 import SeoContentBlock from "../components/SeoContentBlock";
 import AppPhoneShowcase from "../components/AppPhoneShowcase";
+import AppStoreBadges from "../components/AppStoreBadges";
 import GarageFeatureShowcase from "../components/GarageFeatureShowcase";
 import HomeMobilePitch from "../components/HomeMobilePitch";
 import HeroMobileVisual from "../components/HeroMobileVisual";
@@ -542,347 +543,126 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   display:none;
   width:100%;margin:0 0 18px;
 }
-.hx-hero-story{
-  display:flex;flex-direction:column;gap:12px;
+/* ── Mobile hero: typographic campaign (no graphics) ── */
+.hx-type-divider{
+  width:100%;padding:18px 0 14px;
 }
-.hx-hero-story-head{
-  display:flex;flex-direction:column;gap:4px;
+.hx-type-divider-line{
+  position:relative;display:block;width:100%;height:1px;overflow:hidden;
+  background:linear-gradient(90deg, transparent 0%, rgba(124,107,255,0.15) 18%, rgba(122,92,255,0.35) 50%, rgba(56,189,248,0.2) 82%, transparent 100%);
 }
-.hx-hero-story-tag{
-  font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
-  color:var(--gold2);
-}
-.hx-hero-story-title{
-  font-size:22px;font-weight:700;line-height:1.15;color:var(--ink);
-}
-.hx-hero-story-desc{
-  font-size:13px;line-height:1.55;color:var(--mut);font-weight:300;
-}
-.hx-hero-story-stage{
-  position:relative;width:100%;
-  aspect-ratio:320/172;
-  border-radius:18px;overflow:hidden;
-  border:1px solid var(--gbd);
-  box-shadow:0 18px 44px rgba(11,22,61,0.1);
-}
-.hx-hero-story-stage--elite{
-  aspect-ratio:unset;
-  height:auto;
-  border-radius:16px;
-  border:1px solid var(--bdr2);
-  background:var(--sur);
-  box-shadow:0 16px 40px rgba(11,22,61,0.1);
-}
-.hx.dark .hx-hero-story-stage--elite{
-  background:#0a0d18;
-  border-color:rgba(255,255,255,0.08);
-  box-shadow:0 20px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04);
-}
-.hx-hero-story-stage--elite .hx-hero-story-scene{
-  position:relative;inset:auto;
-  height:0;overflow:hidden;
-}
-.hx-hero-story-stage--elite .hx-hero-story-scene.is-active{
-  height:auto;overflow:visible;
-}
-.hx-hero-story-scene{
+.hx-type-divider-sweep{
   position:absolute;inset:0;
-  opacity:0;
-  transition:opacity .32s cubic-bezier(.22,1,.36,1);
-  pointer-events:none;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+  transform:translateX(-100%);
+  animation:hxTypeLineSweep 3.2s ease-in-out infinite;
 }
-.hx-hero-story-scene.is-active{
-  opacity:1;pointer-events:auto;
+.hx-type{width:100%;padding:0;}
+.hx-type-stage{
+  position:relative;
+  min-height:clamp(92px,27vw,112px);
 }
-
-/* ── Elite editorial scene ── */
-.hx-elite-scene{
-  position:relative;width:100%;overflow:hidden;
-}
-.hx-elite-bg{
+.hx-type-msg{
   position:absolute;inset:0;
-  background:
-    radial-gradient(ellipse 70% 80% at 88% 50%, rgba(124,107,255,0.16) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 60% at 10% 20%, rgba(124,107,255,0.1) 0%, transparent 50%),
-    linear-gradient(165deg, var(--sur2) 0%, var(--sur) 100%);
+  display:flex;flex-direction:column;justify-content:flex-start;gap:0;
+  padding:2px 2px 0;
+  visibility:hidden;pointer-events:none;
 }
-.hx.dark .hx-elite-bg{
-  background:
-    radial-gradient(ellipse 70% 80% at 88% 50%, rgba(124,107,255,0.22) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 60% at 10% 20%, rgba(56,189,248,0.08) 0%, transparent 50%),
-    linear-gradient(165deg, #0e1224 0%, #080b14 100%);
+.hx-type-msg.is-active,
+.hx-type-msg.is-exit{
+  visibility:visible;pointer-events:auto;
 }
-.hx-elite-scene--1 .hx-elite-bg{
-  background:
-    radial-gradient(ellipse 75% 85% at 90% 45%, rgba(56,189,248,0.14) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 60% at 8% 80%, rgba(124,107,255,0.08) 0%, transparent 50%),
-    linear-gradient(165deg, var(--sur2) 0%, var(--sur) 100%);
+.hx-type-msg.is-active .hx-type-main,
+.hx-type-msg.is-exit .hx-type-main{
+  opacity:1;transform:none;filter:none;
 }
-.hx.dark .hx-elite-scene--1 .hx-elite-bg{
-  background:
-    radial-gradient(ellipse 75% 85% at 90% 45%, rgba(56,189,248,0.18) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 60% at 8% 80%, rgba(124,107,255,0.1) 0%, transparent 50%),
-    linear-gradient(165deg, #0c1428 0%, #070a12 100%);
-}
-.hx-elite-scene--2 .hx-elite-bg{
-  background:
-    radial-gradient(ellipse 70% 80% at 88% 50%, rgba(56,189,248,0.12) 0%, transparent 55%),
-    linear-gradient(165deg, var(--sur2) 0%, var(--sur) 100%);
-}
-.hx.dark .hx-elite-scene--2 .hx-elite-bg{
-  background:
-    radial-gradient(ellipse 70% 80% at 88% 50%, rgba(56,189,248,0.16) 0%, transparent 55%),
-    linear-gradient(165deg, #0a0f1e 0%, #060810 100%);
-}
-.hx-elite-noise{
-  position:absolute;inset:0;opacity:0.035;pointer-events:none;
-  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-.hx.dark .hx-elite-noise{opacity:0.05;}
-.hx-elite-body{
-  position:relative;z-index:2;
-  display:flex;flex-direction:row;align-items:stretch;
-}
-.hx-elite-copy{
-  flex:1;min-width:0;
-  display:flex;flex-direction:column;
-  padding:14px 10px 12px 16px;gap:10px;
-}
-.hx-elite-visual{
-  position:relative;width:118px;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  border-left:1px solid var(--bdr);
-  background:rgba(124,107,255,0.04);
-  overflow:hidden;padding:10px 8px;
-}
-.hx.dark .hx-elite-visual{
-  border-left-color:rgba(255,255,255,0.08);
-  background:rgba(124,107,255,0.08);
-}
-.hx-vis-stack{
-  display:flex;flex-direction:column;gap:8px;width:100%;
-}
-.hx-vis-row{
-  display:flex;flex-direction:column;align-items:center;gap:4px;
-  opacity:0;transform:translateX(6px);
-}
-.hx-hero-story-scene.is-active .hx-vis-row-0{animation:hxVisRowIn .28s cubic-bezier(.22,1,.36,1) .06s forwards;}
-.hx-hero-story-scene.is-active .hx-vis-row-1{animation:hxVisRowIn .28s cubic-bezier(.22,1,.36,1) .12s forwards;}
-.hx-hero-story-scene.is-active .hx-vis-row-2{animation:hxVisRowIn .28s cubic-bezier(.22,1,.36,1) .18s forwards;}
-.hx-vis-widget{
-  position:relative;width:100%;height:36px;
-  display:flex;align-items:center;justify-content:center;
-  border-radius:8px;
-  background:rgba(255,255,255,0.5);
-  border:1px solid var(--bdr2);
-}
-.hx-vis-widget-wide{height:auto;min-height:36px;padding:6px 8px;flex-direction:column;gap:4px;}
-.hx.dark .hx-vis-widget{
-  background:rgba(255,255,255,0.04);
-  border-color:rgba(255,255,255,0.1);
-}
-.hx-vis-cap{
-  font-size:7px;font-weight:600;letter-spacing:.04em;
-  text-transform:uppercase;text-align:center;
-  color:var(--mut);line-height:1.2;max-width:100%;
-}
-.hx-vis-ico{width:18px;height:18px;color:var(--gold2);}
-.hx-vis-badge{
-  position:absolute;bottom:4px;right:6px;
-  width:14px;height:14px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:8px;font-weight:700;color:#fff;
-  background:linear-gradient(135deg,#7c6bff,#38bdf8);
-  opacity:0;transform:scale(0.5);
-}
-.hx-hero-story-scene.is-active .hx-vis-anim-check{animation:hxVisPop .28s cubic-bezier(.22,1,.36,1) .22s forwards;}
-.hx-vis-price-line{
-  display:flex;align-items:center;gap:5px;width:100%;
-  font-size:6px;font-weight:600;color:var(--mut);text-transform:uppercase;
-}
-.hx-vis-price-line span{flex-shrink:0;width:28px;}
-.hx-vis-bar{
-  flex:1;height:4px;border-radius:2px;background:var(--bdr);
-  overflow:hidden;
-}
-.hx-vis-bar-fill{
-  display:block;height:100%;border-radius:2px;
-  transform:scaleX(0);transform-origin:left center;
-}
-.hx-vis-bar-a{background:rgba(124,107,255,0.45);width:88%;}
-.hx-vis-bar-b{background:linear-gradient(90deg,#7c6bff,#38bdf8);width:72%;}
-.hx-hero-story-scene.is-active .hx-vis-bar-a{animation:hxVisBarGrow .35s cubic-bezier(.22,1,.36,1) .15s forwards;}
-.hx-hero-story-scene.is-active .hx-vis-bar-b{animation:hxVisBarGrow .35s cubic-bezier(.22,1,.36,1) .22s forwards;}
-.hx-vis-fair{
-  font-size:7px;font-weight:700;color:#38bdf8;
-  align-self:flex-start;opacity:0;
-}
-.hx-vis-doc-line{
-  display:block;height:3px;border-radius:2px;
-  background:var(--bdr2);width:0;
-}
-.hx-vis-doc-1{--w:70%;}
-.hx-vis-doc-2{--w:90%;}
-.hx-vis-doc-3{--w:55%;}
-.hx-hero-story-scene.is-active .hx-vis-doc-1{animation:hxVisDocDraw .25s ease .12s forwards;}
-.hx-hero-story-scene.is-active .hx-vis-doc-2{animation:hxVisDocDraw .25s ease .18s forwards;}
-.hx-hero-story-scene.is-active .hx-vis-doc-3{animation:hxVisDocDraw .25s ease .24s forwards;}
-.hx-vis-tap-btn{
-  position:relative;z-index:1;
-  font-size:8px;font-weight:700;letter-spacing:.06em;
-  text-transform:uppercase;color:#fff;
-  padding:4px 10px;border-radius:6px;
-  background:linear-gradient(135deg,#7c6bff,#38bdf8);
-}
-.hx-vis-tap-ring{
-  position:absolute;width:32px;height:32px;border-radius:50%;
-  border:1px solid rgba(56,189,248,0.5);
-  opacity:0;
-}
-.hx-hero-story-scene.is-active .hx-vis-anim-tap{animation:hxVisTap 1.2s ease-out infinite;}
-.hx-vis-runway{
-  position:absolute;bottom:6px;left:12px;right:12px;height:1px;
-  background:linear-gradient(90deg,transparent,var(--gold2),transparent);
-}
-.hx-hero-story-scene.is-active .hx-vis-anim-plane{animation:hxVisPlane 1.4s ease-in-out infinite;}
-.hx-vis-cal{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:3px;width:100%;
-}
-.hx-vis-cal span{
-  height:8px;border-radius:2px;background:var(--bdr);
-}
-.hx-vis-cal span.is-sel{background:linear-gradient(135deg,#7c6bff,#38bdf8);}
-.hx-vis-cal-range{
-  font-size:7px;font-weight:700;color:var(--gold2);letter-spacing:.04em;
-}
-.hx-vis-paper-x{
-  position:absolute;top:3px;right:5px;
-  font-size:8px;font-weight:700;color:#f87171;opacity:.85;
-}
-.hx-vis-alert-tag{
-  position:absolute;top:2px;right:4px;
-  font-size:6px;font-weight:700;color:#fff;
-  padding:1px 4px;border-radius:4px;background:#f59e0b;
-}
-.hx-hero-story-scene.is-active .hx-vis-anim-bell{animation:hxVisBell 1.2s ease-in-out infinite;transform-origin:top center;}
-.hx-hero-story-scene.is-active .hx-vis-anim-pulse{animation:hxVisPulse 1.2s ease-in-out infinite;}
-.hx-vis-chat{display:flex;align-items:center;gap:5px;padding:5px 6px !important;}
-.hx-vis-avatar{
-  width:16px;height:16px;border-radius:50%;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  font-size:7px;font-weight:700;color:#fff;
-  background:linear-gradient(135deg,#7c6bff,#38bdf8);
-}
-.hx-vis-bubbles{flex:1;display:flex;flex-direction:column;gap:2px;}
-.hx-vis-bubble{
-  display:block;height:3px;border-radius:2px;background:var(--bdr2);
-  width:0;
-}
-.hx-vis-bubble-1{--w:80%;}
-.hx-vis-bubble-2{--w:55%;}
-.hx-hero-story-scene.is-active .hx-vis-bubble-1{animation:hxVisDocDraw .22s ease .15s forwards;}
-.hx-hero-story-scene.is-active .hx-vis-bubble-2{animation:hxVisDocDraw .22s ease .22s forwards;}
-.hx-vis-chat-live{font-size:6px;font-weight:600;color:#38bdf8;white-space:nowrap;}
-.hx-elite-headline{
-  margin:0;
-  font-family:var(--disp);
-  font-size:19px;font-weight:600;line-height:1.22;
-  letter-spacing:-.03em;color:var(--ink);
-}
-.hx-elite-headline span{display:block;}
-.hx-elite-pills{
-  list-style:none;margin:0;padding:0;
-  display:flex;flex-wrap:wrap;gap:8px;
-}
-.hx-elite-pill{
-  display:inline-flex;align-items:center;gap:7px;
-  padding:7px 10px;border-radius:9px;
-  background:rgba(255,255,255,0.55);
-  border:1px solid var(--bdr2);
-  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-  opacity:0;transform:translateY(8px);
-}
-.hx.dark .hx-elite-pill{
-  background:rgba(255,255,255,0.04);
-  border-color:rgba(255,255,255,0.1);
-}
-.hx-hero-story-scene.is-active .hx-elite-pill-0{animation:hxElitePill .3s cubic-bezier(.22,1,.36,1) .12s forwards;}
-.hx-hero-story-scene.is-active .hx-elite-pill-1{animation:hxElitePill .3s cubic-bezier(.22,1,.36,1) .18s forwards;}
-.hx-hero-story-scene.is-active .hx-elite-pill-2{animation:hxElitePill .3s cubic-bezier(.22,1,.36,1) .24s forwards;}
-.hx-hero-story-scene.is-active .hx-elite-headline span:nth-child(1){
-  animation:hxEliteHead .32s cubic-bezier(.22,1,.36,1) .04s forwards;
-  opacity:0;transform:translateY(8px);
-}
-.hx-hero-story-scene.is-active .hx-elite-headline span:nth-child(2){
-  animation:hxEliteHead .32s cubic-bezier(.22,1,.36,1) .1s forwards;
-  opacity:0;transform:translateY(8px);
-}
-.hx-elite-pill-ico{
-  display:flex;color:var(--gold2);flex-shrink:0;
-}
-.hx-elite-pill-ico svg{width:14px;height:14px;}
-.hx-elite-pill-txt{
-  font-size:11px;font-weight:500;letter-spacing:.02em;
-  color:var(--ink);white-space:nowrap;
-}
-.hx.dark .hx-elite-pill-txt{color:var(--ink2);}
-
-.hx-hero-story-nav{
-  display:flex;align-items:center;justify-content:space-between;gap:12px;
-  padding-top:2px;
-}
-.hx-hero-story-tab{
-  flex:1;padding:0 0 8px;
-  background:none;border:none;border-bottom:2px solid transparent;
-  font-size:11px;font-weight:600;letter-spacing:.04em;
-  text-transform:uppercase;color:var(--mut);
-  cursor:pointer;transition:color .25s,border-color .25s;
-}
-.hx-hero-story-tab.is-active{
-  color:var(--ink);border-bottom-color:var(--gold);
-}
-.hx-hero-story-dots{display:flex;gap:5px;flex-shrink:0;}
-.hx-hero-story-dot{
-  width:5px;height:5px;border-radius:50%;
-  background:var(--bdr2);transition:background .3s,transform .3s;
-}
-.hx-hero-story-dot.is-active{
-  background:linear-gradient(135deg,#7c6bff,#38bdf8);
-  transform:scale(1.3);
+.hx-type-msg.is-active .hx-type-sign,
+.hx-type-msg.is-exit .hx-type-sign{
+  opacity:1;clip-path:none;transform:none;filter:none;
 }
 
-@keyframes hxElitePill{
-  to{opacity:1;transform:none;}
+.hx-type-main{
+  display:block;
+  font-family:Allura,cursive;
+  font-size:clamp(52px,15vw,68px);
+  font-weight:400;line-height:0.92;
+  letter-spacing:.04em;
+  color:var(--ink);
+  transform-origin:left center;
+  transition:color .4s;
 }
-@keyframes hxEliteHead{
-  to{opacity:1;transform:none;}
+.hx.dark .hx-type-main{
+  text-shadow:0 0 48px rgba(124,107,255,0.12);
 }
-@keyframes hxVisRowIn{
-  to{opacity:1;transform:none;}
+.hx-type-sign{
+  display:block;
+  margin-top:-2px;
+  font-family:Allura,cursive;
+  font-size:clamp(40px,11.5vw,52px);
+  font-weight:400;line-height:1;
+  letter-spacing:.05em;
+  color:#7A5CFF;
+  text-shadow:0 0 40px rgba(122,92,255,0.28);
+  transform-origin:left center;
 }
-@keyframes hxVisPop{
-  to{opacity:1;transform:scale(1);}
+.hx-type--rtl .hx-type-main,
+.hx-type--rtl .hx-type-sign,
+.hx-type-sign--ar{
+  font-family:"Cormorant Garamond",Georgia,serif;
+  font-style:italic;font-weight:300;
+  letter-spacing:.02em;
 }
-@keyframes hxVisBarGrow{to{transform:scaleX(1);}}
-@keyframes hxVisDocDraw{to{width:var(--w);}}
-@keyframes hxVisTap{
-  0%{opacity:.6;transform:scale(0.85);}
-  70%{opacity:0;transform:scale(1.25);}
-  100%{opacity:0;transform:scale(1.25);}
+.hx-type--rtl .hx-type-main{
+  font-size:clamp(34px,9.5vw,44px);
+  line-height:1.05;
+  color:var(--ink);
+  text-shadow:none;
 }
-@keyframes hxVisPlane{
-  0%,100%{transform:translateY(0);}
-  50%{transform:translateY(-2px);}
+.hx-type-sign--ar,
+.hx-type--rtl .hx-type-sign{
+  font-size:clamp(28px,8vw,36px);
+  color:#7A5CFF;
 }
-@keyframes hxVisBell{
-  0%,100%{transform:rotate(0);}
-  20%{transform:rotate(8deg);}
-  40%{transform:rotate(-8deg);}
-  60%{transform:rotate(4deg);}
+.hx-type--rtl .hx-type-sign{transform-origin:right center;}
+
+@media (prefers-reduced-motion: no-preference){
+  .hx-type-msg.is-active .hx-type-main{
+    opacity:0;
+    animation:hxTypeMainIn 1s cubic-bezier(.22,1,.36,1) forwards;
+  }
+  .hx-type-msg.is-active .hx-type-sign{
+    clip-path:inset(0 100% 0 0);
+    opacity:0;
+    animation:hxTypeSignIn 1.35s cubic-bezier(.22,1,.36,1) .45s forwards;
+  }
+  .hx-type-msg.is-exit .hx-type-main{
+    animation:hxTypeOut .72s cubic-bezier(.4,0,.2,1) forwards;
+  }
+  .hx-type-msg.is-exit .hx-type-sign{
+    animation:hxTypeSignOut .72s cubic-bezier(.4,0,.2,1) forwards;
+  }
 }
-@keyframes hxVisPulse{
-  0%,100%{opacity:1;}
-  50%{opacity:.65;}
+
+@keyframes hxTypeMainIn{
+  0%{opacity:0;filter:blur(10px);transform:translateY(14px);}
+  100%{opacity:1;filter:blur(0);transform:none;}
+}
+@keyframes hxTypeSignIn{
+  0%{opacity:0;clip-path:inset(0 100% 0 0);filter:blur(6px);transform:translateX(-6px);}
+  35%{opacity:1;filter:blur(2px);}
+  100%{opacity:1;clip-path:inset(0 0 0 0);filter:blur(0);transform:none;}
+}
+@keyframes hxTypeOut{
+  0%{opacity:1;filter:blur(0);transform:none;}
+  100%{opacity:0;filter:blur(8px);transform:translateY(-10px);}
+}
+@keyframes hxTypeSignOut{
+  0%{opacity:1;filter:blur(0);}
+  100%{opacity:0;filter:blur(6px);transform:translateX(8px);}
+}
+@keyframes hxTypeLineSweep{
+  0%{transform:translateX(-100%);}
+  100%{transform:translateX(100%);}
 }
 .hx-hero-btns {
   display:flex;gap:12px;flex-wrap:wrap;
@@ -1004,7 +784,9 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
 .hx-vault-head{padding:0 64px 36px;max-width:1280px;margin:0 auto;}
 .hx-vault-sub{max-width:640px;}
 .hx-vault-band{padding:0 0 28px;}
+.hx-vault--rent{border-top:1px solid var(--bdr);padding-top:12px;}
 .hx-vault-band-rent{padding-top:8px;}
+.hx-app-btns{margin-top:24px;}
 .hx-vault-band-h{
   max-width:1280px;margin:0 auto 16px;padding:0 64px;
   display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
@@ -1669,6 +1451,53 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   mix-blend-mode:screen;
 }
 .hx-app-phones-banner{display:none;}
+.hx-app-visual{
+  display:flex;flex-direction:column;align-items:center;
+  justify-self:end;width:min(400px,44vw);max-width:100%;
+}
+.hx-store-badges{
+  display:flex;flex-wrap:wrap;gap:10px;
+  margin-top:20px;width:100%;
+}
+.hx-store-badge{
+  display:inline-flex;align-items:center;gap:10px;
+  min-width:min(168px,48vw);flex:1 1 168px;
+  padding:10px 14px 10px 12px;border-radius:14px;
+  background:var(--sur);
+  border:1px solid var(--gbd);
+  box-shadow:0 8px 24px rgba(7,14,45,.06);
+  transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease,background .22s ease;
+}
+.hx.dark .hx-store-badge{
+  background:rgba(255,255,255,.04);
+  border-color:rgba(124,107,255,.18);
+  box-shadow:0 10px 28px rgba(0,0,0,.28);
+}
+.hx-store-badge:hover{
+  transform:translateY(-2px);
+  border-color:rgba(124,107,255,.42);
+  box-shadow:0 14px 32px rgba(124,107,255,.14);
+}
+.hx-store-badge--apple:hover{border-color:rgba(255,255,255,.22);}
+.hx-store-badge-ico{
+  width:28px;height:28px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.hx-store-badge-ico svg{width:100%;height:100%;}
+.hx-store-badge-ico--apple svg{fill:var(--ink);}
+.hx.dark .hx-store-badge-ico--apple svg{fill:#f5f7ff;}
+.hx-store-badge-txt{
+  display:flex;flex-direction:column;gap:1px;min-width:0;
+}
+.hx-store-badge-txt small{
+  font-family:var(--mono);font-size:9px;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--mut);line-height:1.2;
+}
+.hx-store-badge-txt strong{
+  font-size:14px;font-weight:700;letter-spacing:-.02em;
+  color:var(--ink);line-height:1.15;
+}
+.hx.dark .hx-store-badge-txt strong{color:#fafafa;}
 @keyframes hxAppFloat{
   0%,100%{transform:translateY(0);}
   50%{transform:translateY(-8px);}
@@ -1741,6 +1570,10 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
     transition: none !important;
     transform: none !important;
   }
+  .hx-hero-graph{opacity:1 !important;}
+  .hx-type-divider-sweep{animation:none !important;opacity:0.35;}
+  .hx-type-msg.is-active .hx-type-main,
+  .hx-type-msg.is-active .hx-type-sign{opacity:1 !important;clip-path:none !important;filter:none !important;}
 }
 
 /* ════ RESPONSIVE ════ */
@@ -1776,8 +1609,29 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-nav-links{display:none;}
   .hx-npill.gh{display:none;}
   .hx-burger{display:flex;}
-  .hx-hero{padding:88px 24px 20px;min-height:auto;}
-  .hx-hero-inner{max-width:100%;display:block;}
+  .hx-hero{
+    min-height:auto;
+    padding:76px 24px 16px;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+  }
+  .hx-hero-inner{width:100%;max-width:100%;display:block;}
+  .hx-hero-left{
+    max-width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    padding-top:clamp(4px,2vw,16px);
+  }
+  .hx-hero-kicker{justify-content:center;margin-bottom:14px;}
+  .hx-hero-h1{margin-bottom:0;text-align:center;}
+  .hx-hero-h1--caps{text-transform:uppercase;}
+  .hx-hero-h1--caps em{text-transform:none;}
+  .hx.dark .hx-hero-h1{color:#fafafa;}
+  .hx-type-divider{padding:10px 0 8px;}
+  .hx-hero-rule{display:none;}
   .hx-hero-right,
   .hx-hero-stats,
   .hx-scroll-ind{display:none !important;}
@@ -1786,16 +1640,39 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-hero-p{display:none;}
   .hx-hero-graph{
     display:block;
-    opacity:0;animation:hUp .6s ease .42s forwards;
+    width:100%;
+    margin:0;
+    opacity:1;
+    text-align:center;
+  }
+  .hx-type-msg{align-items:center;text-align:center;}
+  .hx-type-main,
+  .hx-type-sign{transform-origin:center center;}
+  .hx-type--rtl .hx-type-sign{transform-origin:center center;}
+  @media (prefers-reduced-motion: no-preference){
+    .hx-hero-graph{
+      opacity:0;animation:hUp .6s ease .42s forwards;
+    }
   }
   .hx-hbtn{justify-content:center;flex:1;min-width:140px;}
   .hx-vault{
-    padding:40px 0 48px;
+    padding:28px 0 32px;
     border-top:none;
-    border-bottom:1px solid var(--bdr);
+    border-bottom:none;
   }
-  .hx-vault-head{padding:0 24px 20px;}
-  .hx-vault-sub{font-size:14px;}
+  .hx-vault--rent{
+    padding:20px 0 28px;
+    border-top:1px solid var(--bdr);
+    border-bottom:none;
+  }
+  .hx-vault::before{display:none;}
+  .hx-vault-head{display:none;}
+  .hx-vault-band:first-of-type{padding-top:0;}
+  .hx-app{padding:36px 24px 40px;}
+  .hx-app-btns{display:none;}
+  .hx-mobile-pitch--app{margin-bottom:14px;}
+  .hx-mobile-pitch--garage{margin-bottom:12px;}
+  .hx-gfeat{padding:40px 24px 44px;}
   .hx-svc-wrap{border-top:none;}
   .hx-svc-header{padding:48px 24px 0;flex-direction:column;align-items:flex-start;}
   .hx-svc-header .hx-h2-sub{text-align:left !important;max-width:100% !important;}
@@ -1844,12 +1721,10 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-tgrid::-webkit-scrollbar{display:none;}
   .hx-tgrid>.hx-tm{flex:0 0 min(280px,80vw);scroll-snap-align:start;}
   .hx-dash-sec{padding:64px 24px;}
-  .hx-gfeat{padding:56px 24px 48px;}
   .hx-gfeat-copy{display:none;}
-  .hx-mobile-pitch{display:block;margin-bottom:8px;}
+  .hx-mobile-pitch{display:block;}
   .hx-gfeat-visual{display:block;width:100%;margin-top:4px;}
   .hx-app-copy-desktop{display:none;}
-  .hx-mobile-pitch--app{margin-bottom:16px;}
   .hx-gfeat-feats{grid-template-columns:1fr;}
   .hx-fsec,.hx-ben-sec,.hx-tsec,.hx-trust,.hx-app{padding-left:24px;padding-right:24px;}
   .hx-vault-head,.hx-vault-band-h{padding-left:24px;padding-right:24px;}
@@ -1873,6 +1748,7 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-ft{padding:48px 24px 24px;}
   .hx-ft-top{grid-template-columns:1fr;gap:24px;}
   .hx-ft-top>div:first-child{grid-column:1;}
+  .hx-app-visual{width:100%;max-width:none;}
   .hx-app-phones-float{display:none;}
   .hx-app-phones{width:100%;max-width:none;margin-top:12px;}
   .hx-app-phones-banner{
@@ -1880,6 +1756,10 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
     animation:hxAppFloat 7s ease-in-out infinite;
     pointer-events:none;user-select:none;
   }
+  .hx-store-badges{justify-content:center;margin-top:16px;}
+  .hx-store-badge{min-width:0;flex:1 1 calc(50% - 5px);max-width:none;padding:9px 12px 9px 10px;}
+  .hx-store-badge-ico{width:24px;height:24px;}
+  .hx-store-badge-txt strong{font-size:12px;}
   .hx-app-phones--dark .hx-app-phones-banner{mix-blend-mode:screen;}
   .hx-app-phones--light .hx-app-phones-banner{mix-blend-mode:normal;}
 }
@@ -2148,18 +2028,19 @@ function HomeInner() {
           <div className="hx-hero-left">
           <div className="hx-hero-kicker">{copy.home.hero.kicker}</div>
 
-          <h1 className="hx-hero-h1">
+          <h1 className={`hx-hero-h1${lang !== "ar" ? " hx-hero-h1--caps" : ""}`}>
             {copy.home.hero.line1}<br/>
             {copy.home.hero.line2}<br/>
             <em>{copy.home.hero.line3}</em>
           </h1>
+
+          <HeroMobileVisual />
 
           <div className="hx-hero-rule" />
 
           <p className="hx-hero-p">
             {copy.home.hero.body}
           </p>
-          <HeroMobileVisual />
           <div className="hx-hero-pillrow">
             <span className="hx-hero-pill">{copy.home.hero.intent}</span>
           </div>
@@ -2215,7 +2096,7 @@ function HomeInner() {
         </div>
       </div>
 
-      {/* ═══ LIVE SHOWCASE — SALES + RENTALS (before services on mobile) ═══ */}
+      {/* ═══ LIVE SHOWCASE — SALES ═══ */}
       <section className="hx-vault">
         <div className="hx-vault-head rv rv-u vis">
           <div className="hx-ey">{copy.home.showcase.eyebrow}</div>
@@ -2282,7 +2163,10 @@ function HomeInner() {
             </div>
           </div>
         </div>
+      </section>
 
+      {/* ═══ RENTALS SHOWCASE ═══ */}
+      <section className="hx-vault hx-vault--rent">
         <div className="hx-vault-band hx-vault-band-rent">
           <div className="hx-vault-band-h">
             <span className="hx-vtag hx-vtag-rent">{copy.home.showcase.forRent}</span>
@@ -2336,6 +2220,76 @@ function HomeInner() {
               )}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ═══ APP — title + banner + store badges ═══ */}
+      <section className="hx-app">
+        <div className="hx-app-grid">
+          <div className="rv rv-l vis">
+            <HomeMobilePitch
+              className="hx-mobile-pitch--app"
+              badge={copy.home.app.eyebrow}
+              title1={copy.home.app.title1}
+              titleEm={copy.home.app.title2}
+              tagline={copy.home.app.sub}
+            />
+            <div className="hx-app-copy-desktop">
+              <div className="hx-ey">{copy.home.app.eyebrow}</div>
+              <h2 className="hx-h2">{copy.home.app.title1} <em>{copy.home.app.title2}</em></h2>
+              <p className="hx-h2-sub" style={{ maxWidth: 560 }}>
+                {copy.home.app.sub}
+              </p>
+            </div>
+            <div className="hx-hero-btns hx-app-btns">
+              <button className="hx-hbtn prim" type="button">{copy.home.app.download}</button>
+              <Link to="/register" className="hx-hbtn outl">{copy.home.app.waitlist}</Link>
+            </div>
+          </div>
+          <div className="hx-app-visual rv rv-r vis">
+            <AppPhoneShowcase />
+            <AppStoreBadges
+              appStoreSmall={copy.home.app.appStoreSmall}
+              appStoreBig={copy.home.app.appStoreBig}
+              playStoreSmall={copy.home.app.playStoreSmall}
+              playStoreBig={copy.home.app.playStoreBig}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ MON GARAGE — title + banner ═══ */}
+      <section className="hx-gfeat" aria-label={copy.home.garage.aria}>
+        <HomeMobilePitch
+          className="hx-mobile-pitch--garage"
+          badge={copy.home.garage.badge}
+          title1={copy.home.garage.title1}
+          titleEm={copy.home.garage.title2}
+          tagline={copy.home.garage.title3}
+        />
+        <div className="hx-gfeat-copy rv rv-u vis">
+          <div className="hx-gfeat-badge">{copy.home.garage.badge}</div>
+          <h2 className="hx-gfeat-title">
+            {copy.home.garage.title1} <em>{copy.home.garage.title2}</em>
+          </h2>
+          <p className="hx-gfeat-tagline">{copy.home.garage.title3}</p>
+          <p className="hx-gfeat-sub">{copy.home.garage.sub}</p>
+          <div className="hx-gfeat-feats">
+            {copy.home.garage.feats.map((f, i) => (
+              <div key={i} className="hx-gfeat-feat">
+                <strong>{f.label}</strong>
+                <span>{f.desc}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <GarageFeatureShowcase className="rv rv-u vis" />
+        <div className="hx-gfeat-actions rv rv-u vis" style={{ transitionDelay: "0.08s" }}>
+          {auth ? (
+            <Link to="/garage" className="hx-hbtn prim">{copy.home.garage.cta}</Link>
+          ) : (
+            <Link to="/register" className="hx-hbtn prim">{copy.home.garage.ctaGuest}</Link>
+          )}
         </div>
       </section>
 
@@ -2533,41 +2487,6 @@ function HomeInner() {
         </div>
       </section>
 
-      {/* ═══ MY GARAGE — deadlines, alerts, mechanics ═══ */}
-      <section className="hx-gfeat" aria-label={copy.home.garage.aria}>
-        <HomeMobilePitch
-          className="rv rv-u vis"
-          badge={copy.home.platform.badge}
-          title1={copy.home.platform.title1}
-          titleEm={copy.home.platform.titleEm}
-          tagline={copy.home.platform.tagline}
-        />
-        <div className="hx-gfeat-copy rv rv-u vis">
-          <div className="hx-gfeat-badge">{copy.home.garage.badge}</div>
-          <h2 className="hx-gfeat-title">
-            {copy.home.garage.title1} <em>{copy.home.garage.title2}</em>
-          </h2>
-          <p className="hx-gfeat-tagline">{copy.home.garage.title3}</p>
-          <p className="hx-gfeat-sub">{copy.home.garage.sub}</p>
-          <div className="hx-gfeat-feats">
-            {copy.home.garage.feats.map((f, i) => (
-              <div key={i} className="hx-gfeat-feat">
-                <strong>{f.label}</strong>
-                <span>{f.desc}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <GarageFeatureShowcase className="rv rv-u vis" />
-        <div className="hx-gfeat-actions rv rv-u vis" style={{ transitionDelay: "0.08s" }}>
-          {auth ? (
-            <Link to="/garage" className="hx-hbtn prim">{copy.home.garage.cta}</Link>
-          ) : (
-            <Link to="/register" className="hx-hbtn prim">{copy.home.garage.ctaGuest}</Link>
-          )}
-        </div>
-      </section>
-
       {/* ═══ DASHBOARD / AUTH CTA ═══ */}
       <div className="hx-dash-sec">
         <div ref={dashRef} className="hx-dash-card rv rv-s">
@@ -2612,33 +2531,6 @@ function HomeInner() {
           )}
         </div>
       </div>
-
-      {/* ═══ APP / COMING SOON ═══ */}
-      <section className="hx-app">
-        <div className="hx-app-grid">
-          <div className="rv rv-l vis">
-            <HomeMobilePitch
-              className="hx-mobile-pitch--app"
-              badge={copy.home.platform.badge}
-              title1={copy.home.platform.title1}
-              titleEm={copy.home.platform.titleEm}
-              tagline={copy.home.platform.tagline}
-            />
-            <div className="hx-app-copy-desktop">
-              <div className="hx-ey">{copy.home.app.eyebrow}</div>
-              <h2 className="hx-h2">{copy.home.app.title1} <em>{copy.home.app.title2}</em></h2>
-              <p className="hx-h2-sub" style={{ maxWidth: 560 }}>
-                {copy.home.app.sub}
-              </p>
-            </div>
-            <div className="hx-hero-btns" style={{ marginTop: 24 }}>
-              <button className="hx-hbtn prim" type="button">{copy.home.app.download}</button>
-              <Link to="/register" className="hx-hbtn outl">{copy.home.app.waitlist}</Link>
-            </div>
-          </div>
-          <AppPhoneShowcase className="rv rv-r vis" />
-        </div>
-      </section>
 
       {/* ═══ FINAL CONVERSION CTA ═══ */}
       <section className="hx-final rv rv-s vis">
