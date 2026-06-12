@@ -1225,27 +1225,15 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   animation:hxAppFloat 7s ease-in-out infinite;
   border-radius:26px;
 }
-.hx-app-phones--light .hx-app-phones-img{
+.hx-app-phones-img{
   display:block;width:100%;height:auto;
   border-radius:26px;
+  pointer-events:none;user-select:none;
   filter:drop-shadow(0 22px 48px rgba(7,14,45,.12));
-  pointer-events:none;user-select:none;
+  transition:filter .4s;
 }
-/* Dark: gradient card like light mockup; screen blend removes image black bg */
-.hx-app-phones--dark .hx-app-phones-float{
-  aspect-ratio:1/1;overflow:hidden;
-  background:
-    radial-gradient(ellipse 78% 58% at 72% 86%, rgba(124,107,255,.26), transparent 58%),
-    radial-gradient(ellipse 58% 48% at 14% 16%, rgba(56,189,248,.18), transparent 52%),
-    linear-gradient(155deg, #0c1024 0%, #121830 50%, #080c18 100%);
-  box-shadow:0 24px 52px rgba(0,0,0,.48), inset 0 1px 0 rgba(255,255,255,.05);
-  isolation:isolate;
-}
-.hx-app-phones--dark .hx-app-phones-img{
-  display:block;width:100%;height:100%;
-  object-fit:contain;object-position:center center;
-  mix-blend-mode:screen;
-  pointer-events:none;user-select:none;
+.hx.dark .hx-app-phones-img{
+  filter:drop-shadow(0 28px 56px rgba(0,0,0,.42));
 }
 @keyframes hxAppFloat{
   0%,100%{transform:translateY(0);}
