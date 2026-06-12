@@ -1242,12 +1242,14 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
 .hx.dark .hx-app-phones-img{
   mix-blend-mode:screen;
 }
+.hx-app-phones-banner{display:none;}
 @keyframes hxAppFloat{
   0%,100%{transform:translateY(0);}
   50%{transform:translateY(-8px);}
 }
 @media (prefers-reduced-motion:reduce){
-  .hx-app-phones-float{animation:none !important;}
+  .hx-app-phones-float,
+  .hx-app-phones-banner{animation:none !important;}
 }
 
 .hx-final{
@@ -1432,6 +1434,14 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-ft{padding:48px 24px 24px;}
   .hx-ft-top{grid-template-columns:1fr;gap:24px;}
   .hx-ft-top>div:first-child{grid-column:1;}
+  .hx.dark .hx-app-phones-float{display:none;}
+  .hx.dark .hx-app-phones{width:100%;max-width:none;margin-top:12px;}
+  .hx.dark .hx-app-phones-banner{
+    display:block;width:100%;height:auto;
+    mix-blend-mode:screen;
+    animation:hxAppFloat 7s ease-in-out infinite;
+    pointer-events:none;user-select:none;
+  }
 }
 @media(max-width:480px){
   .hx-lang button{padding:6px 8px;font-size:9px;}
@@ -1443,6 +1453,7 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-svc-body{padding:28px;}
   .hx-app{padding:52px 24px;}
   .hx-app-phones{width:min(300px,90vw);}
+  .hx.dark .hx-app-phones{width:100%;}
   .hx-stats-inner{grid-template-columns:repeat(2,1fr);gap:16px 12px;}
   .hx-stat-n{font-size:30px;}
   .hx-how-cell{flex:0 0 min(260px,84vw);}
