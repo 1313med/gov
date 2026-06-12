@@ -1226,8 +1226,8 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   display:block;width:100%;height:auto;
   pointer-events:none;user-select:none;
 }
-.hx-gfeat-visual--dark .hx-gfeat-img,
-.hx-gfeat-visual--light .hx-gfeat-img{mix-blend-mode:screen;}
+.hx-gfeat-visual--dark .hx-gfeat-img{mix-blend-mode:screen;}
+.hx-gfeat-visual--light .hx-gfeat-img{mix-blend-mode:normal;}
 .hx-gfeat-actions{
   display:flex;justify-content:center;
   margin-top:28px;
