@@ -6,6 +6,7 @@ import { useTheme } from "../context/ThemeContext";
 import SeoContentBlock from "../components/SeoContentBlock";
 import AppPhoneShowcase from "../components/AppPhoneShowcase";
 import GarageFeatureShowcase from "../components/GarageFeatureShowcase";
+import HomeMobilePitch from "../components/HomeMobilePitch";
 import HeroMobileVisual from "../components/HeroMobileVisual";
 import { getApprovedSales } from "../api/sale";
 import { getApprovedRentals } from "../api/rental";
@@ -1606,6 +1607,35 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   margin-top:28px;
 }
 
+/* Mobile marketing pitch — all users (above section banners) */
+.hx-mobile-pitch{display:none;}
+.hx-mobile-pitch-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--teal,#2af5c0);padding:7px 13px;border-radius:99px;
+  background:rgba(42,245,192,.1);border:1px solid rgba(42,245,192,.22);
+  margin-bottom:14px;
+}
+.hx-mobile-pitch-badge::before{
+  content:'';width:6px;height:6px;border-radius:50%;
+  background:var(--teal,#2af5c0);box-shadow:0 0 10px var(--teal,#2af5c0);
+}
+.hx-mobile-pitch-title{
+  font-family:var(--disp);font-size:clamp(26px,6.5vw,34px);
+  font-weight:800;letter-spacing:-.04em;line-height:1.08;
+  color:var(--ink);margin:0 0 10px;
+}
+.hx-mobile-pitch-title em{
+  font-style:italic;font-weight:700;
+  background:linear-gradient(90deg,var(--gold),var(--gold2));
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.hx-mobile-pitch-sub{
+  font-size:clamp(13px,3.2vw,15px);line-height:1.65;
+  color:var(--mut);margin:0 0 20px;max-width:52ch;
+}
+
 /* ════ APP & FINAL CTA ════ */
 /* App download — light: mockup image only; dark: ring card on black */
 .hx-app{padding:92px 64px;background:var(--bg);}
@@ -1816,7 +1846,10 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-dash-sec{padding:64px 24px;}
   .hx-gfeat{padding:56px 24px 48px;}
   .hx-gfeat-copy{display:none;}
-  .hx-gfeat-visual{display:block;width:100%;}
+  .hx-mobile-pitch{display:block;margin-bottom:8px;}
+  .hx-gfeat-visual{display:block;width:100%;margin-top:4px;}
+  .hx-app-copy-desktop{display:none;}
+  .hx-mobile-pitch--app{margin-bottom:16px;}
   .hx-gfeat-feats{grid-template-columns:1fr;}
   .hx-fsec,.hx-ben-sec,.hx-tsec,.hx-trust,.hx-app{padding-left:24px;padding-right:24px;}
   .hx-vault-head,.hx-vault-band-h{padding-left:24px;padding-right:24px;}
@@ -2182,7 +2215,7 @@ function HomeInner() {
         </div>
       </div>
 
-      {/* ═══ LIVE SHOWCASE — SALES + RENTALS ═══ */}
+      {/* ═══ LIVE SHOWCASE — SALES + RENTALS (before services on mobile) ═══ */}
       <section className="hx-vault">
         <div className="hx-vault-head rv rv-u vis">
           <div className="hx-ey">{copy.home.showcase.eyebrow}</div>
@@ -2303,52 +2336,6 @@ function HomeInner() {
               )}
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* ═══ APP / COMING SOON ═══ */}
-      <section className="hx-app">
-        <div className="hx-app-grid">
-          <div className="rv rv-l vis">
-            <div className="hx-ey">{copy.home.app.eyebrow}</div>
-            <h2 className="hx-h2">{copy.home.app.title1} <em>{copy.home.app.title2}</em></h2>
-            <p className="hx-h2-sub" style={{ maxWidth: 560 }}>
-              {copy.home.app.sub}
-            </p>
-            <div className="hx-hero-btns" style={{ marginTop: 24 }}>
-              <button className="hx-hbtn prim" type="button">{copy.home.app.download}</button>
-              <Link to="/register" className="hx-hbtn outl">{copy.home.app.waitlist}</Link>
-            </div>
-          </div>
-          <AppPhoneShowcase className="rv rv-r vis" />
-        </div>
-      </section>
-
-      {/* ═══ MY GARAGE — deadlines, alerts, mechanics ═══ */}
-      <section className="hx-gfeat" aria-label={copy.home.garage.aria}>
-        <div className="hx-gfeat-copy rv rv-u vis">
-          <div className="hx-gfeat-badge">{copy.home.garage.badge}</div>
-          <h2 className="hx-gfeat-title">
-            {copy.home.garage.title1} <em>{copy.home.garage.title2}</em>
-          </h2>
-          <p className="hx-gfeat-tagline">{copy.home.garage.title3}</p>
-          <p className="hx-gfeat-sub">{copy.home.garage.sub}</p>
-          <div className="hx-gfeat-feats">
-            {copy.home.garage.feats.map((f, i) => (
-              <div key={i} className="hx-gfeat-feat">
-                <strong>{f.label}</strong>
-                <span>{f.desc}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <GarageFeatureShowcase className="rv rv-u vis" />
-        <div className="hx-gfeat-actions rv rv-u vis" style={{ transitionDelay: "0.08s" }}>
-          {auth ? (
-            <Link to="/garage" className="hx-hbtn prim">{copy.home.garage.cta}</Link>
-          ) : (
-            <Link to="/register" className="hx-hbtn prim">{copy.home.garage.ctaGuest}</Link>
-          )}
         </div>
       </section>
 
@@ -2546,6 +2533,41 @@ function HomeInner() {
         </div>
       </section>
 
+      {/* ═══ MY GARAGE — deadlines, alerts, mechanics ═══ */}
+      <section className="hx-gfeat" aria-label={copy.home.garage.aria}>
+        <HomeMobilePitch
+          className="rv rv-u vis"
+          badge={copy.home.platform.badge}
+          title1={copy.home.platform.title1}
+          titleEm={copy.home.platform.titleEm}
+          tagline={copy.home.platform.tagline}
+        />
+        <div className="hx-gfeat-copy rv rv-u vis">
+          <div className="hx-gfeat-badge">{copy.home.garage.badge}</div>
+          <h2 className="hx-gfeat-title">
+            {copy.home.garage.title1} <em>{copy.home.garage.title2}</em>
+          </h2>
+          <p className="hx-gfeat-tagline">{copy.home.garage.title3}</p>
+          <p className="hx-gfeat-sub">{copy.home.garage.sub}</p>
+          <div className="hx-gfeat-feats">
+            {copy.home.garage.feats.map((f, i) => (
+              <div key={i} className="hx-gfeat-feat">
+                <strong>{f.label}</strong>
+                <span>{f.desc}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <GarageFeatureShowcase className="rv rv-u vis" />
+        <div className="hx-gfeat-actions rv rv-u vis" style={{ transitionDelay: "0.08s" }}>
+          {auth ? (
+            <Link to="/garage" className="hx-hbtn prim">{copy.home.garage.cta}</Link>
+          ) : (
+            <Link to="/register" className="hx-hbtn prim">{copy.home.garage.ctaGuest}</Link>
+          )}
+        </div>
+      </section>
+
       {/* ═══ DASHBOARD / AUTH CTA ═══ */}
       <div className="hx-dash-sec">
         <div ref={dashRef} className="hx-dash-card rv rv-s">
@@ -2590,6 +2612,33 @@ function HomeInner() {
           )}
         </div>
       </div>
+
+      {/* ═══ APP / COMING SOON ═══ */}
+      <section className="hx-app">
+        <div className="hx-app-grid">
+          <div className="rv rv-l vis">
+            <HomeMobilePitch
+              className="hx-mobile-pitch--app"
+              badge={copy.home.platform.badge}
+              title1={copy.home.platform.title1}
+              titleEm={copy.home.platform.titleEm}
+              tagline={copy.home.platform.tagline}
+            />
+            <div className="hx-app-copy-desktop">
+              <div className="hx-ey">{copy.home.app.eyebrow}</div>
+              <h2 className="hx-h2">{copy.home.app.title1} <em>{copy.home.app.title2}</em></h2>
+              <p className="hx-h2-sub" style={{ maxWidth: 560 }}>
+                {copy.home.app.sub}
+              </p>
+            </div>
+            <div className="hx-hero-btns" style={{ marginTop: 24 }}>
+              <button className="hx-hbtn prim" type="button">{copy.home.app.download}</button>
+              <Link to="/register" className="hx-hbtn outl">{copy.home.app.waitlist}</Link>
+            </div>
+          </div>
+          <AppPhoneShowcase className="rv rv-r vis" />
+        </div>
+      </section>
 
       {/* ═══ FINAL CONVERSION CTA ═══ */}
       <section className="hx-final rv rv-s vis">

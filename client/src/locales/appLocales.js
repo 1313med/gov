@@ -529,6 +529,12 @@ const ownerAnalyticsEn = {
   noData: "No analytics data",
   eyebrowDashboard: "Dashboard",
   title: "Owner Analytics",
+  marketing: {
+    badge: "Your dashboard",
+    title1: "Track everything.",
+    titleEm: "Act faster.",
+    tagline: "Bookings, revenue, and fleet insights — updated in real time.",
+  },
   kpi: {
     totalBookings: "Total Bookings",
     totalRevenue: "Total Revenue",
@@ -594,6 +600,12 @@ const ownerAnalyticsFr = {
   noData: "Aucune donnée d'analyse",
   eyebrowDashboard: "Tableau de bord",
   title: "Analyses propriétaire",
+  marketing: {
+    badge: "Votre tableau de bord",
+    title1: "Suivez tout.",
+    titleEm: "Agissez vite.",
+    tagline: "Réservations, revenus et performance — mis à jour en temps réel.",
+  },
   kpi: {
     totalBookings: "Réservations",
     totalRevenue: "Revenu total",

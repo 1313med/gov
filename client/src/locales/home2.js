@@ -266,6 +266,13 @@ export const home2Dict = {
       "/my-sales/new": "Add Car for Sale",
       "/admin": "Admin Dashboard",
     },
+    platform: {
+      badge: "For every driver",
+      title1: "Buy. Rent. Sell.",
+      titleEm: "Your way.",
+      tagline:
+        "Whether you're searching, booking, or listing — Goovoiture is built for buyers, renters, and owners alike.",
+    },
     garage: {
       aria: "My Garage — track your car, deadlines, alerts and mechanics",
       badge: "Your car, under control.",
@@ -285,10 +292,10 @@ export const home2Dict = {
     },
     app: {
       eyebrow: "Mobile App",
-      title1: "Elite Access,",
-      title2: "On the Go.",
+      title1: "The whole platform,",
+      title2: "in your pocket.",
       sub:
-        "Manage bookings, track offers, and get real-time alerts from your phone. Download experience coming soon for iOS and Android.",
+        "Browse cars, book rentals, manage listings, and get real-time alerts — one app for every kind of user. Coming soon on iOS and Android.",
       download: "Download App",
       waitlist: "Join Waitlist",
       phoneTitle: "Goovoiture Elite",
@@ -589,6 +596,13 @@ export const home2Dict = {
       "/my-sales/new": "Vendre une voiture",
       "/admin": "Tableau d’administration",
     },
+    platform: {
+      badge: "Pour tous les conducteurs",
+      title1: "Acheter. Louer. Vendre.",
+      titleEm: "À votre façon.",
+      tagline:
+        "Que vous cherchiez, réserviez ou publiiez — Goovoiture est fait pour les acheteurs, locataires et propriétaires.",
+    },
     garage: {
       aria: "Mon Garage — suivez votre voiture, échéances, alertes et mécaniciens",
       badge: "Votre voiture, sous contrôle.",
@@ -608,10 +622,10 @@ export const home2Dict = {
     },
     app: {
       eyebrow: "Application mobile",
-      title1: "L’élite",
+      title1: "Toute la plateforme,",
       title2: "dans votre poche.",
       sub:
-        "Gérez vos réservations, suivez les offres et recevez des alertes en temps réel. Téléchargement bientôt sur iOS et Android.",
+        "Parcourez, réservez, publiez et recevez des alertes — une app pour chaque profil. Bientôt sur iOS et Android.",
       download: "Télécharger l’app",
       waitlist: "Rejoindre la liste d’attente",
       phoneTitle: "Goovoiture Élite",

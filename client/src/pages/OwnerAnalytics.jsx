@@ -105,7 +105,6 @@ const STYLES = `
   .oa-card-pad-sm { padding: clamp(18px, 4vw, 28px) clamp(16px, 4vw, 28px) clamp(16px, 3vw, 24px); }
 
   .oa-kpi { padding: clamp(18px, 3.5vw, 26px) clamp(16px, 3vw, 22px) clamp(16px, 3vw, 22px); display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-  .oa-kpi-bar { position: absolute; top: 0; left: 0; right: 0; height: 2px; border-radius: 2px 2px 0 0; z-index: 1; }
   .oa-kpi-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
   .oa-kpi-icon { width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
@@ -113,10 +112,85 @@ const STYLES = `
   .oa-kpi-value { font-family: var(--mono); font-size: clamp(22px, 6vw, 32px); font-weight: 500; line-height: 1.05; letter-spacing: -.02em; min-width: 0; }
   .oa-kpi-value.clip { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-  .oa-header { display: flex; flex-direction: column; align-items: stretch; gap: 16px; margin-bottom: clamp(22px, 5vw, 36px); }
-  @media (min-width: 720px) { .oa-header { flex-direction: row; align-items: flex-end; justify-content: space-between; } }
+  .oa-marketing {
+    position: relative;
+    border-radius: 20px;
+    padding: clamp(20px, 4.5vw, 30px) clamp(18px, 4vw, 28px);
+    margin-bottom: clamp(18px, 4vw, 24px);
+    background:
+      linear-gradient(135deg, rgba(124,108,252,.14) 0%, rgba(42,245,192,.08) 52%, rgba(56,189,248,.06) 100%),
+      var(--s1);
+    border: 1px solid rgba(124,108,252,.22);
+    overflow: hidden;
+    box-shadow: 0 0 48px rgba(124,108,252,.08);
+  }
+  .oa-marketing::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #7c6cfc 0%, #2af5c0 50%, #38bdf8 100%);
+  }
+  .oa-marketing::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 100% 0%, rgba(42,245,192,.12), transparent 55%);
+    pointer-events: none;
+  }
+  .oa-marketing-inner { position: relative; z-index: 1; }
+  .oa-marketing-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--teal);
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(42,245,192,.1);
+    border: 1px solid rgba(42,245,192,.22);
+    margin-bottom: 14px;
+  }
+  .oa-marketing-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--teal);
+    box-shadow: 0 0 10px var(--teal);
+  }
+  .oa-marketing-title {
+    font-family: var(--head);
+    font-size: clamp(26px, 6.5vw, 36px);
+    font-weight: 800;
+    letter-spacing: -.04em;
+    line-height: 1.08;
+    color: var(--txt);
+    margin: 0 0 10px;
+  }
+  .oa-marketing-title em {
+    font-style: italic;
+    font-weight: 700;
+    background: linear-gradient(90deg, var(--teal), #38bdf8);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .oa-marketing-tagline {
+    font-size: clamp(13px, 3.2vw, 15px);
+    line-height: 1.6;
+    color: var(--muted);
+    margin: 0;
+    max-width: 52ch;
+  }
 
-  .oa-title { font-family: var(--head); font-size: clamp(28px, 7vw, 38px); font-weight: 800; letter-spacing: -.04em; line-height: 1.05; margin: 8px 0 0; color: var(--txt); }
+  .oa-header { display: flex; flex-direction: column; align-items: stretch; gap: 14px; margin-bottom: clamp(18px, 4vw, 28px); }
+  @media (min-width: 720px) { .oa-header { flex-direction: row; align-items: center; justify-content: space-between; } }
+
+  .oa-title { font-family: var(--head); font-size: clamp(20px, 4.5vw, 24px); font-weight: 700; letter-spacing: -.03em; line-height: 1.1; margin: 6px 0 0; color: var(--txt); }
 
   .oa-kpi-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 20px; }
   @media (min-width: 520px) { .oa-kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; } }
@@ -223,7 +297,6 @@ const SH = ({ eyebrow, title }) => (
 function KpiCard({ label, value, icon: Icon, color, delay = 0, clip = false, sub }) {
   return (
     <div className="oa-card oa-kpi oa-fade" style={{ animationDelay: `${delay}ms` }}>
-      <div className="oa-kpi-bar" style={{ background: color }} />
       <div className="oa-kpi-top">
         <span className="oa-label">{label}</span>
         <div className="oa-kpi-icon" style={{ background: `${color}18`, color }}>
@@ -353,13 +426,25 @@ export default function OwnerAnalytics() {
           </button>
         </div>
 
-        {/* ── HEADER: title + time filter ── */}
-        <header className="oa-header oa-fade" style={{ animationDelay: "40ms" }}>
+        {/* ── MARKETING HERO ── */}
+        <div className="oa-marketing oa-fade" style={{ animationDelay: "20ms" }}>
+          <div className="oa-marketing-inner">
+            <div className="oa-marketing-badge">{t.marketing.badge}</div>
+            <h1 className="oa-marketing-title">
+              {t.marketing.title1}{" "}
+              <em>{t.marketing.titleEm}</em>
+            </h1>
+            <p className="oa-marketing-tagline">{t.marketing.tagline}</p>
+          </div>
+        </div>
+
+        {/* ── PERIOD FILTER ── */}
+        <header className="oa-header oa-fade" style={{ animationDelay: "60ms" }}>
           <div>
             <span className="oa-label">{t.eyebrowDashboard}</span>
-            <h1 className="oa-title">{t.title}</h1>
+            <h2 className="oa-title">{t.title}</h2>
           </div>
-          <div style={{ flexShrink: 0 }}>
+          <div style={{ flexShrink: 0, width: "100%", maxWidth: 520 }}>
             <TimeFilter period={period} setPeriod={setPeriod} />
           </div>
         </header>
