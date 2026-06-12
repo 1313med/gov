@@ -190,7 +190,7 @@ const S = `
 
   /* Responsive */
   @media(max-width:768px) {
-    .mr { padding: 28px 16px 48px; }
+    .mr { padding: 28px 16px 24px; }
     .mr-title { font-size: 26px; }
     .mr-card-bottom { grid-template-columns: 1fr 1fr; }
     .mr-summary-n { font-size: 22px; }

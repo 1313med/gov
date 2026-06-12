@@ -596,9 +596,25 @@ const STYLES = `
 
   /* ── responsive ── */
   @media (max-width:900px) {
-    .obl { padding:20px 14px 100px; }
-    .obl-table-wrap { overflow-x:auto; }
+    .obl { padding:20px 14px 24px; }
+    .obl-header { flex-direction:column; gap:12px; margin-bottom:20px; }
+    .obl-heading { font-size:clamp(22px, 5.5vw, 28px); }
+    .obl-export-row { width:100%; }
+    .obl-toolbar { flex-direction:column; align-items:stretch; }
+    .obl-search-wrap { min-width:0; width:100%; }
+    .obl-filters {
+      flex-wrap:nowrap;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+      padding-bottom:4px;
+      margin-bottom:16px;
+    }
+    .obl-filters::-webkit-scrollbar { display:none; }
+    .obl-pill { flex-shrink:0; white-space:nowrap; }
+    .obl-table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
     .obl-table { min-width:900px; }
+    .obl-detail-panel { padding:18px 16px; gap:20px; }
   }
 `;
 

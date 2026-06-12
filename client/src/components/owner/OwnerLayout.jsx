@@ -10,7 +10,7 @@ const LAYOUT_CSS = `
   }
   @media (max-width: 767px) {
     .ol-main {
-      padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+      padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
     }
   }
 `;

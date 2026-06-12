@@ -148,3 +148,38 @@
   border: 1px solid #e5e7eb;
   border-radius: 12px;
 }
+
+/* Mobile toolbar */
+@media (max-width: 767px) {
+  .rbc-toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .rbc-toolbar-label {
+    order: -1;
+    width: 100%;
+    text-align: center;
+    font-size: 15px;
+    margin-bottom: 4px;
+  }
+  .rbc-btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+  }
+  .rbc-toolbar button {
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 8px;
+  }
+  .rbc-header {
+    padding: 8px 0;
+    font-size: 11px;
+  }
+  .rbc-event {
+    font-size: 11px !important;
+    padding: 3px 6px !important;
+  }
+}

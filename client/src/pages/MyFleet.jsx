@@ -93,7 +93,7 @@ const STYLES = `
   .mf-empty-icon { font-size:40px; margin-bottom:12px; opacity:.3; }
 
   @media (max-width:767px) {
-    .mf-wrap { padding:20px 16px 100px; }
+    .mf-wrap { padding:20px 16px 24px; }
     .mf-grid { grid-template-columns:1fr; }
     .mf-offer-form-row { flex-direction:column; }
   }

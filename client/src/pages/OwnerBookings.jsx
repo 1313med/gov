@@ -9,6 +9,54 @@ import OwnerLayout from "../components/owner/OwnerLayout";
 import { useAppLang } from "../context/AppLangContext";
 import "../styles/ownerCalendar.css";
 
+const PAGE_CSS = `
+  .ob-page {
+    padding: clamp(16px, 4vw, 32px) clamp(14px, 3.5vw, 32px) clamp(24px, 4vw, 40px);
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .ob-head {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: clamp(16px, 4vw, 28px);
+  }
+  @media (min-width: 640px) {
+    .ob-head {
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: space-between;
+    }
+  }
+  .ob-title {
+    font-size: clamp(22px, 5.5vw, 30px);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin: 0;
+  }
+  .ob-calendar-wrap {
+    background: var(--ob-card, #fff);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
+    padding: clamp(12px, 3vw, 24px);
+    margin-bottom: 24px;
+    height: clamp(420px, 62vh, 680px);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+  }
+  html.dark .ob-calendar-wrap {
+    --ob-card: #0f172a;
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  }
+  .ob-modal-panel {
+    width: min(400px, calc(100vw - 32px));
+    max-height: min(88vh, 640px);
+    overflow-y: auto;
+    margin: 16px;
+  }
+`;
+
 import {
   Calendar,
   dateFnsLocalizer
@@ -203,9 +251,10 @@ export default function OwnerBookings() {
 
   return (
     <OwnerLayout>
-
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+      <style>{PAGE_CSS}</style>
+      <div className="ob-page">
+      <div className="ob-head">
+        <h1 className="ob-title text-slate-900 dark:text-white">
           {t.pageTitle}
         </h1>
 
@@ -214,7 +263,7 @@ export default function OwnerBookings() {
         </p>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-lg p-8 mb-10 h-[680px] border border-gray-100 dark:border-slate-700">
+      <div className="ob-calendar-wrap">
 
         <DragCalendar
           localizer={localizer}
@@ -239,9 +288,9 @@ export default function OwnerBookings() {
 
       {/* Booking Modal */}
       {selectedBooking && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
 
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-8 w-[400px] border border-gray-100 dark:border-slate-700">
+          <div className="ob-modal-panel bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-6 sm:p-8 border border-gray-100 dark:border-slate-700">
 
             <h2 className="text-xl font-bold mb-4 text-slate-900 dark:text-white">
               {t.modalTitle}
@@ -346,7 +395,7 @@ export default function OwnerBookings() {
 
         </div>
       )}
-
+      </div>
     </OwnerLayout>
   );
 }

@@ -50,7 +50,7 @@ const S = `
     --border:rgba(255,255,255,.07); --bhi:rgba(124,108,252,.22);
     --txt:#e8e8f0; --txt2:#c0c0d0; --muted:#5a5a72; --dim:#3a3a52;
   }
-  @media(max-width:768px){ .mx{ padding:20px 16px 100px; } }
+  @media(max-width:768px){ .mx{ padding:20px 16px 24px; } }
 
   /* ─ header ─ */
   .mx-hero { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:36px; flex-wrap:wrap; }

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { LayoutDashboard, Car, PlusCircle, Calendar, Layers, ClipboardList, Wrench, Eye, Users } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
@@ -222,6 +223,13 @@ const STYLES = `
     min-width: 0;
   }
 
+  .osb-nav-scroll {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
   @media (max-width: 767px) {
     .osb {
       position: fixed;
@@ -233,54 +241,92 @@ const STYLES = `
       min-width: 100%;
       min-height: unset;
       height: auto;
-      flex-direction: row;
-      flex-wrap: nowrap;
-      padding: 10px 6px calc(10px + env(safe-area-inset-bottom, 0px));
+      flex-direction: column;
+      padding: 0;
       border-right: none;
       border-top: 1px solid var(--osb-border);
       z-index: 50;
       box-shadow: var(--osb-mob-shadow);
     }
+    .osb::before { display: none; }
     .osb-brand,
     .osb-divider,
     .osb-nav-label,
     .osb-footer {
       display: none;
     }
-    .osb nav {
-      display: flex;
-      flex-direction: row;
+
+    .osb-nav-scroll {
+      position: relative;
       width: 100%;
-      justify-content: space-around;
-      align-items: center;
-      gap: 2px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+      flex: unset;
+    }
+    .osb-nav-scroll::-webkit-scrollbar { display: none; }
+
+    .osb-nav-scroll::before,
+    .osb-nav-scroll::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 20px;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .osb-nav-scroll::before {
+      left: 0;
+      background: linear-gradient(90deg, var(--osb-bg) 25%, transparent);
+    }
+    .osb-nav-scroll::after {
+      right: 0;
+      background: linear-gradient(270deg, var(--osb-bg) 25%, transparent);
+    }
+
+    .osb nav {
+      display: inline-flex;
+      flex-direction: row;
+      align-items: stretch;
+      gap: 6px;
+      width: max-content;
+      min-width: 100%;
+      padding: 0 2px;
     }
     .osb-item {
-      flex: 1;
+      flex: 0 0 auto;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      padding: 8px 4px;
+      padding: 8px 14px;
       margin: 0;
       font-size: 10px;
       text-align: center;
-      gap: 6px;
-      max-width: 88px;
+      gap: 5px;
+      min-width: 76px;
+      max-width: none;
+      border-radius: 12px;
     }
     .osb-item.active::before {
       display: none;
     }
+    .osb-item.active {
+      box-shadow: 0 0 0 1px rgba(124,108,252,.22) inset, 0 4px 16px rgba(124,108,252,.12);
+    }
     .osb-item-label {
-      font-size: 9px;
-      line-height: 1.15;
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      font-size: 10px;
+      line-height: 1.2;
       white-space: nowrap;
+      overflow: visible;
+      text-overflow: unset;
     }
     .osb-icon {
-      width: 28px;
-      height: 28px;
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
     }
   }
 `;
@@ -291,17 +337,32 @@ const MENU_DEFS = [
   { key: "myRentals",   path: "/my-rentals",            icon: Car             },
   { key: "addRental",   path: "/add-rental",            icon: PlusCircle      },
   { key: "bookings",    path: "/owner/bookings-list",   icon: ClipboardList   },
-  { key: "calendar",    path: "/owner/bookings",        icon: Calendar        },
+  { key: "calendar",    path: "/owner-bookings",        icon: Calendar        },
   { key: "maintenance", path: "/owner/maintenance",     icon: Wrench          },
   { key: "listingViews", path: "/owner/listing-views", icon: Eye             },
   { key: "staff",       path: "/owner/staff",           icon: Users           },
 ];
+
+function isNavActive(pathname, itemPath) {
+  if (pathname === itemPath) return true;
+  if (itemPath !== "/" && pathname.startsWith(`${itemPath}/`)) return true;
+  return false;
+}
 
 export default function OwnerSidebar() {
   const location = useLocation();
   const { dark } = useTheme();
   const { copy } = useAppLang();
   const t = copy.ownerSidebar;
+  const itemRefs = useRef({});
+
+  useEffect(() => {
+    const active = MENU_DEFS.find((item) => isNavActive(location.pathname, item.path));
+    if (!active) return;
+    const el = itemRefs.current[active.path];
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  }, [location.pathname]);
 
   return (
     <>
@@ -320,25 +381,28 @@ export default function OwnerSidebar() {
         {/* ── Nav ── */}
         <p className="osb-nav-label">{t.navigation}</p>
 
-        <nav>
-          {MENU_DEFS.map((item) => {
-            const Icon    = item.icon;
-            const isActive = location.pathname === item.path;
+        <div className="osb-nav-scroll">
+          <nav>
+            {MENU_DEFS.map((item) => {
+              const Icon = item.icon;
+              const isActive = isNavActive(location.pathname, item.path);
 
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`osb-item${isActive ? " active" : ""}`}
-              >
-                <span className="osb-icon">
-                  <Icon size={15}/>
-                </span>
-                <span className="osb-item-label">{t.items[item.key]}</span>
-              </Link>
-            );
-          })}
-        </nav>
+              return (
+                <Link
+                  key={item.path}
+                  ref={(node) => { itemRefs.current[item.path] = node; }}
+                  to={item.path}
+                  className={`osb-item${isActive ? " active" : ""}`}
+                >
+                  <span className="osb-icon">
+                    <Icon size={15}/>
+                  </span>
+                  <span className="osb-item-label">{t.items[item.key]}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
 
         {/* ── Footer ── */}
         <div className="osb-footer">

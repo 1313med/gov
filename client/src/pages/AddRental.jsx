@@ -49,7 +49,7 @@ const S = `
   .ar-feature-check input { accent-color:var(--violet); width:14px; height:14px; }
   @keyframes ar-up { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
   .ar-fade { opacity:0; animation:ar-up .5s ease forwards; }
-  @media(max-width:768px) { .ar{padding:28px 16px 48px;} .ar-form-card{padding:22px;} .ar-grid-2,.ar-grid-3{grid-template-columns:1fr;} .ar-features-grid{grid-template-columns:1fr;} }
+  @media(max-width:768px) { .ar{padding:24px 16px 24px;} .ar-form-card{padding:22px;} .ar-grid-2,.ar-grid-3{grid-template-columns:1fr;} .ar-features-grid{grid-template-columns:1fr;} .ar-footer{flex-direction:column;align-items:stretch;} .ar-submit{width:100%;justify-content:center;} }
 `;
 
 function Field({ label, name, type = "text", value, onChange, placeholder, required = true }) {

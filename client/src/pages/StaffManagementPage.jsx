@@ -33,7 +33,7 @@ const CSS = `
     min-height: 100vh;
     color: var(--txt);
     font-family: var(--head);
-    padding: clamp(20px,4vw,44px) clamp(16px,3.5vw,44px) 60px;
+    padding: clamp(20px,4vw,44px) clamp(16px,3.5vw,44px) clamp(24px,4vw,60px);
     box-sizing: border-box;
     width: 100%;
   }

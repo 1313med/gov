@@ -4,6 +4,7 @@ import { api } from "../api/axios";
 import { saveAuth } from "../utils/authStorage";
 import { homePathForUser } from "../utils/userRoles";
 import { useAppLang } from "../context/AppLangContext";
+import AuthTopBar from "../components/AuthTopBar";
 
 /* ─────────────────────────────────────────────
    GLOBAL STYLES
@@ -483,16 +484,8 @@ const CSS = `
 }
 .lx-footer a:hover::after { transform: scaleX(1); transform-origin: left; }
 
-/* Mobile logo on right panel */
-.lx-mobile-logo {
-  display: none; text-align: center;
-  margin-bottom: 28px;
-  animation: slideDown 0.6s cubic-bezier(0.22,1,0.36,1) both;
-}
-.lx-mobile-logo-inner {
-  display: inline-flex; align-items: center; gap: 10px;
-  text-decoration: none;
-}
+/* Mobile logo on right panel (desktop-only fallback) */
+.lx-mobile-logo { display: none; }
 
 /* ── KEYFRAMES ── */
 @keyframes cardIn {
@@ -514,93 +507,62 @@ const CSS = `
 
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
+  .lx-root { flex-direction: column; min-height: 100dvh; }
   .lx-left { display: none; }
   .lx-grid { opacity: 0.35; }
   .lx-particle { display: none; }
   .lx-orb3 { display: none; }
-  .lx-right { padding: 18px 16px 28px; align-items: flex-start; }
-  .lx-mobile-logo {
-    display: block;
-    margin: 0 0 14px;
-    text-align: left;
-  }
-  .lx-mobile-logo .lx-logo-mark {
-    width: 32px;
-    height: 32px;
-    border-radius: 9px;
-    font-size: 14px;
-  }
-  .lx-mobile-logo .lx-logo-text {
-    font-size: 28px;
-    font-weight: 900;
-    letter-spacing: -0.04em;
+  .lx-back { display: none; }
+  .lx-right {
+    flex: 1;
+    padding: 20px 16px 32px;
+    align-items: flex-start;
+    overflow-y: auto;
   }
   .lx-card {
-    padding: 22px 18px 18px;
-    border-radius: 18px;
-    background: rgba(10, 12, 22, 0.84);
-    border-color: rgba(124,107,255,0.35);
-    backdrop-filter: blur(16px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+    padding: 26px 20px 22px;
+    border-radius: 20px;
+    background: rgba(10, 12, 22, 0.88);
+    border-color: rgba(124,107,255,0.28);
+    backdrop-filter: blur(20px);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.04) inset,
+      0 24px 48px rgba(0,0,0,0.4);
   }
-  .lx-ch {
-    margin-bottom: 16px;
+  html.light .lx-root.gv-auth .lx-card {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(124, 107, 255, 0.2);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.8) inset,
+      0 20px 40px rgba(12, 26, 86, 0.1);
   }
-  .lx-ch-badge {
-    display: none;
-  }
-  .lx-ch h2 {
-    font-size: 26px;
-    margin-bottom: 4px;
-  }
-  .lx-ch-sub {
-    font-size: 14px;
-    line-height: 1.45;
-    color: var(--ink4);
-  }
-  .lx-form {
-    gap: 10px;
-  }
+  .lx-ch { margin-bottom: 20px; }
+  .lx-ch-badge { margin-bottom: 12px; }
+  .lx-ch h2 { font-size: 28px; margin-bottom: 6px; }
+  .lx-ch-sub { font-size: 14px; line-height: 1.5; color: var(--ink3); }
+  .lx-form { gap: 12px; }
   .lx-input {
-    border-radius: 12px;
-    padding: 18px 12px 8px 40px;
-    font-size: 14px;
-    background: rgba(255,255,255,0.04);
+    border-radius: 13px;
+    padding: 20px 14px 9px 42px;
+    font-size: 15px;
   }
-  .lx-label {
-    left: 40px;
-  }
-  .lx-field-icon {
-    left: 14px;
-  }
+  .lx-label { left: 42px; }
+  .lx-field-icon { left: 15px; font-size: 15px; }
   .lx-submit {
-    margin-top: 4px;
-    border-radius: 12px;
-    padding: 14px;
-    box-shadow: 0 10px 24px rgba(124,107,255,0.32);
+    margin-top: 6px;
+    border-radius: 13px;
+    padding: 15px;
+    font-size: 15px;
+    box-shadow: 0 12px 28px rgba(124,107,255,0.35);
   }
-  .lx-divider {
-    display: none;
-  }
-  .lx-footer {
-    margin-top: 14px;
-    font-size: 12px;
-  }
-  .lx-back {
-    position: static;
-    margin-bottom: 10px;
-    width: fit-content;
-    font-size: 10px;
-  }
+  .lx-divider { display: none; }
+  .lx-footer { margin-top: 18px; font-size: 13px; }
 }
 @media (max-width: 480px) {
-  .lx-right { padding: 14px 12px 26px; }
-  .lx-mobile-logo { margin-bottom: 12px; }
-  .lx-mobile-logo .lx-logo-text { font-size: 24px; }
-  .lx-card { border-radius: 16px; padding: 18px 14px 14px; }
-  .lx-ch h2 { font-size: 23px; }
+  .lx-right { padding: 16px 14px 28px; }
+  .lx-card { border-radius: 18px; padding: 22px 16px 18px; }
+  .lx-ch h2 { font-size: 25px; }
   .lx-ch-sub { font-size: 13px; }
-  .lx-input { font-size: 13px; }
 }
 
 /* ── SMOOTH SCROLL GLOW ON MOBILE ── */
@@ -736,6 +698,7 @@ export default function Login() {
   return (
     <div className="lx-root gv-auth">
       <style>{CSS}</style>
+      <AuthTopBar />
 
       {/* Background layers */}
       <div className="lx-bg" />
@@ -800,19 +763,9 @@ export default function Login() {
 
       {/* ═══ RIGHT PANEL ═══ */}
       <div className="lx-right">
-
         <Link to="/" className="lx-back">{copy.login.back}</Link>
 
         <div style={{ width: "100%", maxWidth: 420 }}>
-
-          {/* Mobile logo */}
-          <div className="lx-mobile-logo">
-            <Link to="/" className="lx-mobile-logo-inner">
-              <div className="lx-logo-mark">G</div>
-              <span className="lx-logo-text">Goo<span>voiture</span></span>
-            </Link>
-          </div>
-
           {/* Glass card */}
           <div className="lx-card">
             <div className="lx-card-glow" />

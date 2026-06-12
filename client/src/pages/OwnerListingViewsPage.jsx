@@ -14,6 +14,78 @@ const PERIODS = [
   { id: "year", en: "This year", fr: "Cette année" },
 ];
 
+const PAGE_CSS = `
+  .olv-page {
+    padding: clamp(20px, 4vw, 32px) clamp(14px, 3.5vw, 28px) clamp(24px, 4vw, 80px);
+    max-width: 960px;
+    box-sizing: border-box;
+  }
+  .olv-title {
+    font-size: clamp(22px, 5.5vw, 28px);
+    font-weight: 800;
+    margin: 0 0 8px;
+  }
+  .olv-sub { margin-bottom: 24px; font-size: 14px; }
+  .olv-periods {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+  .olv-periods::-webkit-scrollbar { display: none; }
+  .olv-period-btn {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .olv-stats {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  @media (min-width: 520px) {
+    .olv-stats { grid-template-columns: repeat(3, 1fr); }
+  }
+  .olv-stat-card {
+    padding: 18px 20px;
+    border-radius: 16px;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+  }
+  .olv-stat-val {
+    font-size: clamp(22px, 5vw, 28px);
+    font-weight: 900;
+    margin: 0;
+  }
+  .olv-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  }
+  .olv-row-title {
+    font-weight: 700;
+    margin: 0;
+    font-size: clamp(13px, 3.5vw, 15px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .olv-row-views {
+    font-size: clamp(18px, 4.5vw, 22px);
+    font-weight: 900;
+    margin: 0;
+  }
+`;
+
 function statusLabel(status, fr) {
   const s = String(status || "").toLowerCase();
   if (s === "approved") return fr ? "En ligne" : "Live";
@@ -60,31 +132,28 @@ export default function OwnerListingViewsPage() {
 
   return (
     <OwnerLayout>
-      <div style={{ padding: "32px 28px 80px", maxWidth: 960 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 800, color: txt, marginBottom: 8 }}>
+      <style>{PAGE_CSS}</style>
+      <div className="olv-page">
+        <h1 className="olv-title" style={{ color: txt }}>
           {fr ? "Portée de vos annonces" : "Listing reach"}
         </h1>
-        <p style={{ color: "#94a3b8", marginBottom: 24, fontSize: 14 }}>
+        <p className="olv-sub" style={{ color: "#94a3b8" }}>
           {fr
             ? "Les vues comptent une ouverture de fiche (dédupliquée par visiteur)."
             : "Views count a detail-page open, deduplicated per visitor."}
         </p>
 
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
+        <div className="olv-periods">
           {PERIODS.map((p) => (
             <button
               key={p.id}
               type="button"
               onClick={() => setPeriod(p.id)}
+              className="olv-period-btn"
               style={{
-                padding: "8px 14px",
-                borderRadius: 999,
                 border: `1px solid ${period === p.id ? "#7c6bff" : "rgba(148,163,184,.35)"}`,
                 background: period === p.id ? "rgba(124,107,255,.12)" : "transparent",
                 color: period === p.id ? "#7c6bff" : txt,
-                fontWeight: 700,
-                fontSize: 12,
-                cursor: "pointer",
               }}
             >
               {fr ? p.fr : p.en}
@@ -96,15 +165,15 @@ export default function OwnerListingViewsPage() {
           <p style={{ color: "#94a3b8" }}>{fr ? "Chargement…" : "Loading…"}</p>
         ) : (
           <>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 28 }}>
+            <div className="olv-stats">
               {[
                 { label: fr ? "Vues totales" : "Total views", val: data?.totalViews ?? 0 },
                 { label: fr ? "Annonces" : "Listings", val: data?.listingCount ?? 0 },
                 { label: fr ? "Moy. / annonce" : "Avg / listing", val: Math.round(data?.avgViewsPerListing ?? 0) },
               ].map((m) => (
-                <div key={m.label} style={{ background: card, padding: 20, borderRadius: 16, border: "1px solid rgba(148,163,184,.2)" }}>
+                <div key={m.label} className="olv-stat-card" style={{ background: card }}>
                   <p style={{ fontSize: 11, color: "#94a3b8", marginBottom: 6 }}>{m.label}</p>
-                  <p style={{ fontSize: 28, fontWeight: 900, color: txt }}>{Number(m.val).toLocaleString()}</p>
+                  <p className="olv-stat-val" style={{ color: txt }}>{Number(m.val).toLocaleString()}</p>
                 </div>
               ))}
             </div>
@@ -117,14 +186,14 @@ export default function OwnerListingViewsPage() {
                   const img = v.images?.[0] || v.image;
                   const pct = ((v.views || 0) / maxViews) * 100;
                   return (
-                    <div key={v._id || i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderBottom: "1px solid rgba(148,163,184,.12)" }}>
+                    <div key={v._id || i} className="olv-row">
                       {img ? (
-                        <img src={img} alt="" style={{ width: 48, height: 48, borderRadius: 10, objectFit: "cover" }} />
+                        <img src={img} alt="" style={{ width: 48, height: 48, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
                       ) : (
-                        <div style={{ width: 48, height: 48, borderRadius: 10, background: "rgba(124,107,255,.15)" }} />
+                        <div style={{ width: 48, height: 48, borderRadius: 10, background: "rgba(124,107,255,.15)", flexShrink: 0 }} />
                       )}
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontWeight: 700, color: txt, margin: 0 }}>
+                        <p className="olv-row-title" style={{ color: txt }}>
                           {v.brand} {v.model}
                         </p>
                         <p style={{ fontSize: 12, color: "#94a3b8", margin: "2px 0 8px" }}>
@@ -134,8 +203,8 @@ export default function OwnerListingViewsPage() {
                           <div style={{ width: `${pct}%`, height: "100%", background: "#7c6bff", borderRadius: 2 }} />
                         </div>
                       </div>
-                      <div style={{ textAlign: "right" }}>
-                        <p style={{ fontSize: 22, fontWeight: 900, color: txt, margin: 0 }}>{v.views ?? 0}</p>
+                      <div style={{ textAlign: "right", flexShrink: 0 }}>
+                        <p className="olv-row-views" style={{ color: txt }}>{v.views ?? 0}</p>
                         <p style={{ fontSize: 10, color: "#94a3b8" }}>{fr ? "vues" : "views"}</p>
                       </div>
                     </div>

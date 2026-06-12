@@ -71,6 +71,39 @@ html.light .lx-root.gv-auth .lx-input:focus {
   background: rgba(124, 107, 255, 0.06);
 }
 
+/* Register — mirrors login light overrides */
+html.light .rx-root.gv-auth .rx-left-veil {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0.45) 42%, rgba(255, 255, 255, 0.94) 100%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.95) 0%, transparent 100%);
+}
+html.light .rx-root.gv-auth .rx-grid {
+  background-image:
+    linear-gradient(rgba(11, 22, 61, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(11, 22, 61, 0.05) 1px, transparent 1px);
+}
+html.light .rx-root.gv-auth .rx-card {
+  background: rgba(255, 255, 255, 0.82);
+  border-color: rgba(11, 22, 61, 0.12);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.6) inset,
+    0 24px 48px rgba(12, 26, 86, 0.1),
+    0 0 60px rgba(124, 107, 255, 0.08);
+}
+html.light .rx-root.gv-auth .rx-input {
+  background: rgba(11, 22, 61, 0.04);
+  color: var(--ink);
+}
+html.light .rx-root.gv-auth .rx-input:focus {
+  background: rgba(124, 107, 255, 0.06);
+}
+html.light .rx-root.gv-auth .rx-role-chip {
+  background: rgba(11, 22, 61, 0.03);
+}
+html.light .rx-root.gv-auth .rx-role-chip.active {
+  background: linear-gradient(145deg, rgba(124, 107, 255, 0.1), rgba(14, 165, 233, 0.06));
+}
+
 /* Forgot / Reset / Verify — glass cards */
 html.light .fp-root.gv-auth .fp-card,
 html.light .rp-root.gv-auth .rp-card,

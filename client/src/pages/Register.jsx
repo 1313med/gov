@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { api } from "../api/axios";
 import { saveAuth } from "../utils/authStorage";
 import { useAppLang } from "../context/AppLangContext";
+import AuthTopBar from "../components/AuthTopBar";
 
 /* ─────────────────────────────────────────────
    GLOBAL STYLES  (mirrors Login's lx-* system)
@@ -433,37 +434,67 @@ const CSS = `
 
 /* Role chips */
 .rx-role-chips {
-  display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 8px;
 }
 .rx-role-chip {
-  flex: 1; min-width: 0;
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 72px;
+  padding: 12px 8px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 14px;
   background: rgba(255,255,255,0.03);
-  cursor: pointer; transition: all 0.2s;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.15s;
   font-family: var(--mono);
   text-align: center;
 }
 .rx-role-chip:hover {
   border-color: rgba(124,107,255,0.35);
   background: rgba(124,107,255,0.07);
+  transform: translateY(-1px);
 }
 .rx-role-chip.active {
-  border-color: rgba(124,107,255,0.6);
-  background: rgba(124,107,255,0.14);
-  box-shadow: 0 0 0 1px rgba(124,107,255,0.2) inset;
+  border-color: rgba(124,107,255,0.55);
+  background: linear-gradient(145deg, rgba(124,107,255,0.16), rgba(56,189,248,0.08));
+  box-shadow: 0 0 0 1px rgba(124,107,255,0.2) inset, 0 8px 20px rgba(124,107,255,0.12);
 }
-.rx-role-chip-icon { font-size: 18px; line-height: 1; }
+.rx-role-chip-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.06);
+  color: var(--ink3);
+  transition: background 0.2s, color 0.2s;
+}
+.rx-role-chip.active .rx-role-chip-icon {
+  background: rgba(124,107,255,0.2);
+  color: var(--p2);
+}
 .rx-role-chip-label {
-  font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase;
-  color: var(--ink3); line-height: 1.3;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--ink3);
+  line-height: 1.35;
 }
 .rx-role-chip.active .rx-role-chip-label { color: var(--p2); }
 .rx-role-section-label {
-  font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--ink4); margin-bottom: 6px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 8px;
 }
 
 /* Divider */
@@ -556,16 +587,8 @@ const CSS = `
 }
 .rx-footer a:hover::after { transform: scaleX(1); transform-origin: left; }
 
-/* Mobile logo */
-.rx-mobile-logo {
-  display: none; text-align: center;
-  margin-bottom: 28px;
-  animation: rxSlideDown 0.6s cubic-bezier(0.22,1,0.36,1) both;
-}
-.rx-mobile-logo-inner {
-  display: inline-flex; align-items: center; gap: 10px;
-  text-decoration: none;
-}
+/* Mobile logo (replaced by AuthTopBar on small screens) */
+.rx-mobile-logo { display: none; }
 
 /* ── KEYFRAMES ── */
 @keyframes rxCardIn {
@@ -587,55 +610,83 @@ const CSS = `
 
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
+  .rx-root { flex-direction: column; min-height: 100dvh; }
   .rx-left { display: none; }
   .rx-grid { opacity: 0.35; }
   .rx-particle { display: none; }
   .rx-orb3 { display: none; }
-  .rx-right { padding: 18px 16px 28px; align-items: flex-start; }
-  .rx-mobile-logo {
-    display: block;
-    margin: 0 0 14px;
-    text-align: left;
-  }
-  .rx-mobile-logo .rx-logo-mark {
-    width: 32px; height: 32px; border-radius: 9px; font-size: 14px;
-  }
-  .rx-mobile-logo .rx-logo-text {
-    font-size: 28px; font-weight: 900; letter-spacing: -0.04em;
+  .rx-back { display: none; }
+  .rx-right {
+    flex: 1;
+    padding: 20px 16px 32px;
+    align-items: flex-start;
+    overflow-y: auto;
   }
   .rx-card {
-    padding: 22px 18px 18px; border-radius: 18px;
-    background: rgba(10,12,22,0.84);
-    border-color: rgba(124,107,255,0.35);
-    backdrop-filter: blur(16px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+    padding: 26px 20px 22px;
+    border-radius: 20px;
+    background: rgba(10, 12, 22, 0.88);
+    border-color: rgba(124,107,255,0.28);
+    backdrop-filter: blur(20px);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.04) inset,
+      0 24px 48px rgba(0,0,0,0.4);
   }
-  .rx-ch { margin-bottom: 14px; }
-  .rx-ch-badge { display: none; }
-  .rx-ch h2 { font-size: 24px; margin-bottom: 4px; }
-  .rx-ch-sub { font-size: 13px; line-height: 1.45; color: var(--ink4); }
-  .rx-form { gap: 10px; }
+  html.light .rx-root.gv-auth .rx-card {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(124, 107, 255, 0.2);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.8) inset,
+      0 20px 40px rgba(12, 26, 86, 0.1);
+  }
+  .rx-ch { margin-bottom: 20px; }
+  .rx-ch-badge { margin-bottom: 12px; }
+  .rx-ch h2 { font-size: 26px; margin-bottom: 6px; }
+  .rx-ch-sub { font-size: 14px; line-height: 1.5; color: var(--ink3); }
+  .rx-form { gap: 12px; }
   .rx-input {
-    border-radius: 12px; padding: 18px 12px 8px 40px;
-    font-size: 14px; background: rgba(255,255,255,0.04);
+    border-radius: 13px;
+    padding: 20px 14px 9px 42px;
+    font-size: 15px;
   }
-  .rx-label { left: 40px; }
-  .rx-field-icon { left: 14px; }
-  .rx-select { border-radius: 12px; }
-  .rx-select-icon { left: 14px; }
-  .rx-select-label { left: 40px; }
-  .rx-submit { border-radius: 12px; padding: 14px; box-shadow: 0 10px 24px rgba(124,107,255,0.32); }
+  .rx-label { left: 42px; }
+  .rx-field-icon { left: 15px; font-size: 15px; }
+  .rx-role-chips {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .rx-role-chip {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 14px;
+    min-height: 0;
+    padding: 14px 16px;
+    text-align: left;
+  }
+  .rx-role-chip-icon { flex-shrink: 0; }
+  .rx-role-chip-label {
+    font-size: 13px;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    font-family: var(--sans);
+    font-weight: 500;
+    line-height: 1.3;
+  }
+  .rx-submit {
+    border-radius: 13px;
+    padding: 15px;
+    font-size: 15px;
+    box-shadow: 0 12px 28px rgba(124,107,255,0.35);
+  }
   .rx-divider { display: none; }
-  .rx-footer { margin-top: 14px; font-size: 12px; }
-  .rx-back { position: static; margin-bottom: 10px; width: fit-content; font-size: 10px; }
+  .rx-footer { margin-top: 18px; font-size: 13px; }
 }
 @media (max-width: 480px) {
-  .rx-right { padding: 14px 12px 26px; }
-  .rx-mobile-logo { margin-bottom: 12px; }
-  .rx-mobile-logo .rx-logo-text { font-size: 24px; }
-  .rx-card { border-radius: 16px; padding: 18px 14px 14px; }
-  .rx-ch h2 { font-size: 22px; }
-  .rx-input { font-size: 13px; }
+  .rx-right { padding: 16px 14px 28px; }
+  .rx-card { border-radius: 18px; padding: 22px 16px 18px; }
+  .rx-ch h2 { font-size: 24px; }
+  .rx-ch-sub { font-size: 13px; }
 }
 @media (max-width: 900px) {
   .rx-root { background: var(--bg0); }
@@ -716,25 +767,48 @@ function Field({ icon, label, value, onChange, type = "text", hasError }) {
 /* ─────────────────────────────────────────────
    ROLE CHIP SELECTOR
 ───────────────────────────────────────────── */
+const ROLE_ICONS = {
+  customer: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
+      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+    </svg>
+  ),
+  car_owner: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h13l4 4v4a2 2 0 0 1-2 2h-2" />
+      <circle cx="7" cy="17" r="2" /><circle cx="17" cy="17" r="2" />
+    </svg>
+  ),
+  rental_owner: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 21h18" /><path d="M5 21V7l8-4v18" /><path d="M19 21V11l-6-4" />
+      <path d="M9 9v.01" /><path d="M9 12v.01" /><path d="M9 15v.01" /><path d="M9 18v.01" />
+    </svg>
+  ),
+};
+
 const ROLES = [
-  { value: "customer",     icon: "🛒", labelKey: "roleCustomer" },
-  { value: "car_owner",    icon: "🚗", labelKey: "roleCarOwner" },
-  { value: "rental_owner", icon: "🏢", labelKey: "roleRental"   },
+  { value: "customer",     iconKey: "customer",     labelKey: "roleCustomer" },
+  { value: "car_owner",    iconKey: "car_owner",    labelKey: "roleCarOwner" },
+  { value: "rental_owner", iconKey: "rental_owner", labelKey: "roleRental"   },
 ];
 
 function RoleChips({ value, onChange, copy }) {
   return (
     <div>
       <div className="rx-role-section-label">{copy.accountType}</div>
-      <div className="rx-role-chips">
+      <div className="rx-role-chips" role="radiogroup" aria-label={copy.accountType}>
         {ROLES.map(r => (
           <button
             key={r.value}
             type="button"
+            role="radio"
+            aria-checked={value === r.value}
             className={`rx-role-chip${value === r.value ? " active" : ""}`}
             onClick={() => onChange(r.value)}
           >
-            <span className="rx-role-chip-icon">{r.icon}</span>
+            <span className="rx-role-chip-icon">{ROLE_ICONS[r.iconKey]}</span>
             <span className="rx-role-chip-label">{copy[r.labelKey]}</span>
           </button>
         ))}
@@ -800,6 +874,7 @@ export default function Register() {
   return (
     <div className="rx-root gv-auth">
       <style>{CSS}</style>
+      <AuthTopBar backLabel="← Accueil" />
 
       {/* Background layers */}
       <div className="rx-bg" />
@@ -884,15 +959,6 @@ export default function Register() {
         <Link to="/" className="rx-back">← Accueil</Link>
 
         <div style={{ width: "100%", maxWidth: 440 }}>
-
-          {/* Mobile logo */}
-          <div className="rx-mobile-logo">
-            <Link to="/" className="rx-mobile-logo-inner">
-              <div className="rx-logo-mark">G</div>
-              <span className="rx-logo-text">Goo<span>voiture</span></span>
-            </Link>
-          </div>
-
           {/* Glass card */}
           <div className="rx-card">
             <div className="rx-card-glow" />

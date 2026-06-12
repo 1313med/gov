@@ -71,6 +71,12 @@ const NO_NAV_PREFIXES = [
   "/owner-bookings",
 ];
 
+const AUTH_PATHS = [
+  "/login",
+  "/register",
+  "/forgot-password",
+];
+
 const LANG_PREFIXES = ["", "en", "ar"];
 
 function localizedPath(prefix, path) {
@@ -91,7 +97,11 @@ export default function App() {
   const { basePath } = parseSeoPath(pathname);
   const isHome = basePath === "/";
   const hasSidebar = NO_NAV_PREFIXES.some((p) => basePath.startsWith(p));
-  const showNav = !isHome && !hasSidebar;
+  const isAuth =
+    AUTH_PATHS.includes(basePath) ||
+    basePath.startsWith("/reset-password") ||
+    basePath.startsWith("/verify-email");
+  const showNav = !isHome && !hasSidebar && !isAuth;
 
   const publicPages = [
     { path: "/", element: <Home /> },
