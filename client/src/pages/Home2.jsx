@@ -1232,8 +1232,13 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   filter:drop-shadow(0 22px 48px rgba(7,14,45,.12));
   transition:filter .4s;
 }
+.hx.dark .hx-app-phones-float{
+  background:#050508;
+  border:1px solid rgba(124,107,255,.16);
+  box-shadow:0 28px 56px rgba(0,0,0,.48),0 0 48px rgba(124,107,255,.07);
+}
 .hx.dark .hx-app-phones-img{
-  filter:drop-shadow(0 28px 56px rgba(0,0,0,.42));
+  filter:none;
 }
 @keyframes hxAppFloat{
   0%,100%{transform:translateY(0);}
