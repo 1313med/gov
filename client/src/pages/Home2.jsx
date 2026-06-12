@@ -1438,10 +1438,11 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-app-phones{width:100%;max-width:none;margin-top:12px;}
   .hx-app-phones-banner{
     display:block;width:100%;height:auto;
-    mix-blend-mode:screen;
     animation:hxAppFloat 7s ease-in-out infinite;
     pointer-events:none;user-select:none;
   }
+  .hx-app-phones--dark .hx-app-phones-banner{mix-blend-mode:screen;}
+  .hx-app-phones--light .hx-app-phones-banner{mix-blend-mode:normal;}
 }
 @media(max-width:480px){
   .hx-lang button{padding:6px 8px;font-size:9px;}
