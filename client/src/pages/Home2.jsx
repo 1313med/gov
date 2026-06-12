@@ -1217,8 +1217,37 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   background:var(--bg);
   transition:background .4s;
 }
+.hx-gfeat-copy{
+  max-width:720px;margin:0 auto;text-align:center;
+}
+.hx-gfeat-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--mut);padding:8px 14px;border-radius:99px;
+  background:var(--gbg);border:1px solid var(--gbd);margin-bottom:20px;
+}
+.hx-gfeat-title{
+  font-family:var(--disp);font-size:clamp(32px,5vw,52px);
+  line-height:1.05;letter-spacing:-.03em;color:var(--ink);margin-bottom:8px;
+}
+.hx-gfeat-title em{font-style:italic;font-weight:300;color:var(--gold);}
+.hx-gfeat-tagline{
+  font-family:var(--disp);font-size:clamp(22px,3.5vw,32px);
+  font-style:italic;font-weight:300;color:var(--gold2);margin-bottom:18px;
+}
+.hx-gfeat-sub{
+  font-size:16px;line-height:1.75;color:var(--mut);margin-bottom:28px;
+}
+.hx-gfeat-feats{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:14px 20px;
+  text-align:left;margin-bottom:8px;
+}
+.hx-gfeat-feat strong{
+  display:block;font-size:13px;letter-spacing:.04em;color:var(--ink);margin-bottom:2px;
+}
+.hx-gfeat-feat span{font-size:12px;line-height:1.5;color:var(--mut);}
 .hx-gfeat-visual{
-  max-width:1180px;margin:0 auto;
+  display:none;max-width:100%;margin:0 auto;
 }
 .hx-gfeat-img{
   display:block;width:100%;height:auto;
@@ -1434,6 +1463,9 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-tgrid>.hx-tm{flex:0 0 min(280px,80vw);scroll-snap-align:start;}
   .hx-dash-sec{padding:64px 24px;}
   .hx-gfeat{padding:56px 24px 48px;}
+  .hx-gfeat-copy{display:none;}
+  .hx-gfeat-visual{display:block;width:100%;}
+  .hx-gfeat-feats{grid-template-columns:1fr;}
   .hx-fsec,.hx-ben-sec,.hx-tsec,.hx-trust,.hx-app{padding-left:24px;padding-right:24px;}
   .hx-vault-head,.hx-vault-band-h{padding-left:24px;padding-right:24px;}
   .hx-vrail,.hx-vskel-wrap{padding-left:24px;padding-right:24px;}
@@ -2117,6 +2149,22 @@ function HomeInner() {
 
       {/* ═══ MY GARAGE — deadlines, alerts, mechanics ═══ */}
       <section className="hx-gfeat" aria-label={copy.home.garage.aria}>
+        <div className="hx-gfeat-copy rv rv-u vis">
+          <div className="hx-gfeat-badge">{copy.home.garage.badge}</div>
+          <h2 className="hx-gfeat-title">
+            {copy.home.garage.title1} <em>{copy.home.garage.title2}</em>
+          </h2>
+          <p className="hx-gfeat-tagline">{copy.home.garage.title3}</p>
+          <p className="hx-gfeat-sub">{copy.home.garage.sub}</p>
+          <div className="hx-gfeat-feats">
+            {copy.home.garage.feats.map((f, i) => (
+              <div key={i} className="hx-gfeat-feat">
+                <strong>{f.label}</strong>
+                <span>{f.desc}</span>
+              </div>
+            ))}
+          </div>
+        </div>
         <GarageFeatureShowcase className="rv rv-u vis" />
         <div className="hx-gfeat-actions rv rv-u vis" style={{ transitionDelay: "0.08s" }}>
           {auth ? (

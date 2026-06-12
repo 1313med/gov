@@ -268,6 +268,18 @@ export const home2Dict = {
     },
     garage: {
       aria: "My Garage — track your car, deadlines, alerts and mechanics",
+      badge: "Your car, under control.",
+      title1: "Know everything.",
+      title2: "Anticipate everything.",
+      title3: "Zero stress.",
+      sub:
+        "Track your car’s condition, stay ahead of deadlines (insurance, inspection, oil change…) and chat with our mechanics — completely free.",
+      feats: [
+        { label: "Alerts", desc: "before every deadline" },
+        { label: "Full tracking", desc: "for your vehicle in real time" },
+        { label: "Mechanics", desc: "available when you need them" },
+        { label: "100% free", desc: "no fees, no commitment" },
+      ],
       cta: "Open My Garage",
       ctaGuest: "Create Free Account",
     },
@@ -579,6 +591,18 @@ export const home2Dict = {
     },
     garage: {
       aria: "Mon Garage — suivez votre voiture, échéances, alertes et mécaniciens",
+      badge: "Votre voiture, sous contrôle.",
+      title1: "Tout savoir.",
+      title2: "Tout anticiper.",
+      title3: "Zéro stress.",
+      sub:
+        "Suivez l'état de votre voiture, anticipez vos échéances (assurance, contrôle technique, vidange…) et échangez avec nos mécanos, le tout gratuitement.",
+      feats: [
+        { label: "Alertes", desc: "avant chaque échéance" },
+        { label: "Suivi complet", desc: "de votre véhicule en temps réel" },
+        { label: "Mécaniciens", desc: "disponibles pour vous" },
+        { label: "100% gratuit", desc: "sans frais, sans engagement" },
+      ],
       cta: "Ouvrir Mon Garage",
       ctaGuest: "Créer un compte gratuit",
     },

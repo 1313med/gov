@@ -1,6 +1,6 @@
 import { useTheme } from "../context/ThemeContext";
 
-/** My Garage feature — PNG with transparent bg; site background shows through. */
+/** My Garage — mobile banner only (desktop uses text in Home2). */
 export default function GarageFeatureShowcase({ className = "" }) {
   const { dark } = useTheme();
 
@@ -10,7 +10,7 @@ export default function GarageFeatureShowcase({ className = "" }) {
       aria-hidden="true"
     >
       <img
-        src={dark ? "/images/garage-feature-dark.png" : "/images/garage-feature-light.png"}
+        src={dark ? "/images/garage-feature-dark.png" : "/images/garage-feature-light-mobile.png"}
         alt=""
         className="hx-gfeat-img"
         loading="lazy"

@@ -39,4 +39,4 @@ async function stripBg(name) {
 }
 
 await stripBg("garage-feature-dark.png");
-await stripBg("garage-feature-light.png");
+await stripBg("garage-feature-light-mobile.png");
