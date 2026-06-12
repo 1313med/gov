@@ -1211,30 +1211,151 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
 .hx-tr p{font-size:13px;line-height:1.75;color:var(--mut);}
 
 /* ════ APP & FINAL CTA ════ */
-/* App download — phone mockup (image includes its own backdrop) */
+/* App download — elite card + animated phone mockup */
 .hx-app{padding:92px 64px;background:var(--bg);}
 .hx-app-grid{
   max-width:1280px;margin:0 auto;display:grid;grid-template-columns:1.1fr .9fr;
-  gap:26px;align-items:center;
+  gap:32px;align-items:center;
 }
 .hx-app-phones{
   position:relative;justify-self:end;
-  width:min(340px,42vw);max-width:100%;
-  aspect-ratio:1/1;
+  width:min(420px,46vw);max-width:100%;
+}
+.hx-app-phones-card{
+  position:relative;width:100%;aspect-ratio:1/1;
+  animation:hxAppFloat 7s ease-in-out infinite;
+}
+.hx-app-phones-card-ring{
+  position:absolute;inset:-1px;border-radius:30px;z-index:0;
+  background:linear-gradient(135deg,var(--gold),var(--gold2),rgba(124,107,255,.5),var(--gold2));
+  background-size:300% 300%;
+  animation:hxAppRing 5s ease infinite;
+  opacity:.85;
+}
+.hx-app-phones-card-inner{
+  position:absolute;inset:1px;z-index:1;
+  border-radius:28px;overflow:hidden;
+  display:flex;flex-direction:column;
+  background:
+    radial-gradient(ellipse 75% 55% at 72% 88%, rgba(124,107,255,.12), transparent 58%),
+    radial-gradient(ellipse 55% 45% at 14% 16%, rgba(56,189,248,.10), transparent 52%),
+    linear-gradient(155deg, var(--sur) 0%, var(--bg2) 50%, var(--sur2) 100%);
+  border:1px solid var(--bdr2);
+  box-shadow:0 28px 64px rgba(7,14,45,.12), inset 0 1px 0 rgba(255,255,255,.6);
+  transition:background .45s,box-shadow .45s,border-color .45s;
+}
+.hx-app-phones--dark .hx-app-phones-card-inner{
+  background:
+    radial-gradient(ellipse 80% 60% at 70% 92%, rgba(124,107,255,.28), transparent 58%),
+    radial-gradient(ellipse 55% 45% at 12% 14%, rgba(56,189,248,.20), transparent 52%),
+    linear-gradient(155deg, #0c1024 0%, #101426 42%, #060810 100%);
+  border-color:rgba(124,107,255,.22);
+  box-shadow:0 32px 72px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.05);
+}
+.hx-app-phones--light .hx-app-phones-card-inner{
+  background:linear-gradient(155deg, rgba(255,255,255,.72) 0%, rgba(238,242,255,.55) 100%);
+  backdrop-filter:blur(12px);
+  box-shadow:0 28px 64px rgba(7,14,45,.10), inset 0 1px 0 rgba(255,255,255,.85);
+}
+.hx-app-phones--light .hx-app-phones-card-glow{opacity:.35;}
+.hx-app-phones--light .hx-app-phones-card-grid{opacity:.18;}
+.hx-app-phones-card-shine{
+  position:absolute;top:0;left:-60%;width:45%;height:100%;z-index:2;pointer-events:none;
+  background:linear-gradient(105deg,transparent,rgba(255,255,255,.14),transparent);
+  transform:skewX(-18deg);
+  animation:hxAppShine 6s ease-in-out infinite;
+}
+.hx.dark .hx-app-phones-card-shine{
+  background:linear-gradient(105deg,transparent,rgba(124,107,255,.12),transparent);
+}
+.hx-app-phones-card-glow{
+  position:absolute;border-radius:50%;pointer-events:none;z-index:0;
+  filter:blur(48px);opacity:.55;
+}
+.hx-app-phones--dark .hx-app-phones-card-glow{opacity:.85;}
+.hx-app-phones-card-glow--teal{
+  width:46%;height:46%;top:-8%;left:-6%;
+  background:rgba(56,189,248,.38);
+  animation:hxAppGlowTeal 8s ease-in-out infinite;
+}
+.hx-app-phones-card-glow--purple{
+  width:52%;height:52%;bottom:-10%;right:-8%;
+  background:rgba(124,107,255,.34);
+  animation:hxAppGlowPurple 9s ease-in-out infinite;
+}
+.hx-app-phones-card-grid{
+  position:absolute;inset:0;z-index:1;pointer-events:none;opacity:.28;
+  background-image:
+    linear-gradient(rgba(124,107,255,.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124,107,255,.07) 1px, transparent 1px);
+  background-size:26px 26px;
+  mask-image:radial-gradient(ellipse 88% 78% at 50% 50%, #000 25%, transparent 100%);
+}
+.hx-app-phones--dark .hx-app-phones-card-grid{opacity:.18;}
+.hx-app-phones-badge{
+  position:relative;z-index:4;align-self:center;margin-top:14px;
+  display:inline-flex;align-items:center;gap:7px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--mut);padding:6px 12px;border-radius:99px;
+  background:rgba(124,107,255,.08);border:1px solid var(--gbd);
+}
+.hx-app-phones--dark .hx-app-phones-badge{
+  color:rgba(255,255,255,.55);
+  background:rgba(124,107,255,.14);
+  border-color:rgba(124,107,255,.28);
+}
+.hx-app-phones-badge-dot{
+  width:6px;height:6px;border-radius:50%;background:var(--gold2);
+  box-shadow:0 0 8px var(--gold2);
+  animation:hxAppPulse 2.2s ease-in-out infinite;
+}
+.hx-app-phones-stage{
+  position:relative;z-index:3;flex:1;
   display:flex;align-items:center;justify-content:center;
+  padding:6px 10px 14px;
 }
 .hx-app-phones-img{
   display:block;width:100%;height:100%;
   object-fit:contain;object-position:center center;
   pointer-events:none;user-select:none;
-  border-radius:22px;
-  transition:filter .35s,opacity .35s;
-}
-.hx-app-phones--light .hx-app-phones-img{
-  filter:drop-shadow(0 16px 36px rgba(7,14,45,.10));
+  border-radius:18px;
+  filter:drop-shadow(0 20px 44px rgba(7,14,45,.14));
+  transition:filter .35s;
 }
 .hx-app-phones--dark .hx-app-phones-img{
-  filter:drop-shadow(0 18px 40px rgba(0,0,0,.35));
+  filter:drop-shadow(0 24px 48px rgba(0,0,0,.45));
+}
+@keyframes hxAppFloat{
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(-10px);}
+}
+@keyframes hxAppRing{
+  0%,100%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+}
+@keyframes hxAppShine{
+  0%,100%{left:-60%;opacity:0;}
+  12%{opacity:1;}
+  38%{left:120%;opacity:0;}
+}
+@keyframes hxAppGlowTeal{
+  0%,100%{transform:translate(0,0) scale(1);}
+  50%{transform:translate(6px,8px) scale(1.06);}
+}
+@keyframes hxAppGlowPurple{
+  0%,100%{transform:translate(0,0) scale(1);}
+  50%{transform:translate(-8px,-6px) scale(1.05);}
+}
+@keyframes hxAppPulse{
+  0%,100%{opacity:1;transform:scale(1);}
+  50%{opacity:.55;transform:scale(.88);}
+}
+@media (prefers-reduced-motion:reduce){
+  .hx-app-phones-card,
+  .hx-app-phones-card-ring,
+  .hx-app-phones-card-shine,
+  .hx-app-phones-card-glow,
+  .hx-app-phones-badge-dot{animation:none !important;}
 }
 
 .hx-final{
@@ -1324,7 +1445,7 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-exp{margin:70px 40px;min-height:440px;}
   .hx-app{padding:64px 40px;}
   .hx-app-grid{grid-template-columns:1fr;}
-  .hx-app-phones{justify-self:center;margin-top:8px;width:min(300px,78vw);}
+  .hx-app-phones{justify-self:center;margin-top:16px;width:min(360px,88vw);}
   .hx-final{margin:0 40px 80px;}
   .hx-ft{padding:56px 40px 24px;}
   .hx-ft-top{grid-template-columns:1fr 1fr;}
@@ -1428,8 +1549,9 @@ img{display:block;max-width:100%;}a{text-decoration:none;}
   .hx-svc{height:390px;}
   .hx-svc-title{font-size:52px;}
   .hx-svc-body{padding:28px;}
-  .hx-app{padding:48px 24px;}
-  .hx-app-phones{width:min(268px,74vw);}
+  .hx-app{padding:52px 24px;}
+  .hx-app-phones{width:min(320px,92vw);}
+  .hx-app-phones-badge{margin-top:10px;font-size:8px;}
   .hx-stats-inner{grid-template-columns:repeat(2,1fr);gap:16px 12px;}
   .hx-stat-n{font-size:30px;}
   .hx-how-cell{flex:0 0 min(260px,84vw);}
