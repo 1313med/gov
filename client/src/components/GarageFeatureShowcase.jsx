@@ -1,6 +1,6 @@
 import { useTheme } from "../context/ThemeContext";
 
-/** My Garage — mobile banner only (desktop uses text in Home2). */
+/** My Garage — mobile banner only; original PNG, no processing. */
 export default function GarageFeatureShowcase({ className = "" }) {
   const { dark } = useTheme();
 
