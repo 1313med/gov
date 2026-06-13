@@ -327,6 +327,37 @@ export function carJsonLd({ name, brand, model, description, url, vehicleEngine,
   };
 }
 
+export function howToJsonLd({ name, description, url, steps = [], totalTime }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name,
+    description,
+    url,
+    totalTime,
+    step: steps.map((s, i) => ({
+      "@type": "HowToStep",
+      position: i + 1,
+      name: s.title || s.name,
+      text: s.body || s.text,
+    })),
+  };
+}
+
+export function aggregateRatingJsonLd({ itemReviewed, ratingValue, reviewCount, bestRating = 5 }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: itemReviewed,
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue,
+      reviewCount,
+      bestRating,
+    },
+  };
+}
+
 export function mergeJsonLd(...graphs) {
   return graphs.filter(Boolean);
 }

@@ -6,6 +6,8 @@ const answerSchema = new mongoose.Schema(
     body: { type: String, required: true, maxlength: 3000 },
     verifiedExpert: { type: Boolean, default: false },
     accepted: { type: Boolean, default: false },
+    upvotes: { type: Number, default: 0 },
+    downvotes: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
@@ -27,6 +29,7 @@ const questionSchema = new mongoose.Schema(
     status: { type: String, enum: ["published", "pending", "hidden"], default: "published" },
     answers: [answerSchema],
     viewCount: { type: Number, default: 0 },
+    upvotes: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

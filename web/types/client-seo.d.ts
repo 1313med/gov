@@ -204,6 +204,8 @@ declare module "@client-seo/jsonLd" {
   export function datasetJsonLd(opts: Record<string, unknown>): object;
   export function qaPageJsonLd(opts: Record<string, unknown>): object;
   export function carJsonLd(opts: Record<string, unknown>): object;
+  export function howToJsonLd(opts: Record<string, unknown>): object;
+  export function aggregateRatingJsonLd(opts: Record<string, unknown>): object;
 }
 
 declare module "@client-seo/slugUtils" {
@@ -292,13 +294,87 @@ declare module "@client-seo/catalog/contentClusters" {
   export function clusterTopicPath(clusterSlug: string, topicSlug: string): string;
 }
 
+declare module "@client-seo/catalog/reliabilityIndex" {
+  export function getReliabilityIndex(brandSlug: string, modelSlug: string): {
+    brandSlug: string;
+    modelSlug: string;
+    displayName: string;
+    score: number;
+    grade: string;
+    strengths: string[];
+    weaknesses: string[];
+    resaleIndex: number;
+    partsAvailability: number;
+    moroccoVerdict: string;
+    faqs: Array<{ q: string; a: string }>;
+  } | null;
+  export function getAllReliabilityIndexes(): Array<NonNullable<ReturnType<typeof getReliabilityIndex>>>;
+  export function reliabilityPath(brandSlug: string, modelSlug: string): string;
+  export function reliabilityHubPath(): string;
+  export function marketIntelPath(brandSlug: string, modelSlug: string): string;
+  export function marketHubPath(): string;
+  export function searchIntelPath(brandSlug: string, modelSlug: string): string;
+  export function searchIntelHubPath(): string;
+  export function tcoPath(brandSlug: string, modelSlug: string): string;
+  export function buyerAssistantPath(): string;
+  export function ownershipHubPath(): string;
+  export function ownershipTimelinePath(topicSlug: string): string;
+  export function sellerTrustPath(sellerId: string): string;
+}
+
+declare module "@client-seo/catalog/tcoBenchmarks" {
+  export function getTcoBenchmark(brandSlug: string, modelSlug: string): {
+    brandSlug: string;
+    modelSlug: string;
+    displayName: string;
+    consumptionL100: number;
+    fuelPricePerLiter: number;
+    insuranceYear: number;
+    maintenanceYear: number;
+    papersYear: number;
+    depreciationRate: number;
+    defaultKmPerYear: number;
+    defaultYear: number;
+  } | null;
+  export function getAllTcoBenchmarks(): Array<NonNullable<ReturnType<typeof getTcoBenchmark>>>;
+}
+
+declare module "@client-seo/catalog/ownershipTimelines" {
+  export function getOwnershipTimeline(topicSlug: string): {
+    slug: string;
+    title: string;
+    description: string;
+    durationWeeks: number;
+    steps: Array<{ title: string; body: string; week?: number; day?: number; checklist?: string[] }>;
+    faqs: Array<{ q: string; a: string }>;
+    relatedLinks?: Array<{ label: string; path: string }>;
+  } | null;
+  export function getAllOwnershipTimelines(): Array<NonNullable<ReturnType<typeof getOwnershipTimeline>>>;
+  export function ownershipHubPath(): string;
+  export function ownershipTimelinePath(topicSlug: string): string;
+}
+
+declare module "@client-seo/catalog/buyerAssistant" {
+  export const ASSISTANT_STEPS: Array<{
+    id: string;
+    question: string;
+    options: Array<{ value: string; label: string }>;
+  }>;
+  export function buyerAssistantPath(): string;
+  export function resolveRecommendations(answers: Record<string, string>): Array<{
+    brandSlug: string;
+    modelSlug: string;
+    reason: string;
+  }>;
+}
+
 declare module "@client-seo/catalog/questionSeeds" {
   export function getQuestionSeed(slug: string): {
     slug: string;
     question: string;
     body?: string;
     topic?: string;
-    answers?: Array<{ body: string; authorName?: string; verifiedExpert?: boolean; accepted?: boolean }>;
+    answers?: Array<{ body: string; authorName?: string; verifiedExpert?: boolean; accepted?: boolean; upvotes?: number }>;
   } | null;
   export function getAllQuestionSeeds(): Array<NonNullable<ReturnType<typeof getQuestionSeed>>>;
   export function questionPath(slug: string): string;

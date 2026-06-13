@@ -30,13 +30,14 @@ export function questionMetadata(lang: SeoLang, slug: string) {
 }
 
 function normalizeAnswers(q: {
-  answers?: Array<{ body: string; authorName?: string; authorId?: { name?: string }; verifiedExpert?: boolean; accepted?: boolean }>;
+  answers?: Array<{ body: string; authorName?: string; authorId?: { name?: string }; verifiedExpert?: boolean; accepted?: boolean; upvotes?: number }>;
 }) {
   return (q.answers || []).map((a) => ({
     text: a.body,
     authorName: a.authorName || a.authorId?.name || "Membre GoVoiture",
     accepted: a.accepted,
     verifiedExpert: a.verifiedExpert,
+    upvotes: a.upvotes || 0,
   }));
 }
 
@@ -110,8 +111,9 @@ export async function QuestionDetailView({ lang, slug }: { lang: SeoLang; slug: 
             <div key={i} className={`rounded-xl border p-4 ${a.accepted ? "border-violet-300 bg-violet-50/50" : ""}`}>
               <div className="flex items-center gap-2 mb-2 text-sm">
                 <span className="font-medium">{a.authorName}</span>
-                {a.verifiedExpert ? <span className="text-xs text-green-700">✓ Expert</span> : null}
-                {a.accepted ? <span className="text-xs text-violet-600">Réponse acceptée</span> : null}
+                {a.verifiedExpert ? <span className="text-xs text-green-700 bg-green-50 px-2 py-0.5 rounded">✓ Expert GoVoiture</span> : null}
+                {a.accepted ? <span className="text-xs text-violet-600 bg-violet-50 px-2 py-0.5 rounded">✓ Acceptée</span> : null}
+                {a.upvotes > 0 ? <span className="text-xs text-gray-500 ml-auto">▲ {a.upvotes}</span> : null}
               </div>
               <p className="text-gray-700">{a.text}</p>
             </div>

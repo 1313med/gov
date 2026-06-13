@@ -95,3 +95,40 @@ exports.addAnswer = asyncHandler(async (req, res) => {
   await q.populate("answers.authorId", "name avatar");
   res.status(201).json(q);
 });
+
+// POST /api/qa/:slug/vote
+exports.voteQuestion = asyncHandler(async (req, res) => {
+  const q = await Question.findOne({ slug: req.params.slug, status: "published" });
+  if (!q) return res.status(404).json({ message: "Question not found" });
+  q.upvotes = (q.upvotes || 0) + 1;
+  await q.save();
+  res.json({ upvotes: q.upvotes });
+});
+
+// POST /api/qa/:slug/answers/:answerId/vote
+exports.voteAnswer = asyncHandler(async (req, res) => {
+  const { direction = "up" } = req.body;
+  const q = await Question.findOne({ slug: req.params.slug, status: "published" });
+  if (!q) return res.status(404).json({ message: "Question not found" });
+  const answer = q.answers.id(req.params.answerId);
+  if (!answer) return res.status(404).json({ message: "Answer not found" });
+  if (direction === "down") answer.downvotes = (answer.downvotes || 0) + 1;
+  else answer.upvotes = (answer.upvotes || 0) + 1;
+  await q.save();
+  res.json({ upvotes: answer.upvotes, downvotes: answer.downvotes });
+});
+
+// POST /api/qa/:slug/answers/:answerId/accept
+exports.acceptAnswer = asyncHandler(async (req, res) => {
+  const q = await Question.findOne({ slug: req.params.slug, status: "published" });
+  if (!q) return res.status(404).json({ message: "Question not found" });
+  if (String(q.authorId) !== String(req.user._id)) {
+    return res.status(403).json({ message: "Only the question author can accept an answer" });
+  }
+  q.answers.forEach((a) => {
+    a.accepted = String(a._id) === String(req.params.answerId);
+  });
+  await q.save();
+  await q.populate("answers.authorId", "name avatar");
+  res.json(q);
+});

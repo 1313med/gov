@@ -338,6 +338,9 @@ exports.getSellerProfile = asyncHandler(async (req, res) => {
   const openingHours = bp.openingHours || "Lun–Sam 9h–19h";
   const logo = bp.logo || seller.avatar;
 
+  const { computeReputation } = require("./intelligenceController");
+  const reputation = await computeReputation(seller._id);
+
   res.json({
     seller: { ...seller.toObject(), name: displayName, avatar: logo, whatsapp },
     kind,
@@ -357,6 +360,7 @@ exports.getSellerProfile = asyncHandler(async (req, res) => {
     avgRating: reviewData.avgRating,
     reviewCount: reviewData.total,
     verified: Boolean(seller.nationalId?.verified || seller.driverLicense?.verified),
+    reputation,
     related: related.filter(Boolean),
   });
 });

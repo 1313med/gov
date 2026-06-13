@@ -161,6 +161,10 @@ export default async function PriceIntelligenceView({
           <a href={buildSeoPath(lang, modelPath(brandSlug, modelSlug))} className="text-violet-600 hover:underline">Annonces {spec.displayName}</a>
           <a href={buildSeoPath(lang, vehicleSpecPath(brandSlug, modelSlug))} className="text-violet-600 hover:underline">Fiche technique</a>
           <a href={buildSeoPath(lang, datasetPath(brandSlug, modelSlug))} className="text-violet-600 hover:underline">Dataset JSON</a>
+          <a href={buildSeoPath(lang, `/marche/${brandSlug}/${modelSlug}`)} className="text-violet-600 hover:underline">Intelligence marché</a>
+          <a href={buildSeoPath(lang, `/fiabilite/${brandSlug}/${modelSlug}`)} className="text-violet-600 hover:underline">Fiabilité</a>
+          <a href={buildSeoPath(lang, `/recherches/${brandSlug}/${modelSlug}`)} className="text-violet-600 hover:underline">Recherches</a>
+          <a href={buildSeoPath(lang, `/cout-possession/${brandSlug}/${modelSlug}`)} className="text-violet-600 hover:underline">Coût possession</a>
           <a href={buildSeoPath(lang, brandPath(brandSlug))} className="text-violet-600 hover:underline">Hub {brandName}</a>
         </section>
 

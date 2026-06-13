@@ -146,3 +146,105 @@ export async function fetchQuestions(limit = 20): Promise<QuestionItem[]> {
   const data = await res.json();
   return data.questions || [];
 }
+
+export type SearchDemandItem = {
+  brand: string;
+  model: string;
+  views: number;
+  listings: number;
+  sold?: number;
+  demandScore?: number;
+};
+
+export async function fetchSearchDemand(brand?: string, model?: string, limit = 20) {
+  const params = new URLSearchParams();
+  if (brand) params.set("brand", brand);
+  if (model) params.set("model", model);
+  if (!brand) params.set("limit", String(limit));
+  const res = await fetch(`${API_BASE}/intelligence/search-demand?${params}`, { next: { revalidate: 3600 } });
+  if (!res.ok) return brand && model ? null : { top: [] as SearchDemandItem[] };
+  return res.json();
+}
+
+export type ReliabilityPayload = {
+  brand: string;
+  model: string;
+  score: number;
+  grade: string;
+  avgListingRating: number | null;
+  reviewSampleSize: number;
+  insights: Array<{ title: string; body: string; type?: string }>;
+  commonIssues: Array<{ title: string; body: string }>;
+  maintenanceTips: Array<{ title: string; body: string }>;
+  methodology?: string;
+};
+
+export async function fetchReliability(brand: string, model: string): Promise<ReliabilityPayload | null> {
+  const params = new URLSearchParams({ brand, model });
+  const res = await fetch(`${API_BASE}/intelligence/reliability?${params}`, { next: { revalidate: 3600 } });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export type MarketIntelPayload = {
+  brand: string;
+  model: string;
+  demand: SearchDemandItem & { activeSaleListings?: number; activeRentalListings?: number };
+  reliability: { score: number; grade: string; commonIssues: Array<{ title: string; body: string }> };
+  links?: Record<string, string>;
+};
+
+export async function fetchMarketIntel(brand: string, model: string): Promise<MarketIntelPayload | null> {
+  const params = new URLSearchParams({ brand, model });
+  const res = await fetch(`${API_BASE}/intelligence/market?${params}`, { next: { revalidate: 3600 } });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export type TcoPayload = {
+  brand: string;
+  model: string;
+  year: number;
+  kmPerYear: number;
+  purchasePriceMad: number;
+  yearly: { fuel: number; insurance: number; maintenance: number; papers: number; depreciation: number; total: number };
+  monthly: { total: number };
+  costPerKm: number;
+  assumptions?: Record<string, unknown>;
+  methodology?: string;
+};
+
+export async function fetchTco(brand: string, model: string, year?: number, kmPerYear?: number, purchasePrice?: number) {
+  const params = new URLSearchParams({ brand, model });
+  if (year) params.set("year", String(year));
+  if (kmPerYear) params.set("kmPerYear", String(kmPerYear));
+  if (purchasePrice) params.set("purchasePrice", String(purchasePrice));
+  const res = await fetch(`${API_BASE}/intelligence/tco?${params}`, { next: { revalidate: 3600 } });
+  if (!res.ok) return null;
+  return res.json() as Promise<TcoPayload | null>;
+}
+
+export type ReputationPayload = {
+  userId: string;
+  name: string;
+  city?: string;
+  avatar?: string;
+  score: number;
+  grade: string;
+  avgRating: number;
+  reviewCount: number;
+  verifiedReviewCount: number;
+  identityVerified: boolean;
+  inventoryCount: number;
+  fleetSize: number;
+  soldCount: number;
+  badges: Array<{ id: string; label: string }>;
+  memberSince?: string;
+  methodology?: string;
+};
+
+export async function fetchReputation(userId: string): Promise<ReputationPayload | null> {
+  const res = await fetch(`${API_BASE}/intelligence/reputation/${userId}`, { next: { revalidate: 600 } });
+  if (!res.ok) return null;
+  return res.json();
+}

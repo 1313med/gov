@@ -344,6 +344,15 @@ export default async function BrandView({
             <a href={buildSeoPath(lang, vehicleSpecPath(brandSlug, model))} className="px-3 py-1 rounded-full bg-gray-100 hover:bg-violet-100">
               Fiche technique
             </a>
+            <a href={buildSeoPath(lang, `/marche/${brandSlug}/${model}`)} className="px-3 py-1 rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200">
+              Intelligence marché
+            </a>
+            <a href={buildSeoPath(lang, `/fiabilite/${brandSlug}/${model}`)} className="px-3 py-1 rounded-full bg-green-100 text-green-800 hover:bg-green-200">
+              Fiabilité
+            </a>
+            <a href={buildSeoPath(lang, `/cout-possession/${brandSlug}/${model}`)} className="px-3 py-1 rounded-full bg-amber-100 text-amber-800 hover:bg-amber-200">
+              Coût possession
+            </a>
           </section>
         ) : null}
 

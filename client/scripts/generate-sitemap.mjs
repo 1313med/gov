@@ -9,6 +9,8 @@ import { getAllComparisons } from "../src/seo/catalog/comparisons.js";
 import { getAllVehicleSpecs } from "../src/seo/catalog/vehicleSpecs.js";
 import { getAllClusterTopics } from "../src/seo/catalog/contentClusters.js";
 import { getAllQuestionSeeds } from "../src/seo/catalog/questionSeeds.js";
+import { getAllReliabilityIndexes } from "../src/seo/catalog/reliabilityIndex.js";
+import { getAllOwnershipTimelines } from "../src/seo/catalog/ownershipTimelines.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const publicDir = join(__dirname, "..", "public");
@@ -85,6 +87,11 @@ const STATIC_PAGES = [
   { path: "/financement", priority: "0.82", changefreq: "weekly" },
   { path: "/demarches", priority: "0.82", changefreq: "weekly" },
   { path: "/questions", priority: "0.8", changefreq: "weekly" },
+  { path: "/marche", priority: "0.84", changefreq: "daily" },
+  { path: "/fiabilite", priority: "0.83", changefreq: "weekly" },
+  { path: "/recherches", priority: "0.82", changefreq: "daily" },
+  { path: "/assistant-achat", priority: "0.8", changefreq: "monthly" },
+  { path: "/possession", priority: "0.81", changefreq: "monthly" },
   { path: "/blog", priority: "0.7", changefreq: "weekly" },
   { path: "/a-propos", priority: "0.5", changefreq: "monthly" },
   { path: "/equipe", priority: "0.4", changefreq: "monthly" },
@@ -302,6 +309,40 @@ async function main() {
   const qaUrls = getAllQuestionSeeds().map((q) => urlEntry(`/questions/${q.slug}`, "0.75", "weekly"));
   writeShard("questions.xml", qaUrls);
   shardFiles.push("questions.xml");
+
+  const intelModels = getAllReliabilityIndexes();
+  const marketUrls = [
+    urlEntry("/marche", "0.84", "daily"),
+    ...intelModels.map((m) => urlEntry(`/marche/${m.brandSlug}/${m.modelSlug}`, "0.8", "daily")),
+  ];
+  writeShard("market-intelligence.xml", marketUrls);
+  shardFiles.push("market-intelligence.xml");
+
+  const reliabilityUrls = [
+    urlEntry("/fiabilite", "0.83", "weekly"),
+    ...intelModels.map((m) => urlEntry(`/fiabilite/${m.brandSlug}/${m.modelSlug}`, "0.8", "weekly")),
+  ];
+  writeShard("reliability-index.xml", reliabilityUrls);
+  shardFiles.push("reliability-index.xml");
+
+  const searchUrls = [
+    urlEntry("/recherches", "0.82", "daily"),
+    ...intelModels.map((m) => urlEntry(`/recherches/${m.brandSlug}/${m.modelSlug}`, "0.78", "daily")),
+  ];
+  writeShard("search-intelligence.xml", searchUrls);
+  shardFiles.push("search-intelligence.xml");
+
+  const tcoUrls = intelModels.map((m) => urlEntry(`/cout-possession/${m.brandSlug}/${m.modelSlug}`, "0.77", "monthly"));
+  writeShard("tco-calculator.xml", tcoUrls);
+  shardFiles.push("tco-calculator.xml");
+
+  const possessionUrls = [
+    urlEntry("/possession", "0.81", "monthly"),
+    urlEntry("/assistant-achat", "0.8", "monthly"),
+    ...getAllOwnershipTimelines().map((t) => urlEntry(`/possession/${t.slug}`, "0.79", "monthly")),
+  ];
+  writeShard("ownership-guides.xml", possessionUrls);
+  shardFiles.push("ownership-guides.xml");
 
   // listings-rental.xml (sharded if needed)
   const rentalListingBlocks = [];
