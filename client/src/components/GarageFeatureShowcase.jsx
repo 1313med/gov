@@ -1,5 +1,7 @@
 import { useTheme } from "../context/ThemeContext";
 
+const img = (name) => `${import.meta.env.BASE_URL}images/${name}`;
+
 /** My Garage — mobile banner only; transparent PNG (background removed per theme). */
 export default function GarageFeatureShowcase({ className = "" }) {
   const { dark } = useTheme();
@@ -10,7 +12,7 @@ export default function GarageFeatureShowcase({ className = "" }) {
       aria-hidden="true"
     >
       <img
-        src={dark ? "/images/garage-feature-dark-mobile.png" : "/images/garage-feature-light-mobile.png"}
+        src={img(dark ? "garage-feature-dark-mobile.png" : "garage-feature-light-mobile.png")}
         alt=""
         className="hx-gfeat-img"
         loading="lazy"

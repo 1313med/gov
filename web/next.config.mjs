@@ -36,6 +36,7 @@ const nextConfig = {
   },
   async rewrites() {
     return {
+      beforeFiles: [{ source: "/images/:path*", destination: "/legacy/images/:path*" }],
       fallback: [{ source: "/:path*", destination: "/legacy/index.html" }],
     };
   },
