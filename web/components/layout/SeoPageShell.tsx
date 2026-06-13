@@ -1,7 +1,7 @@
 import type { SeoLang } from "@/lib/site";
 import Breadcrumbs, { type Crumb } from "@/components/ssr/Breadcrumbs";
-import SeoFooter from "@/components/ssr/SeoFooter";
-import SiteHeader from "@/components/layout/SiteHeader";
+import HomeSiteFooter from "@/components/layout/HomeSiteFooter";
+import HomeNav from "@/components/layout/HomeNav";
 import HeroSection from "@/components/ui/HeroSection";
 import FaqSection from "@/components/ssr/FaqSection";
 import PremiumCTA from "@/components/ui/PremiumCTA";
@@ -53,7 +53,10 @@ export default async function SeoPageShell({
   return (
     <>
       {jsonLd}
-      <SiteHeader lang={lang} />
+      <div className="hx-shell">
+        <HomeNav lang={lang} />
+      </div>
+      <div className="hx-shell-body-offset">
       <HeroSection
         kicker={hero.kicker}
         title={hero.title}
@@ -87,7 +90,10 @@ export default async function SeoPageShell({
           />
         ) : null}
       </div>
-      <SeoFooter lang={lang} />
+      </div>
+      <div className="hx-shell">
+        <HomeSiteFooter lang={lang} />
+      </div>
     </>
   );
 }

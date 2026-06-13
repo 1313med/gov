@@ -30,9 +30,10 @@ declare module "@client-seo/catalog/brands" {
 }
 
 declare module "@client-seo/catalog/airports" {
-  export const MOROCCO_AIRPORTS: Array<{ slug: string; citySlug: string }>;
-  export function getAirportBySlug(slug: string): { slug: string; citySlug: string } | null;
+  export const MOROCCO_AIRPORTS: Array<{ slug: string; iata: string; citySlug: string; name?: Record<string, string> }>;
+  export function getAirportBySlug(slug: string): { slug: string; iata: string; citySlug: string } | null;
   export function getAirportName(airport: unknown, lang: string): string;
+  export function airportRentalPath(slug: string): string;
 }
 
 declare module "@client-seo/catalog/proPages" {
@@ -183,6 +184,7 @@ declare module "@client-seo/seoLocales" {
 
 declare module "@client-seo/seoPaths" {
   export function buildSeoPath(lang: string, path: string): string;
+  export function parseSeoPath(pathname: string): { lang: "fr" | "en" | "ar"; basePath: string };
   export function getAlternateUrls(siteUrl: string, path: string): Array<{ lang: string; href: string }>;
   export const HREFLANG_MAP: Record<string, string>;
 }

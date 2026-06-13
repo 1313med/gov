@@ -2,10 +2,12 @@ import { lazy, Suspense } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import Home from "./pages/Home2.jsx";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Navbar from "./components/Navbar";
-import SeoFooter from "./components/seo/SeoFooter";
+import HomeNav from "./components/layout/HomeNav";
+import HomeSiteFooter from "./components/layout/HomeSiteFooter";
 import SeoHead from "./components/SeoHead";
 import { parseSeoPath } from "./seo/seoPaths";
+import { useTheme } from "./context/ThemeContext";
+import "./styles/home-shell.css";
 
 const Login = lazy(() => import("./pages/Login.jsx"));
 const Register = lazy(() => import("./pages/Register.jsx"));
@@ -96,12 +98,6 @@ const NO_NAV_PREFIXES = [
   "/owner-bookings",
 ];
 
-const AUTH_PATHS = [
-  "/login",
-  "/register",
-  "/forgot-password",
-];
-
 const LANG_PREFIXES = ["", "en", "ar"];
 
 function localizedPath(prefix, path) {
@@ -120,14 +116,11 @@ function publicRoutes(defs) {
 export default function App() {
   const { pathname } = useLocation();
   const { basePath } = parseSeoPath(pathname);
+  const { dark } = useTheme();
   const isHome = basePath === "/";
   const hasSidebar = NO_NAV_PREFIXES.some((p) => basePath.startsWith(p));
-  const isAuth =
-    AUTH_PATHS.includes(basePath) ||
-    basePath.startsWith("/reset-password") ||
-    basePath.startsWith("/verify-email");
-  const showNav = !isHome && !hasSidebar;
-  const showGlobalFooter = !isHome && !hasSidebar;
+  const showShell = !hasSidebar;
+  const shellClass = `hx-shell${dark ? " dark" : ""}`;
 
   const publicPages = [
     { path: "/", element: <Home /> },
@@ -214,8 +207,13 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-[#05060f] dark:text-gray-100 transition-colors duration-300">
       <SeoHead />
-      {showNav && <Navbar />}
+      {showShell && (
+        <div className={shellClass}>
+          <HomeNav />
+        </div>
+      )}
 
+      <div className={showShell && !isHome ? "hx-shell-body-offset" : ""}>
       <Suspense fallback={null}>
         <Routes>
           {publicRoutes(publicPages)}
@@ -277,7 +275,12 @@ export default function App() {
           <Route path="/owner/staff"      element={<ProtectedRoute roles={["rental_owner"]}><StaffManagementPage /></ProtectedRoute>} />
         </Routes>
       </Suspense>
-      {showGlobalFooter ? <SeoFooter /> : null}
+      </div>
+      {showShell && !isHome && (
+        <div className={shellClass}>
+          <HomeSiteFooter />
+        </div>
+      )}
     </div>
   );
 }
