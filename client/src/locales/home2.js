@@ -317,7 +317,7 @@ export const home2Dict = {
     },
     footer: {
       tag:
-        "Algeria's premium marketplace for buying, selling, and renting cars with confidence and full transparency.",
+        "Morocco's premium marketplace for buying, selling, and renting cars with confidence and full transparency.",
       platform: "Platform",
       buyCars: "Buy Cars",
       rentCars: "Rent Cars",
@@ -328,7 +328,7 @@ export const home2Dict = {
       legal: "Legal",
       terms: "Terms of Service",
       privacy: "Privacy Policy",
-      copy: "Algeria's Elite Car Marketplace",
+      copy: "Morocco's Elite Car Marketplace",
       built: "Built with care ♥",
     },
   },
@@ -652,7 +652,7 @@ export const home2Dict = {
     },
     footer: {
       tag:
-        "La marketplace premium en Algérie pour acheter, vendre et louer des voitures en toute confiance et transparence.",
+        "La marketplace premium au Maroc pour acheter, vendre et louer des voitures en toute confiance et transparence.",
       platform: "Plateforme",
       buyCars: "Acheter",
       rentCars: "Louer",
@@ -663,7 +663,7 @@ export const home2Dict = {
       legal: "Mentions",
       terms: "Conditions d’utilisation",
       privacy: "Politique de confidentialité",
-      copy: "Marketplace automobile d’élite en Algérie",
+      copy: "Marketplace automobile d’élite au Maroc",
       built: "Fait avec soin ♥",
     },
   },

@@ -29,6 +29,8 @@ const STATIC_PAGES = [
   { path: "/afford-car", priority: "0.4", changefreq: "monthly" },
   { path: "/emergency", priority: "0.4", changefreq: "monthly" },
   { path: "/vendre-ma-voiture", priority: "0.9", changefreq: "daily" },
+  { path: "/conditions-utilisation", priority: "0.3", changefreq: "yearly" },
+  { path: "/politique-confidentialite", priority: "0.3", changefreq: "yearly" },
 ];
 
 const CITIES = ["casablanca", "rabat", "marrakech", "fes", "tanger", "agadir", "meknes", "oujda"];

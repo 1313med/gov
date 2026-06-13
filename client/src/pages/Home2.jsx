@@ -10,6 +10,7 @@ import GarageFeatureShowcase from "../components/GarageFeatureShowcase";
 import HomeMobilePitch from "../components/HomeMobilePitch";
 import HeroMobileVisual from "../components/HeroMobileVisual";
 import { useMediaQuery } from "../hooks/useMediaQuery";
+import { buildSeoPath } from "../seo/seoPaths";
 
 const HERO_IMG =
   "https://images.unsplash.com/photo-1549924231-f129b911e442?w=960&q=75&auto=format&fit=crop&fm=webp";
@@ -2589,8 +2590,8 @@ function HomeInner() {
             </div>
             <div>
               <p className="hx-ft-ch">{copy.home.footer.legal}</p>
-              <span className="hx-ft-link" style={{cursor:"default"}}>{copy.home.footer.terms}</span>
-              <span className="hx-ft-link" style={{cursor:"default"}}>{copy.home.footer.privacy}</span>
+              <Link to={buildSeoPath(lang, "/conditions-utilisation")} className="hx-ft-link">{copy.home.footer.terms}</Link>
+              <Link to={buildSeoPath(lang, "/politique-confidentialite")} className="hx-ft-link">{copy.home.footer.privacy}</Link>
             </div>
           </div>
           <div className="hx-ft-bot">

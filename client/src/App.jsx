@@ -61,6 +61,8 @@ const ConditionChecklistPage = lazy(() => import("./pages/ConditionChecklistPage
 const DocScannerPage = lazy(() => import("./pages/DocScannerPage"));
 const CityLandingPage = lazy(() => import("./pages/CityLandingPage"));
 const SellCarPage = lazy(() => import("./pages/SellCarPage"));
+const TermsPage = lazy(() => import("./pages/TermsPage"));
+const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
 
 const NO_NAV_PREFIXES = [
   "/admin",
@@ -117,6 +119,8 @@ export default function App() {
     { path: "/afford-car", element: <AffordCarPage /> },
     { path: "/emergency", element: <EmergencyPage /> },
     { path: "/vendre-ma-voiture", element: <SellCarPage /> },
+    { path: "/conditions-utilisation", element: <TermsPage /> },
+    { path: "/politique-confidentialite", element: <PrivacyPage /> },
   ];
 
   const cityRoutes = LANG_PREFIXES.flatMap((prefix) => [

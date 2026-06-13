@@ -50,6 +50,8 @@ export function isPublicSeoPath(pathname) {
     "/afford-car",
     "/emergency",
     "/vendre-ma-voiture",
+    "/conditions-utilisation",
+    "/politique-confidentialite",
   ];
   if (publicExact.includes(basePath)) return true;
   if (/^\/cars\/[^/]+$/.test(basePath)) return true;

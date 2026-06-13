@@ -1,6 +1,7 @@
 import { parseSeoPath } from "./seoPaths";
 import { getCityBySlug, cityRentalPath, citySalePath } from "./cityPages";
 import { DARIJA, getCityDarija } from "./seoDarija";
+import { LEGAL_SEO } from "../locales/legal.js";
 
 export const SITE_NAME = "Goovoiture";
 export const DEFAULT_SITE_URL = "https://goovoiture.ma";
@@ -288,6 +289,7 @@ const STATIC_PAGES = {
       darija: "Bghiti nbi3 tomobil dyalek? Dder annonce 3la Goovoiture w wsel l-machetin f l-Maghrib.",
     },
   },
+  ...LEGAL_SEO,
 };
 
 function cityRentalSeo(lang, city) {
