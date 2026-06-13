@@ -2,13 +2,163 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://goovoiture.ma/pro</loc>
+    <loc>https://goovoiture.ma/agences</loc>
     <lastmod>2026-06-13</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/pro" />
-    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/pro" />
-    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/pro" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/pro" />
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/agences" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/agences" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/agences" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/agences" />
+  </url>
+  <url>
+    <loc>https://goovoiture.ma/agences/casablanca</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/agences/casablanca" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/agences/casablanca" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/agences/casablanca" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/agences/casablanca" />
+  </url>
+  <url>
+    <loc>https://goovoiture.ma/agences/rabat</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/agences/rabat" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/agences/rabat" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/agences/rabat" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/agences/rabat" />
+  </url>
+  <url>
+    <loc>https://goovoiture.ma/agences/marrakech</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/agences/marrakech" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/agences/marrakech" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/agences/marrakech" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/agences/marrakech" />
+  </url>
+  <url>
+    <loc>https://goovoiture.ma/agences/fes</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/agences/fes" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/agences/fes" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/agences/fes" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/agences/fes" />
+  </url>
+  <url>
+    <loc>https://goovoiture.ma/agences/tanger</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/agences/tanger" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/agences/tanger" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/agences/tanger" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/agences/tanger" />
+  </url>
+  <url>
+    <loc>https://goovoiture.ma/agences/agadir</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/agences/agadir" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/agences/agadir" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/agences/agadir" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/agences/agadir" />
+  </url>
+  <url>
+    <loc>https://goovoiture.ma/agences/meknes</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/agences/meknes" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/agences/meknes" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/agences/meknes" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/agences/meknes" />
+  </url>
+  <url>
+    <loc>https://goovoiture.ma/agences/oujda</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/agences/oujda" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/agences/oujda" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/agences/oujda" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/agences/oujda" />
+  </url>
+  <url>
+    <loc>https://goovoiture.ma/agences/kenitra</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/agences/kenitra" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/agences/kenitra" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/agences/kenitra" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/agences/kenitra" />
+  </url>
+  <url>
+    <loc>https://goovoiture.ma/agences/tetouan</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/agences/tetouan" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/agences/tetouan" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/agences/tetouan" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/agences/tetouan" />
+  </url>
+  <url>
+    <loc>https://goovoiture.ma/agences/sale</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/agences/sale" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/agences/sale" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/agences/sale" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/agences/sale" />
+  </url>
+  <url>
+    <loc>https://goovoiture.ma/agences/temara</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/agences/temara" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/agences/temara" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/agences/temara" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/agences/temara" />
+  </url>
+  <url>
+    <loc>https://goovoiture.ma/agences/mohammedia</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/agences/mohammedia" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/agences/mohammedia" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/agences/mohammedia" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/agences/mohammedia" />
+  </url>
+  <url>
+    <loc>https://goovoiture.ma/agences/el-jadida</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/agences/el-jadida" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/agences/el-jadida" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/agences/el-jadida" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/agences/el-jadida" />
+  </url>
+  <url>
+    <loc>https://goovoiture.ma/agences/nador</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/agences/nador" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/agences/nador" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/agences/nador" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/agences/nador" />
   </url>
 </urlset>

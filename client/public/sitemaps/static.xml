@@ -72,6 +72,26 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/pro" />
   </url>
   <url>
+    <loc>https://goovoiture.ma/agences</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/agences" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/agences" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/agences" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/agences" />
+  </url>
+  <url>
+    <loc>https://goovoiture.ma/concessionnaires</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/concessionnaires" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/concessionnaires" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/concessionnaires" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/concessionnaires" />
+  </url>
+  <url>
     <loc>https://goovoiture.ma/blog</loc>
     <lastmod>2026-06-13</lastmod>
     <changefreq>weekly</changefreq>

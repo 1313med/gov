@@ -3,7 +3,7 @@ import { getSiteUrl } from "@/lib/site";
 import Breadcrumbs from "@/components/ssr/Breadcrumbs";
 import JsonLd from "@/components/ssr/JsonLd";
 import SeoFooter from "@/components/ssr/SeoFooter";
-import { BLOG_CLUSTERS, BLOG_ARTICLES, getBlogArticle, blogArticlePath, blogClusterPath } from "@client-seo/catalog/blogArticles";
+import { BLOG_CLUSTERS, getAllBlogArticles, getBlogArticle, blogArticlePath, blogClusterPath } from "@client-seo/catalog/blogArticles";
 import { buildSeoPath } from "@client-seo/seoPaths";
 import { graphJsonLd, breadcrumbJsonLd, articleJsonLd } from "@client-seo/jsonLd";
 
@@ -55,7 +55,7 @@ export function BlogHubView({ lang }: { lang: SeoLang }) {
               </a>
             </h2>
             <ul className="space-y-2">
-              {BLOG_ARTICLES.filter((a: { cluster: string }) => a.cluster === cluster.slug).map(
+              {getAllBlogArticles().filter((a: { cluster: string }) => a.cluster === cluster.slug).slice(0, 12).map(
                 (a: { slug: string; title: Record<string, string> }) => (
                   <li key={a.slug}>
                     <a href={buildSeoPath(lang, blogArticlePath(a.slug))} className="text-violet-600 hover:underline">

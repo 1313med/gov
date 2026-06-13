@@ -2,11 +2,15 @@ const asyncHandler = require("express-async-handler");
 const User = require("../models/User");
 const SaleListing = require("../models/SaleListing");
 const RentalListing = require("../models/RentalListing");
+const Review = require("../models/Review");
 const {
   getUserRoles,
   getPrimaryRole,
   normalizeRoleSlug,
+  hasUserRole,
 } = require("../utils/userRoles");
+const { getCityNameFromSlug, getCitySlugFromName, cityNameMatchesSlug } = require("../utils/citySlugs");
+const { buildAgencyPath, buildDealerPath } = require("../utils/seoSlugs");
 
 // ── SALE FAVORITES ─────────────────────────────────────────────────────────
 
@@ -142,14 +146,208 @@ exports.updateNationalId = asyncHandler(async (req, res) => {
 
 // ── SELLER PROFILE (PUBLIC) ────────────────────────────────────────────────
 
+async function reviewStatsForUser(userId) {
+  const reviews = await Review.find({ targetId: userId, targetModel: "User" })
+    .populate("authorId", "name avatar")
+    .sort({ createdAt: -1 })
+    .limit(20)
+    .lean();
+  const total = reviews.length;
+  const avgRating =
+    total > 0 ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / total) * 10) / 10 : 0;
+  return { reviews, avgRating, total };
+}
+
+function rentalCategoriesFromFleet(rentals) {
+  const cats = new Set();
+  for (const r of rentals) {
+    if (r.fuel) cats.add(String(r.fuel));
+    if (r.gearbox) cats.add(String(r.gearbox));
+    if (Number(r.seats) >= 7) cats.add("7+ places");
+    else if (Number(r.seats) >= 5) cats.add("5 places");
+  }
+  return [...cats].slice(0, 8);
+}
+
+async function enrichProfessional(user, kind, fleetSize) {
+  const stats = await reviewStatsForUser(user._id);
+  const citySlug = getCitySlugFromName(user.city) || "casablanca";
+  const path =
+    kind === "agency"
+      ? buildAgencyPath(citySlug, user.name, user._id)
+      : buildDealerPath(citySlug, user.name, user._id);
+  return {
+    _id: user._id,
+    name: user.name,
+    city: user.city,
+    citySlug,
+    bio: user.bio,
+    avatar: user.avatar,
+    phone: user.phone,
+    email: user.email,
+    fleetSize,
+    path,
+    avgRating: stats.avgRating,
+    reviewCount: stats.total,
+    verified: Boolean(user.nationalId?.verified || user.driverLicense?.verified),
+  };
+}
+
+exports.listAgencies = asyncHandler(async (req, res) => {
+  const citySlug = req.query.city || null;
+  const cityName = citySlug ? getCityNameFromSlug(citySlug) : null;
+
+  const ownerIds = await RentalListing.distinct("rentalOwnerId", {
+    status: "approved",
+    deletedAt: null,
+  });
+
+  const users = await User.find({
+    _id: { $in: ownerIds },
+    deletedAt: null,
+  })
+    .select("name phone email city bio avatar nationalId driverLicense roles role")
+    .limit(200)
+    .lean();
+
+  const filtered = cityName
+    ? users.filter((u) => cityNameMatchesSlug(u.city, citySlug))
+    : users;
+
+  const agencies = await Promise.all(
+    filtered.map(async (u) => {
+      const fleetSize = await RentalListing.countDocuments({
+        rentalOwnerId: u._id,
+        status: "approved",
+        deletedAt: null,
+      });
+      if (fleetSize < 1) return null;
+      return enrichProfessional(u, "agency", fleetSize);
+    })
+  );
+
+  res.json({ agencies: agencies.filter(Boolean) });
+});
+
+exports.listDealers = asyncHandler(async (req, res) => {
+  const citySlug = req.query.city || null;
+  const cityName = citySlug ? getCityNameFromSlug(citySlug) : null;
+
+  const sellerIds = await SaleListing.distinct("sellerId", {
+    status: "approved",
+    deletedAt: null,
+  });
+
+  const users = await User.find({
+    _id: { $in: sellerIds },
+    deletedAt: null,
+  })
+    .select("name phone email city bio avatar nationalId driverLicense roles role")
+    .limit(200)
+    .lean();
+
+  const filtered = cityName
+    ? users.filter((u) => cityNameMatchesSlug(u.city, citySlug))
+    : users;
+
+  const dealers = await Promise.all(
+    filtered.map(async (u) => {
+      const inventory = await SaleListing.countDocuments({
+        sellerId: u._id,
+        status: "approved",
+        deletedAt: null,
+      });
+      if (inventory < 1) return null;
+      return enrichProfessional(u, "dealer", inventory);
+    })
+  );
+
+  res.json({ dealers: dealers.filter(Boolean) });
+});
+
 exports.getSellerProfile = asyncHandler(async (req, res) => {
-  const seller = await User.findById(req.params.id).select("name phone city role bio avatar");
+  const seller = await User.findById(req.params.id).select(
+    "name phone email city role roles bio avatar nationalId driverLicense"
+  );
   if (!seller) return res.status(404).json({ message: "Seller not found" });
 
-  const [listings, rentalListings] = await Promise.all([
+  const [listings, rentalListings, reviewData] = await Promise.all([
     SaleListing.find({ sellerId: seller._id, status: "approved" }).sort({ createdAt: -1 }),
     RentalListing.find({ rentalOwnerId: seller._id, status: "approved" }).sort({ createdAt: -1 }),
+    reviewStatsForUser(seller._id),
   ]);
 
-  res.json({ seller, listings, rentalListings });
+  const citySlug = getCitySlugFromName(seller.city) || "casablanca";
+  const isAgency = rentalListings.length > 0 && hasUserRole(seller, "rental_owner");
+  const isDealer = listings.length > 0 && hasUserRole(seller, "car_owner");
+  const kind = isAgency ? "agency" : isDealer ? "dealer" : "seller";
+
+  const relatedQuery = {
+    _id: { $ne: seller._id },
+    deletedAt: null,
+    city: seller.city ? new RegExp(seller.city.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i") : /.*/,
+  };
+
+  let related = [];
+  if (kind === "agency") {
+    const ids = await RentalListing.distinct("rentalOwnerId", {
+      status: "approved",
+      deletedAt: null,
+      rentalOwnerId: { $ne: seller._id },
+    });
+    const users = await User.find({ _id: { $in: ids.slice(0, 20) }, ...relatedQuery })
+      .select("name city avatar")
+      .limit(6)
+      .lean();
+    related = await Promise.all(
+      users.map(async (u) => {
+        const fleetSize = await RentalListing.countDocuments({
+          rentalOwnerId: u._id,
+          status: "approved",
+          deletedAt: null,
+        });
+        return enrichProfessional(u, "agency", fleetSize);
+      })
+    );
+  } else if (kind === "dealer") {
+    const ids = await SaleListing.distinct("sellerId", {
+      status: "approved",
+      deletedAt: null,
+      sellerId: { $ne: seller._id },
+    });
+    const users = await User.find({ _id: { $in: ids.slice(0, 20) }, ...relatedQuery })
+      .select("name city avatar")
+      .limit(6)
+      .lean();
+    related = await Promise.all(
+      users.map(async (u) => {
+        const inventory = await SaleListing.countDocuments({
+          sellerId: u._id,
+          status: "approved",
+          deletedAt: null,
+        });
+        return enrichProfessional(u, "dealer", inventory);
+      })
+    );
+  }
+
+  res.json({
+    seller,
+    kind,
+    citySlug,
+    agencyPath: isAgency ? buildAgencyPath(citySlug, seller.name, seller._id) : null,
+    dealerPath: isDealer ? buildDealerPath(citySlug, seller.name, seller._id) : null,
+    listings,
+    rentalListings,
+    fleetSize: rentalListings.length,
+    inventoryCount: listings.length,
+    rentalCategories: rentalCategoriesFromFleet(rentalListings),
+    openingHours: "Lun–Sam 9h–19h",
+    address: seller.city ? `${seller.city}, Maroc` : "Maroc",
+    reviews: reviewData.reviews,
+    avgRating: reviewData.avgRating,
+    reviewCount: reviewData.total,
+    verified: Boolean(seller.nationalId?.verified || seller.driverLicense?.verified),
+    related: related.filter(Boolean),
+  });
 });

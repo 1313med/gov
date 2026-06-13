@@ -4,6 +4,8 @@
 import { writeFileSync, mkdirSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
+import { getAllBlogArticles } from "../src/seo/catalog/blogArticles.js";
+import { getAllComparisons } from "../src/seo/catalog/comparisons.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const publicDir = join(__dirname, "..", "public");
@@ -73,6 +75,8 @@ const STATIC_PAGES = [
   { path: "/cars", priority: "0.9", changefreq: "daily" },
   { path: "/vendre-ma-voiture", priority: "0.9", changefreq: "daily" },
   { path: "/pro", priority: "0.85", changefreq: "weekly" },
+  { path: "/agences", priority: "0.85", changefreq: "weekly" },
+  { path: "/concessionnaires", priority: "0.85", changefreq: "weekly" },
   { path: "/blog", priority: "0.7", changefreq: "weekly" },
   { path: "/a-propos", priority: "0.5", changefreq: "monthly" },
   { path: "/equipe", priority: "0.4", changefreq: "monthly" },
@@ -266,9 +270,14 @@ async function main() {
   shardFiles.push("pro.xml");
 
   // blog.xml
-  const blogUrls = [urlEntry("/blog", "0.7", "weekly"), ...BLOG_ARTICLES.map((a) => urlEntry(`/blog/${a.cluster}/${a.slug}`, "0.6", "monthly"))];
+  const allArticles = getAllBlogArticles();
+  const blogUrls = [urlEntry("/blog", "0.7", "weekly"), ...allArticles.map((a) => urlEntry(`/blog/${a.cluster}/${a.slug}`, "0.6", "monthly"))];
   writeShard("blog.xml", blogUrls);
   shardFiles.push("blog.xml");
+
+  const compUrls = getAllComparisons().map((c) => urlEntry(c.path, "0.65", "monthly"));
+  writeShard("comparisons.xml", compUrls);
+  shardFiles.push("comparisons.xml");
 
   // listings-rental.xml (sharded if needed)
   const rentalListingBlocks = [];
@@ -302,9 +311,37 @@ async function main() {
     shardFiles.push("listings-sale.xml");
   }
 
-  // agencies.xml / dealers.xml — placeholder hubs (expand when agency API available)
-  writeShard("agencies.xml", [urlEntry("/pro", "0.5", "monthly")]);
-  writeShard("dealers.xml", [urlEntry("/voiture-occasion", "0.5", "monthly")]);
+  // agencies.xml / dealers.xml
+  let agencyUrls = [
+    urlEntry("/agences", "0.85", "weekly"),
+    ...CITIES.slice(0, 15).map((c) => urlEntry(`/agences/${c}`, "0.8", "weekly")),
+  ];
+  let dealerUrls = [
+    urlEntry("/concessionnaires", "0.85", "weekly"),
+    ...CITIES.slice(0, 15).map((c) => urlEntry(`/concessionnaires/${c}`, "0.8", "weekly")),
+  ];
+  try {
+    const [agRes, deRes] = await Promise.all([
+      fetch(`${API_BASE}/user/agencies`),
+      fetch(`${API_BASE}/user/dealers`),
+    ]);
+    if (agRes.ok) {
+      const { agencies } = await agRes.json();
+      for (const a of agencies || []) {
+        if (a.path) agencyUrls.push(urlEntry(a.path, "0.75", "weekly"));
+      }
+    }
+    if (deRes.ok) {
+      const { dealers } = await deRes.json();
+      for (const d of dealers || []) {
+        if (d.path) dealerUrls.push(urlEntry(d.path, "0.75", "weekly"));
+      }
+    }
+  } catch {
+    /* API optional at build time */
+  }
+  writeShard("agencies.xml", agencyUrls);
+  writeShard("dealers.xml", dealerUrls);
   shardFiles.push("agencies.xml", "dealers.xml");
 
   const indexEntries = shardFiles.map(

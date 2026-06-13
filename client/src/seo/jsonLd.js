@@ -162,7 +162,7 @@ export function breadcrumbJsonLd(items) {
   };
 }
 
-export function localBusinessJsonLd({ name, cityName, siteUrl, pageUrl, ratingValue, reviewCount }) {
+export function localBusinessJsonLd({ name, cityName, siteUrl, pageUrl, ratingValue, reviewCount, phone, email, address }) {
   const graph = {
     "@context": "https://schema.org",
     "@type": "AutoRental",
@@ -170,6 +170,9 @@ export function localBusinessJsonLd({ name, cityName, siteUrl, pageUrl, ratingVa
     url: pageUrl,
     areaServed: cityName,
     parentOrganization: { "@type": "Organization", name: SITE_NAME, url: siteUrl },
+    telephone: phone || undefined,
+    email: email || undefined,
+    address: address ? { "@type": "PostalAddress", addressLocality: cityName, addressCountry: "MA" } : undefined,
   };
   if (ratingValue && reviewCount >= 1) {
     graph.aggregateRating = {
@@ -181,15 +184,51 @@ export function localBusinessJsonLd({ name, cityName, siteUrl, pageUrl, ratingVa
   return graph;
 }
 
-export function autoDealerJsonLd({ name, cityName, siteUrl, pageUrl }) {
-  return {
+export function autoDealerJsonLd({ name, cityName, siteUrl, pageUrl, ratingValue, reviewCount, phone, email, address }) {
+  const graph = {
     "@context": "https://schema.org",
     "@type": "AutoDealer",
     name,
     url: pageUrl,
     areaServed: cityName,
     parentOrganization: { "@type": "Organization", name: SITE_NAME, url: siteUrl },
+    telephone: phone || undefined,
+    email: email || undefined,
+    address: address ? { "@type": "PostalAddress", addressLocality: cityName, addressCountry: "MA" } : undefined,
   };
+  if (ratingValue && reviewCount >= 1) {
+    graph.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: String(ratingValue),
+      reviewCount: String(reviewCount),
+    };
+  }
+  return graph;
+}
+
+export function reviewJsonLd({ authorName, rating, body, datePublished, itemReviewed }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Review",
+    author: { "@type": "Person", name: authorName || "Client GoVoiture" },
+    reviewRating: { "@type": "Rating", ratingValue: String(rating), bestRating: "5" },
+    reviewBody: body,
+    datePublished,
+    itemReviewed,
+  };
+}
+
+export function reviewsGraphJsonLd(reviews, itemReviewed) {
+  if (!reviews?.length) return null;
+  return reviews.slice(0, 5).map((r) =>
+    reviewJsonLd({
+      authorName: r.authorName,
+      rating: r.rating,
+      body: r.body,
+      datePublished: r.datePublished,
+      itemReviewed,
+    })
+  );
 }
 
 export function softwareApplicationJsonLd({ name, description, url, price, currency = "MAD" }) {

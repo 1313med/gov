@@ -1,4 +1,7 @@
 /** Blog articles for topical authority (expand to 200+). */
+import { CAR_BRANDS } from "./brands.js";
+import { MOROCCO_CITIES } from "./cities.js";
+
 export const BLOG_CLUSTERS = [
   { slug: "location-voiture", name: { fr: "Location voiture", en: "Car rental", ar: "تأجير السيارات" } },
   { slug: "voiture-occasion", name: { fr: "Voiture occasion", en: "Used cars", ar: "سيارات مستعملة" } },
@@ -87,12 +90,174 @@ export const BLOG_ARTICLES = [
   },
 ];
 
+/** Programmatic buyer/seller/insurance guides — scales toward 200+ articles. */
+const GUIDE_TEMPLATES = {
+  "achat-occasion": {
+    cluster: "voiture-occasion",
+    topics: [
+      { slug: "comment-acheter-voiture-occasion-maroc", title: { fr: "Comment acheter une voiture d'occasion au Maroc" } },
+      { slug: "meilleure-voiture-occasion-maroc", title: { fr: "Meilleure voiture d'occasion au Maroc" } },
+      { slug: "suv-occasion-maroc", title: { fr: "SUV occasion Maroc" } },
+      { slug: "citadine-occasion-maroc", title: { fr: "Citadine occasion Maroc" } },
+      { slug: "checklist-achat-voiture-occasion", title: { fr: "Checklist achat voiture occasion" } },
+    ],
+  },
+  vente: {
+    cluster: "voiture-occasion",
+    topics: [
+      { slug: "comment-vendre-sa-voiture-maroc", title: { fr: "Comment vendre sa voiture au Maroc" } },
+      { slug: "transfert-propriete-maroc", title: { fr: "Transfert de propriété Maroc" } },
+      { slug: "documents-vente-voiture-maroc", title: { fr: "Documents vente voiture Maroc" } },
+    ],
+  },
+  assurance: {
+    cluster: "conduire-au-maroc",
+    topics: [{ slug: "assurance-automobile-maroc", title: { fr: "Assurance automobile Maroc" } }],
+  },
+  financement: {
+    cluster: "voiture-occasion",
+    topics: [
+      { slug: "credit-auto-maroc", title: { fr: "Crédit auto Maroc" } },
+      { slug: "financement-voiture-maroc", title: { fr: "Financement voiture Maroc" } },
+    ],
+  },
+  entretien: {
+    cluster: "conduire-au-maroc",
+    topics: [
+      { slug: "controle-technique-maroc", title: { fr: "Contrôle technique Maroc" } },
+      { slug: "entretien-voiture-maroc", title: { fr: "Entretien voiture Maroc" } },
+    ],
+  },
+};
+
+function generatedGuides() {
+  const out = [];
+  for (const group of Object.values(GUIDE_TEMPLATES)) {
+    for (const t of group.topics) {
+      const titleFr = t.title.fr;
+      out.push({
+        slug: t.slug,
+        cluster: group.cluster,
+        title: { fr: `${titleFr} | GoVoiture`, en: titleFr, ar: titleFr },
+        description: {
+          fr: `Guide complet : ${titleFr.toLowerCase()}. Conseils pratiques sur GoVoiture.`,
+          en: `Guide: ${titleFr}.`,
+          ar: `دليل: ${titleFr}.`,
+        },
+        keyword: { fr: t.slug.replace(/-/g, " "), en: t.slug, ar: t.slug },
+        body: {
+          fr: `${titleFr} : lisez notre guide pratique pour le marché automobile marocain sur GoVoiture.`,
+          en: `${titleFr} — practical guide for Morocco.`,
+          ar: `${titleFr} — دليل عملي للمغرب.`,
+        },
+      });
+    }
+  }
+  // City × topic expansion for location cluster
+  const cities = ["casablanca", "rabat", "marrakech", "tanger", "agadir", "fes"];
+  for (const city of cities) {
+    out.push({
+      slug: `location-voiture-${city}-guide`,
+      cluster: "location-voiture",
+      title: { fr: `Location voiture ${city} — guide`, en: `Car rental ${city} guide`, ar: `كراء ${city}` },
+      description: { fr: `Tout savoir pour louer à ${city}.`, en: `Rent in ${city}.`, ar: `كراء في ${city}.` },
+      keyword: { fr: `location voiture ${city}`, en: `car rental ${city}`, ar: `كراء ${city}` },
+      body: { fr: `Guide location voiture à ${city}.`, en: `Rental guide ${city}.`, ar: `دليل ${city}.` },
+    });
+  }
+
+  // Brand authority guides (30 brands × 4 topics ≈ 120 articles)
+  const brandTopics = [
+    { suffix: "location-maroc", title: (b) => `Location ${b} Maroc`, cluster: "location-voiture" },
+    { suffix: "occasion-maroc", title: (b) => `${b} occasion Maroc`, cluster: "voiture-occasion" },
+    { suffix: "prix-maroc", title: (b) => `Prix ${b} au Maroc`, cluster: "voiture-occasion" },
+    { suffix: "fiabilite-maroc", title: (b) => `Fiabilité ${b} au Maroc`, cluster: "conduire-au-maroc" },
+  ];
+  for (const brand of CAR_BRANDS) {
+    const bName = brand.name.fr;
+    for (const topic of brandTopics) {
+      out.push({
+        slug: `${brand.slug}-${topic.suffix}`,
+        cluster: topic.cluster,
+        title: { fr: `${topic.title(bName)} | GoVoiture`, en: topic.title(bName), ar: topic.title(bName) },
+        description: {
+          fr: `Guide ${bName} au Maroc : location, occasion, prix et conseils pratiques.`,
+          en: `${bName} guide for Morocco.`,
+          ar: `دليل ${bName} في المغرب.`,
+        },
+        keyword: { fr: `${bName.toLowerCase()} maroc`, en: `${brand.slug} morocco`, ar: brand.slug },
+        body: {
+          fr: `Tout sur ${bName} au Maroc — comparez les offres GoVoiture.`,
+          en: `Everything about ${bName} in Morocco on GoVoiture.`,
+          ar: `كل ما يخص ${bName} في المغرب.`,
+        },
+      });
+    }
+  }
+
+  // City × occasion guides (45 cities)
+  for (const city of MOROCCO_CITIES) {
+    const cityN = city.name.fr;
+    out.push({
+      slug: `voiture-occasion-${city.slug}`,
+      cluster: "voiture-occasion",
+      title: { fr: `Voiture occasion ${cityN}`, en: `Used cars ${cityN}`, ar: `سيارات مستعملة ${cityN}` },
+      description: {
+        fr: `Acheter une voiture d'occasion à ${cityN} — annonces vérifiées GoVoiture.`,
+        en: `Buy used cars in ${cityN}.`,
+        ar: `شراء سيارة مستعملة في ${cityN}.`,
+      },
+      keyword: { fr: `voiture occasion ${city.slug}`, en: `used cars ${city.slug}`, ar: city.slug },
+      body: {
+        fr: `Parcourez les annonces occasion à ${cityN} sur GoVoiture.`,
+        en: `Browse used car listings in ${cityN}.`,
+        ar: `تصفح إعلانات ${cityN}.`,
+      },
+    });
+  }
+
+  // Model guides (top 3 models per brand)
+  for (const brand of CAR_BRANDS) {
+    for (const model of brand.models.slice(0, 3)) {
+      const modelN = model.replace(/-/g, " ");
+      out.push({
+        slug: `${brand.slug}-${model}-guide`,
+        cluster: "voiture-occasion",
+        title: {
+          fr: `${brand.name.fr} ${modelN} — guide Maroc`,
+          en: `${brand.name.en} ${modelN} Morocco guide`,
+          ar: `${brand.name.ar} ${modelN}`,
+        },
+        description: {
+          fr: `Location et occasion ${brand.name.fr} ${modelN} au Maroc.`,
+          en: `${brand.name.en} ${modelN} in Morocco.`,
+          ar: `${brand.name.ar} ${modelN} في المغرب.`,
+        },
+        keyword: { fr: `${brand.name.fr} ${modelN} maroc`, en: `${brand.slug} ${model}`, ar: model },
+        body: {
+          fr: `Comparez ${brand.name.fr} ${modelN} — location et vente sur GoVoiture.`,
+          en: `Compare ${brand.name.en} ${modelN} on GoVoiture.`,
+          ar: `قارن ${brand.name.fr} ${modelN}.`,
+        },
+      });
+    }
+  }
+
+  return out;
+}
+
+export function getAllBlogArticles() {
+  const seen = new Set(BLOG_ARTICLES.map((a) => a.slug));
+  const extra = generatedGuides().filter((a) => !seen.has(a.slug));
+  return [...BLOG_ARTICLES, ...extra];
+}
+
 export function getBlogArticle(slug) {
-  return BLOG_ARTICLES.find((a) => a.slug === slug) || null;
+  return getAllBlogArticles().find((a) => a.slug === slug) || null;
 }
 
 export function getClusterArticles(clusterSlug) {
-  return BLOG_ARTICLES.filter((a) => a.cluster === clusterSlug);
+  return getAllBlogArticles().filter((a) => a.cluster === clusterSlug);
 }
 
 export function blogArticlePath(slug) {

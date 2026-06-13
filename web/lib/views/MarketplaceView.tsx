@@ -121,7 +121,7 @@ export async function MarketplaceView({
     const raw =
       intent === "rental"
         ? await fetchRentals(city.name.fr)
-        : await fetchSales(city.name.fr, 12);
+        : await fetchSales(city.name.fr, undefined, 12);
     const listings = raw.slice(0, 12);
     const pageUrl = `${siteUrl}${buildSeoPath(lang, basePath)}`;
 
@@ -187,7 +187,7 @@ export async function MarketplaceView({
   }
 
   const raw =
-    intent === "rental" ? await fetchRentals(city.name.fr) : await fetchSales(city.name.fr, 100);
+    intent === "rental" ? await fetchRentals(city.name.fr) : await fetchSales(city.name.fr, undefined, 100);
   const listings = filterListings(raw, {
     city,
     brand: facet.type === "brand" ? facet.data : model?.brand,

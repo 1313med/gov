@@ -1,13 +1,14 @@
 import { notFound } from "next/navigation";
 import type { SeoLang } from "@/lib/site";
 import { getSiteUrl } from "@/lib/site";
-import { fetchRentalById, fetchSaleById } from "@/lib/api";
+import { fetchRentalById, fetchSaleById, fetchReviews } from "@/lib/api";
 import Breadcrumbs from "@/components/ssr/Breadcrumbs";
 import JsonLd from "@/components/ssr/JsonLd";
+import ReviewsSection from "@/components/ssr/ReviewsSection";
 import SeoFooter from "@/components/ssr/SeoFooter";
 import { parseSemanticListingParam, buildRentalListingPath, buildSaleListingPath } from "@client-seo/slugUtils";
 import { buildSeoPath } from "@client-seo/seoPaths";
-import { graphJsonLd, vehicleJsonLd, breadcrumbJsonLd } from "@client-seo/jsonLd";
+import { graphJsonLd, vehicleJsonLd, breadcrumbJsonLd, reviewsGraphJsonLd } from "@client-seo/jsonLd";
 
 type Intent = "rental" | "sale";
 
@@ -38,7 +39,11 @@ export default async function ListingView({
   const { id } = parseSemanticListingParam(listingSlug);
   if (!id) notFound();
 
-  const listing = intent === "rental" ? await fetchRentalById(id) : await fetchSaleById(id);
+  const targetModel = intent === "rental" ? "RentalListing" : "SaleListing";
+  const [listing, reviewData] = await Promise.all([
+    intent === "rental" ? fetchRentalById(id) : fetchSaleById(id),
+    fetchReviews(targetModel, id),
+  ]);
   if (!listing) notFound();
 
   const siteUrl = getSiteUrl();
@@ -49,6 +54,18 @@ export default async function ListingView({
   const title = `${listing.brand} ${listing.model} ${listing.year}`;
   const price = intent === "rental" ? listing.pricePerDay : listing.price;
   const image = Array.isArray(listing.images) ? listing.images[0] : null;
+  const itemReviewed = { "@type": "Vehicle", name: title, url: pageUrl };
+
+  const reviewNodes = reviewsGraphJsonLd(
+    (reviewData.reviews || []).map((r) => ({
+      authorName: r.authorId?.name || "Client GoVoiture",
+      rating: r.rating,
+      body: r.comment || "",
+      datePublished: r.createdAt ? new Date(r.createdAt).toISOString().slice(0, 10) : undefined,
+      itemReviewed,
+    })),
+    itemReviewed
+  );
 
   return (
     <>
@@ -68,12 +85,15 @@ export default async function ListingView({
             fuel: listing.fuel,
             transmission: listing.gearbox,
             intent,
+            ratingValue: reviewData.avgRating,
+            reviewCount: reviewData.total,
           }),
           breadcrumbJsonLd([
             { name: "GoVoiture", url: siteUrl },
             { name: hubLabel, url: `${siteUrl}${buildSeoPath(lang, hubPath)}` },
             { name: title, url: pageUrl },
-          ])
+          ]),
+          ...(Array.isArray(reviewNodes) ? reviewNodes : reviewNodes ? [reviewNodes] : [])
         )}
       />
       <main className="mx-auto max-w-4xl px-4 py-10">
@@ -103,6 +123,14 @@ export default async function ListingView({
           {listing.seats ? <li><strong>Places:</strong> {listing.seats}</li> : null}
           {listing.mileage ? <li><strong>Kilométrage:</strong> {Number(listing.mileage).toLocaleString()} km</li> : null}
         </ul>
+
+        <ReviewsSection
+          reviews={reviewData.reviews || []}
+          avgRating={reviewData.avgRating}
+          reviewCount={reviewData.total}
+          lang={lang}
+        />
+
         <a href={hubPath} className="inline-block px-6 py-3 bg-violet-600 text-white rounded-xl font-semibold">
           {intent === "rental" ? "Voir plus d'offres" : "Voir plus d'annonces"}
         </a>

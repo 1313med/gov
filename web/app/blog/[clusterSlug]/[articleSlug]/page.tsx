@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { buildPageMetadata } from "@/lib/metadata";
 import { BlogArticleView, blogArticleMetadata } from "@/lib/views/BlogView";
-import { BLOG_ARTICLES } from "@client-seo/catalog/blogArticles";
+import { getAllBlogArticles } from "@client-seo/catalog/blogArticles";
 
 export const revalidate = 86400;
 
@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export async function generateStaticParams() {
-  return BLOG_ARTICLES.map((a: { cluster: string; slug: string }) => ({
+  return getAllBlogArticles().map((a: { cluster: string; slug: string }) => ({
     clusterSlug: a.cluster,
     articleSlug: a.slug,
   }));

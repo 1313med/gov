@@ -63,6 +63,14 @@ declare module "@client-seo/catalog/blogArticles" {
     keyword?: Record<string, string>;
     body: Record<string, string>;
   }>;
+  export function getAllBlogArticles(): Array<{
+    slug: string;
+    cluster: string;
+    title: Record<string, string>;
+    description: Record<string, string>;
+    keyword?: Record<string, string>;
+    body: Record<string, string>;
+  }>;
   export function getBlogArticle(slug: string): {
     slug: string;
     cluster: string;
@@ -71,8 +79,67 @@ declare module "@client-seo/catalog/blogArticles" {
     keyword?: Record<string, string>;
     body: Record<string, string>;
   } | null;
+  export function getClusterArticles(clusterSlug: string): Array<{
+    slug: string;
+    cluster: string;
+    title: Record<string, string>;
+  }>;
   export function blogArticlePath(slug: string): string;
   export function blogClusterPath(clusterSlug: string): string;
+}
+
+declare module "@client-seo/catalog/comparisons" {
+  export type ComparisonData = {
+    slug: string;
+    path: string;
+    brandA: string;
+    modelA: string;
+    brandB: string;
+    modelB: string;
+    nameA: string;
+    nameB: string;
+    title: string;
+    description: string;
+    h1: string;
+    intro: string;
+    strengthsA: string[];
+    strengthsB: string[];
+    weaknessesA: string[];
+    weaknessesB: string[];
+    specs: Array<{ label: string; a: string; b: string }>;
+    faqs: Array<{ q: string; a: string }>;
+  };
+  export function getAllComparisons(): ComparisonData[];
+  export function getComparisonBySlug(slug: string): ComparisonData | null;
+  export function getComparisonsForBrand(brandSlug: string, modelSlug?: string | null, limit?: number): ComparisonData[];
+  export function buildComparisonData(slug: string): ComparisonData | null;
+}
+
+declare module "@client-seo/catalog/professionals" {
+  export function buildAgencyHubSeo(
+    lang: string,
+    citySlug?: string | null
+  ): {
+    title: string;
+    description: string;
+    h1: string;
+    intro: string;
+    keywords: string;
+    path: string;
+  } | null;
+  export function buildDealerHubSeo(
+    lang: string,
+    citySlug?: string | null
+  ): {
+    title: string;
+    description: string;
+    h1: string;
+    intro: string;
+    keywords: string;
+    path: string;
+  } | null;
+  export function agencyFaqs(lang: string, cityName?: string): Array<{ q: string; a: string }>;
+  export function dealerFaqs(lang: string, cityName?: string): Array<{ q: string; a: string }>;
 }
 
 declare module "@client-seo/programmaticSeo" {
@@ -124,6 +191,8 @@ declare module "@client-seo/jsonLd" {
   export function organizationJsonLd(siteUrl?: string): object;
   export function webSiteJsonLd(siteUrl?: string): object;
   export function vehicleJsonLd(opts: Record<string, unknown>): object;
+  export function reviewJsonLd(opts: Record<string, unknown>): object;
+  export function reviewsGraphJsonLd(reviews: unknown, itemReviewed: unknown): unknown;
 }
 
 declare module "@client-seo/slugUtils" {
@@ -136,7 +205,17 @@ declare module "@client-seo/slugUtils" {
 }
 
 declare module "@client-seo/internalLinks" {
-  export const SEO_FOOTER_LINKS: unknown;
+  export const ENTITY_HUBS: Record<string, { path: string; label: Record<string, string> }>;
+  export function topCityLinks(limit?: number): Array<{
+    slug: string;
+    name: Record<string, string>;
+    rentalPath: string;
+    salePath: string;
+    agencyPath: string;
+    dealerPath: string;
+  }>;
+  export function topBrandLinks(limit?: number): Array<{ slug: string; name: Record<string, string>; path: string }>;
+  export function proLinks(limit?: number): Array<{ slug: string; title: Record<string, string>; path: string }>;
 }
 
 declare module "@client-seo/catalog/hubs" {

@@ -4,7 +4,7 @@ const { protect } = require("../middlewares/authMiddleware");
 const {
   addFavorite, removeFavorite, getFavorites,
   addRentalFavorite, removeRentalFavorite, getRentalFavorites,
-  getSellerProfile,
+  getSellerProfile, listAgencies, listDealers,
   getMyProfile, updateMyProfile, addMyRole,
   updateDriverLicense, updateNationalId,
 } = require("../controllers/userController");
@@ -26,7 +26,9 @@ router.get("/rental-favorites", protect, getRentalFavorites);
 router.post("/rental-favorites/:id", protect, addRentalFavorite);
 router.delete("/rental-favorites/:id", protect, removeRentalFavorite);
 
-// Public seller profile
+// Public seller / professional profiles
+router.get("/agencies", listAgencies);
+router.get("/dealers", listDealers);
 router.get("/seller/:id", getSellerProfile);
 
 module.exports = router;
