@@ -5,6 +5,7 @@ import { useAppLang } from "../context/AppLangContext";
 import { useTheme } from "../context/ThemeContext";
 import SeoContentBlock from "../components/SeoContentBlock";
 import SeoFooter from "../components/seo/SeoFooter";
+import HomeFaqSection from "../components/seo/HomeFaqSection";
 import AppPhoneShowcase from "../components/AppPhoneShowcase";
 import AppStoreBadges from "../components/AppStoreBadges";
 import GarageFeatureShowcase from "../components/GarageFeatureShowcase";
@@ -2567,6 +2568,8 @@ function HomeInner() {
       </section>
 
       {/* ═══ FOOTER ═══ */}
+      {/* ═══ SEO: FAQ + city links ═══ */}
+      <HomeFaqSection />
       <SeoContentBlock />
       <SeoFooter />
       <footer className="hx-ft">

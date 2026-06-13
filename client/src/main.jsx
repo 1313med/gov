@@ -9,6 +9,9 @@ import App from "./App.jsx";
 import "./index.css";
 import "./styles/theme-screens.css";
 
+// Remove static SEO prerender shell once React mounts (keeps view-source rich for crawlers).
+document.getElementById("goovoiture-seo-prerender")?.remove();
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>

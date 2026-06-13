@@ -7,7 +7,8 @@ import {
   SITE_NAME,
 } from "../seo/seoLocales";
 import { getAlternateUrls, parseSeoPath, isPublicSeoPath, buildSeoPath } from "../seo/seoPaths";
-import { mergeJsonLd, organizationJsonLd, webSiteJsonLd } from "../seo/jsonLd";
+import { mergeJsonLd, organizationJsonLd, webSiteJsonLd, faqPageJsonLd } from "../seo/jsonLd";
+import { defaultFaqs } from "../seo/programmaticSeo";
 
 const OG_LOCALE = { fr: "fr_MA", en: "en_MA", ar: "ar_MA" };
 const OG_ALT = { fr: ["en_MA", "ar_MA"], en: ["fr_MA", "ar_MA"], ar: ["fr_MA", "en_MA"] };
@@ -122,11 +123,11 @@ export default function SeoHead({ override = null, jsonLdExtra = null }) {
     }
 
     if (!noindex) {
+      const isHome = pathname === "/" || parseSeoPath(pathname).basePath === "/";
       const graphs = mergeJsonLd(
         organizationJsonLd(siteUrl),
-        pathname === "/" || parseSeoPath(pathname).basePath === "/"
-          ? webSiteJsonLd(siteUrl)
-          : null,
+        isHome ? webSiteJsonLd(siteUrl) : null,
+        isHome ? faqPageJsonLd(defaultFaqs(lang, { cityName: "Maroc", intent: "rental" })) : null,
         jsonLdExtra
       );
       upsertJsonLd(graphs.length === 1 ? graphs[0] : { "@context": "https://schema.org", "@graph": graphs });
