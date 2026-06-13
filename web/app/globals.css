@@ -5,7 +5,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ═══ Goovoiture design tokens (Home2 source of truth) ═══ */
 :root {
   --gv-bg: #f6f8ff;
   --gv-bg2: #eef1fb;
@@ -30,24 +29,24 @@
   --gv-shadow: 0 4px 24px rgba(7, 14, 45, 0.08);
   --gv-shadow-hover: 0 28px 56px rgba(7, 14, 45, 0.18);
   --gv-max: 1280px;
+  color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --gv-bg: #05060f;
-    --gv-bg2: #080c1a;
-    --gv-sur: #101426;
-    --gv-sur2: #141b34;
-    --gv-bdr: rgba(255, 255, 255, 0.07);
-    --gv-bdr2: rgba(255, 255, 255, 0.12);
-    --gv-ink: #f5f7ff;
-    --gv-ink2: #c6d3ff;
-    --gv-mut: #8a95bf;
-    --gv-gbg: rgba(124, 107, 255, 0.16);
-    --gv-gbd: rgba(124, 107, 255, 0.34);
-    --gv-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
-    --gv-shadow-hover: 0 28px 56px rgba(0, 0, 0, 0.45);
-  }
+html.dark {
+  --gv-bg: #05060f;
+  --gv-bg2: #080c1a;
+  --gv-sur: #101426;
+  --gv-sur2: #141b34;
+  --gv-bdr: rgba(255, 255, 255, 0.07);
+  --gv-bdr2: rgba(255, 255, 255, 0.12);
+  --gv-ink: #f5f7ff;
+  --gv-ink2: #c6d3ff;
+  --gv-mut: #8a95bf;
+  --gv-gbg: rgba(124, 107, 255, 0.16);
+  --gv-gbd: rgba(124, 107, 255, 0.34);
+  --gv-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  --gv-shadow-hover: 0 28px 56px rgba(0, 0, 0, 0.45);
+  color-scheme: dark;
 }
 
 @layer base {
@@ -56,6 +55,7 @@
     background: var(--gv-bg);
     color: var(--gv-ink);
     font-family: var(--gv-body);
+    transition: background-color 0.4s ease, color 0.4s ease;
   }
 }
 
@@ -183,8 +183,8 @@
     background: rgba(255, 255, 255, 0.72);
     backdrop-filter: blur(16px) saturate(180%);
   }
-  @media (prefers-color-scheme: dark) {
-    .gv-card-glass { background: rgba(16, 20, 38, 0.82); }
+  html.dark .gv-card-glass {
+    background: rgba(16, 20, 38, 0.82);
   }
 
   /* Stat */
@@ -553,8 +553,8 @@
     background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(20px) saturate(180%);
   }
-  @media (prefers-color-scheme: dark) {
-    .gv-nav { background: rgba(5, 6, 15, 0.88); }
+  html.dark .gv-nav {
+    background: rgba(5, 6, 15, 0.88);
   }
   .gv-nav-inner {
     width: 100%;

@@ -32,6 +32,7 @@ function applyDark(dark: boolean) {
   } catch {
     /* ignore */
   }
+  window.dispatchEvent(new Event("goovoiture-theme"));
 }
 
 type AuthUser = {
@@ -71,6 +72,14 @@ export default function HomeNav({ lang }: { lang: SeoLang }) {
     setDark(d);
     applyDark(d);
     setAuth(loadAuth());
+
+    const onTheme = () => setDark(readDark());
+    window.addEventListener("goovoiture-theme", onTheme);
+    window.addEventListener("storage", onTheme);
+    return () => {
+      window.removeEventListener("goovoiture-theme", onTheme);
+      window.removeEventListener("storage", onTheme);
+    };
   }, []);
 
   useEffect(() => {
