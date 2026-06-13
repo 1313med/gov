@@ -1,6 +1,6 @@
 /** Homepage FAQ — visible on page + matches FAQPage schema. */
-import { useAppLang } from "../context/AppLangContext";
-import { defaultFaqs } from "../seo/programmaticSeo";
+import { useAppLang } from "../../context/AppLangContext";
+import { defaultFaqs } from "../../seo/programmaticSeo";
 
 export default function HomeFaqSection() {
   const { lang } = useAppLang();
