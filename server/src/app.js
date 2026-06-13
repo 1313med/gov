@@ -76,6 +76,8 @@ app.use("/api/contracts",     require("./routes/contractRoutes"));
 app.use("/api/extensions",    require("./routes/extensionRoutes"));
 app.use("/api/referral",      require("./routes/referralRoutes"));
 app.use("/api/fair-price",    require("./routes/fairPriceRoutes"));
+app.use("/api/market",        require("./routes/marketRoutes"));
+app.use("/api/qa",            require("./routes/qaRoutes"));
 app.use("/api/credit-check",  require("./routes/creditCheckRoutes"));
 app.use("/api/reports",       require("./routes/listingReportRoutes"));
 app.use("/api/fuel-logs",     require("./routes/fuelLogRoutes"));

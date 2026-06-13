@@ -267,7 +267,7 @@ exports.listDealers = asyncHandler(async (req, res) => {
 
 exports.getSellerProfile = asyncHandler(async (req, res) => {
   const seller = await User.findById(req.params.id).select(
-    "name phone email city role roles bio avatar nationalId driverLicense"
+    "name phone email city role roles bio avatar nationalId driverLicense businessProfile"
   );
   if (!seller) return res.status(404).json({ message: "Seller not found" });
 
@@ -331,8 +331,15 @@ exports.getSellerProfile = asyncHandler(async (req, res) => {
     );
   }
 
+  const bp = seller.businessProfile || {};
+  const displayName = bp.businessName || seller.name;
+  const whatsapp = bp.whatsapp || seller.phone;
+  const address = bp.address || (seller.city ? `${seller.city}, Maroc` : "Maroc");
+  const openingHours = bp.openingHours || "Lun–Sam 9h–19h";
+  const logo = bp.logo || seller.avatar;
+
   res.json({
-    seller,
+    seller: { ...seller.toObject(), name: displayName, avatar: logo, whatsapp },
     kind,
     citySlug,
     agencyPath: isAgency ? buildAgencyPath(citySlug, seller.name, seller._id) : null,
@@ -342,9 +349,11 @@ exports.getSellerProfile = asyncHandler(async (req, res) => {
     fleetSize: rentalListings.length,
     inventoryCount: listings.length,
     rentalCategories: rentalCategoriesFromFleet(rentalListings),
-    openingHours: "Lun–Sam 9h–19h",
-    address: seller.city ? `${seller.city}, Maroc` : "Maroc",
-    reviews: reviewData.reviews,
+    openingHours,
+    address,
+    whatsapp,
+    businessProfile: bp,
+    reviews: reviewData.reviews.map((r) => ({ ...r, verified: Boolean(r.bookingId) })),
     avgRating: reviewData.avgRating,
     reviewCount: reviewData.total,
     verified: Boolean(seller.nationalId?.verified || seller.driverLicense?.verified),

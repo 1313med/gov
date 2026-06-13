@@ -102,6 +102,46 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/comparer" />
   </url>
   <url>
+    <loc>https://goovoiture.ma/assurance</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.82</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/assurance" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/assurance" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/assurance" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/assurance" />
+  </url>
+  <url>
+    <loc>https://goovoiture.ma/financement</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.82</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/financement" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/financement" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/financement" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/financement" />
+  </url>
+  <url>
+    <loc>https://goovoiture.ma/demarches</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.82</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/demarches" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/demarches" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/demarches" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/demarches" />
+  </url>
+  <url>
+    <loc>https://goovoiture.ma/questions</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/questions" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/questions" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/questions" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/questions" />
+  </url>
+  <url>
     <loc>https://goovoiture.ma/blog</loc>
     <lastmod>2026-06-13</lastmod>
     <changefreq>weekly</changefreq>

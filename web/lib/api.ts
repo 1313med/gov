@@ -83,6 +83,7 @@ export type ReviewPayload = {
     comment?: string;
     authorId?: { name?: string };
     createdAt?: string;
+    verified?: boolean;
   }>;
   avgRating: number;
   total: number;
@@ -92,4 +93,56 @@ export async function fetchReviews(targetModel: string, targetId: string): Promi
   const res = await fetch(`${API_BASE}/reviews/${targetModel}/${targetId}`, { next: { revalidate: 600 } });
   if (!res.ok) return { reviews: [], avgRating: 0, total: 0 };
   return res.json();
+}
+
+export type MarketPricesPayload = {
+  brand: string;
+  model: string;
+  sale: {
+    available: boolean;
+    activeListings: number;
+    soldListings: number;
+    market: { sampleSize: number; average: number; median: number; min: number; max: number } | null;
+    cityBreakdown: Array<{ city: string; sampleSize: number; median: number; average: number }>;
+    yearBreakdown: Array<{ year: number; sampleSize: number; median: number }>;
+  };
+  rental: {
+    available: boolean;
+    activeListings: number;
+    market: { sampleSize: number; average: number; median: number; min: number; max: number } | null;
+    cityBreakdown: Array<{ city: string; sampleSize: number; median: number }>;
+  };
+  methodology?: string;
+  source?: string;
+};
+
+export async function fetchMarketPrices(brand: string, model: string): Promise<MarketPricesPayload | null> {
+  const params = new URLSearchParams({ brand, model });
+  const res = await fetch(`${API_BASE}/market/prices?${params}`, { next: { revalidate: 3600 } });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export async function fetchMarketTrends(brand: string, model: string) {
+  const params = new URLSearchParams({ brand, model });
+  const res = await fetch(`${API_BASE}/market/trends?${params}`, { next: { revalidate: 3600 } });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export type QuestionItem = {
+  slug: string;
+  question: string;
+  body?: string;
+  topic?: string;
+  brand?: string;
+  model?: string;
+  answers?: Array<{ body: string; authorName?: string; authorId?: { name?: string }; verifiedExpert?: boolean; accepted?: boolean }>;
+};
+
+export async function fetchQuestions(limit = 20): Promise<QuestionItem[]> {
+  const res = await fetch(`${API_BASE}/qa?limit=${limit}`, { next: { revalidate: 600 } });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.questions || [];
 }

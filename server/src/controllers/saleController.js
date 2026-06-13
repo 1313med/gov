@@ -13,7 +13,7 @@ const {
   applyGearboxFilter,
 } = require("../utils/listingFilters");
 const { computeListingScore } = require("../utils/listingScore");
-const { userCanListForSale, userHasCinOnFile, userCinVerified } = require("../utils/userRoles");
+const { recordPriceSnapshot } = require("../utils/recordPriceSnapshot");
 
 const notify = async (userId, message, type) => {
   const n = await Notification.create({ user: userId, message, type });
@@ -44,6 +44,7 @@ exports.createSaleListing = asyncHandler(async (req, res) => {
   });
 
   await notify(req.user._id, `Your listing "${listing.title}" is pending approval.`, "pending");
+  await recordPriceSnapshot(listing, "sale", "listed");
   res.status(201).json(listing);
 });
 
@@ -141,6 +142,9 @@ exports.updateSaleListing = asyncHandler(async (req, res) => {
     }
   }
   const updated = await sale.save();
+  if (updated.status === "approved") {
+    await recordPriceSnapshot(updated, "sale", "updated");
+  }
   res.json(updated);
 });
 
@@ -153,6 +157,7 @@ exports.markAsSold = asyncHandler(async (req, res) => {
   }
   sale.status = "sold";
   await sale.save();
+  await recordPriceSnapshot(sale, "sale", "sold");
   res.json(sale);
 });
 
@@ -208,6 +213,10 @@ exports.updateSaleStatusAdmin = asyncHandler(async (req, res) => {
       : `Your listing "${sale.title}" was rejected by the admin.`;
 
     await notify(sale.sellerId, message, status);
+
+    if (status === "approved") {
+      await recordPriceSnapshot(sale, "sale", "listed");
+    }
 
     const seller = await User.findById(sale.sellerId);
     if (seller?.email) {

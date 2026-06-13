@@ -271,6 +271,62 @@ export function personJsonLd({ name, url, jobTitle, image }) {
   };
 }
 
+export function datasetJsonLd({ name, description, url, dateModified, variableMeasured = [] }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    name,
+    description,
+    url,
+    dateModified,
+    variableMeasured,
+    publisher: { "@type": "Organization", name: SITE_NAME },
+  };
+}
+
+export function qaPageJsonLd({ question, answers = [], url }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "QAPage",
+    mainEntity: {
+      "@type": "Question",
+      name: question,
+      text: question,
+      answerCount: answers.length,
+      acceptedAnswer: answers.find((a) => a.accepted)
+        ? {
+            "@type": "Answer",
+            text: answers.find((a) => a.accepted).text,
+            author: { "@type": "Person", name: answers.find((a) => a.accepted).authorName || SITE_NAME },
+          }
+        : undefined,
+      suggestedAnswer: answers
+        .filter((a) => !a.accepted)
+        .map((a) => ({
+          "@type": "Answer",
+          text: a.text,
+          author: { "@type": "Person", name: a.authorName || SITE_NAME },
+        })),
+    },
+    url,
+  };
+}
+
+export function carJsonLd({ name, brand, model, description, url, vehicleEngine, fuelType, numberOfSeats }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Car",
+    name,
+    description,
+    url,
+    brand: { "@type": "Brand", name: brand },
+    model,
+    vehicleEngine,
+    fuelType,
+    numberOfSeats,
+  };
+}
+
 export function mergeJsonLd(...graphs) {
   return graphs.filter(Boolean);
 }

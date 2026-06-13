@@ -6,6 +6,9 @@ import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { getAllBlogArticles } from "../src/seo/catalog/blogArticles.js";
 import { getAllComparisons } from "../src/seo/catalog/comparisons.js";
+import { getAllVehicleSpecs } from "../src/seo/catalog/vehicleSpecs.js";
+import { getAllClusterTopics } from "../src/seo/catalog/contentClusters.js";
+import { getAllQuestionSeeds } from "../src/seo/catalog/questionSeeds.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const publicDir = join(__dirname, "..", "public");
@@ -78,6 +81,10 @@ const STATIC_PAGES = [
   { path: "/agences", priority: "0.85", changefreq: "weekly" },
   { path: "/concessionnaires", priority: "0.85", changefreq: "weekly" },
   { path: "/comparer", priority: "0.8", changefreq: "weekly" },
+  { path: "/assurance", priority: "0.82", changefreq: "weekly" },
+  { path: "/financement", priority: "0.82", changefreq: "weekly" },
+  { path: "/demarches", priority: "0.82", changefreq: "weekly" },
+  { path: "/questions", priority: "0.8", changefreq: "weekly" },
   { path: "/blog", priority: "0.7", changefreq: "weekly" },
   { path: "/a-propos", priority: "0.5", changefreq: "monthly" },
   { path: "/equipe", priority: "0.4", changefreq: "monthly" },
@@ -279,6 +286,22 @@ async function main() {
   const compUrls = getAllComparisons().map((c) => urlEntry(c.path, "0.65", "monthly"));
   writeShard("comparisons.xml", compUrls);
   shardFiles.push("comparisons.xml");
+
+  const specUrls = getAllVehicleSpecs().flatMap((s) => [
+    urlEntry(`/prix/${s.brandSlug}/${s.modelSlug}`, "0.78", "daily"),
+    urlEntry(`/fiche-technique/${s.brandSlug}/${s.modelSlug}`, "0.75", "weekly"),
+    urlEntry(`/donnees/prix/${s.brandSlug}/${s.modelSlug}`, "0.7", "daily"),
+  ]);
+  writeShard("price-intelligence.xml", specUrls);
+  shardFiles.push("price-intelligence.xml");
+
+  const clusterUrls = getAllClusterTopics().map((t) => urlEntry(t.path, "0.8", "monthly"));
+  writeShard("authority-clusters.xml", clusterUrls);
+  shardFiles.push("authority-clusters.xml");
+
+  const qaUrls = getAllQuestionSeeds().map((q) => urlEntry(`/questions/${q.slug}`, "0.75", "weekly"));
+  writeShard("questions.xml", qaUrls);
+  shardFiles.push("questions.xml");
 
   // listings-rental.xml (sharded if needed)
   const rentalListingBlocks = [];

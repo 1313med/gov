@@ -16,6 +16,7 @@ import {
 import { MOROCCO_CITIES } from "@client-seo/catalog/cities";
 import { getAllBlogArticles, blogArticlePath } from "@client-seo/catalog/blogArticles";
 import { getComparisonsForBrand } from "@client-seo/catalog/comparisons";
+import { getVehicleSpec, priceIntelPath, vehicleSpecPath } from "@client-seo/catalog/vehicleSpecs";
 import { buildBrandHubSeo } from "@client-seo/programmaticSeo";
 import { buildSeoPath } from "@client-seo/seoPaths";
 import { buildRentalListingPath, buildSaleListingPath } from "@client-seo/slugUtils";
@@ -334,6 +335,17 @@ export default async function BrandView({
             ))}
           </ul>
         </section>
+
+        {model && getVehicleSpec(brandSlug, model) ? (
+          <section className="mb-10 flex flex-wrap gap-3 text-sm">
+            <a href={buildSeoPath(lang, priceIntelPath(brandSlug, model))} className="px-3 py-1 rounded-full bg-violet-100 text-violet-800 hover:bg-violet-200">
+              Indice prix {modelN}
+            </a>
+            <a href={buildSeoPath(lang, vehicleSpecPath(brandSlug, model))} className="px-3 py-1 rounded-full bg-gray-100 hover:bg-violet-100">
+              Fiche technique
+            </a>
+          </section>
+        ) : null}
 
         <FaqSection faqs={faqs} />
       </main>

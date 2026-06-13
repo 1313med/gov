@@ -6,7 +6,7 @@ export default function ReviewsSection({
   reviewCount,
   lang,
 }: {
-  reviews: Array<{ rating: number; comment?: string; authorId?: { name?: string }; createdAt?: string }>;
+  reviews: Array<{ rating: number; comment?: string; authorId?: { name?: string }; createdAt?: string; verified?: boolean }>;
   avgRating: number;
   reviewCount: number;
   lang: SeoLang;
@@ -35,6 +35,7 @@ export default function ReviewsSection({
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-violet-600 font-semibold">{r.rating}/5</span>
                 <span className="text-sm text-gray-700">{r.authorId?.name || "Client"}</span>
+                {r.verified ? <span className="text-xs text-green-700">✓ Vérifié</span> : null}
               </div>
               {r.comment ? <p className="text-sm text-gray-600">{r.comment}</p> : null}
             </li>

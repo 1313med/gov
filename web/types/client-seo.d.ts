@@ -201,6 +201,9 @@ declare module "@client-seo/jsonLd" {
   export function vehicleJsonLd(opts: Record<string, unknown>): object;
   export function reviewJsonLd(opts: Record<string, unknown>): object;
   export function reviewsGraphJsonLd(reviews: unknown, itemReviewed: unknown): unknown;
+  export function datasetJsonLd(opts: Record<string, unknown>): object;
+  export function qaPageJsonLd(opts: Record<string, unknown>): object;
+  export function carJsonLd(opts: Record<string, unknown>): object;
 }
 
 declare module "@client-seo/slugUtils" {
@@ -228,4 +231,76 @@ declare module "@client-seo/internalLinks" {
 
 declare module "@client-seo/catalog/hubs" {
   export const TRUST_PAGES: unknown;
+}
+
+declare module "@client-seo/catalog/vehicleSpecs" {
+  export function getVehicleSpec(brandSlug: string, modelSlug: string): {
+    brandSlug: string;
+    modelSlug: string;
+    brandName: string;
+    modelName: string;
+    displayName: string;
+    path: string;
+    segment?: string;
+    engine?: string;
+    power?: string;
+    transmission?: string;
+    fuel?: string;
+    consumption?: string;
+    trunk?: string;
+    seats?: number;
+    safety?: string;
+    moroccoNotes?: string;
+    faqs: Array<{ q: string; a: string }>;
+  } | null;
+  export function getAllVehicleSpecs(): Array<NonNullable<ReturnType<typeof getVehicleSpec>>>;
+  export function vehicleSpecPath(brandSlug: string, modelSlug: string): string;
+  export function priceIntelPath(brandSlug: string, modelSlug: string): string;
+  export function datasetPath(brandSlug: string, modelSlug: string): string;
+}
+
+declare module "@client-seo/catalog/contentClusters" {
+  export const CONTENT_CLUSTERS: {
+    assurance: { topics: Array<{ slug: string }> };
+    financement: { topics: Array<{ slug: string }> };
+    demarches: { topics: Array<{ slug: string }> };
+  };
+  export function getCluster(slug: string): {
+    slug: string;
+    hubPath: string;
+    hubTitle: Record<string, string>;
+    hubDescription: Record<string, string>;
+    name: Record<string, string>;
+    topics: Array<{ slug: string; title: Record<string, string>; description: Record<string, string> }>;
+  } | null;
+  export function getClusterTopic(clusterSlug: string, topicSlug: string): {
+    cluster: {
+      slug: string;
+      hubPath: string;
+      name: Record<string, string>;
+    };
+    topic: {
+      slug: string;
+      title: Record<string, string>;
+      description: Record<string, string>;
+      sections: Array<{ heading: string; body: string }>;
+      faqs: Array<{ q: string; a: string }>;
+      relatedLinks?: Array<{ label: string; path: string }>;
+    };
+  } | null;
+  export function getAllClusterTopics(): Array<{ cluster: string; slug: string; path: string }>;
+  export function clusterTopicPath(clusterSlug: string, topicSlug: string): string;
+}
+
+declare module "@client-seo/catalog/questionSeeds" {
+  export function getQuestionSeed(slug: string): {
+    slug: string;
+    question: string;
+    body?: string;
+    topic?: string;
+    answers?: Array<{ body: string; authorName?: string; verifiedExpert?: boolean; accepted?: boolean }>;
+  } | null;
+  export function getAllQuestionSeeds(): Array<NonNullable<ReturnType<typeof getQuestionSeed>>>;
+  export function questionPath(slug: string): string;
+  export function questionsHubPath(): string;
 }

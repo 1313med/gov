@@ -101,6 +101,37 @@ export default function SeoFooter({ lang }: { lang: SeoLang }) {
           </ul>
         </div>
       </div>
+      <div className="mx-auto max-w-6xl px-4 mt-8 pt-8 border-t border-gray-100 grid sm:grid-cols-2 md:grid-cols-4 gap-6 text-sm">
+        <div>
+          <h2 className="font-semibold text-gray-900 mb-2">Prix & données</h2>
+          <ul className="space-y-1">
+            <li><a href={buildSeoPath(lang, "/prix/dacia/logan")} className="hover:text-violet-600">Prix Dacia Logan</a></li>
+            <li><a href={buildSeoPath(lang, "/fiche-technique/dacia/logan")} className="hover:text-violet-600">Fiche technique</a></li>
+            <li><a href={buildSeoPath(lang, "/donnees/prix/dacia/logan")} className="hover:text-violet-600">Dataset prix</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2 className="font-semibold text-gray-900 mb-2">Assurance</h2>
+          <ul className="space-y-1">
+            <li><a href={buildSeoPath(lang, "/assurance")} className="hover:text-violet-600">Hub</a></li>
+            <li><a href={buildSeoPath(lang, "/assurance/assurance-automobile-maroc")} className="hover:text-violet-600">RC & tous risques</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2 className="font-semibold text-gray-900 mb-2">Financement</h2>
+          <ul className="space-y-1">
+            <li><a href={buildSeoPath(lang, "/financement")} className="hover:text-violet-600">Hub</a></li>
+            <li><a href={buildSeoPath(lang, "/financement/credit-auto-maroc")} className="hover:text-violet-600">Crédit auto</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2 className="font-semibold text-gray-900 mb-2">Démarches & Q&A</h2>
+          <ul className="space-y-1">
+            <li><a href={buildSeoPath(lang, "/demarches")} className="hover:text-violet-600">Transfert & CT</a></li>
+            <li><a href={buildSeoPath(lang, "/questions")} className="hover:text-violet-600">Questions</a></li>
+          </ul>
+        </div>
+      </div>
     </footer>
   );
 }

@@ -69,8 +69,16 @@ const userSchema = new mongoose.Schema(
     referredBy:      { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
     referralCredits: { type: Number, default: 0 },  // MAD credits earned
 
-    /** Staff role: which rental owner account this user is staff for (null = not staff) */
-    staffForOwnerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    /** Business entity profile (agencies, dealers) */
+    businessProfile: {
+      businessName: { type: String, default: null },
+      logo: { type: String, default: null },
+      address: { type: String, default: null },
+      whatsapp: { type: String, default: null },
+      openingHours: { type: String, default: null },
+      website: { type: String, default: null },
+      yearsInBusiness: { type: Number, default: null },
+    },
     staffPermissions: {
       manageBookings:  { type: Boolean, default: true },
       manageMessages:  { type: Boolean, default: true },

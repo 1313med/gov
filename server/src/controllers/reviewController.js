@@ -40,7 +40,14 @@ exports.getReviews = asyncHandler(async (req, res) => {
       ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
       : 0;
 
-  res.json({ reviews, avgRating: Math.round(avgRating * 10) / 10, total: reviews.length });
+  res.json({
+    reviews: reviews.map((r) => ({
+      ...r.toObject(),
+      verified: Boolean(r.bookingId),
+    })),
+    avgRating: Math.round(avgRating * 10) / 10,
+    total: reviews.length,
+  });
 });
 
 // POST /api/reviews/:targetModel/:targetId
