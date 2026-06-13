@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation";
 import type { SeoLang } from "@/lib/site";
 import { getSiteUrl } from "@/lib/site";
-import Breadcrumbs from "@/components/ssr/Breadcrumbs";
-import FaqSection from "@/components/ssr/FaqSection";
+import SeoPageShell from "@/components/layout/SeoPageShell";
 import JsonLd from "@/components/ssr/JsonLd";
-import SeoFooter from "@/components/ssr/SeoFooter";
+import SectionHeader from "@/components/ui/SectionHeader";
+import { InsightCard } from "@/components/ui/GlassCard";
+import { RelatedLinksSection } from "@/components/ui/PremiumCTA";
+import BadgePill from "@/components/ui/BadgePill";
 import { getCluster, getClusterTopic, getAllClusterTopics, clusterTopicPath } from "@client-seo/catalog/contentClusters";
 import { buildSeoPath } from "@client-seo/seoPaths";
 import { graphJsonLd, articleJsonLd, breadcrumbJsonLd, faqPageJsonLd } from "@client-seo/jsonLd";
@@ -40,35 +42,48 @@ export function ContentClusterHubView({ lang, clusterSlug }: { lang: SeoLang; cl
 
   const siteUrl = getSiteUrl();
   const pageUrl = `${siteUrl}${buildSeoPath(lang, cluster.hubPath)}`;
+  const clusterName = cluster.name[lang] || cluster.name.fr;
 
   return (
-    <>
-      <JsonLd
-        data={breadcrumbJsonLd([
-          { name: "GoVoiture", url: siteUrl },
-          { name: cluster.name[lang] || cluster.name.fr, url: pageUrl },
-        ])}
-      />
-      <main className="mx-auto max-w-4xl px-4 py-10">
-        <Breadcrumbs
-          items={[{ label: "Goovoiture", href: "/" }, { label: cluster.name[lang] || cluster.name.fr, href: undefined }]}
-          lang={lang}
+    <SeoPageShell
+      lang={lang}
+      breadcrumbs={[{ label: "Goovoiture", href: "/" }, { label: clusterName, href: undefined }]}
+      hero={{
+        kicker: "GoVoiture Guides",
+        title: cluster.hubTitle[lang] || cluster.hubTitle.fr,
+        description: cluster.hubDescription[lang] || cluster.hubDescription.fr,
+      }}
+      cta={{
+        title: "Trouver une voiture",
+        primaryHref: buildSeoPath(lang, "/voiture-occasion"),
+        primaryLabel: "Voiture occasion",
+        secondaryHref: buildSeoPath(lang, "/location-voiture"),
+        secondaryLabel: "Location voiture",
+      }}
+      jsonLd={
+        <JsonLd
+          data={breadcrumbJsonLd([
+            { name: "GoVoiture", url: siteUrl },
+            { name: clusterName, url: pageUrl },
+          ])}
         />
-        <h1 className="text-3xl font-bold mb-4">{cluster.hubTitle[lang] || cluster.hubTitle.fr}</h1>
-        <p className="text-gray-600 mb-10">{cluster.hubDescription[lang] || cluster.hubDescription.fr}</p>
-        <ul className="space-y-4">
+      }
+    >
+      <section className="gv-sec-sm">
+        <SectionHeader eyebrow={clusterName} title="Articles" />
+        <div className="space-y-4">
           {cluster.topics.map((t) => (
-            <li key={t.slug}>
-              <a href={buildSeoPath(lang, clusterTopicPath(clusterSlug, t.slug))} className="block rounded-xl border p-4 hover:border-violet-300">
-                <span className="font-semibold">{t.title[lang] || t.title.fr}</span>
-                <p className="text-sm text-gray-600 mt-1">{t.description[lang] || t.description.fr}</p>
-              </a>
-            </li>
+            <InsightCard
+              key={t.slug}
+              title={t.title[lang] || t.title.fr}
+              body={t.description[lang] || t.description.fr}
+              href={buildSeoPath(lang, clusterTopicPath(clusterSlug, t.slug))}
+              badge={<BadgePill variant="brand">{clusterName}</BadgePill>}
+            />
           ))}
-        </ul>
-      </main>
-      <SeoFooter lang={lang} />
-    </>
+        </div>
+      </section>
+    </SeoPageShell>
   );
 }
 
@@ -89,58 +104,66 @@ export function ContentClusterTopicView({
   const path = clusterTopicPath(clusterSlug, topicSlug);
   const pageUrl = `${siteUrl}${buildSeoPath(lang, path)}`;
   const title = topic.title[lang] || topic.title.fr;
+  const clusterName = cluster.name[lang] || cluster.name.fr;
 
   return (
-    <>
-      <JsonLd
-        data={graphJsonLd(
-          articleJsonLd({
-            headline: title,
-            description: topic.description[lang] || topic.description.fr,
-            url: pageUrl,
-            datePublished: "2026-01-01",
-          }),
-          breadcrumbJsonLd([
-            { name: "GoVoiture", url: siteUrl },
-            { name: cluster.name[lang] || cluster.name.fr, url: `${siteUrl}${buildSeoPath(lang, cluster.hubPath)}` },
-            { name: title, url: pageUrl },
-          ]),
-          faqPageJsonLd(topic.faqs)
-        )}
-      />
-      <main className="mx-auto max-w-3xl px-4 py-10">
-        <Breadcrumbs
-          items={[
-            { label: "Goovoiture", href: "/" },
-            { label: cluster.name[lang] || cluster.name.fr, href: cluster.hubPath },
-            { label: title, href: undefined },
-          ]}
-          lang={lang}
+    <SeoPageShell
+      lang={lang}
+      breadcrumbs={[
+        { label: "Goovoiture", href: "/" },
+        { label: clusterName, href: cluster.hubPath },
+        { label: title, href: undefined },
+      ]}
+      hero={{
+        kicker: "GoVoiture Guides",
+        title,
+        description: topic.description[lang] || topic.description.fr,
+      }}
+      faqs={topic.faqs}
+      cta={{
+        title: "Explorer le marketplace",
+        primaryHref: buildSeoPath(lang, "/voiture-occasion"),
+        primaryLabel: "Voiture occasion",
+        secondaryHref: buildSeoPath(lang, "/location-voiture"),
+        secondaryLabel: "Location voiture",
+      }}
+      jsonLd={
+        <JsonLd
+          data={graphJsonLd(
+            articleJsonLd({
+              headline: title,
+              description: topic.description[lang] || topic.description.fr,
+              url: pageUrl,
+              datePublished: "2026-01-01",
+            }),
+            breadcrumbJsonLd([
+              { name: "GoVoiture", url: siteUrl },
+              { name: clusterName, url: `${siteUrl}${buildSeoPath(lang, cluster.hubPath)}` },
+              { name: title, url: pageUrl },
+            ]),
+            faqPageJsonLd(topic.faqs)
+          )}
         />
-        <article>
-          <h1 className="text-3xl font-bold mb-4">{title}</h1>
-          <p className="text-gray-600 mb-8">{topic.description[lang] || topic.description.fr}</p>
-          {topic.sections.map((s) => (
-            <section key={s.heading} className="mb-8">
-              <h2 className="text-xl font-semibold mb-2">{s.heading}</h2>
-              <p className="text-gray-700 leading-relaxed">{s.body}</p>
-            </section>
-          ))}
-          {topic.relatedLinks?.length ? (
-            <section className="mb-8">
-              <h2 className="font-semibold mb-2">Liens utiles</h2>
-              <ul className="text-sm space-y-1">
-                {topic.relatedLinks.map((l) => (
-                  <li key={l.path}><a href={buildSeoPath(lang, l.path)} className="text-violet-600 hover:underline">{l.label}</a></li>
-                ))}
-              </ul>
-            </section>
-          ) : null}
-          <FaqSection faqs={topic.faqs} />
-        </article>
-      </main>
-      <SeoFooter lang={lang} />
-    </>
+      }
+    >
+      <article>
+        {topic.sections.map((s) => (
+          <section key={s.heading} className="gv-sec-sm">
+            <SectionHeader title={s.heading} />
+            <p className="text-[var(--gv-ink2)] leading-relaxed">{s.body}</p>
+          </section>
+        ))}
+        {topic.relatedLinks?.length ? (
+          <RelatedLinksSection
+            title="Liens utiles"
+            links={topic.relatedLinks.map((l) => ({
+              label: l.label,
+              href: buildSeoPath(lang, l.path),
+            }))}
+          />
+        ) : null}
+      </article>
+    </SeoPageShell>
   );
 }
 

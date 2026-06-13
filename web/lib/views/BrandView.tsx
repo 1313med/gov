@@ -1,10 +1,11 @@
 import type { SeoLang } from "@/lib/site";
 import { getSiteUrl } from "@/lib/site";
 import { fetchRentals, fetchSales, fetchAgencies, fetchDealers } from "@/lib/api";
-import Breadcrumbs from "@/components/ssr/Breadcrumbs";
-import FaqSection from "@/components/ssr/FaqSection";
+import SeoPageShell from "@/components/layout/SeoPageShell";
 import JsonLd from "@/components/ssr/JsonLd";
-import SeoFooter from "@/components/ssr/SeoFooter";
+import SectionHeader from "@/components/ui/SectionHeader";
+import VehicleCard from "@/components/ui/VehicleCard";
+import { EntityGrid, RelatedLinksSection } from "@/components/ui/PremiumCTA";
 import {
   getBrandBySlug,
   brandPath,
@@ -134,231 +135,197 @@ export default async function BrandView({
   const path = model ? modelPath(brandSlug, modelSlug!) : brandPath(brandSlug);
   const pageUrl = `${siteUrl}${buildSeoPath(lang, path)}`;
 
+  const modelIntelLinks = model && getVehicleSpec(brandSlug, model)
+    ? [
+        { label: `Indice prix ${modelN}`, href: buildSeoPath(lang, priceIntelPath(brandSlug, model)) },
+        { label: "Fiche technique", href: buildSeoPath(lang, vehicleSpecPath(brandSlug, model)) },
+        { label: "Intelligence marché", href: buildSeoPath(lang, `/marche/${brandSlug}/${model}`) },
+        { label: "Fiabilité", href: buildSeoPath(lang, `/fiabilite/${brandSlug}/${model}`) },
+        { label: "Coût possession", href: buildSeoPath(lang, `/cout-possession/${brandSlug}/${model}`) },
+      ]
+    : [];
+
   return (
-    <>
-      <JsonLd
-        data={graphJsonLd(
-          collectionPageJsonLd({
-            name: seo.h1,
-            url: pageUrl,
-            description: seo.description,
-            items: [
-              ...filteredRentals.slice(0, 4).map((r: { _id: string; brand: string; model: string }) => ({
-                name: `${r.brand} ${r.model}`,
-                url: `${siteUrl}${buildSeoPath(lang, buildRentalListingPath(r))}`,
-              })),
-              ...filteredSales.slice(0, 4).map((s: { _id: string; brand: string; model: string }) => ({
-                name: `${s.brand} ${s.model}`,
-                url: `${siteUrl}${buildSeoPath(lang, buildSaleListingPath(s))}`,
-              })),
-            ],
-          }),
-          breadcrumbJsonLd([
-            { name: "GoVoiture", url: siteUrl },
-            { name: brandN, url: `${siteUrl}${buildSeoPath(lang, brandPath(brandSlug))}` },
-            ...(model ? [{ name: modelN!, url: pageUrl }] : []),
-          ]),
-          faqPageJsonLd(faqs)
-        )}
-      />
-      <main className="mx-auto max-w-5xl px-4 py-10">
-        <Breadcrumbs
-          items={[
-            { label: "Goovoiture", href: "/" },
-            { label: lang === "fr" ? "Marques" : "Brands", href: "/voiture-occasion" },
-            { label: brandN, href: model ? brandPath(brandSlug) : undefined },
-            ...(model ? [{ label: modelN!, href: undefined }] : []),
-          ]}
-          lang={lang}
+    <SeoPageShell
+      lang={lang}
+      breadcrumbs={[
+        { label: "Goovoiture", href: "/" },
+        { label: lang === "fr" ? "Marques" : "Brands", href: "/voiture-occasion" },
+        { label: brandN, href: model ? brandPath(brandSlug) : undefined },
+        ...(model ? [{ label: modelN!, href: undefined }] : []),
+      ]}
+      hero={{
+        kicker: "GoVoiture Marketplace",
+        title: seo.h1,
+        description: seo.intro,
+      }}
+      faqs={faqs}
+      cta={{
+        title: model ? `Trouver une ${brandN} ${modelN}` : `Trouver une ${brandN}`,
+        primaryHref: buildSeoPath(lang, model ? modelPath(brandSlug, model) : `/voiture-occasion/${brandSlug}`),
+        primaryLabel: lang === "fr" ? "Voir les annonces" : "Browse listings",
+        secondaryHref: buildSeoPath(lang, `/location-voiture/casablanca/${brandSlug}`),
+        secondaryLabel: lang === "fr" ? "Location voiture" : "Car rental",
+      }}
+      related={{ brandSlug, brandFilter, showListings: false, ...(model ? { extraLinks: modelIntelLinks } : {}) }}
+      jsonLd={
+        <JsonLd
+          data={graphJsonLd(
+            collectionPageJsonLd({
+              name: seo.h1,
+              url: pageUrl,
+              description: seo.description,
+              items: [
+                ...filteredRentals.slice(0, 4).map((r: { _id: string; brand: string; model: string }) => ({
+                  name: `${r.brand} ${r.model}`,
+                  url: `${siteUrl}${buildSeoPath(lang, buildRentalListingPath(r))}`,
+                })),
+                ...filteredSales.slice(0, 4).map((s: { _id: string; brand: string; model: string }) => ({
+                  name: `${s.brand} ${s.model}`,
+                  url: `${siteUrl}${buildSeoPath(lang, buildSaleListingPath(s))}`,
+                })),
+              ],
+            }),
+            breadcrumbJsonLd([
+              { name: "GoVoiture", url: siteUrl },
+              { name: brandN, url: `${siteUrl}${buildSeoPath(lang, brandPath(brandSlug))}` },
+              ...(model ? [{ name: modelN!, url: pageUrl }] : []),
+            ]),
+            faqPageJsonLd(faqs)
+          )}
         />
-        <h1 className="text-3xl font-bold mb-4">{seo.h1}</h1>
-        <p className="text-gray-600 mb-8">{seo.intro}</p>
+      }
+    >
+      {!model && (
+        <RelatedLinksSection
+          title={lang === "fr" ? "Modèles" : "Models"}
+          links={brand.models.map((m: string) => ({
+            label: m.replace(/-/g, " "),
+            href: buildSeoPath(lang, modelPath(brandSlug, m)),
+          }))}
+        />
+      )}
 
-        {!model && (
-          <section className="mb-10">
-            <h2 className="font-semibold mb-3">{lang === "fr" ? "Modèles" : "Models"}</h2>
-            <ul className="flex flex-wrap gap-2">
-              {brand.models.map((m: string) => (
-                <li key={m}>
-                  <a
-                    href={buildSeoPath(lang, modelPath(brandSlug, m))}
-                    className="px-3 py-1 rounded-full bg-gray-100 text-sm capitalize hover:bg-violet-100"
-                  >
-                    {m.replace(/-/g, " ")}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
+      {model && similarModels(brand, model).length > 0 && (
+        <RelatedLinksSection
+          title={lang === "fr" ? "Modèles similaires" : "Similar models"}
+          links={similarModels(brand, model).map((m: string) => ({
+            label: m.replace(/-/g, " "),
+            href: buildSeoPath(lang, modelPath(brandSlug, m)),
+          }))}
+        />
+      )}
 
-        {model && (
-          <section className="mb-10">
-            <h2 className="font-semibold mb-3">{lang === "fr" ? "Modèles similaires" : "Similar models"}</h2>
-            <ul className="flex flex-wrap gap-2">
-              {similarModels(brand, model).map((m: string) => (
-                <li key={m}>
-                  <a href={buildSeoPath(lang, modelPath(brandSlug, m))} className="text-violet-600 hover:underline capitalize">
-                    {m.replace(/-/g, " ")}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {filteredRentals.length > 0 && (
-          <section className="mb-10">
-            <h2 className="font-semibold mb-3">{lang === "fr" ? "Location" : "Rental"}</h2>
-            <ul className="grid sm:grid-cols-2 gap-3">
-              {filteredRentals.slice(0, 6).map((r: { _id: string; brand: string; model: string; year?: number; pricePerDay?: number; city?: string }) => (
-                <li key={r._id}>
-                  <a href={buildSeoPath(lang, buildRentalListingPath(r))} className="block p-3 rounded-lg border hover:border-violet-300">
-                    <span className="font-medium">{r.brand} {r.model} {r.year}</span>
-                    {r.city ? <span className="text-gray-500 text-sm block">{r.city}</span> : null}
-                    {r.pricePerDay ? <span className="text-violet-600 text-sm">{Number(r.pricePerDay).toLocaleString()} MAD/j</span> : null}
-                  </a>
-                </li>
-              ))}
-            </ul>
-            <a href={buildSeoPath(lang, `/location-voiture/casablanca/${brandSlug}`)} className="text-sm text-violet-600 hover:underline mt-2 inline-block">
-              {lang === "fr" ? `Voir toutes les locations ${brandN}` : `All ${brandN} rentals`}
-            </a>
-          </section>
-        )}
-
-        {filteredSales.length > 0 && (
-          <section className="mb-10">
-            <h2 className="font-semibold mb-3">{lang === "fr" ? "Occasion" : "Used cars"}</h2>
-            <ul className="grid sm:grid-cols-2 gap-3">
-              {filteredSales.slice(0, 6).map((s: { _id: string; brand: string; model: string; year?: number; price?: number; city?: string }) => (
-                <li key={s._id}>
-                  <a href={buildSeoPath(lang, buildSaleListingPath(s))} className="block p-3 rounded-lg border hover:border-violet-300">
-                    <span className="font-medium">{s.brand} {s.model} {s.year}</span>
-                    {s.city ? <span className="text-gray-500 text-sm block">{s.city}</span> : null}
-                    {s.price ? <span className="text-violet-600 text-sm">{Number(s.price).toLocaleString()} MAD</span> : null}
-                  </a>
-                </li>
-              ))}
-            </ul>
-            <a href={buildSeoPath(lang, `/voiture-occasion/casablanca/${brandSlug}`)} className="text-sm text-violet-600 hover:underline mt-2 inline-block">
-              {lang === "fr" ? `Voir toutes les occasions ${brandN}` : `All ${brandN} used cars`}
-            </a>
-          </section>
-        )}
-
-        <section className="mb-10 grid sm:grid-cols-2 gap-6">
-          <div>
-            <h2 className="font-semibold mb-3">{lang === "fr" ? "Agences" : "Agencies"}</h2>
-            <ul className="space-y-2 text-sm">
-              {agencies.slice(0, 4).map((a) => (
-                <li key={a._id}>
-                  <a href={a.path} className="text-violet-600 hover:underline">{a.name}</a>
-                  {a.city ? <span className="text-gray-500"> — {a.city}</span> : null}
-                </li>
-              ))}
-            </ul>
-            <a href="/agences" className="text-sm text-violet-600 hover:underline mt-2 inline-block">
-              {lang === "fr" ? "Toutes les agences" : "All agencies"}
-            </a>
-          </div>
-          <div>
-            <h2 className="font-semibold mb-3">{lang === "fr" ? "Concessionnaires" : "Dealers"}</h2>
-            <ul className="space-y-2 text-sm">
-              {dealers.slice(0, 4).map((d) => (
-                <li key={d._id}>
-                  <a href={d.path} className="text-violet-600 hover:underline">{d.name}</a>
-                  {d.city ? <span className="text-gray-500"> — {d.city}</span> : null}
-                </li>
-              ))}
-            </ul>
-            <a href="/concessionnaires" className="text-sm text-violet-600 hover:underline mt-2 inline-block">
-              {lang === "fr" ? "Tous les concessionnaires" : "All dealers"}
-            </a>
-          </div>
-        </section>
-
-        {comparisons.length > 0 && (
-          <section className="mb-10">
-            <h2 className="font-semibold mb-3">{lang === "fr" ? "Comparatifs" : "Comparisons"}</h2>
-            <ul className="flex flex-wrap gap-2 text-sm">
-              {comparisons.map((c) => (
-                <li key={c.slug}>
-                  <a href={c.path} className="px-3 py-1 rounded-full bg-gray-100 hover:bg-violet-100">{c.h1}</a>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {blogArticles.length > 0 && (
-          <section className="mb-10">
-            <h2 className="font-semibold mb-3">{lang === "fr" ? "Guides" : "Guides"}</h2>
-            <ul className="space-y-2 text-sm">
-              {blogArticles.map((a) => (
-                <li key={a.slug}>
-                  <a href={buildSeoPath(lang, blogArticlePath(a.slug))} className="text-violet-600 hover:underline">
-                    {a.title[lang] || a.title.fr}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        <section className="mb-10">
-          <h2 className="font-semibold mb-3">{lang === "fr" ? "Par ville" : "By city"}</h2>
-          <ul className="grid sm:grid-cols-2 md:grid-cols-3 gap-2 text-sm">
-            {MOROCCO_CITIES.slice(0, 12).map((c: { slug: string; name: Record<string, string> }) => (
-              <li key={c.slug}>
-                <a href={buildSeoPath(lang, cityBrandRentalPath(c.slug, brandSlug))} className="text-violet-600 hover:underline">
-                  {brandN} {c.name[lang] || c.name.fr}
-                </a>
-                {" · "}
-                <a href={buildSeoPath(lang, cityBrandSalePath(c.slug, brandSlug))} className="text-gray-500 hover:underline">
-                  {lang === "fr" ? "occasion" : "used"}
-                </a>
-              </li>
+      {filteredRentals.length > 0 && (
+        <section className="gv-sec-sm">
+          <SectionHeader
+            eyebrow="Location"
+            title={lang === "fr" ? "Location" : "Rental"}
+            action={
+              <a href={buildSeoPath(lang, `/location-voiture/casablanca/${brandSlug}`)} className="gv-btn gv-btn-outline text-sm">
+                {lang === "fr" ? `Toutes les locations ${brandN}` : `All ${brandN} rentals`}
+              </a>
+            }
+          />
+          <EntityGrid cols={3}>
+            {filteredRentals.slice(0, 6).map((r: { _id: string; brand: string; model: string; year?: number; pricePerDay?: number; city?: string }) => (
+              <VehicleCard
+                key={r._id}
+                title={`${r.brand} ${r.model} ${r.year || ""}`}
+                subtitle={r.city}
+                price={r.pricePerDay ? `${Number(r.pricePerDay).toLocaleString()} MAD` : undefined}
+                priceLabel="/j"
+                href={buildSeoPath(lang, buildRentalListingPath(r))}
+                badge="Location"
+                intent="rental"
+              />
             ))}
-          </ul>
+          </EntityGrid>
         </section>
+      )}
 
-        <section className="mb-10">
-          <h2 className="font-semibold mb-3">{lang === "fr" ? "Marques similaires" : "Related brands"}</h2>
-          <ul className="flex flex-wrap gap-2">
-            {relatedBrands(brandSlug).map((b) => (
-              <li key={b.slug}>
-                <a href={buildSeoPath(lang, brandPath(b.slug))} className="px-3 py-1 rounded-full bg-gray-100 text-sm hover:bg-violet-100">
-                  {b.name[lang] || b.name.fr}
-                </a>
-              </li>
+      {filteredSales.length > 0 && (
+        <section className="gv-sec-sm">
+          <SectionHeader
+            eyebrow="Occasion"
+            title={lang === "fr" ? "Occasion" : "Used cars"}
+            action={
+              <a href={buildSeoPath(lang, `/voiture-occasion/casablanca/${brandSlug}`)} className="gv-btn gv-btn-outline text-sm">
+                {lang === "fr" ? `Toutes les occasions ${brandN}` : `All ${brandN} used cars`}
+              </a>
+            }
+          />
+          <EntityGrid cols={3}>
+            {filteredSales.slice(0, 6).map((s: { _id: string; brand: string; model: string; year?: number; price?: number; city?: string }) => (
+              <VehicleCard
+                key={s._id}
+                title={`${s.brand} ${s.model} ${s.year || ""}`}
+                subtitle={s.city}
+                price={s.price ? `${Number(s.price).toLocaleString()} MAD` : undefined}
+                href={buildSeoPath(lang, buildSaleListingPath(s))}
+                badge="Occasion"
+                intent="sale"
+              />
             ))}
-          </ul>
+          </EntityGrid>
         </section>
+      )}
 
-        {model && getVehicleSpec(brandSlug, model) ? (
-          <section className="mb-10 flex flex-wrap gap-3 text-sm">
-            <a href={buildSeoPath(lang, priceIntelPath(brandSlug, model))} className="px-3 py-1 rounded-full bg-violet-100 text-violet-800 hover:bg-violet-200">
-              Indice prix {modelN}
-            </a>
-            <a href={buildSeoPath(lang, vehicleSpecPath(brandSlug, model))} className="px-3 py-1 rounded-full bg-gray-100 hover:bg-violet-100">
-              Fiche technique
-            </a>
-            <a href={buildSeoPath(lang, `/marche/${brandSlug}/${model}`)} className="px-3 py-1 rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200">
-              Intelligence marché
-            </a>
-            <a href={buildSeoPath(lang, `/fiabilite/${brandSlug}/${model}`)} className="px-3 py-1 rounded-full bg-green-100 text-green-800 hover:bg-green-200">
-              Fiabilité
-            </a>
-            <a href={buildSeoPath(lang, `/cout-possession/${brandSlug}/${model}`)} className="px-3 py-1 rounded-full bg-amber-100 text-amber-800 hover:bg-amber-200">
-              Coût possession
-            </a>
-          </section>
-        ) : null}
+      <section className="gv-sec-sm grid sm:grid-cols-2 gap-6">
+        <div>
+          <SectionHeader eyebrow="Professionnels" title={lang === "fr" ? "Agences" : "Agencies"} />
+          <RelatedLinksSection
+            title={lang === "fr" ? "Agences location" : "Rental agencies"}
+            links={[
+              ...agencies.slice(0, 4).map((a) => ({ label: a.city ? `${a.name} — ${a.city}` : a.name, href: a.path })),
+              { label: lang === "fr" ? "Toutes les agences" : "All agencies", href: "/agences" },
+            ]}
+          />
+        </div>
+        <div>
+          <SectionHeader title={lang === "fr" ? "Concessionnaires" : "Dealers"} />
+          <RelatedLinksSection
+            title={lang === "fr" ? "Concessionnaires" : "Dealers"}
+            links={[
+              ...dealers.slice(0, 4).map((d) => ({ label: d.city ? `${d.name} — ${d.city}` : d.name, href: d.path })),
+              { label: lang === "fr" ? "Tous les concessionnaires" : "All dealers", href: "/concessionnaires" },
+            ]}
+          />
+        </div>
+      </section>
 
-        <FaqSection faqs={faqs} />
-      </main>
-      <SeoFooter lang={lang} />
-    </>
+      {comparisons.length > 0 && (
+        <RelatedLinksSection
+          title={lang === "fr" ? "Comparatifs" : "Comparisons"}
+          links={comparisons.map((c) => ({ label: c.h1, href: c.path }))}
+        />
+      )}
+
+      {blogArticles.length > 0 && (
+        <RelatedLinksSection
+          title={lang === "fr" ? "Guides" : "Guides"}
+          links={blogArticles.map((a) => ({
+            label: a.title[lang] || a.title.fr,
+            href: buildSeoPath(lang, blogArticlePath(a.slug)),
+          }))}
+        />
+      )}
+
+      <RelatedLinksSection
+        title={lang === "fr" ? "Par ville" : "By city"}
+        links={MOROCCO_CITIES.slice(0, 12).flatMap((c: { slug: string; name: Record<string, string> }) => [
+          { label: `${brandN} ${c.name[lang] || c.name.fr} (location)`, href: buildSeoPath(lang, cityBrandRentalPath(c.slug, brandSlug)) },
+          { label: `${brandN} ${c.name[lang] || c.name.fr} (occasion)`, href: buildSeoPath(lang, cityBrandSalePath(c.slug, brandSlug)) },
+        ])}
+      />
+
+      <RelatedLinksSection
+        title={lang === "fr" ? "Marques similaires" : "Related brands"}
+        links={relatedBrands(brandSlug).map((b) => ({
+          label: b.name[lang] || b.name.fr,
+          href: buildSeoPath(lang, brandPath(b.slug)),
+        }))}
+      />
+    </SeoPageShell>
   );
 }

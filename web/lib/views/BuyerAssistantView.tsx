@@ -1,8 +1,9 @@
 import type { SeoLang } from "@/lib/site";
 import { getSiteUrl } from "@/lib/site";
-import Breadcrumbs from "@/components/ssr/Breadcrumbs";
+import SeoPageShell from "@/components/layout/SeoPageShell";
 import JsonLd from "@/components/ssr/JsonLd";
-import SeoFooter from "@/components/ssr/SeoFooter";
+import { CalculatorCard } from "@/components/ui/GlassCard";
+import { RelatedLinksSection } from "@/components/ui/PremiumCTA";
 import BuyerAssistantClient from "@/components/client/BuyerAssistantClient";
 import { buyerAssistantPath } from "@client-seo/catalog/buyerAssistant";
 import { buildSeoPath } from "@client-seo/seoPaths";
@@ -23,37 +24,52 @@ export default function BuyerAssistantView({ lang }: { lang: SeoLang }) {
   const pageUrl = `${siteUrl}${buildSeoPath(lang, path)}`;
 
   return (
-    <>
-      <JsonLd
-        data={graphJsonLd(
-          softwareApplicationJsonLd({
-            name: "Assistant achat GoVoiture",
-            description: "Recommandations voiture basées sur budget, usage et priorités — Maroc.",
-            url: pageUrl,
-          }),
-          breadcrumbJsonLd([
-            { name: "GoVoiture", url: siteUrl },
-            { name: "Assistant achat", url: pageUrl },
-          ])
-        )}
-      />
-      <main className="mx-auto max-w-2xl px-4 py-10">
-        <Breadcrumbs items={[{ label: "Goovoiture", href: "/" }, { label: "Assistant achat", href: undefined }]} lang={lang} />
-        <h1 className="text-3xl font-bold mb-2">Assistant achat GoVoiture</h1>
-        <p className="text-gray-600 mb-10">
-          Répondez à 4 questions — nous croisons budget, usage et priorités avec nos indices propriétaires (prix, fiabilité, TCO).
-        </p>
+    <SeoPageShell
+      lang={lang}
+      breadcrumbs={[{ label: "Goovoiture", href: "/" }, { label: "Assistant achat", href: undefined }]}
+      hero={{
+        kicker: "GoVoiture Outils",
+        title: "Assistant achat GoVoiture",
+        description: "Répondez à 4 questions — nous croisons budget, usage et priorités avec nos indices propriétaires (prix, fiabilité, TCO).",
+      }}
+      cta={{
+        title: "Parcourir le marketplace",
+        description: "Annonces occasion et location vérifiées au Maroc.",
+        primaryHref: buildSeoPath(lang, "/voiture-occasion"),
+        primaryLabel: "Voiture occasion",
+        secondaryHref: buildSeoPath(lang, "/location-voiture"),
+        secondaryLabel: "Location voiture",
+      }}
+      jsonLd={
+        <JsonLd
+          data={graphJsonLd(
+            softwareApplicationJsonLd({
+              name: "Assistant achat GoVoiture",
+              description: "Recommandations voiture basées sur budget, usage et priorités — Maroc.",
+              url: pageUrl,
+            }),
+            breadcrumbJsonLd([
+              { name: "GoVoiture", url: siteUrl },
+              { name: "Assistant achat", url: pageUrl },
+            ])
+          )}
+        />
+      }
+    >
+      <CalculatorCard>
         <BuyerAssistantClient />
-        <section className="mt-12 text-sm text-gray-500">
-          <p>Pas un chatbot générique — recommandations basées sur modèles indexés GoVoiture avec données vérifiées.</p>
-          <p className="mt-2">
-            <a href={buildSeoPath(lang, "/questions")} className="text-violet-600 hover:underline">Questions communauté</a>
-            {" · "}
-            <a href={buildSeoPath(lang, "/possession/achat-voiture-occasion")} className="text-violet-600 hover:underline">Timeline achat</a>
-          </p>
-        </section>
-      </main>
-      <SeoFooter lang={lang} />
-    </>
+      </CalculatorCard>
+
+      <p className="text-sm text-[var(--gv-mut)] mt-8">
+        Pas un chatbot générique — recommandations basées sur modèles indexés GoVoiture avec données vérifiées.
+      </p>
+
+      <RelatedLinksSection
+        links={[
+          { label: "Questions communauté", href: buildSeoPath(lang, "/questions") },
+          { label: "Timeline achat", href: buildSeoPath(lang, "/possession/achat-voiture-occasion") },
+        ]}
+      />
+    </SeoPageShell>
   );
 }

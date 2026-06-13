@@ -5,6 +5,7 @@ import { ASSISTANT_STEPS, resolveRecommendations } from "@client-seo/catalog/buy
 import { marketIntelPath, reliabilityPath, tcoPath } from "@client-seo/catalog/reliabilityIndex";
 import { priceIntelPath } from "@client-seo/catalog/vehicleSpecs";
 import { modelPath } from "@client-seo/catalog/brands";
+import BadgePill from "@/components/ui/BadgePill";
 
 export default function BuyerAssistantClient() {
   const [step, setStep] = useState(0);
@@ -28,23 +29,32 @@ export default function BuyerAssistantClient() {
   if (done) {
     return (
       <div>
-        <h2 className="text-xl font-semibold mb-4">Modèles recommandés pour vous</h2>
-        <ul className="space-y-4 mb-8">
+        <h2 className="gv-h2 mb-4">Modèles recommandés pour vous</h2>
+        <div className="space-y-4 mb-8">
           {recommendations.map((rec) => (
-            <li key={`${rec.brandSlug}:${rec.modelSlug}`} className="rounded-xl border p-4">
-              <p className="font-medium capitalize">{rec.brandSlug} {rec.modelSlug.replace(/-/g, " ")}</p>
-              <p className="text-sm text-gray-600 mt-1">{rec.reason}</p>
-              <div className="flex flex-wrap gap-2 mt-3 text-sm">
-                <a href={modelPath(rec.brandSlug, rec.modelSlug)} className="text-violet-600 hover:underline">Annonces</a>
-                <a href={marketIntelPath(rec.brandSlug, rec.modelSlug)} className="text-violet-600 hover:underline">Marché</a>
-                <a href={reliabilityPath(rec.brandSlug, rec.modelSlug)} className="text-violet-600 hover:underline">Fiabilité</a>
-                <a href={tcoPath(rec.brandSlug, rec.modelSlug)} className="text-violet-600 hover:underline">TCO</a>
-                <a href={priceIntelPath(rec.brandSlug, rec.modelSlug)} className="text-violet-600 hover:underline">Prix</a>
+            <div key={`${rec.brandSlug}:${rec.modelSlug}`} className="gv-card gv-card-static p-5">
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <p className="font-semibold capitalize text-[var(--gv-ink)]">
+                  {rec.brandSlug} {rec.modelSlug.replace(/-/g, " ")}
+                </p>
+                <BadgePill variant="brand">Recommandé</BadgePill>
               </div>
-            </li>
+              <p className="text-sm text-[var(--gv-mut)] mb-3">{rec.reason}</p>
+              <div className="flex flex-wrap gap-2">
+                <a href={modelPath(rec.brandSlug, rec.modelSlug)} className="gv-chip">Annonces</a>
+                <a href={marketIntelPath(rec.brandSlug, rec.modelSlug)} className="gv-chip">Marché</a>
+                <a href={reliabilityPath(rec.brandSlug, rec.modelSlug)} className="gv-chip">Fiabilité</a>
+                <a href={tcoPath(rec.brandSlug, rec.modelSlug)} className="gv-chip">TCO</a>
+                <a href={priceIntelPath(rec.brandSlug, rec.modelSlug)} className="gv-chip">Prix</a>
+              </div>
+            </div>
           ))}
-        </ul>
-        <button type="button" onClick={() => { setStep(0); setAnswers({}); }} className="text-sm text-violet-600 hover:underline">
+        </div>
+        <button
+          type="button"
+          onClick={() => { setStep(0); setAnswers({}); }}
+          className="gv-btn gv-btn-outline text-sm"
+        >
           Recommencer
         </button>
       </div>
@@ -53,15 +63,25 @@ export default function BuyerAssistantClient() {
 
   return (
     <div>
-      <p className="text-sm text-gray-500 mb-2">Étape {step + 1} / {ASSISTANT_STEPS.length}</p>
-      <h2 className="text-xl font-semibold mb-6">{current.question}</h2>
+      <div className="flex items-center gap-3 mb-6">
+        <span className="gv-badge gv-badge-brand">
+          Étape {step + 1} / {ASSISTANT_STEPS.length}
+        </span>
+        <div className="flex-1 h-1 rounded-full bg-[var(--gv-sur2)] overflow-hidden">
+          <div
+            className="h-full bg-[var(--gv-brand)] transition-all duration-300"
+            style={{ width: `${((step + 1) / ASSISTANT_STEPS.length) * 100}%` }}
+          />
+        </div>
+      </div>
+      <h2 className="gv-h2 mb-6">{current.question}</h2>
       <ul className="space-y-3">
         {current.options.map((opt) => (
           <li key={opt.value}>
             <button
               type="button"
               onClick={() => choose(opt.value)}
-              className="w-full text-left rounded-xl border p-4 hover:border-violet-400 hover:bg-violet-50 transition"
+              className="w-full text-left gv-card gv-card-static p-4 hover:border-[var(--gv-gbd)] hover:bg-[var(--gv-gbg)] transition-all"
             >
               {opt.label}
             </button>

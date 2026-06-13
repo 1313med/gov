@@ -1,10 +1,13 @@
 import type { SeoLang } from "@/lib/site";
 import { getSiteUrl } from "@/lib/site";
 import { fetchMarketIntel, fetchMarketPrices } from "@/lib/api";
-import Breadcrumbs from "@/components/ssr/Breadcrumbs";
-import FaqSection from "@/components/ssr/FaqSection";
+import SeoPageShell from "@/components/layout/SeoPageShell";
 import JsonLd from "@/components/ssr/JsonLd";
-import SeoFooter from "@/components/ssr/SeoFooter";
+import StatCard from "@/components/ui/StatCard";
+import SectionHeader from "@/components/ui/SectionHeader";
+import { EntityGrid, RelatedLinksSection } from "@/components/ui/PremiumCTA";
+import { InsightCard } from "@/components/ui/GlassCard";
+import BadgePill from "@/components/ui/BadgePill";
 import { getBrandBySlug, modelPath } from "@client-seo/catalog/brands";
 import { getVehicleSpec, priceIntelPath } from "@client-seo/catalog/vehicleSpecs";
 import {
@@ -49,34 +52,48 @@ export async function MarketHubView({ lang }: { lang: SeoLang }) {
   const pageUrl = `${siteUrl}${buildSeoPath(lang, path)}`;
 
   return (
-    <>
-      <JsonLd
-        data={graphJsonLd(
-          breadcrumbJsonLd([
-            { name: "GoVoiture", url: siteUrl },
-            { name: "Intelligence marché", url: pageUrl },
-          ])
-        )}
-      />
-      <main className="mx-auto max-w-4xl px-4 py-10">
-        <Breadcrumbs items={[{ label: "Goovoiture", href: "/" }, { label: "Intelligence marché", href: undefined }]} lang={lang} />
-        <h1 className="text-3xl font-bold mb-4">Intelligence marché automobile Maroc</h1>
-        <p className="text-gray-600 mb-10">
-          Vue consolidée demande, fiabilité et prix — uniquement pour les modèles avec données vérifiées GoVoiture.
-        </p>
-        <ul className="grid sm:grid-cols-2 gap-3">
+    <SeoPageShell
+      lang={lang}
+      breadcrumbs={[{ label: "Goovoiture", href: "/" }, { label: "Intelligence marché", href: undefined }]}
+      hero={{
+        kicker: "GoVoiture Data",
+        title: "Intelligence marché automobile Maroc",
+        description: "Vue consolidée demande, fiabilité et prix — uniquement pour les modèles avec données vérifiées GoVoiture.",
+      }}
+      cta={{
+        title: "Explorer le marketplace",
+        description: "Annonces occasion et location vérifiées au Maroc.",
+        primaryHref: buildSeoPath(lang, "/voiture-occasion"),
+        primaryLabel: "Voiture occasion",
+        secondaryHref: buildSeoPath(lang, "/location-voiture"),
+        secondaryLabel: "Location voiture",
+      }}
+      jsonLd={
+        <JsonLd
+          data={graphJsonLd(
+            breadcrumbJsonLd([
+              { name: "GoVoiture", url: siteUrl },
+              { name: "Intelligence marché", url: pageUrl },
+            ])
+          )}
+        />
+      }
+    >
+      <section className="gv-sec-sm">
+        <SectionHeader eyebrow="Modèles indexés" title="Intelligence par modèle" />
+        <EntityGrid cols={2}>
           {models.map((m) => (
-            <li key={`${m!.brandSlug}:${m!.modelSlug}`}>
-              <a href={buildSeoPath(lang, marketIntelPath(m!.brandSlug, m!.modelSlug))} className="block rounded-xl border p-4 hover:border-violet-300">
-                <span className="font-medium capitalize">{m!.displayName}</span>
-                <span className="block text-sm text-gray-500 mt-1">Score fiabilité {m!.score}/100 · {m!.grade}</span>
-              </a>
-            </li>
+            <InsightCard
+              key={`${m!.brandSlug}:${m!.modelSlug}`}
+              title={m!.displayName}
+              body={`Score fiabilité ${m!.score}/100 · ${m!.grade}`}
+              href={buildSeoPath(lang, marketIntelPath(m!.brandSlug, m!.modelSlug))}
+              badge={<BadgePill variant="brand">Marché</BadgePill>}
+            />
           ))}
-        </ul>
-      </main>
-      <SeoFooter lang={lang} />
-    </>
+        </EntityGrid>
+      </section>
+    </SeoPageShell>
   );
 }
 
@@ -119,85 +136,94 @@ export default async function MarketIntelligenceView({
     },
   ];
 
+  const relatedLinks = [
+    { label: "Indice prix", href: buildSeoPath(lang, priceIntelPath(brandSlug, modelSlug)) },
+    { label: "Fiabilité", href: buildSeoPath(lang, reliabilityPath(brandSlug, modelSlug)) },
+    { label: "Recherches", href: buildSeoPath(lang, searchIntelPath(brandSlug, modelSlug)) },
+    { label: "Coût possession", href: buildSeoPath(lang, tcoPath(brandSlug, modelSlug)) },
+    { label: "Annonces", href: buildSeoPath(lang, modelPath(brandSlug, modelSlug)) },
+  ];
+
   return (
-    <>
-      <JsonLd
-        data={graphJsonLd(
-          datasetJsonLd({
-            name: `Intelligence marché ${spec.displayName} Maroc`,
-            description: `Demande, fiabilité et prix ${spec.displayName}.`,
-            url: pageUrl,
-            dateModified: new Date().toISOString().slice(0, 10),
-            variableMeasured: ["demandScore", "reliabilityScore", "salePriceMad"],
-          }),
-          breadcrumbJsonLd([
-            { name: "GoVoiture", url: siteUrl },
-            { name: "Marché", url: `${siteUrl}${buildSeoPath(lang, marketHubPath())}` },
-            { name: spec.displayName, url: pageUrl },
-          ]),
-          faqPageJsonLd(faqs)
-        )}
-      />
-      <main className="mx-auto max-w-4xl px-4 py-10">
-        <Breadcrumbs
-          items={[
-            { label: "Goovoiture", href: "/" },
-            { label: "Marché", href: marketHubPath() },
-            { label: spec.displayName, href: undefined },
-          ]}
-          lang={lang}
+    <SeoPageShell
+      lang={lang}
+      breadcrumbs={[
+        { label: "Goovoiture", href: "/" },
+        { label: "Marché", href: marketHubPath() },
+        { label: spec.displayName, href: undefined },
+      ]}
+      hero={{
+        kicker: "GoVoiture Data",
+        title: `Marché ${spec.displayName} au Maroc`,
+        description: "Intelligence propriétaire GoVoiture — demande, fiabilité et prix consolidés.",
+      }}
+      faqs={faqs}
+      cta={{
+        title: `Acheter ou louer une ${spec.displayName}`,
+        primaryHref: buildSeoPath(lang, modelPath(brandSlug, modelSlug)),
+        primaryLabel: "Voir les annonces",
+        secondaryHref: buildSeoPath(lang, "/location-voiture"),
+        secondaryLabel: "Location voiture",
+      }}
+      related={{ brandSlug, brandFilter: brandName }}
+      jsonLd={
+        <JsonLd
+          data={graphJsonLd(
+            datasetJsonLd({
+              name: `Intelligence marché ${spec.displayName} Maroc`,
+              description: `Demande, fiabilité et prix ${spec.displayName}.`,
+              url: pageUrl,
+              dateModified: new Date().toISOString().slice(0, 10),
+              variableMeasured: ["demandScore", "reliabilityScore", "salePriceMad"],
+            }),
+            breadcrumbJsonLd([
+              { name: "GoVoiture", url: siteUrl },
+              { name: "Marché", url: `${siteUrl}${buildSeoPath(lang, marketHubPath())}` },
+              { name: spec.displayName, url: pageUrl },
+            ]),
+            faqPageJsonLd(faqs)
+          )}
         />
-        <h1 className="text-3xl font-bold mb-2">Marché {spec.displayName} au Maroc</h1>
-        <p className="text-gray-600 mb-8">Intelligence propriétaire GoVoiture — demande, fiabilité et prix consolidés.</p>
-
-        <div className="grid sm:grid-cols-3 gap-4 mb-10">
-          {demand ? (
-            <div className="rounded-xl border p-4 text-center">
-              <p className="text-sm text-gray-500">Demande</p>
-              <p className="text-3xl font-bold text-violet-600">{demand.demandScore}/100</p>
-              <p className="text-xs text-gray-500 mt-1">{demand.views?.toLocaleString()} vues · {demand.activeSaleListings} ventes · {demand.activeRentalListings} locations</p>
-            </div>
-          ) : null}
-          {rel ? (
-            <div className="rounded-xl border p-4 text-center">
-              <p className="text-sm text-gray-500">Fiabilité</p>
-              <p className="text-3xl font-bold text-green-600">{rel.score}/100</p>
-              <p className="text-xs text-gray-500 mt-1">Grade {rel.grade}</p>
-            </div>
-          ) : null}
-          {prices?.sale?.market ? (
-            <div className="rounded-xl border p-4 text-center">
-              <p className="text-sm text-gray-500">Prix médian</p>
-              <p className="text-3xl font-bold">{prices.sale.market.median?.toLocaleString()} MAD</p>
-              <p className="text-xs text-gray-500 mt-1">{prices.sale.market.sampleSize} observations</p>
-            </div>
-          ) : null}
-        </div>
-
-        {rel?.commonIssues?.length ? (
-          <section className="mb-10">
-            <h2 className="text-xl font-semibold mb-3">Points de vigilance</h2>
-            <ul className="space-y-2 text-sm">
-              {rel.commonIssues.map((i, idx) => (
-                <li key={idx} className="rounded-lg bg-amber-50 border border-amber-100 p-3">
-                  <strong>{i.title}</strong> — {i.body}
-                </li>
-              ))}
-            </ul>
-          </section>
+      }
+    >
+      <EntityGrid cols={3}>
+        {demand ? (
+          <StatCard
+            value={demand.demandScore ?? "—"}
+            suffix="/100"
+            label="Demande"
+            accent="brand"
+          />
         ) : null}
+        {rel ? (
+          <StatCard value={rel.score} suffix="/100" label={`Fiabilité · ${rel.grade}`} accent="success" />
+        ) : null}
+        {prices?.sale?.market ? (
+          <StatCard
+            value={prices.sale.market.median?.toLocaleString() ?? "—"}
+            suffix=" MAD"
+            label={`Prix médian · ${prices.sale.market.sampleSize} obs.`}
+          />
+        ) : null}
+      </EntityGrid>
+      {demand ? (
+        <p className="text-xs text-[var(--gv-mut)] mt-2 text-center">
+          {demand.views?.toLocaleString()} vues · {demand.activeSaleListings} ventes · {demand.activeRentalListings} locations
+        </p>
+      ) : null}
 
-        <section className="mb-10 flex flex-wrap gap-3 text-sm">
-          <a href={buildSeoPath(lang, priceIntelPath(brandSlug, modelSlug))} className="px-3 py-1 rounded-full bg-violet-100 text-violet-800">Indice prix</a>
-          <a href={buildSeoPath(lang, reliabilityPath(brandSlug, modelSlug))} className="px-3 py-1 rounded-full bg-green-100 text-green-800">Fiabilité</a>
-          <a href={buildSeoPath(lang, searchIntelPath(brandSlug, modelSlug))} className="px-3 py-1 rounded-full bg-blue-100 text-blue-800">Recherches</a>
-          <a href={buildSeoPath(lang, tcoPath(brandSlug, modelSlug))} className="px-3 py-1 rounded-full bg-gray-100">Coût possession</a>
-          <a href={buildSeoPath(lang, modelPath(brandSlug, modelSlug))} className="text-violet-600 hover:underline">Annonces</a>
+      {rel?.commonIssues?.length ? (
+        <section className="gv-sec-sm">
+          <SectionHeader eyebrow="Vigilance" title="Points de vigilance" />
+          <div className="space-y-3">
+            {rel.commonIssues.map((i, idx) => (
+              <InsightCard key={idx} title={i.title} body={i.body} badge={<BadgePill variant="neutral">Alerte</BadgePill>} />
+            ))}
+          </div>
         </section>
+      ) : null}
 
-        <FaqSection faqs={faqs} />
-      </main>
-      <SeoFooter lang={lang} />
-    </>
+      <RelatedLinksSection title="Explorer ce modèle" links={relatedLinks} />
+    </SeoPageShell>
   );
 }

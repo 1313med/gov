@@ -1,4 +1,7 @@
 import type { SeoLang } from "@/lib/site";
+import SectionHeader from "@/components/ui/SectionHeader";
+import BadgePill from "@/components/ui/BadgePill";
+import { EntityGrid } from "@/components/ui/PremiumCTA";
 
 export default function ReviewsSection({
   reviews,
@@ -15,32 +18,31 @@ export default function ReviewsSection({
   const title = lang === "fr" ? "Avis clients" : lang === "ar" ? "آراء العملاء" : "Customer reviews";
 
   return (
-    <section className="mb-10" aria-labelledby="reviews-heading">
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        <h2 id="reviews-heading" className="text-xl font-semibold">
-          {title}
-        </h2>
-        {reviewCount > 0 ? (
-          <p className="text-sm text-gray-600">
-            <span className="font-semibold text-violet-600">{avgRating}/5</span> · {reviewCount} avis
-          </p>
-        ) : (
-          <p className="text-sm text-gray-500">{lang === "fr" ? "Pas encore d'avis" : "No reviews yet"}</p>
-        )}
-      </div>
+    <section className="gv-sec-sm" aria-labelledby="reviews-heading">
+      <SectionHeader
+        eyebrow="Confiance"
+        title={title}
+        description={
+          reviewCount > 0
+            ? `${avgRating}/5 · ${reviewCount} avis sur GoVoiture`
+            : lang === "fr"
+              ? "Pas encore d'avis — soyez le premier."
+              : "No reviews yet"
+        }
+      />
       {reviews.length > 0 ? (
-        <ul className="space-y-3">
+        <EntityGrid cols={2}>
           {reviews.slice(0, 8).map((r, i) => (
-            <li key={i} className="rounded-xl border p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-violet-600 font-semibold">{r.rating}/5</span>
-                <span className="text-sm text-gray-700">{r.authorId?.name || "Client"}</span>
-                {r.verified ? <span className="text-xs text-green-700">✓ Vérifié</span> : null}
+            <div key={i} className="gv-card gv-card-static p-4">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <span className="text-[var(--gv-brand)] font-bold">{r.rating}/5</span>
+                <span className="text-sm font-medium text-[var(--gv-ink)]">{r.authorId?.name || "Client"}</span>
+                {r.verified ? <BadgePill variant="success">✓ Vérifié</BadgePill> : null}
               </div>
-              {r.comment ? <p className="text-sm text-gray-600">{r.comment}</p> : null}
-            </li>
+              {r.comment ? <p className="text-sm text-[var(--gv-mut)] leading-relaxed">{r.comment}</p> : null}
+            </div>
           ))}
-        </ul>
+        </EntityGrid>
       ) : null}
     </section>
   );

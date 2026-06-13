@@ -1,7 +1,10 @@
 import type { SeoLang } from "@/lib/site";
 import { getSiteUrl } from "@/lib/site";
+import SeoPageShell from "@/components/layout/SeoPageShell";
 import JsonLd from "@/components/ssr/JsonLd";
-import SeoFooter from "@/components/ssr/SeoFooter";
+import { InsightCard } from "@/components/ui/GlassCard";
+import { EntityGrid } from "@/components/ui/PremiumCTA";
+import BadgePill from "@/components/ui/BadgePill";
 import { buildSeoPath } from "@client-seo/seoPaths";
 import { graphJsonLd, organizationJsonLd, webSiteJsonLd } from "@client-seo/jsonLd";
 
@@ -35,32 +38,62 @@ export default function HomeView({ lang }: { lang: SeoLang }) {
   const siteUrl = getSiteUrl();
   const meta = homeMetadata(lang);
 
+  const hubs = [
+    {
+      title: lang === "fr" ? "Location voiture" : "Car rental",
+      body: "45 villes & aéroports",
+      href: buildSeoPath(lang, "/location-voiture"),
+      badge: "Location",
+    },
+    {
+      title: lang === "fr" ? "Voiture occasion" : "Used cars",
+      body: lang === "fr" ? "Acheter & vendre" : "Buy & sell",
+      href: buildSeoPath(lang, "/voiture-occasion"),
+      badge: "Occasion",
+    },
+    {
+      title: "GoVoiture Pro",
+      body: "SaaS agences",
+      href: buildSeoPath(lang, "/pro"),
+      badge: "Pro",
+    },
+    {
+      title: "Blog",
+      body: lang === "fr" ? "Guides & conseils" : "Guides",
+      href: buildSeoPath(lang, "/blog"),
+      badge: "Guides",
+    },
+  ];
+
   return (
-    <>
-      <JsonLd data={graphJsonLd(organizationJsonLd(siteUrl), webSiteJsonLd(siteUrl))} />
-      <main className="mx-auto max-w-5xl px-4 py-16">
-        <h1 className="text-4xl font-bold mb-4">{meta.title.split("—")[0].trim()}</h1>
-        <p className="text-xl text-gray-600 mb-10">{meta.description}</p>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <a href={buildSeoPath(lang, "/location-voiture")} className="p-6 rounded-xl border hover:border-violet-400">
-            <h2 className="font-semibold">{lang === "fr" ? "Location voiture" : "Car rental"}</h2>
-            <p className="text-sm text-gray-600 mt-2">45 villes & aéroports</p>
-          </a>
-          <a href={buildSeoPath(lang, "/voiture-occasion")} className="p-6 rounded-xl border hover:border-violet-400">
-            <h2 className="font-semibold">{lang === "fr" ? "Voiture occasion" : "Used cars"}</h2>
-            <p className="text-sm text-gray-600 mt-2">{lang === "fr" ? "Acheter & vendre" : "Buy & sell"}</p>
-          </a>
-          <a href={buildSeoPath(lang, "/pro")} className="p-6 rounded-xl border hover:border-violet-400">
-            <h2 className="font-semibold">GoVoiture Pro</h2>
-            <p className="text-sm text-gray-600 mt-2">SaaS agences</p>
-          </a>
-          <a href={buildSeoPath(lang, "/blog")} className="p-6 rounded-xl border hover:border-violet-400">
-            <h2 className="font-semibold">Blog</h2>
-            <p className="text-sm text-gray-600 mt-2">{lang === "fr" ? "Guides & conseils" : "Guides"}</p>
-          </a>
-        </div>
-      </main>
-      <SeoFooter lang={lang} />
-    </>
+    <SeoPageShell
+      lang={lang}
+      breadcrumbs={[{ label: "Goovoiture", href: undefined }]}
+      hero={{
+        kicker: "GoVoiture",
+        title: meta.title.split("—")[0].trim(),
+        description: meta.description,
+      }}
+      cta={{
+        title: lang === "fr" ? "Explorer le marketplace" : "Explore the marketplace",
+        primaryHref: buildSeoPath(lang, "/location-voiture"),
+        primaryLabel: lang === "fr" ? "Location voiture" : "Car rental",
+        secondaryHref: buildSeoPath(lang, "/voiture-occasion"),
+        secondaryLabel: lang === "fr" ? "Voiture occasion" : "Used cars",
+      }}
+      jsonLd={<JsonLd data={graphJsonLd(organizationJsonLd(siteUrl), webSiteJsonLd(siteUrl))} />}
+    >
+      <EntityGrid cols={4}>
+        {hubs.map((h) => (
+          <InsightCard
+            key={h.href}
+            title={h.title}
+            body={h.body}
+            href={h.href}
+            badge={<BadgePill variant="brand">{h.badge}</BadgePill>}
+          />
+        ))}
+      </EntityGrid>
+    </SeoPageShell>
   );
 }

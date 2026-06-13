@@ -1,11 +1,10 @@
 import { notFound } from "next/navigation";
 import type { SeoLang } from "@/lib/site";
 import { getSiteUrl } from "@/lib/site";
-import Breadcrumbs from "@/components/ssr/Breadcrumbs";
-import FaqSection from "@/components/ssr/FaqSection";
+import SeoPageShell from "@/components/layout/SeoPageShell";
 import JsonLd from "@/components/ssr/JsonLd";
-import SeoFooter from "@/components/ssr/SeoFooter";
-import { brandPath, modelPath } from "@client-seo/catalog/brands";
+import { ChartContainer, RelatedLinksSection } from "@/components/ui/PremiumCTA";
+import { getBrandBySlug, brandPath, modelPath } from "@client-seo/catalog/brands";
 import { getVehicleSpec, priceIntelPath, vehicleSpecPath } from "@client-seo/catalog/vehicleSpecs";
 import { buildSeoPath } from "@client-seo/seoPaths";
 import { graphJsonLd, carJsonLd, breadcrumbJsonLd, faqPageJsonLd } from "@client-seo/jsonLd";
@@ -33,6 +32,9 @@ export default function VehicleSpecView({
   const spec = getVehicleSpec(brandSlug, modelSlug);
   if (!spec) notFound();
 
+  const brand = getBrandBySlug(brandSlug);
+  const brandName = brand?.name[lang] || brand?.name.fr || spec.brandName;
+
   const siteUrl = getSiteUrl();
   const path = vehicleSpecPath(brandSlug, modelSlug);
   const pageUrl = `${siteUrl}${buildSeoPath(lang, path)}`;
@@ -49,60 +51,74 @@ export default function VehicleSpecView({
     ["Sécurité", spec.safety],
   ].filter(([, v]) => v);
 
-  return (
-    <>
-      <JsonLd
-        data={graphJsonLd(
-          carJsonLd({
-            name: spec.displayName,
-            brand: spec.brandName,
-            model: spec.modelName,
-            description: spec.moroccoNotes,
-            url: pageUrl,
-            vehicleEngine: spec.engine,
-            fuelType: spec.fuel,
-            numberOfSeats: spec.seats,
-          }),
-          breadcrumbJsonLd([
-            { name: "GoVoiture", url: siteUrl },
-            { name: "Encyclopédie", url: `${siteUrl}${buildSeoPath(lang, vehicleSpecPath("dacia", "logan"))}` },
-            { name: spec.displayName, url: pageUrl },
-          ]),
-          faqPageJsonLd(spec.faqs)
-        )}
-      />
-      <main className="mx-auto max-w-4xl px-4 py-10">
-        <Breadcrumbs
-          items={[
-            { label: "Goovoiture", href: "/" },
-            { label: "Fiche technique", href: vehicleSpecPath("dacia", "logan") },
-            { label: spec.displayName, href: undefined },
-          ]}
-          lang={lang}
-        />
-        <h1 className="text-3xl font-bold mb-4">Fiche technique {spec.displayName}</h1>
-        <p className="text-gray-600 mb-8">{spec.moroccoNotes}</p>
+  const relatedLinks = [
+    { label: "Indice prix live", href: buildSeoPath(lang, priceIntelPath(brandSlug, modelSlug)) },
+    { label: "Annonces", href: buildSeoPath(lang, modelPath(brandSlug, modelSlug)) },
+    { label: `Marque ${spec.brandName}`, href: buildSeoPath(lang, brandPath(brandSlug)) },
+    { label: "Intelligence marché", href: buildSeoPath(lang, `/marche/${brandSlug}/${modelSlug}`) },
+    { label: "Fiabilité", href: buildSeoPath(lang, `/fiabilite/${brandSlug}/${modelSlug}`) },
+    { label: "Coût possession", href: buildSeoPath(lang, `/cout-possession/${brandSlug}/${modelSlug}`) },
+  ];
 
-        <table className="w-full text-sm border-collapse mb-10">
+  return (
+    <SeoPageShell
+      lang={lang}
+      breadcrumbs={[
+        { label: "Goovoiture", href: "/" },
+        { label: "Fiche technique", href: vehicleSpecPath("dacia", "logan") },
+        { label: spec.displayName, href: undefined },
+      ]}
+      hero={{
+        kicker: "GoVoiture Encyclopédie",
+        title: `Fiche technique ${spec.displayName}`,
+        description: spec.moroccoNotes,
+      }}
+      faqs={spec.faqs}
+      cta={{
+        title: `Trouver une ${spec.displayName}`,
+        primaryHref: buildSeoPath(lang, modelPath(brandSlug, modelSlug)),
+        primaryLabel: "Voir les annonces",
+        secondaryHref: buildSeoPath(lang, "/location-voiture"),
+        secondaryLabel: "Location voiture",
+      }}
+      related={{ brandSlug, brandFilter: brandName }}
+      jsonLd={
+        <JsonLd
+          data={graphJsonLd(
+            carJsonLd({
+              name: spec.displayName,
+              brand: spec.brandName,
+              model: spec.modelName,
+              description: spec.moroccoNotes,
+              url: pageUrl,
+              vehicleEngine: spec.engine,
+              fuelType: spec.fuel,
+              numberOfSeats: spec.seats,
+            }),
+            breadcrumbJsonLd([
+              { name: "GoVoiture", url: siteUrl },
+              { name: "Encyclopédie", url: `${siteUrl}${buildSeoPath(lang, vehicleSpecPath("dacia", "logan"))}` },
+              { name: spec.displayName, url: pageUrl },
+            ]),
+            faqPageJsonLd(spec.faqs)
+          )}
+        />
+      }
+    >
+      <ChartContainer title="Spécifications">
+        <table className="w-full text-sm border-collapse">
           <tbody>
             {specs.map(([label, value]) => (
-              <tr key={label} className="border-b">
+              <tr key={label} className="border-b border-[var(--gv-bdr)]">
                 <th className="text-left py-3 pr-4 font-medium w-1/3">{label}</th>
-                <td className="py-3 text-gray-700">{value}</td>
+                <td className="py-3 text-[var(--gv-ink2)]">{value}</td>
               </tr>
             ))}
           </tbody>
         </table>
+      </ChartContainer>
 
-        <section className="mb-10 flex flex-wrap gap-3 text-sm">
-          <a href={buildSeoPath(lang, priceIntelPath(brandSlug, modelSlug))} className="px-4 py-2 bg-violet-600 text-white rounded-lg">Indice prix live</a>
-          <a href={buildSeoPath(lang, modelPath(brandSlug, modelSlug))} className="text-violet-600 hover:underline">Annonces</a>
-          <a href={buildSeoPath(lang, brandPath(brandSlug))} className="text-violet-600 hover:underline">Marque {spec.brandName}</a>
-        </section>
-
-        <FaqSection faqs={spec.faqs} />
-      </main>
-      <SeoFooter lang={lang} />
-    </>
+      <RelatedLinksSection title="Explorer ce modèle" links={relatedLinks} />
+    </SeoPageShell>
   );
 }

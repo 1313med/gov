@@ -1,8 +1,11 @@
 import type { SeoLang } from "@/lib/site";
 import { getSiteUrl } from "@/lib/site";
-import Breadcrumbs from "@/components/ssr/Breadcrumbs";
+import SeoPageShell from "@/components/layout/SeoPageShell";
 import JsonLd from "@/components/ssr/JsonLd";
-import SeoFooter from "@/components/ssr/SeoFooter";
+import SectionHeader from "@/components/ui/SectionHeader";
+import { InsightCard } from "@/components/ui/GlassCard";
+import { EntityGrid } from "@/components/ui/PremiumCTA";
+import BadgePill from "@/components/ui/BadgePill";
 import { PRO_PAGES, getProPage, proPagePath } from "@client-seo/catalog/proPages";
 import { buildSeoPath } from "@client-seo/seoPaths";
 import { graphJsonLd, softwareApplicationJsonLd, breadcrumbJsonLd } from "@client-seo/jsonLd";
@@ -34,48 +37,67 @@ export function proPageMetadata(lang: SeoLang, pageSlug: string) {
 
 export function ProHubView({ lang }: { lang: SeoLang }) {
   const siteUrl = getSiteUrl();
-  const meta = proHubMetadata(lang);
 
   return (
-    <>
-      <JsonLd
-        data={graphJsonLd(
-          softwareApplicationJsonLd({
-            name: "GoVoiture Pro",
-            description: "Suite SaaS pour agences de location automobile au Maroc",
-            url: `${siteUrl}/pro`,
-          }),
-          breadcrumbJsonLd([
-            { name: "GoVoiture", url: siteUrl },
-            { name: "Pro", url: `${siteUrl}${buildSeoPath(lang, "/pro")}` },
-          ])
-        )}
-      />
-      <main className="mx-auto max-w-5xl px-4 py-12">
-        <Breadcrumbs items={[{ label: "Goovoiture", href: "/" }, { label: "Pro", href: undefined }]} lang={lang} />
-        <h1 className="text-3xl font-bold mb-4">GoVoiture Pro</h1>
-        <p className="text-gray-600 mb-10">
-          {lang === "fr"
+    <SeoPageShell
+      lang={lang}
+      breadcrumbs={[{ label: "Goovoiture", href: "/" }, { label: "Pro", href: undefined }]}
+      hero={{
+        kicker: "GoVoiture Pro",
+        title: "GoVoiture Pro",
+        description:
+          lang === "fr"
             ? "L'écosystème B2B pour dominer la location automobile au Maroc : flotte, CRM, contrats, facturation et SEO."
-            : "The B2B ecosystem for rental agencies in Morocco."}
-        </p>
-        <ul className="grid sm:grid-cols-2 gap-4">
+            : "The B2B ecosystem for rental agencies in Morocco.",
+      }}
+      cta={{
+        title: lang === "fr" ? "Démarrer avec GoVoiture Pro" : "Get started with GoVoiture Pro",
+        primaryHref: "/register",
+        primaryLabel: lang === "fr" ? "Demander une démo" : "Request a demo",
+        secondaryHref: buildSeoPath(lang, "/agences"),
+        secondaryLabel: lang === "fr" ? "Voir les agences" : "Browse agencies",
+      }}
+      jsonLd={
+        <JsonLd
+          data={graphJsonLd(
+            softwareApplicationJsonLd({
+              name: "GoVoiture Pro",
+              description: "Suite SaaS pour agences de location automobile au Maroc",
+              url: `${siteUrl}/pro`,
+            }),
+            breadcrumbJsonLd([
+              { name: "GoVoiture", url: siteUrl },
+              { name: "Pro", url: `${siteUrl}${buildSeoPath(lang, "/pro")}` },
+            ])
+          )}
+        />
+      }
+    >
+      <section className="gv-sec-sm">
+        <SectionHeader
+          eyebrow="Modules"
+          title={lang === "fr" ? "Suite complète pour agences" : "Complete agency suite"}
+        />
+        <EntityGrid cols={2}>
           {PRO_PAGES.map((p: { slug: string; title: Record<string, string>; description: Record<string, string>; price: number | null }) => (
-            <li key={p.slug}>
-              <a
-                href={buildSeoPath(lang, proPagePath(p.slug))}
-                className="block p-6 rounded-xl border hover:border-violet-400"
-              >
-                <h2 className="font-semibold text-lg">{p.title[lang] || p.title.fr}</h2>
-                <p className="text-sm text-gray-600 mt-2">{p.description[lang] || p.description.fr}</p>
-                {p.price ? <p className="text-violet-600 mt-2 font-medium">à partir de {p.price} MAD/mois</p> : null}
-              </a>
-            </li>
+            <InsightCard
+              key={p.slug}
+              title={p.title[lang] || p.title.fr}
+              body={p.description[lang] || p.description.fr}
+              href={buildSeoPath(lang, proPagePath(p.slug))}
+              badge={<BadgePill variant="brand">Pro</BadgePill>}
+              footer={
+                p.price ? (
+                  <span className="text-[var(--gv-brand)] font-semibold">
+                    {lang === "fr" ? `à partir de ${p.price} MAD/mois` : `from ${p.price} MAD/month`}
+                  </span>
+                ) : undefined
+              }
+            />
           ))}
-        </ul>
-      </main>
-      <SeoFooter lang={lang} />
-    </>
+        </EntityGrid>
+      </section>
+    </SeoPageShell>
   );
 }
 
@@ -88,40 +110,56 @@ export function ProPageView({ lang, pageSlug }: { lang: SeoLang; pageSlug: strin
   const title = page.title[lang] || page.title.fr;
 
   return (
-    <>
-      <JsonLd
-        data={graphJsonLd(
-          softwareApplicationJsonLd({
-            name: `GoVoiture Pro — ${title}`,
-            description: page.description[lang] || page.description.fr,
-            url: pageUrl,
-          }),
-          breadcrumbJsonLd([
-            { name: "GoVoiture", url: siteUrl },
-            { name: "Pro", url: `${siteUrl}${buildSeoPath(lang, "/pro")}` },
-            { name: title, url: pageUrl },
-          ])
-        )}
-      />
-      <main className="mx-auto max-w-3xl px-4 py-12">
-        <Breadcrumbs
-          items={[
-            { label: "Goovoiture", href: "/" },
-            { label: "Pro", href: "/pro" },
-            { label: title, href: undefined },
-          ]}
-          lang={lang}
+    <SeoPageShell
+      lang={lang}
+      breadcrumbs={[
+        { label: "Goovoiture", href: "/" },
+        { label: "Pro", href: "/pro" },
+        { label: title, href: undefined },
+      ]}
+      hero={{
+        kicker: "GoVoiture Pro",
+        title,
+        description: page.description[lang] || page.description.fr,
+        badges: page.price ? [`à partir de ${page.price} MAD/mois`] : undefined,
+      }}
+      cta={{
+        title: lang === "fr" ? "Prêt à transformer votre agence ?" : "Ready to transform your agency?",
+        primaryHref: "/register",
+        primaryLabel: lang === "fr" ? "Demander une démo" : "Request a demo",
+        secondaryHref: buildSeoPath(lang, "/pro"),
+        secondaryLabel: "GoVoiture Pro",
+      }}
+      jsonLd={
+        <JsonLd
+          data={graphJsonLd(
+            softwareApplicationJsonLd({
+              name: `GoVoiture Pro — ${title}`,
+              description: page.description[lang] || page.description.fr,
+              url: pageUrl,
+            }),
+            breadcrumbJsonLd([
+              { name: "GoVoiture", url: siteUrl },
+              { name: "Pro", url: `${siteUrl}${buildSeoPath(lang, "/pro")}` },
+              { name: title, url: pageUrl },
+            ])
+          )}
         />
-        <h1 className="text-3xl font-bold mb-4">{title}</h1>
-        <p className="text-gray-600 mb-6">{page.description[lang] || page.description.fr}</p>
+      }
+    >
+      <div className="gv-card gv-card-static p-6 md:p-8 max-w-2xl">
+        <p className="text-[var(--gv-ink2)] leading-relaxed mb-6">
+          {page.description[lang] || page.description.fr}
+        </p>
         {page.price ? (
-          <p className="text-xl font-semibold text-violet-600 mb-8">à partir de {page.price} MAD/mois</p>
+          <p className="text-2xl font-bold text-[var(--gv-brand)] font-[family-name:var(--gv-disp)] mb-6">
+            {lang === "fr" ? `à partir de ${page.price} MAD/mois` : `from ${page.price} MAD/month`}
+          </p>
         ) : null}
-        <a href="/register" className="inline-block px-6 py-3 bg-violet-600 text-white rounded-xl font-semibold">
-          {lang === "fr" ? "Demander une démo" : "Request a demo"}
+        <a href="/register" className="gv-btn gv-btn-primary">
+          {lang === "fr" ? "Demander une démo →" : "Request a demo →"}
         </a>
-      </main>
-      <SeoFooter lang={lang} />
-    </>
+      </div>
+    </SeoPageShell>
   );
 }

@@ -1,12 +1,14 @@
 import type { SeoLang } from "@/lib/site";
 import { getSiteUrl } from "@/lib/site";
-import Breadcrumbs from "@/components/ssr/Breadcrumbs";
-import FaqSection from "@/components/ssr/FaqSection";
+import SeoPageShell from "@/components/layout/SeoPageShell";
+import ListingGrid from "@/components/ui/ListingGrid";
+import { RelatedLinksSection } from "@/components/ui/PremiumCTA";
+import SectionHeader from "@/components/ui/SectionHeader";
+import { EmptyState } from "@/components/ui/PremiumCTA";
 import JsonLd from "@/components/ssr/JsonLd";
-import SeoFooter from "@/components/ssr/SeoFooter";
 import { fetchRentals, fetchSales } from "@/lib/api";
 
-import { getCityBySlug, getCityName } from "@client-seo/catalog/cities";
+import { getCityBySlug, getCityName, MOROCCO_CITIES } from "@client-seo/catalog/cities";
 import { resolveCityFacetSlug, getModelBySlugs } from "@client-seo/catalog/brands";
 import {
   buildHubSeo,
@@ -78,35 +80,51 @@ export async function MarketplaceView({
 }) {
   const siteUrl = getSiteUrl();
   const hubPath = intent === "sale" ? "/voiture-occasion" : "/location-voiture";
+  const hubLabel = intent === "sale" ? "Occasion" : "Location";
 
   // Hub page (no slug)
   if (!slug.length) {
     const seo = buildHubSeo(lang, intent);
     if (!seo) return null;
     const pageUrl = `${siteUrl}${buildSeoPath(lang, hubPath)}`;
+    const cityLinks = MOROCCO_CITIES.slice(0, 18).map((c) => ({
+      label: `${hubLabel} ${c.name[lang] || c.name.fr}`,
+      href: buildSeoPath(lang, `${hubPath}/${c.slug}`),
+    }));
+
     return (
-      <>
-        <JsonLd
-          data={graphJsonLd(
-            collectionPageJsonLd({ name: seo.h1, url: pageUrl, description: seo.description, items: [] }),
-            breadcrumbJsonLd([
-              { name: "Goovoiture", url: siteUrl },
-              { name: seo.h1, url: pageUrl },
-            ])
-          )}
+      <SeoPageShell
+        lang={lang}
+        breadcrumbs={[{ label: "Goovoiture", href: "/" }, { label: seo.h1, href: undefined }]}
+        hero={{
+          kicker: "GoVoiture Marketplace",
+          title: seo.h1,
+          description: seo.intro,
+        }}
+        cta={{
+          title: lang === "fr" ? "Comparer les offres" : "Compare offers",
+          primaryHref: buildSeoPath(lang, "/location-voiture/casablanca"),
+          primaryLabel: lang === "fr" ? "Location Casablanca" : "Casablanca rental",
+          secondaryHref: buildSeoPath(lang, "/voiture-occasion/casablanca"),
+          secondaryLabel: lang === "fr" ? "Occasion Casablanca" : "Casablanca used cars",
+        }}
+        jsonLd={
+          <JsonLd
+            data={graphJsonLd(
+              collectionPageJsonLd({ name: seo.h1, url: pageUrl, description: seo.description, items: [] }),
+              breadcrumbJsonLd([
+                { name: "Goovoiture", url: siteUrl },
+                { name: seo.h1, url: pageUrl },
+              ])
+            )}
+          />
+        }
+      >
+        <RelatedLinksSection
+          title={lang === "fr" ? "Par ville" : "By city"}
+          links={cityLinks}
         />
-        <main className="mx-auto max-w-5xl px-4 py-10">
-          <Breadcrumbs items={[{ label: "Goovoiture", href: "/" }, { label: seo.h1, href: undefined }]} lang={lang} />
-          <h1 className="text-3xl font-bold mb-4">{seo.h1}</h1>
-          <p className="text-gray-600 mb-8">{seo.intro}</p>
-          <p>
-            <a href={buildSeoPath(lang, "/location-voiture/casablanca")} className="text-violet-600 font-medium">
-              {lang === "fr" ? "Location Casablanca →" : "Casablanca →"}
-            </a>
-          </p>
-        </main>
-        <SeoFooter lang={lang} />
-      </>
+      </SeoPageShell>
     );
   }
 
@@ -126,46 +144,72 @@ export async function MarketplaceView({
     const pageUrl = `${siteUrl}${buildSeoPath(lang, basePath)}`;
 
     return (
-      <>
-        <JsonLd
-          data={
-            intent === "rental"
-              ? graphJsonLd(
-                  localBusinessJsonLd({ cityName, siteUrl, pageUrl }),
-                  breadcrumbJsonLd([
+      <SeoPageShell
+        lang={lang}
+        breadcrumbs={[
+          { label: "Goovoiture", href: "/" },
+          { label: hubLabel, href: hubPath },
+          { label: cityName, href: undefined },
+        ]}
+        hero={{
+          kicker: "GoVoiture Marketplace",
+          title: seo?.h1 || cityName,
+          description: seo?.intro,
+        }}
+        cta={{
+          title: lang === "fr" ? `Plus d'offres à ${cityName}` : `More offers in ${cityName}`,
+          primaryHref: buildSeoPath(lang, intent === "rental" ? "/cars" : "/cars"),
+          primaryLabel: lang === "fr" ? "Marketplace interactif" : "Interactive marketplace",
+          secondaryHref: buildSeoPath(lang, intent === "rental" ? "/agences" : "/concessionnaires"),
+          secondaryLabel: intent === "rental" ? "Agences" : "Concessionnaires",
+        }}
+        related={{ showListings: false, showBrands: true, showAgencies: intent === "rental" }}
+        jsonLd={
+          <JsonLd
+            data={
+              intent === "rental"
+                ? graphJsonLd(
+                    localBusinessJsonLd({ cityName, siteUrl, pageUrl }),
+                    breadcrumbJsonLd([
+                      { name: "Goovoiture", url: siteUrl },
+                      { name: seo?.h1 || cityName, url: pageUrl },
+                    ])
+                  )
+                : breadcrumbJsonLd([
                     { name: "Goovoiture", url: siteUrl },
                     { name: seo?.h1 || cityName, url: pageUrl },
                   ])
-                )
-              : breadcrumbJsonLd([
-                  { name: "Goovoiture", url: siteUrl },
-                  { name: seo?.h1 || cityName, url: pageUrl },
-                ])
-          }
-        />
-        <main className="mx-auto max-w-5xl px-4 py-8">
-          <Breadcrumbs
-            items={[
-              { label: "Goovoiture", href: "/" },
-              { label: intent === "sale" ? "Occasion" : "Location", href: hubPath },
-              { label: cityName, href: undefined },
-            ]}
-            lang={lang}
+            }
           />
-          <h1 className="text-2xl font-bold mb-3">{seo?.h1}</h1>
-          <p className="text-gray-600 mb-8">{seo?.intro}</p>
-          <ListingGrid listings={listings} lang={lang} intent={intent} />
-        </main>
-        <SeoFooter lang={lang} />
-      </>
+        }
+      >
+        <section className="gv-sec-sm">
+          <SectionHeader
+            eyebrow={cityName}
+            title={lang === "fr" ? "Annonces disponibles" : "Available listings"}
+            description={lang === "fr" ? `${listings.length} offre(s) trouvée(s)` : `${listings.length} offer(s) found`}
+          />
+          <ListingGrid
+            listings={listings}
+            lang={lang}
+            intent={intent}
+            emptyActionHref={buildSeoPath(lang, hubPath)}
+            emptyActionLabel={lang === "fr" ? "Voir toutes les villes" : "Browse all cities"}
+          />
+        </section>
+      </SeoPageShell>
     );
   }
 
   if (!city) {
     return (
-      <main className="p-8 text-center text-gray-500">
-        <h1>Page introuvable</h1>
-      </main>
+      <SeoPageShell
+        lang={lang}
+        breadcrumbs={[{ label: "Goovoiture", href: "/" }, { label: "Page introuvable", href: undefined }]}
+        hero={{ title: "Page introuvable" }}
+      >
+        <EmptyState title="Page introuvable" actionHref="/" actionLabel="Retour à l'accueil" />
+      </SeoPageShell>
     );
   }
 
@@ -180,9 +224,13 @@ export async function MarketplaceView({
 
   if (!seo || !facet) {
     return (
-      <main className="p-8 text-center text-gray-500">
-        <h1>Page introuvable</h1>
-      </main>
+      <SeoPageShell
+        lang={lang}
+        breadcrumbs={[{ label: "Goovoiture", href: "/" }, { label: "Page introuvable", href: undefined }]}
+        hero={{ title: "Page introuvable" }}
+      >
+        <EmptyState title="Page introuvable" actionHref={buildSeoPath(lang, hubPath)} actionLabel={hubLabel} />
+      </SeoPageShell>
     );
   }
 
@@ -211,83 +259,57 @@ export async function MarketplaceView({
   }));
 
   return (
-    <>
-      <JsonLd
-        data={graphJsonLd(
-          collectionPageJsonLd({ name: seo.h1, url: pageUrl, description: seo.description, items: itemList }),
-          faqPageJsonLd(faqs),
-          breadcrumbJsonLd([
-            { name: "Goovoiture", url: siteUrl },
-            { name: intent === "sale" ? "Occasion" : "Location", url: `${siteUrl}${buildSeoPath(lang, hubPath)}` },
-            { name: getCityName(city, lang), url: `${siteUrl}${buildSeoPath(lang, `${hubPath}/${citySlug}`)}` },
-            { name: seo.h1, url: pageUrl },
-          ])
-        )}
-      />
-      <main className="mx-auto max-w-5xl px-4 py-8">
-        <Breadcrumbs
-          items={[
-            { label: "Goovoiture", href: "/" },
-            { label: intent === "sale" ? "Occasion" : "Location", href: hubPath },
-            { label: getCityName(city, lang), href: `${hubPath}/${citySlug}` },
-            { label: seo.h1.split("—")[0].trim(), href: undefined },
-          ]}
-          lang={lang}
+    <SeoPageShell
+      lang={lang}
+      breadcrumbs={[
+        { label: "Goovoiture", href: "/" },
+        { label: hubLabel, href: hubPath },
+        { label: getCityName(city, lang), href: `${hubPath}/${citySlug}` },
+        { label: seo.h1.split("—")[0].trim(), href: undefined },
+      ]}
+      hero={{
+        kicker: getCityName(city, lang),
+        title: seo.h1,
+        description: seo.intro,
+      }}
+      faqs={faqs}
+      cta={{
+        title: lang === "fr" ? "Comparer toutes les offres" : "Compare all offers",
+        primaryHref: buildSeoPath(lang, hubPath),
+        primaryLabel: hubLabel,
+        secondaryHref: buildSeoPath(lang, `${hubPath}/${citySlug}`),
+        secondaryLabel: getCityName(city, lang),
+      }}
+      related={{ brandSlug: facet.type === "brand" ? brandKey : undefined, showListings: false }}
+      jsonLd={
+        <JsonLd
+          data={graphJsonLd(
+            collectionPageJsonLd({ name: seo.h1, url: pageUrl, description: seo.description, items: itemList }),
+            faqPageJsonLd(faqs),
+            breadcrumbJsonLd([
+              { name: "Goovoiture", url: siteUrl },
+              { name: hubLabel, url: `${siteUrl}${buildSeoPath(lang, hubPath)}` },
+              { name: getCityName(city, lang), url: `${siteUrl}${buildSeoPath(lang, `${hubPath}/${citySlug}`)}` },
+              { name: seo.h1, url: pageUrl },
+            ])
+          )}
         />
-        <h1 className="text-2xl font-bold mb-3">{seo.h1}</h1>
-        <p className="text-gray-600 mb-8">{seo.intro}</p>
-        <ListingGrid listings={listings} lang={lang} intent={intent} />
-        <FaqSection faqs={faqs} />
-      </main>
-      <SeoFooter lang={lang} />
-    </>
-  );
-}
-
-function ListingGrid({
-  listings,
-  lang,
-  intent,
-}: {
-  listings: Record<string, unknown>[];
-  lang: SeoLang;
-  intent: Intent;
-}) {
-  if (!listings.length) {
-    return <p className="text-gray-500">Aucune annonce pour le moment.</p>;
-  }
-  return (
-    <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-10">
-      {listings.map((item) => (
-        <li key={String(item._id)}>
-          <a
-            href={buildSeoPath(
-              lang,
-              intent === "sale" ? buildSaleListingPath(item) : buildRentalListingPath(item)
-            )}
-            className="block rounded-xl border border-gray-200 p-4 hover:shadow-md"
-          >
-            {Array.isArray(item.images) && item.images[0] ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={String(item.images[0])}
-                alt={`${item.brand} ${item.model}`}
-                className="h-36 w-full object-cover rounded-lg mb-3"
-                loading="lazy"
-              />
-            ) : null}
-            <h3 className="font-semibold">
-              {String(item.brand)} {String(item.model)} {String(item.year)}
-            </h3>
-            <p className="text-violet-600 text-sm mt-1">
-              {intent === "rental"
-                ? `${Number(item.pricePerDay).toLocaleString()} MAD/jour`
-                : `${Number(item.price).toLocaleString()} MAD`}
-            </p>
-          </a>
-        </li>
-      ))}
-    </ul>
+      }
+    >
+      <section className="gv-sec-sm">
+        <SectionHeader
+          eyebrow={getCityName(city, lang)}
+          title={lang === "fr" ? "Annonces filtrées" : "Filtered listings"}
+        />
+        <ListingGrid
+          listings={listings}
+          lang={lang}
+          intent={intent}
+          emptyActionHref={buildSeoPath(lang, `${hubPath}/${citySlug}`)}
+          emptyActionLabel={getCityName(city, lang)}
+        />
+      </section>
+    </SeoPageShell>
   );
 }
 

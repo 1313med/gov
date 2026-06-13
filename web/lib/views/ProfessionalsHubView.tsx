@@ -1,49 +1,44 @@
 import type { SeoLang } from "@/lib/site";
 import { getSiteUrl } from "@/lib/site";
 import { fetchAgencies, fetchDealers, type ProfessionalSummary } from "@/lib/api";
-import Breadcrumbs from "@/components/ssr/Breadcrumbs";
-import FaqSection from "@/components/ssr/FaqSection";
+import SeoPageShell from "@/components/layout/SeoPageShell";
 import JsonLd from "@/components/ssr/JsonLd";
-import SeoFooter from "@/components/ssr/SeoFooter";
+import SectionHeader from "@/components/ui/SectionHeader";
+import { EntityGrid, EmptyState, RelatedLinksSection } from "@/components/ui/PremiumCTA";
+import BadgePill from "@/components/ui/BadgePill";
 import { getCityBySlug, getCityName, MOROCCO_CITIES } from "@client-seo/catalog/cities";
-import {
-  buildAgencyHubSeo,
-  buildDealerHubSeo,
-  agencyFaqs,
-  dealerFaqs,
-} from "@client-seo/catalog/professionals";
+import { buildAgencyHubSeo, buildDealerHubSeo, agencyFaqs, dealerFaqs } from "@client-seo/catalog/professionals";
 import { buildSeoPath } from "@client-seo/seoPaths";
 import { graphJsonLd, collectionPageJsonLd, faqPageJsonLd, breadcrumbJsonLd } from "@client-seo/jsonLd";
 
 type Kind = "agency" | "dealer";
 
 export function professionalsHubMetadata(lang: SeoLang, kind: Kind, citySlug?: string) {
-  const seo =
-    kind === "agency" ? buildAgencyHubSeo(lang, citySlug) : buildDealerHubSeo(lang, citySlug);
+  const seo = kind === "agency" ? buildAgencyHubSeo(lang, citySlug) : buildDealerHubSeo(lang, citySlug);
   if (!seo) return null;
   return { basePath: seo.path, title: seo.title, description: seo.description, keywords: seo.keywords };
 }
 
 function ProfessionalCard({ p, lang }: { p: ProfessionalSummary; lang: SeoLang }) {
   return (
-    <a href={buildSeoPath(lang, p.path)} className="block rounded-xl border p-4 hover:shadow-md">
+    <a href={buildSeoPath(lang, p.path)} className="gv-card block p-5 no-underline text-inherit">
       <div className="flex gap-3 items-start">
         {p.avatar ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={String(p.avatar)} alt={p.name} className="w-12 h-12 rounded-full object-cover" />
+          <img src={String(p.avatar)} alt={p.name} className="w-14 h-14 rounded-full object-cover border-2 border-[var(--gv-gbd)]" />
         ) : (
-          <div className="w-12 h-12 rounded-full bg-violet-100 flex items-center justify-center text-violet-700 font-bold">
+          <div className="w-14 h-14 rounded-full bg-[var(--gv-gbg)] flex items-center justify-center text-[var(--gv-brand)] font-bold text-lg">
             {p.name.charAt(0)}
           </div>
         )}
-        <div>
-          <h3 className="font-semibold">{p.name}</h3>
-          <p className="text-sm text-gray-600">{p.city}</p>
-          <p className="text-xs text-gray-500 mt-1">
-            {p.fleetSize} véhicule{p.fleetSize !== 1 ? "s" : ""}
-            {p.reviewCount > 0 ? ` · ${p.avgRating}/5 (${p.reviewCount})` : ""}
-            {p.verified ? " · ✓ Vérifié" : ""}
-          </p>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-[var(--gv-ink)] truncate">{p.name}</h3>
+          <p className="text-sm text-[var(--gv-mut)]">{p.city}</p>
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            <BadgePill variant="neutral">{p.fleetSize} véhicule{p.fleetSize !== 1 ? "s" : ""}</BadgePill>
+            {p.reviewCount > 0 ? <BadgePill variant="brand">{p.avgRating}/5</BadgePill> : null}
+            {p.verified ? <BadgePill variant="success">✓ Vérifié</BadgePill> : null}
+          </div>
         </div>
       </div>
     </a>
@@ -59,8 +54,7 @@ export default async function ProfessionalsHubView({
   kind: Kind;
   citySlug?: string;
 }) {
-  const seo =
-    kind === "agency" ? buildAgencyHubSeo(lang, citySlug) : buildDealerHubSeo(lang, citySlug);
+  const seo = kind === "agency" ? buildAgencyHubSeo(lang, citySlug) : buildDealerHubSeo(lang, citySlug);
   if (!seo) return null;
 
   const city = citySlug ? getCityBySlug(citySlug) : null;
@@ -76,67 +70,68 @@ export default async function ProfessionalsHubView({
   const siteUrl = getSiteUrl();
   const pageUrl = `${siteUrl}${buildSeoPath(lang, seo.path)}`;
 
+  const cityLinks = !citySlug
+    ? MOROCCO_CITIES.slice(0, 15).map((c) => ({
+        label: `${hubLabel} ${c.name[lang] || c.name.fr}`,
+        href: buildSeoPath(lang, `${hubPath}/${c.slug}`),
+      }))
+    : [];
+
   return (
-    <>
-      <JsonLd
-        data={graphJsonLd(
-          collectionPageJsonLd({
-            name: seo.h1,
-            url: pageUrl,
-            description: seo.description,
-            items: items.map((p) => ({ name: p.name, url: `${siteUrl}${buildSeoPath(lang, p.path)}` })),
-          }),
-          faqPageJsonLd(faqs),
-          breadcrumbJsonLd([
-            { name: "GoVoiture", url: siteUrl },
-            { name: hubLabel, url: `${siteUrl}${buildSeoPath(lang, hubPath)}` },
-            ...(city ? [{ name: cityName, url: pageUrl }] : []),
-          ])
-        )}
-      />
-      <main className="mx-auto max-w-5xl px-4 py-10">
-        <Breadcrumbs
-          items={[
-            { label: "Goovoiture", href: "/" },
-            { label: hubLabel, href: hubPath },
-            ...(city ? [{ label: cityName, href: undefined }] : []),
-          ]}
-          lang={lang}
+    <SeoPageShell
+      lang={lang}
+      breadcrumbs={[
+        { label: "Goovoiture", href: "/" },
+        { label: hubLabel, href: hubPath },
+        ...(city ? [{ label: cityName, href: undefined }] : []),
+      ]}
+      hero={{
+        kicker: kind === "agency" ? "GoVoiture Pro · Location" : "GoVoiture Pro · Occasion",
+        title: seo.h1,
+        description: seo.intro,
+        badges: [cityName, `${items.length} profils`],
+      }}
+      faqs={faqs}
+      cta={{
+        title: kind === "agency" ? "Louer une voiture au Maroc" : "Acheter une voiture au Maroc",
+        description: "Comparez les offres marketplace en temps réel.",
+        primaryHref: buildSeoPath(lang, kind === "agency" ? "/location-voiture" : "/voiture-occasion"),
+        primaryLabel: kind === "agency" ? "Voir les locations" : "Voir les occasions",
+      }}
+      related={{ showListings: true, showBrands: true, showAgencies: false }}
+      jsonLd={
+        <JsonLd
+          data={graphJsonLd(
+            collectionPageJsonLd({
+              name: seo.h1,
+              url: pageUrl,
+              description: seo.description,
+              items: items.map((p) => ({ name: p.name, url: `${siteUrl}${buildSeoPath(lang, p.path)}` })),
+            }),
+            faqPageJsonLd(faqs),
+            breadcrumbJsonLd([
+              { name: "GoVoiture", url: siteUrl },
+              { name: hubLabel, url: `${siteUrl}${buildSeoPath(lang, hubPath)}` },
+              ...(city ? [{ name: cityName, url: pageUrl }] : []),
+            ])
+          )}
         />
-        <h1 className="text-3xl font-bold mb-4">{seo.h1}</h1>
-        <p className="text-gray-600 mb-8">{seo.intro}</p>
+      }
+    >
+      {cityLinks.length > 0 ? <RelatedLinksSection title="Par ville" links={cityLinks} /> : null}
 
-        {!citySlug ? (
-          <section className="mb-10">
-            <h2 className="font-semibold mb-3">{lang === "fr" ? "Par ville" : "By city"}</h2>
-            <ul className="grid sm:grid-cols-2 md:grid-cols-3 gap-2 text-sm">
-              {MOROCCO_CITIES.slice(0, 15).map((c) => (
-                <li key={c.slug}>
-                  <a
-                    href={buildSeoPath(lang, `${hubPath}/${c.slug}`)}
-                    className="text-violet-600 hover:underline"
-                  >
-                    {hubLabel} {c.name[lang] || c.name.fr}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
-
-        <ul className="grid sm:grid-cols-2 gap-4 mb-10">
-          {items.map((p) => (
-            <li key={p._id}>
-              <ProfessionalCard p={p} lang={lang} />
-            </li>
-          ))}
-        </ul>
-        {!items.length ? (
-          <p className="text-gray-500 mb-8">{lang === "fr" ? "Aucun profil pour le moment." : "No profiles yet."}</p>
-        ) : null}
-        <FaqSection faqs={faqs} />
-      </main>
-      <SeoFooter lang={lang} />
-    </>
+      <section className="gv-sec-sm">
+        <SectionHeader eyebrow="Professionnels" title={`${hubLabel} vérifiés`} description={`Profils actifs à ${cityName}.`} />
+        {items.length > 0 ? (
+          <EntityGrid cols={2}>
+            {items.map((p) => (
+              <ProfessionalCard key={p._id} p={p} lang={lang} />
+            ))}
+          </EntityGrid>
+        ) : (
+          <EmptyState title="Aucun profil pour le moment" description="Revenez bientôt — de nouvelles agences rejoignent GoVoiture." />
+        )}
+      </section>
+    </SeoPageShell>
   );
 }

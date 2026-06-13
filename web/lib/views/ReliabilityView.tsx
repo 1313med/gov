@@ -2,10 +2,14 @@ import { notFound } from "next/navigation";
 import type { SeoLang } from "@/lib/site";
 import { getSiteUrl } from "@/lib/site";
 import { fetchReliability } from "@/lib/api";
-import Breadcrumbs from "@/components/ssr/Breadcrumbs";
-import FaqSection from "@/components/ssr/FaqSection";
+import SeoPageShell from "@/components/layout/SeoPageShell";
 import JsonLd from "@/components/ssr/JsonLd";
-import SeoFooter from "@/components/ssr/SeoFooter";
+import StatCard from "@/components/ui/StatCard";
+import SectionHeader from "@/components/ui/SectionHeader";
+import TrustScoreCard from "@/components/ui/TrustScoreCard";
+import { InsightCard } from "@/components/ui/GlassCard";
+import { EntityGrid, RelatedLinksSection } from "@/components/ui/PremiumCTA";
+import BadgePill from "@/components/ui/BadgePill";
 import { getBrandBySlug, modelPath } from "@client-seo/catalog/brands";
 import { getVehicleSpec, priceIntelPath } from "@client-seo/catalog/vehicleSpecs";
 import {
@@ -48,26 +52,52 @@ export async function ReliabilityHubView({ lang }: { lang: SeoLang }) {
   const siteUrl = getSiteUrl();
 
   return (
-    <>
-      <main className="mx-auto max-w-4xl px-4 py-10">
-        <Breadcrumbs items={[{ label: "Goovoiture", href: "/" }, { label: "Fiabilité", href: undefined }]} lang={lang} />
-        <h1 className="text-3xl font-bold mb-4">Indice fiabilité GoVoiture</h1>
-        <p className="text-gray-600 mb-10">Scores curatés + données communauté — uniquement modèles avec fiche technique vérifiée.</p>
-        <ul className="space-y-3">
+    <SeoPageShell
+      lang={lang}
+      breadcrumbs={[{ label: "Goovoiture", href: "/" }, { label: "Fiabilité", href: undefined }]}
+      hero={{
+        kicker: "GoVoiture Data",
+        title: "Indice fiabilité GoVoiture",
+        description: "Scores curatés + données communauté — uniquement modèles avec fiche technique vérifiée.",
+      }}
+      cta={{
+        title: "Trouver une voiture fiable",
+        primaryHref: buildSeoPath(lang, "/voiture-occasion"),
+        primaryLabel: "Voiture occasion",
+        secondaryHref: buildSeoPath(lang, "/location-voiture"),
+        secondaryLabel: "Location voiture",
+      }}
+      jsonLd={
+        <JsonLd
+          data={graphJsonLd(
+            breadcrumbJsonLd([
+              { name: "GoVoiture", url: siteUrl },
+              { name: "Fiabilité", url: `${siteUrl}${buildSeoPath(lang, reliabilityHubPath())}` },
+            ])
+          )}
+        />
+      }
+    >
+      <section className="gv-sec-sm">
+        <SectionHeader eyebrow="Modèles indexés" title="Scores par modèle" />
+        <EntityGrid cols={2}>
           {models.map((m) => (
-            <li key={`${m!.brandSlug}:${m!.modelSlug}`}>
-              <a href={buildSeoPath(lang, reliabilityPath(m!.brandSlug, m!.modelSlug))} className="flex items-center justify-between rounded-xl border p-4 hover:border-violet-300">
-                <span className="font-medium capitalize">{m!.displayName}</span>
-                <span className={`text-lg font-bold ${m!.score >= 85 ? "text-green-600" : m!.score >= 70 ? "text-amber-600" : "text-red-600"}`}>
-                  {m!.score}/100 · {m!.grade}
+            <InsightCard
+              key={`${m!.brandSlug}:${m!.modelSlug}`}
+              title={m!.displayName}
+              body={`Grade ${m!.grade}`}
+              href={buildSeoPath(lang, reliabilityPath(m!.brandSlug, m!.modelSlug))}
+              footer={
+                <span className={`text-lg font-bold ${m!.score >= 85 ? "text-emerald-600" : m!.score >= 70 ? "text-amber-600" : "text-red-600"}`}>
+                  {m!.score}/100
                 </span>
-              </a>
-            </li>
+              }
+              badge={<BadgePill variant="success">Fiabilité</BadgePill>}
+            />
           ))}
-        </ul>
-      </main>
-      <SeoFooter lang={lang} />
-    </>
+        </EntityGrid>
+      </section>
+    </SeoPageShell>
   );
 }
 
@@ -94,96 +124,105 @@ export default async function ReliabilityModelView({
   const path = reliabilityPath(brandSlug, modelSlug);
   const pageUrl = `${siteUrl}${buildSeoPath(lang, path)}`;
 
+  const relatedLinks = [
+    { label: "Intelligence marché", href: buildSeoPath(lang, marketIntelPath(brandSlug, modelSlug)) },
+    { label: "Indice prix", href: buildSeoPath(lang, priceIntelPath(brandSlug, modelSlug)) },
+    { label: "Coût possession", href: buildSeoPath(lang, tcoPath(brandSlug, modelSlug)) },
+    { label: "Annonces", href: buildSeoPath(lang, modelPath(brandSlug, modelSlug)) },
+  ];
+
   return (
-    <>
-      <JsonLd
-        data={graphJsonLd(
-          aggregateRatingJsonLd({
-            itemReviewed: curated.displayName,
-            ratingValue: Math.round(score / 20 * 10) / 10,
-            reviewCount: live?.reviewSampleSize || curated.strengths.length + 5,
-          }),
-          breadcrumbJsonLd([
-            { name: "GoVoiture", url: siteUrl },
-            { name: "Fiabilité", url: `${siteUrl}${buildSeoPath(lang, reliabilityHubPath())}` },
-            { name: curated.displayName, url: pageUrl },
-          ]),
-          faqPageJsonLd(curated.faqs)
-        )}
-      />
-      <main className="mx-auto max-w-4xl px-4 py-10">
-        <Breadcrumbs
-          items={[
-            { label: "Goovoiture", href: "/" },
-            { label: "Fiabilité", href: reliabilityHubPath() },
-            { label: curated.displayName, href: undefined },
-          ]}
-          lang={lang}
+    <SeoPageShell
+      lang={lang}
+      breadcrumbs={[
+        { label: "Goovoiture", href: "/" },
+        { label: "Fiabilité", href: reliabilityHubPath() },
+        { label: curated.displayName, href: undefined },
+      ]}
+      hero={{
+        kicker: "GoVoiture Data",
+        title: `Fiabilité ${curated.displayName}`,
+        description: curated.moroccoVerdict,
+      }}
+      faqs={curated.faqs}
+      cta={{
+        title: `Acheter une ${curated.displayName}`,
+        primaryHref: buildSeoPath(lang, modelPath(brandSlug, modelSlug)),
+        primaryLabel: "Voir les annonces",
+        secondaryHref: buildSeoPath(lang, "/voiture-occasion"),
+        secondaryLabel: "Voiture occasion",
+      }}
+      related={{ brandSlug, brandFilter: brandName }}
+      jsonLd={
+        <JsonLd
+          data={graphJsonLd(
+            aggregateRatingJsonLd({
+              itemReviewed: curated.displayName,
+              ratingValue: Math.round(score / 20 * 10) / 10,
+              reviewCount: live?.reviewSampleSize || curated.strengths.length + 5,
+            }),
+            breadcrumbJsonLd([
+              { name: "GoVoiture", url: siteUrl },
+              { name: "Fiabilité", url: `${siteUrl}${buildSeoPath(lang, reliabilityHubPath())}` },
+              { name: curated.displayName, url: pageUrl },
+            ]),
+            faqPageJsonLd(curated.faqs)
+          )}
         />
-        <h1 className="text-3xl font-bold mb-2">Fiabilité {curated.displayName}</h1>
-        <div className="flex items-baseline gap-4 mb-4">
-          <span className="text-5xl font-bold text-green-600">{score}</span>
-          <span className="text-2xl text-gray-500">/100 · Grade {grade}</span>
+      }
+    >
+      <div className="mb-8">
+        <TrustScoreCard score={score} grade={`Grade ${grade}`} />
+      </div>
+
+      <EntityGrid cols={2}>
+        <div className="gv-card gv-card-static p-5">
+          <SectionHeader title="Points forts" />
+          <ul className="text-sm space-y-1 list-disc pl-4 text-[var(--gv-mut)]">
+            {curated.strengths.map((s) => (
+              <li key={s}>{s}</li>
+            ))}
+          </ul>
         </div>
-        <p className="text-gray-600 mb-8">{curated.moroccoVerdict}</p>
-
-        <div className="grid sm:grid-cols-2 gap-4 mb-10">
-          <div className="rounded-xl border p-4">
-            <h2 className="font-semibold text-green-700 mb-2">Points forts</h2>
-            <ul className="text-sm space-y-1 list-disc pl-4">
-              {curated.strengths.map((s) => (
-                <li key={s}>{s}</li>
-              ))}
-            </ul>
-          </div>
-          <div className="rounded-xl border p-4">
-            <h2 className="font-semibold text-amber-700 mb-2">Points de vigilance</h2>
-            <ul className="text-sm space-y-1 list-disc pl-4">
-              {curated.weaknesses.map((w) => (
-                <li key={w}>{w}</li>
-              ))}
-            </ul>
-          </div>
+        <div className="gv-card gv-card-static p-5">
+          <SectionHeader title="Points de vigilance" />
+          <ul className="text-sm space-y-1 list-disc pl-4 text-[var(--gv-mut)]">
+            {curated.weaknesses.map((w) => (
+              <li key={w}>{w}</li>
+            ))}
+          </ul>
         </div>
+      </EntityGrid>
 
-        <dl className="grid grid-cols-2 gap-4 mb-10 text-center">
-          <div className="rounded-xl bg-gray-50 p-4"><dt className="text-sm text-gray-500">Revente</dt><dd className="text-2xl font-bold">{curated.resaleIndex}/100</dd></div>
-          <div className="rounded-xl bg-gray-50 p-4"><dt className="text-sm text-gray-500">Pièces détachées</dt><dd className="text-2xl font-bold">{curated.partsAvailability}/100</dd></div>
-        </dl>
+      <EntityGrid cols={2}>
+        <StatCard value={curated.resaleIndex} suffix="/100" label="Revente" accent="brand" />
+        <StatCard value={curated.partsAvailability} suffix="/100" label="Pièces détachées" />
+      </EntityGrid>
 
-        {live?.commonIssues?.length ? (
-          <section className="mb-10">
-            <h2 className="text-xl font-semibold mb-3">Retours communauté</h2>
-            <ul className="space-y-2 text-sm">
-              {live.commonIssues.map((i, idx) => (
-                <li key={idx} className="border-l-4 border-amber-400 pl-3">{i.title} — {i.body}</li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
-
-        {live?.maintenanceTips?.length ? (
-          <section className="mb-10">
-            <h2 className="text-xl font-semibold mb-3">Entretien recommandé</h2>
-            <ul className="space-y-2 text-sm">
-              {live.maintenanceTips.slice(0, 5).map((t, idx) => (
-                <li key={idx} className="border-l-4 border-green-400 pl-3">{t.title} — {t.body}</li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
-
-        <section className="mb-10 flex flex-wrap gap-3 text-sm">
-          <a href={buildSeoPath(lang, marketIntelPath(brandSlug, modelSlug))} className="px-3 py-1 rounded-full bg-violet-100">Intelligence marché</a>
-          <a href={buildSeoPath(lang, priceIntelPath(brandSlug, modelSlug))} className="px-3 py-1 rounded-full bg-gray-100">Indice prix</a>
-          <a href={buildSeoPath(lang, tcoPath(brandSlug, modelSlug))} className="px-3 py-1 rounded-full bg-gray-100">Coût possession</a>
-          <a href={buildSeoPath(lang, modelPath(brandSlug, modelSlug))} className="text-violet-600 hover:underline">Annonces</a>
+      {live?.commonIssues?.length ? (
+        <section className="gv-sec-sm">
+          <SectionHeader eyebrow="Communauté" title="Retours communauté" />
+          <div className="space-y-3">
+            {live.commonIssues.map((i, idx) => (
+              <InsightCard key={idx} title={i.title} body={i.body} />
+            ))}
+          </div>
         </section>
+      ) : null}
 
-        <FaqSection faqs={curated.faqs} />
-        <p className="text-xs text-gray-400 mt-6">{live?.methodology || "Score composite GoVoiture : communauté, avis annonces, données curatées Maroc."}</p>
-      </main>
-      <SeoFooter lang={lang} />
-    </>
+      {live?.maintenanceTips?.length ? (
+        <section className="gv-sec-sm">
+          <SectionHeader eyebrow="Entretien" title="Entretien recommandé" />
+          <div className="space-y-3">
+            {live.maintenanceTips.slice(0, 5).map((t, idx) => (
+              <InsightCard key={idx} title={t.title} body={t.body} badge={<BadgePill variant="success">Conseil</BadgePill>} />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      <RelatedLinksSection title="Explorer ce modèle" links={relatedLinks} />
+      <p className="text-xs text-[var(--gv-mut)] mt-6">{live?.methodology || "Score composite GoVoiture : communauté, avis annonces, données curatées Maroc."}</p>
+    </SeoPageShell>
   );
 }

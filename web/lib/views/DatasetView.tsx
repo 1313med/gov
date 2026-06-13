@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import type { SeoLang } from "@/lib/site";
 import { getSiteUrl, API_BASE } from "@/lib/site";
-import Breadcrumbs from "@/components/ssr/Breadcrumbs";
+import SeoPageShell from "@/components/layout/SeoPageShell";
 import JsonLd from "@/components/ssr/JsonLd";
-import SeoFooter from "@/components/ssr/SeoFooter";
+import { DatasetCard } from "@/components/ui/GlassCard";
+import { ChartContainer, EmptyState, RelatedLinksSection } from "@/components/ui/PremiumCTA";
 import { getBrandBySlug } from "@client-seo/catalog/brands";
 import { getVehicleSpec, datasetPath, priceIntelPath } from "@client-seo/catalog/vehicleSpecs";
 import { buildSeoPath } from "@client-seo/seoPaths";
@@ -50,51 +51,72 @@ export default async function DatasetView({
   const jsonUrl = `${API_BASE}/market/dataset?brand=${encodeURIComponent(brandName)}&model=${encodeURIComponent(apiModel)}`;
 
   return (
-    <>
-      <JsonLd
-        data={graphJsonLd(
-          datasetJsonLd({
-            name: data?.name || `Prix ${spec.displayName} Maroc`,
-            description: data?.description || `Dataset GoVoiture ${spec.displayName}`,
-            url: pageUrl,
-            dateModified: data?.dateModified || new Date().toISOString(),
-            variableMeasured: ["salePriceMad", "rentalPricePerDayMad"],
-          }),
-          breadcrumbJsonLd([
-            { name: "GoVoiture", url: siteUrl },
-            { name: "Données", url: pageUrl },
-            { name: spec.displayName, url: pageUrl },
-          ])
-        )}
-      />
-      <main className="mx-auto max-w-4xl px-4 py-10">
-        <Breadcrumbs
-          items={[
-            { label: "Goovoiture", href: "/" },
-            { label: "Données prix", href: priceIntelPath(brandSlug, modelSlug) },
-            { label: spec.displayName, href: undefined },
-          ]}
-          lang={lang}
+    <SeoPageShell
+      lang={lang}
+      breadcrumbs={[
+        { label: "Goovoiture", href: "/" },
+        { label: "Données prix", href: priceIntelPath(brandSlug, modelSlug) },
+        { label: spec.displayName, href: undefined },
+      ]}
+      hero={{
+        kicker: "GoVoiture Data",
+        title: `Dataset — ${spec.displayName}`,
+        description: "Données propriétaires GoVoiture — prix occasion, location et tendances.",
+      }}
+      cta={{
+        title: `Trouver une ${spec.displayName}`,
+        primaryHref: buildSeoPath(lang, `/voiture-occasion/${brandSlug}/${modelSlug}`),
+        primaryLabel: "Voiture occasion",
+        secondaryHref: buildSeoPath(lang, "/location-voiture"),
+        secondaryLabel: "Location voiture",
+      }}
+      related={{ brandSlug, brandFilter: brandName }}
+      jsonLd={
+        <JsonLd
+          data={graphJsonLd(
+            datasetJsonLd({
+              name: data?.name || `Prix ${spec.displayName} Maroc`,
+              description: data?.description || `Dataset GoVoiture ${spec.displayName}`,
+              url: pageUrl,
+              dateModified: data?.dateModified || new Date().toISOString(),
+              variableMeasured: ["salePriceMad", "rentalPricePerDayMad"],
+            }),
+            breadcrumbJsonLd([
+              { name: "GoVoiture", url: siteUrl },
+              { name: "Données", url: pageUrl },
+              { name: spec.displayName, url: pageUrl },
+            ])
+          )}
         />
-        <h1 className="text-3xl font-bold mb-4">Dataset — {spec.displayName}</h1>
-        <p className="text-gray-600 mb-6">Données propriétaires GoVoiture — prix occasion, location et tendances.</p>
-        <p className="mb-4">
-          <a href={jsonUrl} className="text-violet-600 hover:underline font-medium" target="_blank" rel="noopener">
-            Télécharger JSON API →
-          </a>
-        </p>
-        {data?.sale?.market ? (
-          <pre className="text-xs bg-gray-100 p-4 rounded-xl overflow-x-auto mb-8">
+      }
+    >
+      <DatasetCard
+        title={`API JSON — ${spec.displayName}`}
+        description="Téléchargez les données brutes via l'endpoint marketplace GoVoiture."
+        href={jsonUrl}
+      />
+
+      {data?.sale?.market ? (
+        <ChartContainer title="Aperçu des données">
+          <pre className="text-xs overflow-x-auto">
             {JSON.stringify({ sale: data.sale.market, rental: data.rental?.market, trends: data.trends?.monthly?.slice(-6) }, null, 2)}
           </pre>
-        ) : (
-          <p className="text-gray-500">Collecte de données en cours — revenez après publication d&apos;annonces.</p>
-        )}
-        <a href={buildSeoPath(lang, priceIntelPath(brandSlug, modelSlug))} className="text-violet-600 hover:underline">
-          Voir la page prix {spec.displayName}
-        </a>
-      </main>
-      <SeoFooter lang={lang} />
-    </>
+        </ChartContainer>
+      ) : (
+        <EmptyState
+          title="Collecte de données en cours"
+          description="Revenez après publication d'annonces."
+          actionHref={buildSeoPath(lang, priceIntelPath(brandSlug, modelSlug))}
+          actionLabel={`Page prix ${spec.displayName}`}
+        />
+      )}
+
+      <RelatedLinksSection
+        links={[
+          { label: `Page prix ${spec.displayName}`, href: buildSeoPath(lang, priceIntelPath(brandSlug, modelSlug)) },
+          { label: "Télécharger JSON API", href: jsonUrl },
+        ]}
+      />
+    </SeoPageShell>
   );
 }
