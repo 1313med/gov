@@ -11,6 +11,11 @@ const root = join(__dirname, "..");
 const clientDir = join(root, "..", "client");
 const legacyDir = join(root, "public", "legacy");
 
+if (!existsSync(join(clientDir, "node_modules"))) {
+  console.log("[build] Installing legacy client dependencies...");
+  execSync("npm install", { cwd: clientDir, stdio: "inherit" });
+}
+
 console.log("[build] Building legacy Vite SPA...");
 execSync("npm run build", {
   cwd: clientDir,
