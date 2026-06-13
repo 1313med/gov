@@ -45,6 +45,26 @@
     <lastmod>2026-06-13</lastmod>
   </sitemap>
   <sitemap>
+    <loc>https://goovoiture.ma/sitemaps/market-intelligence.xml</loc>
+    <lastmod>2026-06-13</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://goovoiture.ma/sitemaps/reliability-index.xml</loc>
+    <lastmod>2026-06-13</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://goovoiture.ma/sitemaps/search-intelligence.xml</loc>
+    <lastmod>2026-06-13</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://goovoiture.ma/sitemaps/tco-calculator.xml</loc>
+    <lastmod>2026-06-13</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://goovoiture.ma/sitemaps/ownership-guides.xml</loc>
+    <lastmod>2026-06-13</lastmod>
+  </sitemap>
+  <sitemap>
     <loc>https://goovoiture.ma/sitemaps/listings-rental.xml</loc>
     <lastmod>2026-06-13</lastmod>
   </sitemap>

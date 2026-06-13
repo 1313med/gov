@@ -142,6 +142,56 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/questions" />
   </url>
   <url>
+    <loc>https://goovoiture.ma/marche</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.84</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/marche" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/marche" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/marche" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/marche" />
+  </url>
+  <url>
+    <loc>https://goovoiture.ma/fiabilite</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.83</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/fiabilite" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/fiabilite" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/fiabilite" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/fiabilite" />
+  </url>
+  <url>
+    <loc>https://goovoiture.ma/recherches</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.82</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/recherches" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/recherches" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/recherches" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/recherches" />
+  </url>
+  <url>
+    <loc>https://goovoiture.ma/assistant-achat</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/assistant-achat" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/assistant-achat" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/assistant-achat" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/assistant-achat" />
+  </url>
+  <url>
+    <loc>https://goovoiture.ma/possession</loc>
+    <lastmod>2026-06-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.81</priority>
+    <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/possession" />
+    <xhtml:link rel="alternate" hreflang="en-MA" href="https://goovoiture.ma/en/possession" />
+    <xhtml:link rel="alternate" hreflang="ar-MA" href="https://goovoiture.ma/ar/possession" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://goovoiture.ma/possession" />
+  </url>
+  <url>
     <loc>https://goovoiture.ma/blog</loc>
     <lastmod>2026-06-13</lastmod>
     <changefreq>weekly</changefreq>

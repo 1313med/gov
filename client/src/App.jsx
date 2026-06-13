@@ -86,6 +86,16 @@ const LegacyRentalRedirect = lazy(() => import("./pages/seo/ListingRoutes.jsx").
 const LegacyCitySaleRedirect = lazy(() => import("./pages/seo/ListingRoutes.jsx").then((m) => ({ default: m.LegacyCitySaleRedirect })));
 const LegacyCarsHubRedirect = lazy(() => import("./pages/seo/ListingRoutes.jsx").then((m) => ({ default: m.LegacyCarsHubRedirect })));
 const LegacyRentalsHubRedirect = lazy(() => import("./pages/seo/ListingRoutes.jsx").then((m) => ({ default: m.LegacyRentalsHubRedirect })));
+const BuyerAssistantPage = lazy(() => import("./pages/seo/EcosystemPages").then((m) => ({ default: m.BuyerAssistantPage })));
+const TcoCalculatorPage = lazy(() => import("./pages/seo/EcosystemPages").then((m) => ({ default: m.TcoCalculatorPage })));
+const ComparisonsHubPage = lazy(() => import("./pages/seo/EcosystemPages").then((m) => ({ default: m.ComparisonsHubPage })));
+const ComparisonDetailPage = lazy(() => import("./pages/seo/EcosystemPages").then((m) => ({ default: m.ComparisonDetailPage })));
+const ContentClusterHubPage = lazy(() => import("./pages/seo/EcosystemPages").then((m) => ({ default: m.ContentClusterHubPage })));
+const ContentClusterTopicPage = lazy(() => import("./pages/seo/EcosystemPages").then((m) => ({ default: m.ContentClusterTopicPage })));
+const QuestionsHubPage = lazy(() => import("./pages/seo/EcosystemPages").then((m) => ({ default: m.QuestionsHubPage })));
+const QuestionDetailPage = lazy(() => import("./pages/seo/EcosystemPages").then((m) => ({ default: m.QuestionDetailPage })));
+const OwnershipHubPage = lazy(() => import("./pages/seo/EcosystemPages").then((m) => ({ default: m.OwnershipHubPage })));
+const OwnershipTimelinePage = lazy(() => import("./pages/seo/EcosystemPages").then((m) => ({ default: m.OwnershipTimelinePage })));
 
 const NO_NAV_PREFIXES = [
   "/admin",
@@ -186,6 +196,23 @@ export default function App() {
     />,
   ]);
 
+  const ecosystemRoutes = LANG_PREFIXES.flatMap((prefix) => [
+    <Route key={`${prefix || "fr"}-assistant`} path={localizedPath(prefix, "/assistant-achat")} element={<BuyerAssistantPage />} />,
+    <Route key={`${prefix || "fr"}-tco`} path={localizedPath(prefix, "/cout-possession/:brandSlug/:modelSlug")} element={<TcoCalculatorPage />} />,
+    <Route key={`${prefix || "fr"}-comparer`} path={localizedPath(prefix, "/comparer")} element={<ComparisonsHubPage />} />,
+    <Route key={`${prefix || "fr"}-comparer-slug`} path={localizedPath(prefix, "/comparer/:slug")} element={<ComparisonDetailPage />} />,
+    <Route key={`${prefix || "fr"}-assurance`} path={localizedPath(prefix, "/assurance")} element={<ContentClusterHubPage clusterSlug="assurance" />} />,
+    <Route key={`${prefix || "fr"}-assurance-topic`} path={localizedPath(prefix, "/assurance/:topicSlug")} element={<ContentClusterTopicPage clusterSlug="assurance" />} />,
+    <Route key={`${prefix || "fr"}-financement`} path={localizedPath(prefix, "/financement")} element={<ContentClusterHubPage clusterSlug="financement" />} />,
+    <Route key={`${prefix || "fr"}-financement-topic`} path={localizedPath(prefix, "/financement/:topicSlug")} element={<ContentClusterTopicPage clusterSlug="financement" />} />,
+    <Route key={`${prefix || "fr"}-demarches`} path={localizedPath(prefix, "/demarches")} element={<ContentClusterHubPage clusterSlug="demarches" />} />,
+    <Route key={`${prefix || "fr"}-demarches-topic`} path={localizedPath(prefix, "/demarches/:topicSlug")} element={<ContentClusterTopicPage clusterSlug="demarches" />} />,
+    <Route key={`${prefix || "fr"}-questions`} path={localizedPath(prefix, "/questions")} element={<QuestionsHubPage />} />,
+    <Route key={`${prefix || "fr"}-questions-slug`} path={localizedPath(prefix, "/questions/:slug")} element={<QuestionDetailPage />} />,
+    <Route key={`${prefix || "fr"}-possession`} path={localizedPath(prefix, "/possession")} element={<OwnershipHubPage />} />,
+    <Route key={`${prefix || "fr"}-possession-topic`} path={localizedPath(prefix, "/possession/:topicSlug")} element={<OwnershipTimelinePage />} />,
+  ]);
+
   const cityRoutes = LANG_PREFIXES.flatMap((prefix) => [
     <Route
       key={`${prefix || "fr"}-rental-city`}
@@ -221,6 +248,8 @@ export default function App() {
           {seoFacetRoutes}
 
           {cityRoutes}
+
+          {ecosystemRoutes}
 
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />

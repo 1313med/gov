@@ -53,6 +53,14 @@ const PUBLIC_PREFIXES = [
   "/avis",
   "/partenaires",
   "/etudes-de-cas",
+  "/assistant-achat",
+  "/cout-possession/",
+  "/comparer",
+  "/assurance",
+  "/financement",
+  "/demarches",
+  "/questions",
+  "/possession",
 ];
 
 export function isPublicSeoPath(pathname) {
