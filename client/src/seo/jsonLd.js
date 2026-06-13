@@ -8,12 +8,13 @@ export function organizationJsonLd(siteUrl = DEFAULT_SITE_URL) {
     url: siteUrl,
     logo: `${siteUrl}/og-default.svg`,
     description:
-      "Plateforme marocaine de location de voiture et marketplace automobile — car rental & used cars in Morocco.",
-    areaServed: {
-      "@type": "Country",
-      name: "Morocco",
-    },
-    sameAs: [],
+      "Écosystème automobile marocain : location, vente, agences et logiciel pro — car rental & marketplace Morocco.",
+    areaServed: { "@type": "Country", name: "Morocco" },
+    sameAs: [
+      "https://www.facebook.com/goovoiture",
+      "https://www.instagram.com/goovoiture",
+      "https://www.linkedin.com/company/goovoiture",
+    ],
   };
 }
 
@@ -24,25 +25,62 @@ export function webSiteJsonLd(siteUrl = DEFAULT_SITE_URL) {
     name: SITE_NAME,
     url: siteUrl,
     inLanguage: ["fr-MA", "ar-MA", "en-MA"],
-    potentialAction: {
-      "@type": "SearchAction",
-      target: {
-        "@type": "EntryPoint",
-        urlTemplate: `${siteUrl}/cars?search={search_term_string}`,
+    potentialAction: [
+      {
+        "@type": "SearchAction",
+        target: {
+          "@type": "EntryPoint",
+          urlTemplate: `${siteUrl}/location-voiture?search={search_term_string}`,
+        },
+        "query-input": "required name=search_term_string",
       },
-      "query-input": "required name=search_term_string",
-    },
+      {
+        "@type": "SearchAction",
+        target: {
+          "@type": "EntryPoint",
+          urlTemplate: `${siteUrl}/voiture-occasion?search={search_term_string}`,
+        },
+        "query-input": "required name=search_term_string",
+      },
+    ],
   };
 }
 
-export function productJsonLd({ name, description, image, price, currency = "MAD", url, city }) {
+function absImage(image, siteUrl) {
+  if (!image) return `${siteUrl}/og-default.svg`;
+  return image.startsWith("http") ? image : `${siteUrl}${image}`;
+}
+
+export function vehicleJsonLd({
+  name,
+  brand,
+  model,
+  year,
+  description,
+  image,
+  price,
+  priceUnit = "DAY",
+  currency = "MAD",
+  url,
+  city,
+  fuel,
+  transmission,
+  ratingValue,
+  reviewCount,
+  intent = "rental",
+}) {
   const siteUrl = typeof window !== "undefined" ? getSiteUrl() : DEFAULT_SITE_URL;
-  return {
+  const graph = {
     "@context": "https://schema.org",
-    "@type": "Product",
+    "@type": "Vehicle",
     name,
     description,
-    image: image ? (image.startsWith("http") ? image : `${siteUrl}${image}`) : `${siteUrl}/og-default.svg`,
+    brand: brand ? { "@type": "Brand", name: brand } : undefined,
+    model,
+    vehicleModelDate: year ? String(year) : undefined,
+    fuelType: fuel,
+    vehicleTransmission: transmission,
+    image: absImage(image, siteUrl),
     offers: {
       "@type": "Offer",
       price: String(price),
@@ -50,7 +88,64 @@ export function productJsonLd({ name, description, image, price, currency = "MAD
       availability: "https://schema.org/InStock",
       url,
       areaServed: city || "Morocco",
+      ...(priceUnit === "DAY"
+        ? {
+            priceSpecification: {
+              "@type": "UnitPriceSpecification",
+              price: String(price),
+              priceCurrency: currency,
+              unitText: "DAY",
+            },
+          }
+        : {}),
     },
+  };
+  if (ratingValue && reviewCount >= 1) {
+    graph.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: String(ratingValue),
+      reviewCount: String(reviewCount),
+    };
+  }
+  if (intent === "sale") graph.offers.itemCondition = "https://schema.org/UsedCondition";
+  return graph;
+}
+
+/** @deprecated use vehicleJsonLd */
+export function productJsonLd(opts) {
+  return vehicleJsonLd({ ...opts, intent: "sale" });
+}
+
+export function collectionPageJsonLd({ name, url, description, items = [] }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name,
+    url,
+    description,
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: items.length,
+      itemListElement: items.slice(0, 20).map((item, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        url: item.url,
+        name: item.name,
+      })),
+    },
+  };
+}
+
+export function faqPageJsonLd(faqs) {
+  if (!faqs?.length) return null;
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
   };
 }
 
@@ -67,21 +162,70 @@ export function breadcrumbJsonLd(items) {
   };
 }
 
-export function localBusinessJsonLd({ cityName, siteUrl, pageUrl }) {
-  return {
+export function localBusinessJsonLd({ name, cityName, siteUrl, pageUrl, ratingValue, reviewCount }) {
+  const graph = {
     "@context": "https://schema.org",
     "@type": "AutoRental",
-    name: `${SITE_NAME} — ${cityName}`,
+    name: name || `${SITE_NAME} — ${cityName}`,
     url: pageUrl,
     areaServed: cityName,
-    parentOrganization: {
-      "@type": "Organization",
-      name: SITE_NAME,
-      url: siteUrl,
-    },
+    parentOrganization: { "@type": "Organization", name: SITE_NAME, url: siteUrl },
+  };
+  if (ratingValue && reviewCount >= 1) {
+    graph.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: String(ratingValue),
+      reviewCount: String(reviewCount),
+    };
+  }
+  return graph;
+}
+
+export function autoDealerJsonLd({ name, cityName, siteUrl, pageUrl }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "AutoDealer",
+    name,
+    url: pageUrl,
+    areaServed: cityName,
+    parentOrganization: { "@type": "Organization", name: SITE_NAME, url: siteUrl },
+  };
+}
+
+export function softwareApplicationJsonLd({ name, description, url, price, currency = "MAD" }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name,
+    description,
+    url,
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Web, iOS, Android",
+    offers: price
+      ? { "@type": "Offer", price: String(price), priceCurrency: currency }
+      : undefined,
+  };
+}
+
+export function personJsonLd({ name, url, jobTitle, image }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name,
+    url,
+    jobTitle,
+    image,
+    worksFor: { "@type": "Organization", name: SITE_NAME },
   };
 }
 
 export function mergeJsonLd(...graphs) {
   return graphs.filter(Boolean);
+}
+
+export function graphJsonLd(...graphs) {
+  const nodes = graphs.filter(Boolean);
+  if (nodes.length === 0) return null;
+  if (nodes.length === 1) return nodes[0];
+  return { "@context": "https://schema.org", "@graph": nodes };
 }

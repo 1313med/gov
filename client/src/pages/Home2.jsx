@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useAppLang } from "../context/AppLangContext";
 import { useTheme } from "../context/ThemeContext";
 import SeoContentBlock from "../components/SeoContentBlock";
+import SeoFooter from "../components/seo/SeoFooter";
 import AppPhoneShowcase from "../components/AppPhoneShowcase";
 import AppStoreBadges from "../components/AppStoreBadges";
 import GarageFeatureShowcase from "../components/GarageFeatureShowcase";
@@ -2567,6 +2568,7 @@ function HomeInner() {
 
       {/* ═══ FOOTER ═══ */}
       <SeoContentBlock />
+      <SeoFooter />
       <footer className="hx-ft">
         <div className="hx-ft-inner">
           <div className="hx-ft-top">

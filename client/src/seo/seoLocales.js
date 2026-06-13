@@ -385,7 +385,7 @@ export function getSeoForPath(pathname, langOverride = null) {
     if (city) return { ...cityRentalSeo(lang, city), lang, path: basePath };
   }
 
-  const citySaleMatch = basePath.match(/^\/location-voiture-occasion\/([^/]+)$/);
+  const citySaleMatch = basePath.match(/^\/(?:voiture-occasion|location-voiture-occasion)\/([^/]+)$/);
   if (citySaleMatch) {
     const city = getCityBySlug(citySaleMatch[1]);
     if (city) return { ...citySaleSeo(lang, city), lang, path: basePath };

@@ -63,6 +63,26 @@ const CityLandingPage = lazy(() => import("./pages/CityLandingPage"));
 const SellCarPage = lazy(() => import("./pages/SellCarPage"));
 const TermsPage = lazy(() => import("./pages/TermsPage"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
+const MarketplaceHubPage = lazy(() => import("./pages/seo/MarketplaceHubPage"));
+const ProgrammaticFacetPage = lazy(() => import("./pages/seo/ProgrammaticFacetPage"));
+const BrandHubPage = lazy(() => import("./pages/seo/BrandHubPage"));
+const AirportLandingPage = lazy(() => import("./pages/seo/AirportLandingPage"));
+const ProHubPage = lazy(() => import("./pages/pro/ProPage.jsx").then((m) => ({ default: m.ProHubPage })));
+const ProPage = lazy(() => import("./pages/pro/ProPage.jsx"));
+const BlogHubPage = lazy(() => import("./pages/blog/BlogHubPage"));
+const BlogArticlePage = lazy(() => import("./pages/blog/BlogArticlePage"));
+const AboutPage = lazy(() => import("./pages/trust/TrustPages.jsx").then((m) => ({ default: m.AboutPage })));
+const TeamPage = lazy(() => import("./pages/trust/TrustPages.jsx").then((m) => ({ default: m.TeamPage })));
+const ReviewsPage = lazy(() => import("./pages/trust/TrustPages.jsx").then((m) => ({ default: m.ReviewsPage })));
+const PartnersPage = lazy(() => import("./pages/trust/TrustPages.jsx").then((m) => ({ default: m.PartnersPage })));
+const CaseStudiesPage = lazy(() => import("./pages/trust/TrustPages.jsx").then((m) => ({ default: m.CaseStudiesPage })));
+const SaleListingRoute = lazy(() => import("./pages/seo/ListingRoutes.jsx").then((m) => ({ default: m.SaleListingRoute })));
+const RentalListingRoute = lazy(() => import("./pages/seo/ListingRoutes.jsx").then((m) => ({ default: m.RentalListingRoute })));
+const LegacySaleRedirect = lazy(() => import("./pages/seo/ListingRoutes.jsx").then((m) => ({ default: m.LegacySaleRedirect })));
+const LegacyRentalRedirect = lazy(() => import("./pages/seo/ListingRoutes.jsx").then((m) => ({ default: m.LegacyRentalRedirect })));
+const LegacyCitySaleRedirect = lazy(() => import("./pages/seo/ListingRoutes.jsx").then((m) => ({ default: m.LegacyCitySaleRedirect })));
+const LegacyCarsHubRedirect = lazy(() => import("./pages/seo/ListingRoutes.jsx").then((m) => ({ default: m.LegacyCarsHubRedirect })));
+const LegacyRentalsHubRedirect = lazy(() => import("./pages/seo/ListingRoutes.jsx").then((m) => ({ default: m.LegacyRentalsHubRedirect })));
 
 const NO_NAV_PREFIXES = [
   "/admin",
@@ -109,10 +129,25 @@ export default function App() {
 
   const publicPages = [
     { path: "/", element: <Home /> },
+    { path: "/location-voiture", element: <MarketplaceHubPage intent="rental" /> },
+    { path: "/voiture-occasion", element: <MarketplaceHubPage intent="sale" /> },
     { path: "/cars", element: <Cars /> },
-    { path: "/cars/:id", element: <CarDetails /> },
+    { path: "/cars/:id", element: <LegacySaleRedirect /> },
+    { path: "/acheter/:listingSlug", element: <SaleListingRoute /> },
     { path: "/rentals", element: <Rentals /> },
-    { path: "/rentals/:id", element: <RentalDetails /> },
+    { path: "/rentals/:id", element: <LegacyRentalRedirect /> },
+    { path: "/louer/:listingSlug", element: <RentalListingRoute /> },
+    { path: "/marque/:brandSlug", element: <BrandHubPage /> },
+    { path: "/marque/:brandSlug/:modelSlug", element: <BrandHubPage /> },
+    { path: "/pro", element: <ProHubPage /> },
+    { path: "/pro/:pageSlug", element: <ProPage /> },
+    { path: "/blog", element: <BlogHubPage /> },
+    { path: "/blog/:clusterSlug/:articleSlug", element: <BlogArticlePage /> },
+    { path: "/a-propos", element: <AboutPage /> },
+    { path: "/equipe", element: <TeamPage /> },
+    { path: "/avis", element: <ReviewsPage /> },
+    { path: "/partenaires", element: <PartnersPage /> },
+    { path: "/etudes-de-cas", element: <CaseStudiesPage /> },
     { path: "/buying-guide", element: <BuyingGuidePage /> },
     { path: "/mechanic-prices", element: <MechanicPricesPage /> },
     { path: "/community", element: <CommunityIntelPage /> },
@@ -123,6 +158,39 @@ export default function App() {
     { path: "/politique-confidentialite", element: <PrivacyPage /> },
   ];
 
+  const seoFacetRoutes = LANG_PREFIXES.flatMap((prefix) => [
+    <Route
+      key={`${prefix || "fr"}-rental-facet-model`}
+      path={localizedPath(prefix, "/location-voiture/:citySlug/:brandSlug/:modelSlug")}
+      element={<ProgrammaticFacetPage intent="rental" />}
+    />,
+    <Route
+      key={`${prefix || "fr"}-sale-facet-model`}
+      path={localizedPath(prefix, "/voiture-occasion/:citySlug/:brandSlug/:modelSlug")}
+      element={<ProgrammaticFacetPage intent="sale" />}
+    />,
+    <Route
+      key={`${prefix || "fr"}-rental-facet`}
+      path={localizedPath(prefix, "/location-voiture/:citySlug/:facetSlug")}
+      element={<ProgrammaticFacetPage intent="rental" />}
+    />,
+    <Route
+      key={`${prefix || "fr"}-sale-facet`}
+      path={localizedPath(prefix, "/voiture-occasion/:citySlug/:facetSlug")}
+      element={<ProgrammaticFacetPage intent="sale" />}
+    />,
+    <Route
+      key={`${prefix || "fr"}-airport-cat`}
+      path={localizedPath(prefix, "/location-voiture-aeroport/:airportSlug/:categorySlug")}
+      element={<AirportLandingPage />}
+    />,
+    <Route
+      key={`${prefix || "fr"}-airport`}
+      path={localizedPath(prefix, "/location-voiture-aeroport/:airportSlug")}
+      element={<AirportLandingPage />}
+    />,
+  ]);
+
   const cityRoutes = LANG_PREFIXES.flatMap((prefix) => [
     <Route
       key={`${prefix || "fr"}-rental-city`}
@@ -131,8 +199,13 @@ export default function App() {
     />,
     <Route
       key={`${prefix || "fr"}-sale-city`}
-      path={localizedPath(prefix, "/location-voiture-occasion/:citySlug")}
+      path={localizedPath(prefix, "/voiture-occasion/:citySlug")}
       element={<CityLandingPage mode="sale" />}
+    />,
+    <Route
+      key={`${prefix || "fr"}-legacy-sale-city`}
+      path={localizedPath(prefix, "/location-voiture-occasion/:citySlug")}
+      element={<LegacyCitySaleRedirect />}
     />,
   ]);
 
@@ -144,6 +217,8 @@ export default function App() {
       <Suspense fallback={null}>
         <Routes>
           {publicRoutes(publicPages)}
+
+          {seoFacetRoutes}
 
           {cityRoutes}
 

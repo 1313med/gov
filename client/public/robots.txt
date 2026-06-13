@@ -1,17 +1,20 @@
-# Goovoiture — SEO trilingue (fr / en / ar)
+# GoVoiture — SEO ecosystem (fr / en / ar)
 User-agent: *
 Allow: /
 Allow: /en/
 Allow: /ar/
+Allow: /location-voiture
+Allow: /location-voiture-aeroport
+Allow: /voiture-occasion
+Allow: /louer/
+Allow: /acheter/
+Allow: /marque/
+Allow: /agences/
+Allow: /concessionnaires/
+Allow: /pro
+Allow: /blog
 Allow: /cars
 Allow: /rentals
-Allow: /location-voiture/
-Allow: /location-voiture-occasion/
-Allow: /buying-guide
-Allow: /mechanic-prices
-Allow: /community
-Allow: /afford-car
-Allow: /emergency
 Allow: /vendre-ma-voiture
 
 Disallow: /admin
@@ -45,4 +48,5 @@ Disallow: /price-alerts
 Disallow: /verify-cin
 Disallow: /profile-documents
 
+Sitemap: https://goovoiture.ma/sitemap-index.xml
 Sitemap: https://goovoiture.ma/sitemap.xml

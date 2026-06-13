@@ -17,13 +17,15 @@ import ListingSpecGrid from "../components/listing/ListingSpecGrid";
 import SeoHead from "../components/SeoHead";
 import { buildSaleListingSeo, getSiteUrl } from "../seo/seoLocales";
 import { buildSeoPath } from "../seo/seoPaths";
-import { productJsonLd } from "../seo/jsonLd";
+import { buildSaleListingPath } from "../seo/slugUtils";
+import { vehicleJsonLd } from "../seo/jsonLd";
 import "../styles/listing-detail.css";
 
-export default function CarDetails() {
+export default function CarDetails({ listingId: listingIdProp = null, semanticSlug = null }) {
   const { copy, lang } = useAppLang();
   const { dark } = useTheme();
-  const { id } = useParams();
+  const { id: idParam } = useParams();
+  const id = listingIdProp || idParam;
   const navigate = useNavigate();
   const [car, setCar] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -94,6 +96,8 @@ export default function CarDetails() {
 
   const listingSeo = buildSaleListingSeo(lang, car);
   const siteUrl = getSiteUrl();
+  const canonicalPath = buildSaleListingPath(car);
+  const canonical = `${siteUrl}${buildSeoPath(lang, canonicalPath)}`;
 
   return (
     <div className={pageClass}>
@@ -103,15 +107,22 @@ export default function CarDetails() {
           description: listingSeo.description,
           image: images[0] || undefined,
           type: "product",
-          canonical: `${siteUrl}${buildSeoPath(lang, `/cars/${id}`)}`,
+          canonical,
         }}
-        jsonLdExtra={productJsonLd({
+        jsonLdExtra={vehicleJsonLd({
           name: `${car.brand} ${car.model} ${car.year}`,
+          brand: car.brand,
+          model: car.model,
+          year: car.year,
           description: listingSeo.description,
           image: images[0],
           price: car.price,
-          url: `${siteUrl}${buildSeoPath(lang, `/cars/${id}`)}`,
+          priceUnit: "TOTAL",
+          url: canonical,
           city: car.city,
+          fuel: car.fuel,
+          transmission: car.gearbox,
+          intent: "sale",
         })}
       />
       <ListingDetailAmbient />

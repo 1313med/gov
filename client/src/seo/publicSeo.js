@@ -14,3 +14,11 @@ export {
 } from "./seoLocales";
 
 export const DEFAULT_LOCALE = "fr_MA";
+
+export {
+  MOROCCO_CITIES,
+  getCityBySlug,
+  getCityName,
+  cityRentalPath,
+  citySalePath,
+} from "./catalog/cities.js";

@@ -36,10 +36,28 @@ export function getAlternateUrls(siteUrl, pathname) {
   }));
 }
 
+const PUBLIC_PREFIXES = [
+  "/location-voiture",
+  "/location-voiture-aeroport",
+  "/voiture-occasion",
+  "/location-voiture-occasion",
+  "/louer/",
+  "/acheter/",
+  "/marque/",
+  "/agences/",
+  "/concessionnaires/",
+  "/pro",
+  "/blog",
+  "/a-propos",
+  "/equipe",
+  "/avis",
+  "/partenaires",
+  "/etudes-de-cas",
+];
+
 export function isPublicSeoPath(pathname) {
   const { basePath } = parseSeoPath(pathname);
-  if (basePath.startsWith("/location-voiture/")) return true;
-  if (basePath.startsWith("/location-voiture-occasion/")) return true;
+  if (PUBLIC_PREFIXES.some((p) => basePath === p || basePath.startsWith(p))) return true;
   const publicExact = [
     "/",
     "/cars",
@@ -56,5 +74,7 @@ export function isPublicSeoPath(pathname) {
   if (publicExact.includes(basePath)) return true;
   if (/^\/cars\/[^/]+$/.test(basePath)) return true;
   if (/^\/rentals\/[^/]+$/.test(basePath)) return true;
+  if (/^\/louer\/[^/]+$/.test(basePath)) return true;
+  if (/^\/acheter\/[^/]+$/.test(basePath)) return true;
   return false;
 }

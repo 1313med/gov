@@ -86,7 +86,7 @@ export default function SeoHead({ override = null, jsonLdExtra = null }) {
     document.title = title;
     upsertMeta("name", "description", description);
     upsertMeta("name", "keywords", keywords);
-    upsertMeta("name", "robots", noindex ? "noindex, nofollow" : "index, follow");
+    upsertMeta("name", "robots", override?.robots || (noindex ? "noindex, nofollow" : "index, follow"));
     upsertMeta("name", "geo.region", "MA");
     upsertMeta("name", "geo.placename", "Morocco");
     upsertMeta("name", "language", htmlLang);
@@ -133,7 +133,7 @@ export default function SeoHead({ override = null, jsonLdExtra = null }) {
     } else {
       document.getElementById("goovoiture-jsonld")?.remove();
     }
-  }, [title, description, keywords, canonical, ogImage, noindex, override?.type, jsonLdExtra, pathname, siteUrl, lang, htmlLang]);
+  }, [title, description, keywords, canonical, ogImage, noindex, override?.type, override?.robots, jsonLdExtra, pathname, siteUrl, lang, htmlLang]);
 
   return null;
 }

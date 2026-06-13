@@ -7,6 +7,8 @@ import { getCityBySlug } from "../seo/cityPages";
 import { getSeoForPath, getSiteUrl } from "../seo/seoLocales";
 import { buildSeoPath, parseSeoPath } from "../seo/seoPaths";
 import { breadcrumbJsonLd, localBusinessJsonLd } from "../seo/jsonLd";
+import { buildRentalListingPath, buildSaleListingPath } from "../seo/slugUtils";
+import SeoFooter from "../components/seo/SeoFooter";
 import { useLocation } from "react-router-dom";
 
 export default function CityLandingPage({ mode = "rental" }) {
@@ -113,7 +115,10 @@ export default function CityLandingPage({ mode = "rental" }) {
             {listings.map((item) => (
               <li key={item._id}>
                 <Link
-                  to={buildSeoPath(lang, `${detailPrefix}/${item._id}`)}
+                  to={buildSeoPath(
+                    lang,
+                    mode === "rental" ? buildRentalListingPath(item) : buildSaleListingPath(item)
+                  )}
                   className="block rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 p-4 hover:shadow-md transition-shadow"
                 >
                   {item.images?.[0] && (
@@ -138,6 +143,7 @@ export default function CityLandingPage({ mode = "rental" }) {
           </ul>
         )}
       </div>
+      <SeoFooter />
     </div>
   );
 }

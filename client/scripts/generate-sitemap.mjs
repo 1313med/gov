@@ -1,12 +1,13 @@
 /**
- * Build-time sitemap + robots.txt — trilingual public SEO (fr / en / ar).
+ * Sharded sitemap index — supports 100k+ URLs (GoVoiture SEO ecosystem).
  */
-import { writeFileSync } from "fs";
+import { writeFileSync, mkdirSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const publicDir = join(__dirname, "..", "public");
+const sitemapsDir = join(publicDir, "sitemaps");
 
 const SITE_URL = (process.env.VITE_SITE_URL || "https://goovoiture.ma").replace(/\/+$/, "");
 const API_BASE = (process.env.VITE_API_URL || "https://goovoiture-api.onrender.com/api").replace(/\/+$/, "");
@@ -19,23 +20,72 @@ const LANGS = [
 
 const HREFLANG = { fr: "fr-MA", en: "en-MA", ar: "ar-MA" };
 
+const CITIES = [
+  "casablanca", "rabat", "marrakech", "fes", "tanger", "agadir", "meknes", "oujda",
+  "kenitra", "tetouan", "sale", "temara", "mohammedia", "el-jadida", "nador", "beni-mellal",
+  "khouribga", "safi", "essaouira", "laayoune", "dakhla", "ouarzazate", "errachidia",
+  "al-hoceima", "taza", "settat", "berrechid", "khemisset", "larache", "khenifra",
+  "taroudant", "tiznit", "guelmim", "ifrane", "azrou", "chefchaouen", "midelt", "tinghir",
+  "zagora", "sidi-kacem", "sidi-slimane", "youssoufia", "fnideq", "martil", "ouezzane",
+];
+
+const RENTAL_CATEGORIES = [
+  "voiture-economique", "suv-4x4", "voiture-luxe", "voiture-automatique",
+  "voiture-7-places", "voiture-electrique", "voiture-diesel", "sans-caution", "avec-chauffeur",
+];
+
+const AIRPORTS = [
+  "mohammed-v-casablanca", "rabat-sale", "marrakech-menara", "agadir-al-massira",
+  "fes-saiss", "tanger-ibn-battouta", "oujda-angads", "nador-al-aaroui",
+  "essaouira-mogador", "ouarzazate", "al-hoceima-cherif", "tetouan-sania-ramel",
+  "laayoune-hassan", "dakhla", "guelmim", "errachidia", "beni-mellal",
+];
+
+const BRANDS = [
+  "dacia", "renault", "peugeot", "hyundai", "volkswagen", "fiat", "toyota", "kia",
+  "seat", "citroen", "mercedes", "bmw", "audi", "nissan", "ford", "opel", "suzuki",
+  "honda", "mazda", "chevrolet", "mitsubishi", "jeep", "land-rover", "porsche", "skoda",
+  "mg", "chery", "geely", "byd", "tesla",
+];
+
+const PRO_SLUGS = [
+  "gestion-flotte", "crm", "reservations", "contrats", "facturation", "rapports",
+  "application-mobile", "creation-site-web", "seo-agences", "hebergement", "tarifs",
+  "fonctionnalites", "support",
+];
+
+const BLOG_ARTICLES = [
+  { cluster: "location-voiture", slug: "location-voiture-maroc-guide-complet" },
+  { cluster: "location-voiture", slug: "location-voiture-casablanca-pas-cher" },
+  { cluster: "aeroports", slug: "location-voiture-aeroport-mohammed-v" },
+  { cluster: "voiture-occasion", slug: "acheter-voiture-occasion-maroc" },
+  { cluster: "voiture-occasion", slug: "vendre-voiture-rapidement-maroc" },
+  { cluster: "conduire-au-maroc", slug: "conduire-au-maroc-guide-etrangers" },
+  { cluster: "tourisme", slug: "road-trip-maroc-10-jours" },
+  { cluster: "pro", slug: "logiciel-gestion-flotte-location-maroc" },
+];
+
 const STATIC_PAGES = [
   { path: "/", priority: "1.0", changefreq: "daily" },
+  { path: "/location-voiture", priority: "0.95", changefreq: "daily" },
+  { path: "/voiture-occasion", priority: "0.95", changefreq: "daily" },
   { path: "/rentals", priority: "0.9", changefreq: "daily" },
   { path: "/cars", priority: "0.9", changefreq: "daily" },
-  { path: "/buying-guide", priority: "0.5", changefreq: "monthly" },
-  { path: "/mechanic-prices", priority: "0.5", changefreq: "monthly" },
-  { path: "/community", priority: "0.5", changefreq: "weekly" },
-  { path: "/afford-car", priority: "0.4", changefreq: "monthly" },
-  { path: "/emergency", priority: "0.4", changefreq: "monthly" },
   { path: "/vendre-ma-voiture", priority: "0.9", changefreq: "daily" },
+  { path: "/pro", priority: "0.85", changefreq: "weekly" },
+  { path: "/blog", priority: "0.7", changefreq: "weekly" },
+  { path: "/a-propos", priority: "0.5", changefreq: "monthly" },
+  { path: "/equipe", priority: "0.4", changefreq: "monthly" },
+  { path: "/avis", priority: "0.5", changefreq: "weekly" },
+  { path: "/partenaires", priority: "0.4", changefreq: "monthly" },
+  { path: "/etudes-de-cas", priority: "0.5", changefreq: "monthly" },
+  { path: "/buying-guide", priority: "0.5", changefreq: "monthly" },
   { path: "/conditions-utilisation", priority: "0.3", changefreq: "yearly" },
   { path: "/politique-confidentialite", priority: "0.3", changefreq: "yearly" },
 ];
 
-const CITIES = ["casablanca", "rabat", "marrakech", "fes", "tanger", "agadir", "meknes", "oujda"];
-
 const today = new Date().toISOString().slice(0, 10);
+const MAX_URLS_PER_FILE = 45000;
 
 function localizedPath(prefix, path) {
   if (!prefix) return path;
@@ -77,6 +127,26 @@ async function fetchAllRentals() {
   return Array.isArray(data) ? data : [];
 }
 
+function slugify(text) {
+  return String(text || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}
+
+function buildRentalPath(item) {
+  const slug = [item.brand, item.model, item.year, item.city].map(slugify).filter(Boolean).join("-");
+  return `/louer/${slug}-${item._id}`;
+}
+
+function buildSalePath(item) {
+  const slug = [item.brand, item.model, item.year, item.city].map(slugify).filter(Boolean).join("-");
+  return `/acheter/${slug}-${item._id}`;
+}
+
 function xmlEscape(s) {
   return String(s)
     .replace(/&/g, "&amp;")
@@ -104,62 +174,181 @@ ${hreflangLinks(basePath)}
   </url>`;
 }
 
-function listingUrlEntry(basePath, priority, changefreq) {
-  return LANGS.map(({ prefix }) => {
-    const p = localizedPath(prefix, basePath);
-    return urlEntry(p, priority, changefreq);
-  }).join("\n");
+function listingUrlEntries(basePath, priority, changefreq) {
+  return LANGS.map(({ prefix }) => urlEntry(localizedPath(prefix, basePath), priority, changefreq)).join("\n");
+}
+
+function writeShard(filename, urlBlocks) {
+  const body = urlBlocks.join("\n");
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+${body}
+</urlset>
+`;
+  writeFileSync(join(sitemapsDir, filename), xml, "utf8");
+  return urlBlocks.length;
+}
+
+function chunkArray(arr, size) {
+  const out = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
 }
 
 async function main() {
+  mkdirSync(sitemapsDir, { recursive: true });
   console.log("[sitemap] Site:", SITE_URL);
-  console.log("[sitemap] API:", API_BASE);
 
   const [sales, rentals] = await Promise.all([fetchAllSales(), fetchAllRentals()]);
-  console.log(`[sitemap] Listings: ${sales.length} sales, ${rentals.length} rentals`);
+  console.log(`[sitemap] API: ${sales.length} sales, ${rentals.length} rentals`);
 
-  const urls = [];
+  const shardFiles = [];
 
-  for (const p of STATIC_PAGES) {
-    urls.push(urlEntry(p.path, p.priority, p.changefreq));
+  // static.xml
+  const staticUrls = STATIC_PAGES.map((p) => urlEntry(p.path, p.priority, p.changefreq));
+  writeShard("static.xml", staticUrls);
+  shardFiles.push("static.xml");
+
+  // rentals.xml — city + category + airport programmatic
+  const rentalUrls = [];
+  for (const city of CITIES) {
+    rentalUrls.push(urlEntry(`/location-voiture/${city}`, "0.85", "weekly"));
+    for (const cat of RENTAL_CATEGORIES) {
+      rentalUrls.push(urlEntry(`/location-voiture/${city}/${cat}`, "0.75", "weekly"));
+    }
+    for (const brand of BRANDS.slice(0, 15)) {
+      rentalUrls.push(urlEntry(`/location-voiture/${city}/${brand}`, "0.7", "weekly"));
+    }
   }
-
-  for (const slug of CITIES) {
-    urls.push(urlEntry(`/location-voiture/${slug}`, "0.8", "weekly"));
-    urls.push(urlEntry(`/location-voiture-occasion/${slug}`, "0.75", "weekly"));
+  for (const ap of AIRPORTS) {
+    rentalUrls.push(urlEntry(`/location-voiture-aeroport/${ap}`, "0.8", "weekly"));
+    for (const cat of RENTAL_CATEGORIES.slice(0, 5)) {
+      rentalUrls.push(urlEntry(`/location-voiture-aeroport/${ap}/${cat}`, "0.7", "weekly"));
+    }
   }
+  writeShard("rentals.xml", rentalUrls);
+  shardFiles.push("rentals.xml");
 
-  for (const s of sales) {
-    if (s._id) urls.push(listingUrlEntry(`/cars/${s._id}`, "0.7", "weekly"));
+  // sales.xml
+  const saleUrls = [];
+  for (const city of CITIES) {
+    saleUrls.push(urlEntry(`/voiture-occasion/${city}`, "0.8", "weekly"));
+    for (const cat of RENTAL_CATEGORIES) {
+      saleUrls.push(urlEntry(`/voiture-occasion/${city}/${cat}`, "0.7", "weekly"));
+    }
   }
+  writeShard("sales.xml", saleUrls);
+  shardFiles.push("sales.xml");
 
+  // brands.xml
+  const brandUrls = BRANDS.map((b) => urlEntry(`/marque/${b}`, "0.65", "weekly"));
+  writeShard("brands.xml", brandUrls);
+  shardFiles.push("brands.xml");
+
+  // models.xml — top models per brand (sample)
+  const modelUrls = [];
+  const TOP_MODELS = {
+    dacia: ["logan", "duster"], renault: ["clio", "symbol"], peugeot: ["208", "3008"],
+    hyundai: ["i10", "tucson"], toyota: ["yaris", "corolla"],
+  };
+  for (const [brand, models] of Object.entries(TOP_MODELS)) {
+    for (const m of models) {
+      modelUrls.push(urlEntry(`/marque/${brand}/${m}`, "0.6", "weekly"));
+    }
+  }
+  writeShard("models.xml", modelUrls);
+  shardFiles.push("models.xml");
+
+  // pro.xml
+  const proUrls = [urlEntry("/pro", "0.85", "weekly"), ...PRO_SLUGS.map((s) => urlEntry(`/pro/${s}`, "0.7", "weekly"))];
+  writeShard("pro.xml", proUrls);
+  shardFiles.push("pro.xml");
+
+  // blog.xml
+  const blogUrls = [urlEntry("/blog", "0.7", "weekly"), ...BLOG_ARTICLES.map((a) => urlEntry(`/blog/${a.cluster}/${a.slug}`, "0.6", "monthly"))];
+  writeShard("blog.xml", blogUrls);
+  shardFiles.push("blog.xml");
+
+  // listings-rental.xml (sharded if needed)
+  const rentalListingBlocks = [];
   for (const r of rentals) {
-    if (r._id) urls.push(listingUrlEntry(`/rentals/${r._id}`, "0.7", "weekly"));
+    if (r._id) rentalListingBlocks.push(listingUrlEntries(buildRentalPath(r), "0.65", "weekly"));
+  }
+  const rentalChunks = chunkArray(rentalListingBlocks, MAX_URLS_PER_FILE);
+  rentalChunks.forEach((chunk, i) => {
+    const name = rentalChunks.length > 1 ? `listings-rental-${i + 1}.xml` : "listings-rental.xml";
+    writeShard(name, chunk);
+    shardFiles.push(name);
+  });
+  if (rentalChunks.length === 0) {
+    writeShard("listings-rental.xml", []);
+    shardFiles.push("listings-rental.xml");
   }
 
-  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml">
-${urls.join("\n")}
-</urlset>
+  // listings-sale.xml
+  const saleListingBlocks = [];
+  for (const s of sales) {
+    if (s._id) saleListingBlocks.push(listingUrlEntries(buildSalePath(s), "0.65", "weekly"));
+  }
+  const saleChunks = chunkArray(saleListingBlocks, MAX_URLS_PER_FILE);
+  saleChunks.forEach((chunk, i) => {
+    const name = saleChunks.length > 1 ? `listings-sale-${i + 1}.xml` : "listings-sale.xml";
+    writeShard(name, chunk);
+    shardFiles.push(name);
+  });
+  if (saleChunks.length === 0) {
+    writeShard("listings-sale.xml", []);
+    shardFiles.push("listings-sale.xml");
+  }
+
+  // agencies.xml / dealers.xml — placeholder hubs (expand when agency API available)
+  writeShard("agencies.xml", [urlEntry("/pro", "0.5", "monthly")]);
+  writeShard("dealers.xml", [urlEntry("/voiture-occasion", "0.5", "monthly")]);
+  shardFiles.push("agencies.xml", "dealers.xml");
+
+  const indexEntries = shardFiles.map(
+    (f) => `  <sitemap>
+    <loc>${xmlEscape(`${SITE_URL}/sitemaps/${f}`)}</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>`
+  );
+
+  const sitemapIndex = `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${indexEntries.join("\n")}
+</sitemapindex>
 `;
+  writeFileSync(join(publicDir, "sitemap-index.xml"), sitemapIndex, "utf8");
 
-  writeFileSync(join(publicDir, "sitemap.xml"), sitemap, "utf8");
+  // Legacy sitemap.xml points to index for older crawlers
+  writeFileSync(
+    join(publicDir, "sitemap.xml"),
+    `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap><loc>${SITE_URL}/sitemap-index.xml</loc><lastmod>${today}</lastmod></sitemap>
+</sitemapindex>
+`,
+    "utf8"
+  );
 
-  const robots = `# Goovoiture — SEO trilingue (fr / en / ar)
+  const robots = `# GoVoiture — SEO ecosystem (fr / en / ar)
 User-agent: *
 Allow: /
 Allow: /en/
 Allow: /ar/
+Allow: /location-voiture
+Allow: /location-voiture-aeroport
+Allow: /voiture-occasion
+Allow: /louer/
+Allow: /acheter/
+Allow: /marque/
+Allow: /agences/
+Allow: /concessionnaires/
+Allow: /pro
+Allow: /blog
 Allow: /cars
 Allow: /rentals
-Allow: /location-voiture/
-Allow: /location-voiture-occasion/
-Allow: /buying-guide
-Allow: /mechanic-prices
-Allow: /community
-Allow: /afford-car
-Allow: /emergency
 Allow: /vendre-ma-voiture
 
 Disallow: /admin
@@ -193,11 +382,24 @@ Disallow: /price-alerts
 Disallow: /verify-cin
 Disallow: /profile-documents
 
+Sitemap: ${SITE_URL}/sitemap-index.xml
 Sitemap: ${SITE_URL}/sitemap.xml
 `;
 
   writeFileSync(join(publicDir, "robots.txt"), robots, "utf8");
-  console.log(`[sitemap] Wrote sitemap.xml (${urls.length} URL entries) and robots.txt`);
+
+  const totalUrls =
+    staticUrls.length +
+    rentalUrls.length +
+    saleUrls.length +
+    brandUrls.length +
+    modelUrls.length +
+    proUrls.length +
+    blogUrls.length +
+    rentalListingBlocks.length +
+    saleListingBlocks.length;
+
+  console.log(`[sitemap] Wrote sitemap-index.xml + ${shardFiles.length} shards (~${totalUrls} URL groups)`);
 }
 
 main().catch((err) => {

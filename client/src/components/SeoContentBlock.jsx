@@ -14,7 +14,9 @@ export default function SeoContentBlock() {
   const isCars = basePath === "/cars";
   const isSell = basePath === "/vendre-ma-voiture";
   const isCityPage =
-    basePath.startsWith("/location-voiture/") || basePath.startsWith("/location-voiture-occasion/");
+    basePath.startsWith("/location-voiture/") ||
+    basePath.startsWith("/voiture-occasion/") ||
+    basePath.startsWith("/location-voiture-occasion/");
   const TitleTag = isCityPage || isSell ? "h1" : "h2";
 
   const labels = {
@@ -75,7 +77,7 @@ export default function SeoContentBlock() {
         <div className="mb-4">
           <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{L.cities}</h2>
           <ul className="flex flex-wrap gap-2">
-            {MOROCCO_CITIES.map((city) => (
+            {MOROCCO_CITIES.slice(0, 12).map((city) => (
               <li key={city.slug}>
                 <Link
                   to={buildSeoPath(lang, cityRentalPath(city.slug))}
@@ -97,7 +99,7 @@ export default function SeoContentBlock() {
         <div>
           <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{L.sales}</h2>
           <ul className="flex flex-wrap gap-2">
-            {MOROCCO_CITIES.map((city) => (
+            {MOROCCO_CITIES.slice(0, 12).map((city) => (
               <li key={city.slug}>
                 <Link
                   to={buildSeoPath(lang, citySalePath(city.slug))}

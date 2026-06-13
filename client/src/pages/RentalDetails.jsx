@@ -17,12 +17,14 @@ import RentalBookingCalendar from "../components/listing/RentalBookingCalendar";
 import SeoHead from "../components/SeoHead";
 import { buildRentalListingSeo, getSiteUrl } from "../seo/seoLocales";
 import { buildSeoPath } from "../seo/seoPaths";
-import { productJsonLd } from "../seo/jsonLd";
+import { buildRentalListingPath } from "../seo/slugUtils";
+import { vehicleJsonLd } from "../seo/jsonLd";
 import "../styles/listing-detail.css";
 
-export default function RentalDetails() {
+export default function RentalDetails({ listingId: listingIdProp = null, semanticSlug = null }) {
   const { copy, lang } = useAppLang();
-  const { id } = useParams();
+  const { id: idParam } = useParams();
+  const id = listingIdProp || idParam;
   const navigate = useNavigate();
   const auth = loadAuth();
   const { dark, toggle: toggleTheme } = useTheme();
@@ -237,6 +239,8 @@ export default function RentalDetails() {
 
   const listingSeo = buildRentalListingSeo(lang, rental);
   const siteUrl = getSiteUrl();
+  const canonicalPath = buildRentalListingPath(rental);
+  const canonical = `${siteUrl}${buildSeoPath(lang, canonicalPath)}`;
 
   return (
     <div className={pageClass}>
@@ -246,15 +250,22 @@ export default function RentalDetails() {
           description: listingSeo.description,
           image: rental.images?.[0] || undefined,
           type: "product",
-          canonical: `${siteUrl}${buildSeoPath(lang, `/rentals/${id}`)}`,
+          canonical,
         }}
-        jsonLdExtra={productJsonLd({
+        jsonLdExtra={vehicleJsonLd({
           name: `${rental.brand} ${rental.model} ${rental.year}`,
+          brand: rental.brand,
+          model: rental.model,
+          year: rental.year,
           description: listingSeo.description,
           image: rental.images?.[0],
           price: rental.pricePerDay,
-          url: `${siteUrl}${buildSeoPath(lang, `/rentals/${id}`)}`,
+          priceUnit: "DAY",
+          url: canonical,
           city: rental.city,
+          fuel: rental.fuel,
+          transmission: rental.gearbox,
+          intent: "rental",
         })}
       />
       <ListingDetailAmbient />
