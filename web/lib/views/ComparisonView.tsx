@@ -36,7 +36,7 @@ export default function ComparisonView({ lang, slug }: { lang: SeoLang; slug: st
           faqPageJsonLd(data.faqs),
           breadcrumbJsonLd([
             { name: "GoVoiture", url: siteUrl },
-            { name: "Comparatifs", url: `${siteUrl}${buildSeoPath(lang, "/comparer/" + slug)}` },
+            { name: "Comparatifs", url: `${siteUrl}${buildSeoPath(lang, "/comparer")}` },
             { name: data.h1, url: pageUrl },
           ])
         )}
@@ -45,7 +45,7 @@ export default function ComparisonView({ lang, slug }: { lang: SeoLang; slug: st
         <Breadcrumbs
           items={[
             { label: "Goovoiture", href: "/" },
-            { label: "Comparatifs", href: "/comparer/dacia-logan-vs-renault-clio" },
+            { label: "Comparatifs", href: "/comparer" },
             { label: data.h1, href: undefined },
           ]}
           lang={lang}

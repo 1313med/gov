@@ -77,6 +77,7 @@ const STATIC_PAGES = [
   { path: "/pro", priority: "0.85", changefreq: "weekly" },
   { path: "/agences", priority: "0.85", changefreq: "weekly" },
   { path: "/concessionnaires", priority: "0.85", changefreq: "weekly" },
+  { path: "/comparer", priority: "0.8", changefreq: "weekly" },
   { path: "/blog", priority: "0.7", changefreq: "weekly" },
   { path: "/a-propos", priority: "0.5", changefreq: "monthly" },
   { path: "/equipe", priority: "0.4", changefreq: "monthly" },

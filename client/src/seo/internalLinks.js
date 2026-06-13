@@ -9,7 +9,7 @@ export const ENTITY_HUBS = {
   agencies: { path: "/agences", label: { fr: "Agences", en: "Agencies", ar: "وكالات" } },
   dealers: { path: "/concessionnaires", label: { fr: "Concessionnaires", en: "Dealers", ar: "وكلاء" } },
   brands: { path: "/marque/dacia", label: { fr: "Marques", en: "Brands", ar: "ماركات" } },
-  compare: { path: "/comparer/dacia-logan-vs-renault-clio", label: { fr: "Comparatifs", en: "Compare", ar: "مقارنة" } },
+  compare: { path: "/comparer", label: { fr: "Comparatifs", en: "Compare", ar: "مقارنة" } },
   blog: { path: "/blog", label: { fr: "Blog", en: "Blog", ar: "مدونة" } },
   pro: { path: "/pro", label: { fr: "GoVoiture Pro", en: "Pro", ar: "Pro" } },
 };

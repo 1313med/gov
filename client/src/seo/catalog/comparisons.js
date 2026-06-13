@@ -119,3 +119,33 @@ export function getComparisonsForBrand(brandSlug, modelSlug = null, limit = 6) {
     })
     .slice(0, limit);
 }
+
+export function buildComparisonHubSeo(lang = "fr") {
+  const templates = {
+    fr: {
+      title: "Comparatif voitures Maroc | GoVoiture",
+      description: "Comparez les modèles les plus populaires au Maroc : prix, consommation, confort et occasion.",
+      h1: "Comparatifs voitures au Maroc",
+      intro: "Choisissez entre citadines, SUV et berlines — comparatifs détaillés pour le marché marocain.",
+      keywords: "comparatif voiture maroc, dacia logan vs renault clio",
+      path: "/comparer",
+    },
+    en: {
+      title: "Car comparisons Morocco | GoVoiture",
+      description: "Compare popular models in Morocco: price, fuel, comfort and used cars.",
+      h1: "Car comparisons in Morocco",
+      intro: "Detailed comparisons for Morocco's most searched model pairs.",
+      keywords: "car comparison morocco",
+      path: "/comparer",
+    },
+    ar: {
+      title: "مقارنة السيارات المغرب | GoVoiture",
+      description: "قارن أشهر الموديلات في المغرب.",
+      h1: "مقارنة السيارات في المغرب",
+      intro: "مقارنات تفصيلية لأزواج الموديلات الأكثر بحثاً.",
+      keywords: "مقارنة سيارات المغرب",
+      path: "/comparer",
+    },
+  };
+  return templates[lang] || templates.fr;
+}

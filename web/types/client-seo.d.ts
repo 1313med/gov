@@ -113,6 +113,14 @@ declare module "@client-seo/catalog/comparisons" {
   export function getComparisonBySlug(slug: string): ComparisonData | null;
   export function getComparisonsForBrand(brandSlug: string, modelSlug?: string | null, limit?: number): ComparisonData[];
   export function buildComparisonData(slug: string): ComparisonData | null;
+  export function buildComparisonHubSeo(lang?: string): {
+    title: string;
+    description: string;
+    h1: string;
+    intro: string;
+    keywords: string;
+    path: string;
+  };
 }
 
 declare module "@client-seo/catalog/professionals" {

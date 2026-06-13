@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export async function generateStaticParams() {
-  return getAllComparisons().slice(0, 80).map((c) => ({ slug: c.slug }));
+  return getAllComparisons().map((c) => ({ slug: c.slug }));
 }
 
 export default async function Page({ params }: Props) {

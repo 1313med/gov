@@ -94,6 +94,7 @@ export default function SeoFooter({ lang }: { lang: SeoLang }) {
         <div>
           <h2 className="font-semibold text-gray-900 mb-2">{L.compare}</h2>
           <ul className="space-y-1">
+            <li><a href={buildSeoPath(lang, "/comparer")} className="hover:text-violet-600">Hub</a></li>
             <li><a href={buildSeoPath(lang, "/comparer/dacia-logan-vs-renault-clio")} className="hover:text-violet-600">Logan vs Clio</a></li>
             <li><a href={buildSeoPath(lang, "/comparer/hyundai-i10-vs-kia-picanto")} className="hover:text-violet-600">i10 vs Picanto</a></li>
             <li><a href={buildSeoPath(lang, "/blog")} className="hover:text-violet-600">{L.blog}</a></li>
