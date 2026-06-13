@@ -10,6 +10,7 @@ import AppPhoneShowcase from "../components/AppPhoneShowcase";
 import AppStoreBadges from "../components/AppStoreBadges";
 import GarageFeatureShowcase from "../components/GarageFeatureShowcase";
 import HomeMobilePitch from "../components/HomeMobilePitch";
+import HomeEliteFeatures from "../components/home/HomeEliteFeatures";
 import HeroMobileVisual from "../components/HeroMobileVisual";
 import { useMediaQuery } from "../hooks/useMediaQuery";
 
@@ -2196,6 +2197,8 @@ function HomeInner() {
 
         </div>
       </div>
+
+      <HomeEliteFeatures />
 
       {/* ═══ ELITE BENEFITS ═══ */}
       <section className="hx-ben-sec">

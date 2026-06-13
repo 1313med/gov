@@ -156,6 +156,77 @@ export const home2Dict = {
         },
       ],
     },
+    eliteTools: {
+      toolsEyebrow: "Smart Tools",
+      toolsTitle1: "Smart automotive",
+      toolsTitle2: "tools.",
+      toolsSub:
+        "AI-powered guidance, real ownership costs, and side-by-side comparisons — built into the Goovoiture ecosystem.",
+      linksEyebrow: "Ecosystem",
+      linksTitle1: "Useful links",
+      linksTitle2: "& tools.",
+      linksSub:
+        "Insurance, financing, paperwork, community Q&A, and ownership guides — everything after the purchase.",
+      linkCta: "Explore",
+      cards: [
+        {
+          id: "ai",
+          tag: "AI · Buyer guide",
+          title: "Smart buyer assistant",
+          desc: "Find the ideal vehicle for your budget, family, and daily use.",
+          cta: "Try the assistant",
+          href: "/assistant-achat",
+        },
+        {
+          id: "tco",
+          tag: "TCO · Real cost",
+          title: "True ownership calculator",
+          desc: "Estimate the full cost of a car: fuel, insurance, maintenance, and depreciation.",
+          cta: "Calculate now",
+          href: "/cout-possession/dacia/logan",
+        },
+        {
+          id: "compare",
+          tag: "Compare · Models",
+          title: "Compare vehicles",
+          desc: "Compare models side by side and find the best choice for you.",
+          cta: "Start comparing",
+          href: "/comparer",
+        },
+      ],
+      links: [
+        {
+          id: "assurance",
+          title: "Insurance",
+          desc: "Understand car insurance in Morocco.",
+          href: "/assurance",
+        },
+        {
+          id: "financement",
+          title: "Financing",
+          desc: "Auto credit and financing solutions.",
+          href: "/financement",
+        },
+        {
+          id: "demarches",
+          title: "Procedures",
+          desc: "Transfer, documents, and formalities.",
+          href: "/demarches",
+        },
+        {
+          id: "questions",
+          title: "Q&A",
+          desc: "Advice and answers from the community.",
+          href: "/questions",
+        },
+        {
+          id: "possession",
+          title: "Owner's guide",
+          desc: "Everything to know after buying.",
+          href: "/possession",
+        },
+      ],
+    },
     experience: {
       eyebrow: "How It Feels",
       title: "This is not just renting a car. This is status, freedom, and power.",
@@ -489,6 +560,53 @@ export const home2Dict = {
         },
       ],
     },
+    eliteTools: {
+      toolsEyebrow: "Outils intelligents",
+      toolsTitle1: "Outils automobiles",
+      toolsTitle2: "intelligents.",
+      toolsSub:
+        "Assistant IA, coût réel de possession et comparatifs — tout l'écosystème Goovoiture à portée de clic.",
+      linksEyebrow: "Écosystème",
+      linksTitle1: "Liens & outils",
+      linksTitle2: "utiles.",
+      linksSub:
+        "Assurance, financement, démarches, questions communauté et guides propriétaire — tout après l'achat.",
+      linkCta: "Explorer",
+      cards: [
+        {
+          id: "ai",
+          tag: "IA · Achat",
+          title: "Assistant d'achat intelligent",
+          desc: "Trouvez le véhicule idéal selon votre budget, votre famille et votre utilisation.",
+          cta: "Essayer l'assistant",
+          href: "/assistant-achat",
+        },
+        {
+          id: "tco",
+          tag: "TCO · Coût réel",
+          title: "Calculateur du coût réel",
+          desc: "Estimez le coût total d'une voiture : carburant, assurance, entretien et dépréciation.",
+          cta: "Calculer maintenant",
+          href: "/cout-possession/dacia/logan",
+        },
+        {
+          id: "compare",
+          tag: "Comparer · Modèles",
+          title: "Comparer les véhicules",
+          desc: "Comparez les modèles côte à côte et trouvez le meilleur choix.",
+          cta: "Commencer à comparer",
+          href: "/comparer",
+        },
+      ],
+      links: [
+        { id: "assurance", title: "Assurance", desc: "Comprendre les assurances automobiles au Maroc.", href: "/assurance" },
+        { id: "financement", title: "Financement", desc: "Crédit auto et solutions de financement.", href: "/financement" },
+        { id: "demarches", title: "Démarches", desc: "Transfert, documents et formalités.", href: "/demarches" },
+        { id: "questions", title: "Questions & Réponses", desc: "Conseils et réponses de la communauté.", href: "/questions" },
+        { id: "possession", title: "Guide du propriétaire", desc: "Tout savoir après l'achat.", href: "/possession" },
+      ],
+    },
+
     experience: {
       eyebrow: "L’expérience",
       title:
