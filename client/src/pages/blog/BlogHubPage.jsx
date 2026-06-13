@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import SeoHead from "../../components/SeoHead";
-import SeoFooter from "../../components/seo/SeoFooter";
 import { BLOG_CLUSTERS, BLOG_ARTICLES, blogArticlePath } from "../../seo/catalog/blogArticles";
 import { buildSeoPath, parseSeoPath } from "../../seo/seoPaths";
 import { getSiteUrl } from "../../seo/seoLocales";
@@ -15,7 +14,7 @@ export default function BlogHubPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-[#05060f]">
       <SeoHead
         override={{
-          title: lang === "fr" ? "Blog automobile Maroc | GoVoiture" : "Automotive blog Morocco | GoVoiture",
+          title: lang === "fr" ? "Blog automobile Maroc | Goovoiture" : "Automotive blog Morocco | Goovoiture",
           description: lang === "fr" ? "Guides location, occasion, conduite et tourisme au Maroc." : "Guides for Morocco drivers.",
           canonical: `${siteUrl}${buildSeoPath(lang, "/blog")}`,
         }}
@@ -37,7 +36,6 @@ export default function BlogHubPage() {
           </section>
         ))}
       </div>
-      <SeoFooter />
     </div>
   );
 }

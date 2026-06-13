@@ -39,7 +39,7 @@ export default function GarageShell({
             {Icon && <GarageIconBadge icon={Icon} size="lg" variant={iconVariant} pulse />}
             <div>
               <p className="ge-kicker">
-                <Sparkles size={12} strokeWidth={2.5} /> GooVoiture · {fr ? "Garage" : "Garage"}
+                <Sparkles size={12} strokeWidth={2.5} /> Goovoiture · {fr ? "Garage" : "Garage"}
               </p>
               <h1 className="ge-title ge-title-sub">{title}</h1>
               {subtitle && <p className="ge-subtitle">{subtitle}</p>}

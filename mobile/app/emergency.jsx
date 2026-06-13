@@ -12,7 +12,7 @@ const STEPS = [
   { icon: "📸", title: "Documenter la scène", body: "Photos de tous les véhicules, dommages, plaques, position sur la route — avant de déplacer quoi que ce soit." },
   { icon: "📋", title: "Constat amiable", body: "Remplissez le constat avec l'autre conducteur. Ne signez rien sous pression. Chacun garde un exemplaire." },
   { icon: "📞", title: "Contacter l'assurance", body: "Appelez votre assurance dans les 5 jours ouvrables. Notez le numéro de sinistre." },
-  { icon: "📱", title: "Contacter le propriétaire", body: "Si vous louez, contactez immédiatement le propriétaire via GooVoiture." },
+  { icon: "📱", title: "Contacter le propriétaire", body: "Si vous louez, contactez immédiatement le propriétaire via Goovoiture." },
 ];
 
 export default function EmergencyScreen() {

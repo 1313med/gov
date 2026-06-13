@@ -13,10 +13,10 @@ import { graphJsonLd, softwareApplicationJsonLd, breadcrumbJsonLd } from "@clien
 export function proHubMetadata(lang: SeoLang) {
   const title =
     lang === "fr"
-      ? "GoVoiture Pro — Logiciel agence location voiture Maroc"
+      ? "Goovoiture Pro — Logiciel agence location voiture Maroc"
       : lang === "ar"
-        ? "GoVoiture Pro — برنامج وكالات تأجير السيارات"
-        : "GoVoiture Pro — Rental agency software Morocco";
+        ? "Goovoiture Pro — برنامج وكالات تأجير السيارات"
+        : "Goovoiture Pro — Rental agency software Morocco";
   const description =
     lang === "fr"
       ? "CRM, flotte, réservations, facturation et site web pour agences de location au Maroc."
@@ -29,7 +29,7 @@ export function proPageMetadata(lang: SeoLang, pageSlug: string) {
   if (!page) return null;
   return {
     basePath: proPagePath(pageSlug),
-    title: `${page.title[lang] || page.title.fr} | GoVoiture Pro`,
+    title: `${page.title[lang] || page.title.fr} | Goovoiture Pro`,
     description: page.description[lang] || page.description.fr,
     keywords: page.keyword?.[lang] || page.keyword?.fr,
   };
@@ -43,15 +43,15 @@ export function ProHubView({ lang }: { lang: SeoLang }) {
       lang={lang}
       breadcrumbs={[{ label: "Goovoiture", href: "/" }, { label: "Pro", href: undefined }]}
       hero={{
-        kicker: "GoVoiture Pro",
-        title: "GoVoiture Pro",
+        kicker: "Goovoiture Pro",
+        title: "Goovoiture Pro",
         description:
           lang === "fr"
             ? "L'écosystème B2B pour dominer la location automobile au Maroc : flotte, CRM, contrats, facturation et SEO."
             : "The B2B ecosystem for rental agencies in Morocco.",
       }}
       cta={{
-        title: lang === "fr" ? "Démarrer avec GoVoiture Pro" : "Get started with GoVoiture Pro",
+        title: lang === "fr" ? "Démarrer avec Goovoiture Pro" : "Get started with Goovoiture Pro",
         primaryHref: "/register",
         primaryLabel: lang === "fr" ? "Demander une démo" : "Request a demo",
         secondaryHref: buildSeoPath(lang, "/agences"),
@@ -61,12 +61,12 @@ export function ProHubView({ lang }: { lang: SeoLang }) {
         <JsonLd
           data={graphJsonLd(
             softwareApplicationJsonLd({
-              name: "GoVoiture Pro",
+              name: "Goovoiture Pro",
               description: "Suite SaaS pour agences de location automobile au Maroc",
               url: `${siteUrl}/pro`,
             }),
             breadcrumbJsonLd([
-              { name: "GoVoiture", url: siteUrl },
+              { name: "Goovoiture", url: siteUrl },
               { name: "Pro", url: `${siteUrl}${buildSeoPath(lang, "/pro")}` },
             ])
           )}
@@ -118,7 +118,7 @@ export function ProPageView({ lang, pageSlug }: { lang: SeoLang; pageSlug: strin
         { label: title, href: undefined },
       ]}
       hero={{
-        kicker: "GoVoiture Pro",
+        kicker: "Goovoiture Pro",
         title,
         description: page.description[lang] || page.description.fr,
         badges: page.price ? [`à partir de ${page.price} MAD/mois`] : undefined,
@@ -128,18 +128,18 @@ export function ProPageView({ lang, pageSlug }: { lang: SeoLang; pageSlug: strin
         primaryHref: "/register",
         primaryLabel: lang === "fr" ? "Demander une démo" : "Request a demo",
         secondaryHref: buildSeoPath(lang, "/pro"),
-        secondaryLabel: "GoVoiture Pro",
+        secondaryLabel: "Goovoiture Pro",
       }}
       jsonLd={
         <JsonLd
           data={graphJsonLd(
             softwareApplicationJsonLd({
-              name: `GoVoiture Pro — ${title}`,
+              name: `Goovoiture Pro — ${title}`,
               description: page.description[lang] || page.description.fr,
               url: pageUrl,
             }),
             breadcrumbJsonLd([
-              { name: "GoVoiture", url: siteUrl },
+              { name: "Goovoiture", url: siteUrl },
               { name: "Pro", url: `${siteUrl}${buildSeoPath(lang, "/pro")}` },
               { name: title, url: pageUrl },
             ])

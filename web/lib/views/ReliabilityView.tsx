@@ -30,7 +30,7 @@ function modelApiName(modelSlug: string) {
 export function reliabilityHubMetadata(lang: SeoLang) {
   return {
     basePath: reliabilityHubPath(),
-    title: "Indice fiabilité voiture Maroc — GoVoiture",
+    title: "Indice fiabilité voiture Maroc — Goovoiture",
     description: "Scores fiabilité, pièces détachées et revente — 15 modèles vérifiés au Maroc.",
     keywords: "fiabilité voiture maroc, indice fiabilité auto",
   };
@@ -41,7 +41,7 @@ export function reliabilityMetadata(lang: SeoLang, brandSlug: string, modelSlug:
   if (!rel) return null;
   return {
     basePath: reliabilityPath(brandSlug, modelSlug),
-    title: `Fiabilité ${rel.displayName} Maroc — indice GoVoiture ${rel.score}/100`,
+    title: `Fiabilité ${rel.displayName} Maroc — indice Goovoiture ${rel.score}/100`,
     description: `${rel.moroccoVerdict} Score ${rel.score}/100 · grade ${rel.grade}.`,
     keywords: `fiabilité ${rel.displayName} maroc, panne ${rel.displayName}`,
   };
@@ -56,8 +56,8 @@ export async function ReliabilityHubView({ lang }: { lang: SeoLang }) {
       lang={lang}
       breadcrumbs={[{ label: "Goovoiture", href: "/" }, { label: "Fiabilité", href: undefined }]}
       hero={{
-        kicker: "GoVoiture Data",
-        title: "Indice fiabilité GoVoiture",
+        kicker: "Goovoiture Data",
+        title: "Indice fiabilité Goovoiture",
         description: "Scores curatés + données communauté — uniquement modèles avec fiche technique vérifiée.",
       }}
       cta={{
@@ -71,7 +71,7 @@ export async function ReliabilityHubView({ lang }: { lang: SeoLang }) {
         <JsonLd
           data={graphJsonLd(
             breadcrumbJsonLd([
-              { name: "GoVoiture", url: siteUrl },
+              { name: "Goovoiture", url: siteUrl },
               { name: "Fiabilité", url: `${siteUrl}${buildSeoPath(lang, reliabilityHubPath())}` },
             ])
           )}
@@ -140,7 +140,7 @@ export default async function ReliabilityModelView({
         { label: curated.displayName, href: undefined },
       ]}
       hero={{
-        kicker: "GoVoiture Data",
+        kicker: "Goovoiture Data",
         title: `Fiabilité ${curated.displayName}`,
         description: curated.moroccoVerdict,
       }}
@@ -162,7 +162,7 @@ export default async function ReliabilityModelView({
               reviewCount: live?.reviewSampleSize || curated.strengths.length + 5,
             }),
             breadcrumbJsonLd([
-              { name: "GoVoiture", url: siteUrl },
+              { name: "Goovoiture", url: siteUrl },
               { name: "Fiabilité", url: `${siteUrl}${buildSeoPath(lang, reliabilityHubPath())}` },
               { name: curated.displayName, url: pageUrl },
             ]),
@@ -222,7 +222,7 @@ export default async function ReliabilityModelView({
       ) : null}
 
       <RelatedLinksSection title="Explorer ce modèle" links={relatedLinks} />
-      <p className="text-xs text-[var(--gv-mut)] mt-6">{live?.methodology || "Score composite GoVoiture : communauté, avis annonces, données curatées Maroc."}</p>
+      <p className="text-xs text-[var(--gv-mut)] mt-6">{live?.methodology || "Score composite Goovoiture : communauté, avis annonces, données curatées Maroc."}</p>
     </SeoPageShell>
   );
 }

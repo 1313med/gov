@@ -19,7 +19,7 @@ export async function listingMetadata(lang: SeoLang, intent: Intent, listingSlug
   const listing = intent === "rental" ? await fetchRentalById(id) : await fetchSaleById(id);
   if (!listing) return null;
   const basePath = intent === "rental" ? buildRentalListingPath(listing) : buildSaleListingPath(listing);
-  const title = `${listing.brand} ${listing.model} ${listing.year}${listing.city ? ` — ${listing.city}` : ""} | GoVoiture`;
+  const title = `${listing.brand} ${listing.model} ${listing.year}${listing.city ? ` — ${listing.city}` : ""} | Goovoiture`;
   const price = intent === "rental" ? listing.pricePerDay : listing.price;
   const description =
     intent === "rental"
@@ -63,7 +63,7 @@ export default async function ListingView({
 
   const reviewNodes = reviewsGraphJsonLd(
     (reviewData.reviews || []).map((r) => ({
-      authorName: r.authorId?.name || "Client GoVoiture",
+      authorName: r.authorId?.name || "Client Goovoiture",
       rating: r.rating,
       body: r.comment || "",
       datePublished: r.createdAt ? new Date(r.createdAt).toISOString().slice(0, 10) : undefined,
@@ -125,7 +125,7 @@ export default async function ListingView({
               reviewCount: reviewData.total,
             }),
             breadcrumbJsonLd([
-              { name: "GoVoiture", url: siteUrl },
+              { name: "Goovoiture", url: siteUrl },
               { name: hubLabel, url: `${siteUrl}${buildSeoPath(lang, hubPath)}` },
               { name: title, url: pageUrl },
             ]),

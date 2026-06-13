@@ -1,4 +1,4 @@
-# GoVoiture — SEO ecosystem (fr / en / ar)
+# Goovoiture — SEO ecosystem (fr / en / ar)
 User-agent: *
 Allow: /
 Allow: /en/

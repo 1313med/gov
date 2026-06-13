@@ -27,7 +27,7 @@ export const CONTENT_CLUSTERS = {
           },
           {
             heading: "Franchise et sinistres",
-            body: "La franchise est la part à votre charge en cas de sinistre. En location GoVoiture, comparez les options rachat de franchise avant départ. En cas d'accident : constat amiable, photos, déclaration sous 5 jours ouvrables.",
+            body: "La franchise est la part à votre charge en cas de sinistre. En location Goovoiture, comparez les options rachat de franchise avant départ. En cas d'accident : constat amiable, photos, déclaration sous 5 jours ouvrables.",
           },
         ],
         faqs: [
@@ -45,7 +45,7 @@ export const CONTENT_CLUSTERS = {
           { heading: "Caution vs assurance", body: "La caution n'est pas une assurance — c'est un dépôt bloqué. Une franchise non rachetée peut être prélevée sur caution en cas de dommage." },
         ],
         faqs: [{ q: "Puis-je refuser l'assurance agence ?", a: "Rarement pour les particuliers — certaines flottes pro ont polices fleet. Touristes : vérifiez extension carte gold/carte bancaire." }],
-        relatedLinks: [{ label: "Agences GoVoiture", path: "/agences" }],
+        relatedLinks: [{ label: "Agences Goovoiture", path: "/agences" }],
       },
       {
         slug: "sinistre-auto-maroc",
@@ -74,7 +74,7 @@ export const CONTENT_CLUSTERS = {
         title: { fr: "Crédit auto au Maroc : comment ça marche" },
         description: { fr: "Banques, durées, apport minimum et documents pour financer votre voiture." },
         sections: [
-          { heading: "Principe", body: "Le crédit auto marocain est généralement un crédit à la consommation affecté. Le véhicule reste gagé jusqu'au solde — vérifiez la situation via GoVoiture Crédit Check avant achat occasion." },
+          { heading: "Principe", body: "Le crédit auto marocain est généralement un crédit à la consommation affecté. Le véhicule reste gagé jusqu'au solde — vérifiez la situation via Goovoiture Crédit Check avant achat occasion." },
           { heading: "Apport et durée", body: "Apport courant : 10–30 %. Durées : 12 à 84 mois. Mensualité = capital × taux + assurance emprunteur obligatoire." },
           { heading: "Documents", body: "CIN, bulletins de salaire (3 mois), attestation de travail, RIB, parfois relevé bancaire. Auto-entrepreneurs : déclarations fiscales." },
         ],
@@ -93,7 +93,7 @@ export const CONTENT_CLUSTERS = {
           { heading: "Comparer crédit vs cash", body: "Cash = négociation prix plus forte. Crédit = préserve trésorerie — calculez coût total avec intérêts." },
         ],
         faqs: [{ q: "LOA disponible au Maroc ?", a: "Offres limitées vs Europe — vérifiez constructeurs et banques partenaires." }],
-        relatedLinks: [{ label: "GoVoiture Pro", path: "/pro" }],
+        relatedLinks: [{ label: "Goovoiture Pro", path: "/pro" }],
       },
       {
         slug: "simulation-mensualite-auto",
@@ -126,9 +126,9 @@ export const CONTENT_CLUSTERS = {
         ],
         faqs: [
           { q: "Peut-on vendre sans CT valide ?", a: "Non recommandé — acquéreur ne pourra pas immatriculer. Renouvelez le CT avant vente." },
-          { q: "Vente entre particuliers ?", a: "Contrat légalisé + vérification crédit/gage via GoVoiture avant paiement du solde." },
+          { q: "Vente entre particuliers ?", a: "Contrat légalisé + vérification crédit/gage via Goovoiture avant paiement du solde." },
         ],
-        relatedLinks: [{ label: "Documents vente", path: "/demarches/documents-vente-voiture-maroc" }, { label: "Vendre sur GoVoiture", path: "/vendre-ma-voiture" }],
+        relatedLinks: [{ label: "Documents vente", path: "/demarches/documents-vente-voiture-maroc" }, { label: "Vendre sur Goovoiture", path: "/vendre-ma-voiture" }],
       },
       {
         slug: "documents-vente-voiture-maroc",

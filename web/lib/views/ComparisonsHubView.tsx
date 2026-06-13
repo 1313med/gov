@@ -34,7 +34,7 @@ export default function ComparisonsHubView({ lang }: { lang: SeoLang }) {
         { label: lang === "fr" ? "Comparatifs" : "Compare", href: undefined },
       ]}
       hero={{
-        kicker: "GoVoiture Comparatifs",
+        kicker: "Goovoiture Comparatifs",
         title: seo.h1,
         description: seo.intro,
       }}
@@ -55,7 +55,7 @@ export default function ComparisonsHubView({ lang }: { lang: SeoLang }) {
               items: comparisons.map((c) => ({ name: c.h1, url: `${siteUrl}${buildSeoPath(lang, c.path)}` })),
             }),
             breadcrumbJsonLd([
-              { name: "GoVoiture", url: siteUrl },
+              { name: "Goovoiture", url: siteUrl },
               { name: lang === "fr" ? "Comparatifs" : "Compare", url: pageUrl },
             ])
           )}

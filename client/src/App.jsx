@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import Home from "./pages/Home2.jsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from "./components/Navbar";
+import SeoFooter from "./components/seo/SeoFooter";
 import SeoHead from "./components/SeoHead";
 import { parseSeoPath } from "./seo/seoPaths";
 
@@ -125,7 +126,8 @@ export default function App() {
     AUTH_PATHS.includes(basePath) ||
     basePath.startsWith("/reset-password") ||
     basePath.startsWith("/verify-email");
-  const showNav = !isHome && !hasSidebar && !isAuth;
+  const showNav = !isHome && !hasSidebar;
+  const showGlobalFooter = !isHome && !hasSidebar;
 
   const publicPages = [
     { path: "/", element: <Home /> },
@@ -275,6 +277,7 @@ export default function App() {
           <Route path="/owner/staff"      element={<ProtectedRoute roles={["rental_owner"]}><StaffManagementPage /></ProtectedRoute>} />
         </Routes>
       </Suspense>
+      {showGlobalFooter ? <SeoFooter /> : null}
     </div>
   );
 }

@@ -32,7 +32,7 @@ export function brandMetadata(lang: SeoLang, brandSlug: string, modelSlug?: stri
     const modelN = modelSlug.replace(/-/g, " ");
     return {
       basePath: path,
-      title: `${brandN} ${modelN} Maroc | GoVoiture`,
+      title: `${brandN} ${modelN} Maroc | Goovoiture`,
       description: `Location et occasion ${brandN} ${modelN} au Maroc.`,
       keywords: `${brandN} ${modelN} maroc`,
     };
@@ -45,19 +45,19 @@ export function brandMetadata(lang: SeoLang, brandSlug: string, modelSlug?: stri
 function brandFaqs(lang: SeoLang, brandN: string, modelN: string | null) {
   if (lang === "en") {
     return [
-      { q: `How much does a ${brandN}${modelN ? ` ${modelN}` : ""} cost in Morocco?`, a: "Prices vary by year and mileage — compare live listings on GoVoiture." },
-      { q: `Where to rent a ${brandN} in Morocco?`, a: "Browse verified agencies on GoVoiture in Casablanca, Rabat, Marrakech and more." },
+      { q: `How much does a ${brandN}${modelN ? ` ${modelN}` : ""} cost in Morocco?`, a: "Prices vary by year and mileage — compare live listings on Goovoiture." },
+      { q: `Where to rent a ${brandN} in Morocco?`, a: "Browse verified agencies on Goovoiture in Casablanca, Rabat, Marrakech and more." },
       { q: `Is ${brandN} popular in Morocco?`, a: `${brandN} is among the most requested brands for rental and used cars in Morocco.` },
     ];
   }
   return [
     {
       q: `Quel prix pour une ${brandN}${modelN ? ` ${modelN}` : ""} au Maroc ?`,
-      a: "Les tarifs dépendent de l'année, du kilométrage et de la ville — consultez les annonces en temps réel sur GoVoiture.",
+      a: "Les tarifs dépendent de l'année, du kilométrage et de la ville — consultez les annonces en temps réel sur Goovoiture.",
     },
     {
       q: `Où louer une ${brandN} au Maroc ?`,
-      a: "Comparez les agences vérifiées GoVoiture à Casablanca, Rabat, Marrakech et dans 45 villes.",
+      a: "Comparez les agences vérifiées Goovoiture à Casablanca, Rabat, Marrakech et dans 45 villes.",
     },
     {
       q: `La ${brandN} est-elle fiable au Maroc ?`,
@@ -100,10 +100,10 @@ export default async function BrandView({
   const modelN = model ? model.replace(/-/g, " ") : null;
   const seo = model
     ? {
-        title: `${brandN} ${modelN} Maroc | GoVoiture`,
+        title: `${brandN} ${modelN} Maroc | Goovoiture`,
         description: `Location et occasion ${brandN} ${modelN} au Maroc.`,
         h1: `${brandN} ${modelN} au Maroc`,
-        intro: `Toutes les offres ${brandN} ${modelN} — location et vente sur GoVoiture.`,
+        intro: `Toutes les offres ${brandN} ${modelN} — location et vente sur Goovoiture.`,
         keywords: `${brandN} ${modelN} maroc`,
       }
     : seoRaw;
@@ -155,7 +155,7 @@ export default async function BrandView({
         ...(model ? [{ label: modelN!, href: undefined }] : []),
       ]}
       hero={{
-        kicker: "GoVoiture Marketplace",
+        kicker: "Goovoiture Marketplace",
         title: seo.h1,
         description: seo.intro,
       }}
@@ -187,7 +187,7 @@ export default async function BrandView({
               ],
             }),
             breadcrumbJsonLd([
-              { name: "GoVoiture", url: siteUrl },
+              { name: "Goovoiture", url: siteUrl },
               { name: brandN, url: `${siteUrl}${buildSeoPath(lang, brandPath(brandSlug))}` },
               ...(model ? [{ name: modelN!, url: pageUrl }] : []),
             ]),

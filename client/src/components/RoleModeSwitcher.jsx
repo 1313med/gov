@@ -86,7 +86,7 @@ export default function RoleModeSwitcher() {
     <div className="rms-wrap">
       <div className="rms-head">
         <p className="rms-kicker">{fr ? "SELECTIONNEZ VOTRE PARCOURS" : "SELECT YOUR PATH"}</p>
-        <h2 className="rms-title">{fr ? "Vos espaces GooVoiture" : "Your GooVoiture spaces"}</h2>
+        <h2 className="rms-title">{fr ? "Vos espaces Goovoiture" : "Your Goovoiture spaces"}</h2>
         <p className="rms-sub">
           {fr ? "Basculez entre vos roles en 1 clic." : "Switch between your modes in one tap."}
         </p>

@@ -2,7 +2,6 @@ import { Link, useParams } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import SeoHead from "../../components/SeoHead";
 import SeoBreadcrumbs from "../../components/seo/SeoBreadcrumbs";
-import SeoFooter from "../../components/seo/SeoFooter";
 import { getBrandBySlug, brandPath, modelPath, cityBrandRentalPath, cityBrandSalePath } from "../../seo/catalog/brands";
 import { MOROCCO_CITIES } from "../../seo/catalog/cities";
 import { buildBrandHubSeo } from "../../seo/programmaticSeo";
@@ -26,10 +25,10 @@ export default function BrandHubPage() {
   const modelN = model ? model.replace(/-/g, " ") : null;
   const seo = model
     ? {
-        title: `${brandN} ${modelN} Maroc | GoVoiture`,
+        title: `${brandN} ${modelN} Maroc | Goovoiture`,
         description: `Location et occasion ${brandN} ${modelN} au Maroc.`,
         h1: `${brandN} ${modelN} au Maroc`,
-        intro: `Toutes les offres ${brandN} ${modelN} — location et vente sur GoVoiture.`,
+        intro: `Toutes les offres ${brandN} ${modelN} — location et vente sur Goovoiture.`,
         keywords: `${brandN} ${modelN} maroc`,
       }
     : seoRaw;
@@ -45,7 +44,7 @@ export default function BrandHubPage() {
         jsonLdExtra={graphJsonLd(
           collectionPageJsonLd({ name: seo.h1, url: pageUrl, description: seo.description, items: [] }),
           breadcrumbJsonLd([
-            { name: "GoVoiture", url: siteUrl },
+            { name: "Goovoiture", url: siteUrl },
             { name: brandN, url: `${siteUrl}${buildSeoPath(lang, brandPath(brandSlug))}` },
             ...(model ? [{ name: modelN, url: pageUrl }] : []),
           ])
@@ -54,7 +53,7 @@ export default function BrandHubPage() {
       <div className="mx-auto max-w-5xl px-4 py-10">
         <SeoBreadcrumbs
           items={[
-            { label: "GoVoiture", href: "/" },
+            { label: "Goovoiture", href: "/" },
             { label: lang === "fr" ? "Marques" : "Brands", href: "/voiture-occasion" },
             { label: brandN, href: model ? brandPath(brandSlug) : null },
             ...(model ? [{ label: modelN, href: null }] : []),
@@ -104,7 +103,6 @@ export default function BrandHubPage() {
           </ul>
         </section>
       </div>
-      <SeoFooter />
     </div>
   );
 }

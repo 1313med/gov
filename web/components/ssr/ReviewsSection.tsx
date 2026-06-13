@@ -24,7 +24,7 @@ export default function ReviewsSection({
         title={title}
         description={
           reviewCount > 0
-            ? `${avgRating}/5 · ${reviewCount} avis sur GoVoiture`
+            ? `${avgRating}/5 · ${reviewCount} avis sur Goovoiture`
             : lang === "fr"
               ? "Pas encore d'avis — soyez le premier."
               : "No reviews yet"

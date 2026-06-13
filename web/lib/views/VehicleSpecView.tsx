@@ -14,7 +14,7 @@ export function vehicleSpecMetadata(lang: SeoLang, brandSlug: string, modelSlug:
   if (!spec) return null;
   return {
     basePath: vehicleSpecPath(brandSlug, modelSlug),
-    title: `Fiche technique ${spec.displayName} — encyclopédie GoVoiture`,
+    title: `Fiche technique ${spec.displayName} — encyclopédie Goovoiture`,
     description: `${spec.displayName} : motorisation, consommation, coffre, sécurité — guide technique Maroc.`,
     keywords: `fiche technique ${spec.displayName}, specs ${spec.brandName} ${spec.modelName}`,
   };
@@ -69,7 +69,7 @@ export default function VehicleSpecView({
         { label: spec.displayName, href: undefined },
       ]}
       hero={{
-        kicker: "GoVoiture Encyclopédie",
+        kicker: "Goovoiture Encyclopédie",
         title: `Fiche technique ${spec.displayName}`,
         description: spec.moroccoNotes,
       }}
@@ -96,7 +96,7 @@ export default function VehicleSpecView({
               numberOfSeats: spec.seats,
             }),
             breadcrumbJsonLd([
-              { name: "GoVoiture", url: siteUrl },
+              { name: "Goovoiture", url: siteUrl },
               { name: "Encyclopédie", url: `${siteUrl}${buildSeoPath(lang, vehicleSpecPath("dacia", "logan"))}` },
               { name: spec.displayName, url: pageUrl },
             ]),

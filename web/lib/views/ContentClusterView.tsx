@@ -18,7 +18,7 @@ export function clusterHubMetadata(lang: SeoLang, clusterSlug: ClusterSlug) {
   if (!cluster) return null;
   return {
     basePath: cluster.hubPath,
-    title: `${cluster.hubTitle[lang] || cluster.hubTitle.fr} | GoVoiture`,
+    title: `${cluster.hubTitle[lang] || cluster.hubTitle.fr} | Goovoiture`,
     description: cluster.hubDescription[lang] || cluster.hubDescription.fr,
     keywords: cluster.slug,
   };
@@ -30,7 +30,7 @@ export function clusterTopicMetadata(lang: SeoLang, clusterSlug: ClusterSlug, to
   const { topic } = data;
   return {
     basePath: clusterTopicPath(clusterSlug, topicSlug),
-    title: `${topic.title[lang] || topic.title.fr} | GoVoiture`,
+    title: `${topic.title[lang] || topic.title.fr} | Goovoiture`,
     description: topic.description[lang] || topic.description.fr,
     keywords: topicSlug,
   };
@@ -49,7 +49,7 @@ export function ContentClusterHubView({ lang, clusterSlug }: { lang: SeoLang; cl
       lang={lang}
       breadcrumbs={[{ label: "Goovoiture", href: "/" }, { label: clusterName, href: undefined }]}
       hero={{
-        kicker: "GoVoiture Guides",
+        kicker: "Goovoiture Guides",
         title: cluster.hubTitle[lang] || cluster.hubTitle.fr,
         description: cluster.hubDescription[lang] || cluster.hubDescription.fr,
       }}
@@ -63,7 +63,7 @@ export function ContentClusterHubView({ lang, clusterSlug }: { lang: SeoLang; cl
       jsonLd={
         <JsonLd
           data={breadcrumbJsonLd([
-            { name: "GoVoiture", url: siteUrl },
+            { name: "Goovoiture", url: siteUrl },
             { name: clusterName, url: pageUrl },
           ])}
         />
@@ -115,7 +115,7 @@ export function ContentClusterTopicView({
         { label: title, href: undefined },
       ]}
       hero={{
-        kicker: "GoVoiture Guides",
+        kicker: "Goovoiture Guides",
         title,
         description: topic.description[lang] || topic.description.fr,
       }}
@@ -137,7 +137,7 @@ export function ContentClusterTopicView({
               datePublished: "2026-01-01",
             }),
             breadcrumbJsonLd([
-              { name: "GoVoiture", url: siteUrl },
+              { name: "Goovoiture", url: siteUrl },
               { name: clusterName, url: `${siteUrl}${buildSeoPath(lang, cluster.hubPath)}` },
               { name: title, url: pageUrl },
             ]),

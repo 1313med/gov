@@ -97,7 +97,7 @@ export async function MarketplaceView({
         lang={lang}
         breadcrumbs={[{ label: "Goovoiture", href: "/" }, { label: seo.h1, href: undefined }]}
         hero={{
-          kicker: "GoVoiture Marketplace",
+          kicker: "Goovoiture Marketplace",
           title: seo.h1,
           description: seo.intro,
         }}
@@ -152,7 +152,7 @@ export async function MarketplaceView({
           { label: cityName, href: undefined },
         ]}
         hero={{
-          kicker: "GoVoiture Marketplace",
+          kicker: "Goovoiture Marketplace",
           title: seo?.h1 || cityName,
           description: seo?.intro,
         }}

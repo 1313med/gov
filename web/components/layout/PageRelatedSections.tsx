@@ -56,7 +56,7 @@ export default async function PageRelatedSections({
 
       {showListings && (rentals.length > 0 || sales.length > 0) ? (
         <section className="gv-sec-sm">
-          <SectionHeader eyebrow="Marketplace" title="Annonces en direct" description="Offres vérifiées GoVoiture — location et occasion." />
+          <SectionHeader eyebrow="Marketplace" title="Annonces en direct" description="Offres vérifiées Goovoiture — location et occasion." />
           <EntityGrid cols={4}>
             {rentals.slice(0, 2).map((r: { _id: string; brand: string; model: string; year?: number; pricePerDay?: number; city?: string }) => (
               <VehicleCard

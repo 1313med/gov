@@ -414,7 +414,7 @@ export default function AddCarScreen() {
                   {pick("Add your car to get started", "Ajoutez votre voiture pour commencer")}
                 </Text>
                 <Text style={{ fontSize: 13, color: subColor, lineHeight: 20 }}>
-                  {pick("This is your main GooVoiture feature: track papers, get alerts, and maintenance. Pick brand and model to start — everything else is optional.", "C'est la fonction principale de GooVoiture pour vous : suivi des papiers, alertes et entretien. Choisissez marque et modèle pour démarrer — le reste est optionnel.")}
+                  {pick("This is your main Goovoiture feature: track papers, get alerts, and maintenance. Pick brand and model to start — everything else is optional.", "C'est la fonction principale de Goovoiture pour vous : suivi des papiers, alertes et entretien. Choisissez marque et modèle pour démarrer — le reste est optionnel.")}
                 </Text>
               </View>
             </View>

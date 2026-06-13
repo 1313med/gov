@@ -34,8 +34,8 @@ function slugifyBrandModel(brand: string, model: string) {
 export function searchIntelHubMetadata(lang: SeoLang) {
   return {
     basePath: searchIntelHubPath(),
-    title: "Recherches auto Maroc — intelligence GoVoiture",
-    description: "Modèles les plus consultés sur GoVoiture — signaux de demande marketplace en temps réel.",
+    title: "Recherches auto Maroc — intelligence Goovoiture",
+    description: "Modèles les plus consultés sur Goovoiture — signaux de demande marketplace en temps réel.",
     keywords: "voiture recherchée maroc, demande auto maroc",
   };
 }
@@ -45,7 +45,7 @@ export function searchIntelMetadata(lang: SeoLang, brandSlug: string, modelSlug:
   if (!spec) return null;
   return {
     basePath: searchIntelPath(brandSlug, modelSlug),
-    title: `Recherches ${spec.displayName} Maroc — demande GoVoiture`,
+    title: `Recherches ${spec.displayName} Maroc — demande Goovoiture`,
     description: `Vues marketplace et score demande ${spec.displayName} — signaux d'achat et location au Maroc.`,
     keywords: `recherche ${spec.displayName} maroc, demande ${spec.displayName}`,
   };
@@ -61,8 +61,8 @@ export async function SearchIntelHubView({ lang }: { lang: SeoLang }) {
       lang={lang}
       breadcrumbs={[{ label: "Goovoiture", href: "/" }, { label: "Recherches", href: undefined }]}
       hero={{
-        kicker: "GoVoiture Data",
-        title: "Intelligence recherches GoVoiture",
+        kicker: "Goovoiture Data",
+        title: "Intelligence recherches Goovoiture",
         description: "Modèles les plus consultés — agrégation viewCount marketplace vente + location.",
       }}
       cta={{
@@ -139,14 +139,14 @@ export default async function SearchIntelModelView({
     {
       q: `${spec.displayName} est-elle recherchée au Maroc ?`,
       a: demand?.views
-        ? `${demand.views.toLocaleString()} vues sur GoVoiture · score demande ${demand.demandScore}/100.`
+        ? `${demand.views.toLocaleString()} vues sur Goovoiture · score demande ${demand.demandScore}/100.`
         : "Données en cours — parcourez les annonces live.",
     },
     {
       q: `Combien d'annonces ${spec.displayName} actives ?`,
       a: demand
         ? `${demand.activeSaleListings || 0} ventes · ${demand.activeRentalListings || 0} locations · ${demand.soldListings || 0} vendues.`
-        : "Consultez le hub modèle GoVoiture.",
+        : "Consultez le hub modèle Goovoiture.",
     },
   ];
 
@@ -165,9 +165,9 @@ export default async function SearchIntelModelView({
         { label: spec.displayName, href: undefined },
       ]}
       hero={{
-        kicker: "GoVoiture Data",
+        kicker: "Goovoiture Data",
         title: `Recherches ${spec.displayName}`,
-        description: "Signaux de demande marketplace GoVoiture — vues agrégées vente + location.",
+        description: "Signaux de demande marketplace Goovoiture — vues agrégées vente + location.",
       }}
       faqs={faqs}
       cta={{
@@ -189,7 +189,7 @@ export default async function SearchIntelModelView({
               variableMeasured: ["viewCount", "demandScore"],
             }),
             breadcrumbJsonLd([
-              { name: "GoVoiture", url: siteUrl },
+              { name: "Goovoiture", url: siteUrl },
               { name: "Recherches", url: `${siteUrl}${buildSeoPath(lang, searchIntelHubPath())}` },
               { name: spec.displayName, url: pageUrl },
             ]),

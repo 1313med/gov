@@ -52,7 +52,7 @@ export function buildComparisonData(slug) {
     modelB: bModel,
     nameA,
     nameB,
-    title: `${nameA} vs ${nameB} — Comparatif Maroc | GoVoiture`,
+    title: `${nameA} vs ${nameB} — Comparatif Maroc | Goovoiture`,
     description: `Comparez ${nameA} et ${nameB} au Maroc : prix, consommation, confort et occasion.`,
     h1: `${nameA} vs ${nameB}`,
     intro: `Comparatif détaillé entre ${nameA} et ${nameB} pour choisir votre prochaine voiture au Maroc.`,
@@ -68,7 +68,7 @@ export function buildComparisonData(slug) {
       specRow("Prix occasion", "Abordable", "Milieu de gamme"),
     ],
     faqs: [
-      { q: `${nameA} ou ${nameB} pour Casablanca ?`, a: "Pour la ville, privilégiez la consommation et le stationnement ; comparez les annonces GoVoiture." },
+      { q: `${nameA} ou ${nameB} pour Casablanca ?`, a: "Pour la ville, privilégiez la consommation et le stationnement ; comparez les annonces Goovoiture." },
       { q: "Quelle voiture revend le mieux ?", a: "Les marques à forte demande locale (Dacia, Renault, Hyundai) restent liquides." },
     ],
   };
@@ -123,7 +123,7 @@ export function getComparisonsForBrand(brandSlug, modelSlug = null, limit = 6) {
 export function buildComparisonHubSeo(lang = "fr") {
   const templates = {
     fr: {
-      title: "Comparatif voitures Maroc | GoVoiture",
+      title: "Comparatif voitures Maroc | Goovoiture",
       description: "Comparez les modèles les plus populaires au Maroc : prix, consommation, confort et occasion.",
       h1: "Comparatifs voitures au Maroc",
       intro: "Choisissez entre citadines, SUV et berlines — comparatifs détaillés pour le marché marocain.",
@@ -131,7 +131,7 @@ export function buildComparisonHubSeo(lang = "fr") {
       path: "/comparer",
     },
     en: {
-      title: "Car comparisons Morocco | GoVoiture",
+      title: "Car comparisons Morocco | Goovoiture",
       description: "Compare popular models in Morocco: price, fuel, comfort and used cars.",
       h1: "Car comparisons in Morocco",
       intro: "Detailed comparisons for Morocco's most searched model pairs.",
@@ -139,7 +139,7 @@ export function buildComparisonHubSeo(lang = "fr") {
       path: "/comparer",
     },
     ar: {
-      title: "مقارنة السيارات المغرب | GoVoiture",
+      title: "مقارنة السيارات المغرب | Goovoiture",
       description: "قارن أشهر الموديلات في المغرب.",
       h1: "مقارنة السيارات في المغرب",
       intro: "مقارنات تفصيلية لأزواج الموديلات الأكثر بحثاً.",

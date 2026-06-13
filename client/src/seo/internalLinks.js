@@ -11,7 +11,7 @@ export const ENTITY_HUBS = {
   brands: { path: "/marque/dacia", label: { fr: "Marques", en: "Brands", ar: "ماركات" } },
   compare: { path: "/comparer", label: { fr: "Comparatifs", en: "Compare", ar: "مقارنة" } },
   blog: { path: "/blog", label: { fr: "Blog", en: "Blog", ar: "مدونة" } },
-  pro: { path: "/pro", label: { fr: "GoVoiture Pro", en: "Pro", ar: "Pro" } },
+  pro: { path: "/pro", label: { fr: "Goovoiture Pro", en: "Pro", ar: "Pro" } },
 };
 
 export function topCityLinks(limit = 8) {

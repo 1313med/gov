@@ -8,7 +8,6 @@ import { getSeoForPath, getSiteUrl } from "../seo/seoLocales";
 import { buildSeoPath, parseSeoPath } from "../seo/seoPaths";
 import { breadcrumbJsonLd, localBusinessJsonLd } from "../seo/jsonLd";
 import { buildRentalListingPath, buildSaleListingPath } from "../seo/slugUtils";
-import SeoFooter from "../components/seo/SeoFooter";
 import { useLocation } from "react-router-dom";
 
 export default function CityLandingPage({ mode = "rental" }) {
@@ -143,7 +142,6 @@ export default function CityLandingPage({ mode = "rental" }) {
           </ul>
         )}
       </div>
-      <SeoFooter />
     </div>
   );
 }

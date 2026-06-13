@@ -562,8 +562,8 @@ export const arOverrides = {
   "Suivre ma voiture": "تتبّع سيارتي",
   "Rent out my fleet": "أؤجّر أسطولي",
   "Louer ma flotte": "أؤجّر أسطولي",
-  "Welcome to GooVoiture": "مرحباً بك في Goovoiture",
-  "Bienvenue sur GooVoiture": "مرحباً بك في Goovoiture",
+  "Welcome to Goovoiture": "مرحباً بك في Goovoiture",
+  "Bienvenue sur Goovoiture": "مرحباً بك في Goovoiture",
 
   // —— Notifications & messages ——
   "No notifications": "لا إشعارات",

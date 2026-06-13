@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import SeoHead from "../../components/SeoHead";
 import SeoBreadcrumbs from "../../components/seo/SeoBreadcrumbs";
-import SeoFooter from "../../components/seo/SeoFooter";
 import { MOROCCO_CITIES, cityRentalPath, citySalePath } from "../../seo/catalog/cities";
 import { MOROCCO_AIRPORTS, airportRentalPath } from "../../seo/catalog/airports";
 import { RENTAL_CATEGORIES, SALE_CATEGORIES } from "../../seo/catalog/categories";
@@ -39,13 +38,13 @@ export default function MarketplaceHubPage({ intent = "rental" }) {
         jsonLdExtra={graphJsonLd(
           collectionPageJsonLd({ name: seo.h1, url: pageUrl, description: seo.description, items: [] }),
           breadcrumbJsonLd([
-            { name: "GoVoiture", url: siteUrl },
+            { name: "Goovoiture", url: siteUrl },
             { name: hubLabel, url: pageUrl },
           ])
         )}
       />
       <div className="mx-auto max-w-5xl px-4 py-10">
-        <SeoBreadcrumbs items={[{ label: "GoVoiture", href: "/" }, { label: hubLabel, href: null }]} />
+        <SeoBreadcrumbs items={[{ label: "Goovoiture", href: "/" }, { label: hubLabel, href: null }]} />
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">{seo.h1}</h1>
         <p className="text-gray-600 dark:text-gray-400 mb-10">{seo.intro}</p>
 
@@ -105,7 +104,6 @@ export default function MarketplaceHubPage({ intent = "rental" }) {
           </ul>
         </section>
       </div>
-      <SeoFooter />
     </div>
   );
 }

@@ -2,7 +2,6 @@ import { Link, useParams } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import SeoHead from "../../components/SeoHead";
 import SeoBreadcrumbs from "../../components/seo/SeoBreadcrumbs";
-import SeoFooter from "../../components/seo/SeoFooter";
 import { getBlogArticle, BLOG_CLUSTERS } from "../../seo/catalog/blogArticles";
 import { buildSeoPath, parseSeoPath } from "../../seo/seoPaths";
 import { getSiteUrl } from "../../seo/seoLocales";
@@ -29,7 +28,7 @@ export default function BlogArticlePage() {
     <div className="min-h-screen bg-gray-50 dark:bg-[#05060f]">
       <SeoHead
         override={{
-          title: `${title} | GoVoiture`,
+          title: `${title} | Goovoiture`,
           description: desc,
           keywords: article.keyword?.[lang] || article.keyword?.fr,
           canonical: pageUrl,
@@ -41,11 +40,11 @@ export default function BlogArticlePage() {
             headline: title,
             description: desc,
             url: pageUrl,
-            author: { "@type": "Organization", name: "GoVoiture" },
-            publisher: { "@type": "Organization", name: "GoVoiture" },
+            author: { "@type": "Organization", name: "Goovoiture" },
+            publisher: { "@type": "Organization", name: "Goovoiture" },
           },
           breadcrumbJsonLd([
-            { name: "GoVoiture", url: siteUrl },
+            { name: "Goovoiture", url: siteUrl },
             { name: "Blog", url: `${siteUrl}${buildSeoPath(lang, "/blog")}` },
             { name: title, url: pageUrl },
           ])
@@ -54,7 +53,7 @@ export default function BlogArticlePage() {
       <article className="mx-auto max-w-3xl px-4 py-12">
         <SeoBreadcrumbs
           items={[
-            { label: "GoVoiture", href: "/" },
+            { label: "Goovoiture", href: "/" },
             { label: "Blog", href: "/blog" },
             { label: cluster?.name[lang] || cluster?.name.fr || clusterSlug, href: `/blog#${clusterSlug}` },
             { label: title, href: null },
@@ -71,7 +70,6 @@ export default function BlogArticlePage() {
           </Link>
         </div>
       </article>
-      <SeoFooter />
     </div>
   );
 }

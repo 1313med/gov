@@ -23,8 +23,8 @@ export function priceIntelMetadata(lang: SeoLang, brandSlug: string, modelSlug: 
   const name = spec.displayName;
   return {
     basePath: priceIntelPath(brandSlug, modelSlug),
-    title: `Prix ${name} occasion Maroc — indice GoVoiture`,
-    description: `Prix médian, fourchette et tendances ${name} au Maroc — données marketplace GoVoiture en temps réel.`,
+    title: `Prix ${name} occasion Maroc — indice Goovoiture`,
+    description: `Prix médian, fourchette et tendances ${name} au Maroc — données marketplace Goovoiture en temps réel.`,
     keywords: `prix ${name} maroc, cote ${name}, valeur ${name} occasion`,
   };
 }
@@ -59,14 +59,14 @@ export default async function PriceIntelligenceView({
     {
       q: `Quel est le prix d'une ${spec.displayName} occasion au Maroc ?`,
       a: sale?.market
-        ? `Indice GoVoiture : médiane ${sale.market.median?.toLocaleString()} MAD (${sale.market.sampleSize} observations).`
-        : "Données insuffisantes — consultez les annonces live sur GoVoiture.",
+        ? `Indice Goovoiture : médiane ${sale.market.median?.toLocaleString()} MAD (${sale.market.sampleSize} observations).`
+        : "Données insuffisantes — consultez les annonces live sur Goovoiture.",
     },
     {
       q: `Combien coûte la location ${spec.displayName} ?`,
       a: rental?.market
         ? `Médiane ${rental.market.median?.toLocaleString()} MAD/jour sur ${rental.market.sampleSize} offres actives.`
-        : "Comparez les agences sur GoVoiture.",
+        : "Comparez les agences sur Goovoiture.",
     },
   ];
 
@@ -90,14 +90,14 @@ export default async function PriceIntelligenceView({
         { label: spec.displayName, href: undefined },
       ]}
       hero={{
-        kicker: "GoVoiture Data",
+        kicker: "Goovoiture Data",
         title: `Prix ${spec.displayName} au Maroc`,
         description: `Indice basé sur ${sale?.activeListings || 0} annonces actives${sale?.soldListings ? ` et ${sale.soldListings} ventes enregistrées` : ""}. ${prices?.methodology || "Moyenne tronquée (5 % outliers retirés)."}`,
       }}
       faqs={faqs}
       cta={{
         title: `Trouver une ${spec.displayName}`,
-        description: "Comparez les annonces occasion et location sur GoVoiture.",
+        description: "Comparez les annonces occasion et location sur Goovoiture.",
         primaryHref: buildSeoPath(lang, modelPath(brandSlug, modelSlug)),
         primaryLabel: "Voir les annonces",
         secondaryHref: buildSeoPath(lang, "/location-voiture"),
@@ -109,13 +109,13 @@ export default async function PriceIntelligenceView({
           data={graphJsonLd(
             datasetJsonLd({
               name: `Indice prix ${spec.displayName} Maroc`,
-              description: `Données prix occasion et location ${spec.displayName} — GoVoiture Morocco.`,
+              description: `Données prix occasion et location ${spec.displayName} — Goovoiture Morocco.`,
               url: pageUrl,
               dateModified: new Date().toISOString().slice(0, 10),
               variableMeasured: ["salePriceMad", "rentalPricePerDayMad"],
             }),
             breadcrumbJsonLd([
-              { name: "GoVoiture", url: siteUrl },
+              { name: "Goovoiture", url: siteUrl },
               { name: "Prix", url: `${siteUrl}${buildSeoPath(lang, "/prix/dacia/logan")}` },
               { name: spec.displayName, url: pageUrl },
             ]),
@@ -174,7 +174,7 @@ export default async function PriceIntelligenceView({
       ) : null}
 
       {trends?.monthly?.length ? (
-        <ChartContainer title="Historique (snapshots GoVoiture)">
+        <ChartContainer title="Historique (snapshots Goovoiture)">
           <ul className="text-sm space-y-1">
             {trends.monthly.slice(-6).map((m: { month: string; sale?: { median: number } | null }) => (
               <li key={m.month}>{m.month}{m.sale?.median ? ` — médiane vente ${m.sale.median.toLocaleString()} MAD` : ""}</li>

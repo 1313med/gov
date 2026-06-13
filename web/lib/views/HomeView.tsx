@@ -12,25 +12,25 @@ export function homeMetadata(lang: SeoLang) {
   if (lang === "en") {
     return {
       basePath: "/",
-      title: "GoVoiture — Car rental & used cars Morocco",
-      description: "Morocco's automotive ecosystem: rent, buy, sell and manage your fleet with GoVoiture Pro.",
-      keywords: "car rental morocco, used cars morocco, goovoiture",
+      title: "Goovoiture — Car rental & used cars Morocco",
+      description: "Morocco's automotive ecosystem: rent, buy, sell and manage your fleet with Goovoiture Pro.",
+      keywords: "car rental morocco, used cars morocco, Goovoiture",
     };
   }
   if (lang === "ar") {
     return {
       basePath: "/",
-      title: "GoVoiture — كراء وبيع السيارات في المغرب",
+      title: "Goovoiture — كراء وبيع السيارات في المغرب",
       description: "منصة السيارات في المغرب: كراء، بيع، شراء وإدارة الأسطول.",
       keywords: "كراء سيارات المغرب, سيارات مستعملة",
     };
   }
   return {
     basePath: "/",
-    title: "GoVoiture — Location, occasion & écosystème auto Maroc",
+    title: "Goovoiture — Location, occasion & écosystème auto Maroc",
     description:
-      "Location de voiture, voitures d'occasion, concessionnaires et GoVoiture Pro — la plateforme automobile de référence au Maroc.",
-    keywords: "location voiture maroc, voiture occasion maroc, goovoiture pro",
+      "Location de voiture, voitures d'occasion, concessionnaires et Goovoiture Pro — la plateforme automobile de référence au Maroc.",
+    keywords: "location voiture maroc, voiture occasion maroc, Goovoiture pro",
   };
 }
 
@@ -52,7 +52,7 @@ export default function HomeView({ lang }: { lang: SeoLang }) {
       badge: "Occasion",
     },
     {
-      title: "GoVoiture Pro",
+      title: "Goovoiture Pro",
       body: "SaaS agences",
       href: buildSeoPath(lang, "/pro"),
       badge: "Pro",
@@ -70,7 +70,7 @@ export default function HomeView({ lang }: { lang: SeoLang }) {
       lang={lang}
       breadcrumbs={[{ label: "Goovoiture", href: undefined }]}
       hero={{
-        kicker: "GoVoiture",
+        kicker: "Goovoiture",
         title: meta.title.split("—")[0].trim(),
         description: meta.description,
       }}

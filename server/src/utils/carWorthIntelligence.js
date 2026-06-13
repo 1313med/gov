@@ -108,7 +108,7 @@ async function getCarWorthIntelligence({ brand, model, year, mileage, fuel, gear
     year,
     insightsFr: [
       marketMedian
-        ? `Prix médian observé sur GooVoiture : ${marketMedian.toLocaleString("fr-MA")} MAD (${listingCount} annonce${listingCount > 1 ? "s" : ""}).`
+        ? `Prix médian observé sur Goovoiture : ${marketMedian.toLocaleString("fr-MA")} MAD (${listingCount} annonce${listingCount > 1 ? "s" : ""}).`
         : "Peu d'annonces identiques — estimation basée sur le marché marocain.",
       monthlyChangeMad < 0
         ? `Votre ${brand} ${model || ""} a probablement perdu environ ${Math.abs(monthlyChangeMad).toLocaleString("fr-MA")} MAD ce mois (dépréciation normale).`
@@ -118,7 +118,7 @@ async function getCarWorthIntelligence({ brand, model, year, mileage, fuel, gear
     ],
     insightsEn: [
       marketMedian
-        ? `Median price on GooVoiture: ${marketMedian.toLocaleString("en")} MAD (${listingCount} listing${listingCount > 1 ? "s" : ""}).`
+        ? `Median price on Goovoiture: ${marketMedian.toLocaleString("en")} MAD (${listingCount} listing${listingCount > 1 ? "s" : ""}).`
         : "Few matching listings — estimate based on Moroccan market data.",
       monthlyChangeMad < 0
         ? `Your ${brand} ${model || ""} likely lost about ${Math.abs(monthlyChangeMad).toLocaleString("en")} MAD this month (normal depreciation).`

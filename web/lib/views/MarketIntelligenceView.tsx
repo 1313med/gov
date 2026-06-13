@@ -28,8 +28,8 @@ function modelApiName(modelSlug: string) {
 export function marketHubMetadata(lang: SeoLang) {
   return {
     basePath: marketHubPath(),
-    title: "Intelligence marché auto Maroc — GoVoiture",
-    description: "Demande, fiabilité et prix par modèle — données propriétaires marketplace GoVoiture.",
+    title: "Intelligence marché auto Maroc — Goovoiture",
+    description: "Demande, fiabilité et prix par modèle — données propriétaires marketplace Goovoiture.",
     keywords: "marché automobile maroc, tendances voiture maroc",
   };
 }
@@ -39,8 +39,8 @@ export function marketIntelMetadata(lang: SeoLang, brandSlug: string, modelSlug:
   if (!spec) return null;
   return {
     basePath: marketIntelPath(brandSlug, modelSlug),
-    title: `Marché ${spec.displayName} Maroc — intelligence GoVoiture`,
-    description: `Demande, fiabilité et prix ${spec.displayName} — vue consolidée marketplace GoVoiture.`,
+    title: `Marché ${spec.displayName} Maroc — intelligence Goovoiture`,
+    description: `Demande, fiabilité et prix ${spec.displayName} — vue consolidée marketplace Goovoiture.`,
     keywords: `marché ${spec.displayName} maroc, demande ${spec.displayName}`,
   };
 }
@@ -56,9 +56,9 @@ export async function MarketHubView({ lang }: { lang: SeoLang }) {
       lang={lang}
       breadcrumbs={[{ label: "Goovoiture", href: "/" }, { label: "Intelligence marché", href: undefined }]}
       hero={{
-        kicker: "GoVoiture Data",
+        kicker: "Goovoiture Data",
         title: "Intelligence marché automobile Maroc",
-        description: "Vue consolidée demande, fiabilité et prix — uniquement pour les modèles avec données vérifiées GoVoiture.",
+        description: "Vue consolidée demande, fiabilité et prix — uniquement pour les modèles avec données vérifiées Goovoiture.",
       }}
       cta={{
         title: "Explorer le marketplace",
@@ -72,7 +72,7 @@ export async function MarketHubView({ lang }: { lang: SeoLang }) {
         <JsonLd
           data={graphJsonLd(
             breadcrumbJsonLd([
-              { name: "GoVoiture", url: siteUrl },
+              { name: "Goovoiture", url: siteUrl },
               { name: "Intelligence marché", url: pageUrl },
             ])
           )}
@@ -128,11 +128,11 @@ export default async function MarketIntelligenceView({
       q: `Quelle est la demande pour ${spec.displayName} au Maroc ?`,
       a: demand?.views
         ? `${demand.views.toLocaleString()} vues marketplace · score demande ${demand.demandScore}/100.`
-        : "Consultez les annonces live sur GoVoiture.",
+        : "Consultez les annonces live sur Goovoiture.",
     },
     {
       q: `Fiabilité ${spec.displayName} ?`,
-      a: rel ? `Indice GoVoiture ${rel.score}/100 (grade ${rel.grade}).` : spec.moroccoNotes || "",
+      a: rel ? `Indice Goovoiture ${rel.score}/100 (grade ${rel.grade}).` : spec.moroccoNotes || "",
     },
   ];
 
@@ -153,9 +153,9 @@ export default async function MarketIntelligenceView({
         { label: spec.displayName, href: undefined },
       ]}
       hero={{
-        kicker: "GoVoiture Data",
+        kicker: "Goovoiture Data",
         title: `Marché ${spec.displayName} au Maroc`,
-        description: "Intelligence propriétaire GoVoiture — demande, fiabilité et prix consolidés.",
+        description: "Intelligence propriétaire Goovoiture — demande, fiabilité et prix consolidés.",
       }}
       faqs={faqs}
       cta={{
@@ -177,7 +177,7 @@ export default async function MarketIntelligenceView({
               variableMeasured: ["demandScore", "reliabilityScore", "salePriceMad"],
             }),
             breadcrumbJsonLd([
-              { name: "GoVoiture", url: siteUrl },
+              { name: "Goovoiture", url: siteUrl },
               { name: "Marché", url: `${siteUrl}${buildSeoPath(lang, marketHubPath())}` },
               { name: spec.displayName, url: pageUrl },
             ]),

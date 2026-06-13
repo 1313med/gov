@@ -19,8 +19,8 @@ export function datasetMetadata(lang: SeoLang, brandSlug: string, modelSlug: str
   if (!spec) return null;
   return {
     basePath: datasetPath(brandSlug, modelSlug),
-    title: `Dataset prix ${spec.displayName} Maroc | GoVoiture`,
-    description: `Données ouvertes prix occasion et location ${spec.displayName} — indice marketplace GoVoiture.`,
+    title: `Dataset prix ${spec.displayName} Maroc | Goovoiture`,
+    description: `Données ouvertes prix occasion et location ${spec.displayName} — indice marketplace Goovoiture.`,
     keywords: `dataset prix ${spec.displayName}, data voiture maroc`,
   };
 }
@@ -59,9 +59,9 @@ export default async function DatasetView({
         { label: spec.displayName, href: undefined },
       ]}
       hero={{
-        kicker: "GoVoiture Data",
+        kicker: "Goovoiture Data",
         title: `Dataset — ${spec.displayName}`,
-        description: "Données propriétaires GoVoiture — prix occasion, location et tendances.",
+        description: "Données propriétaires Goovoiture — prix occasion, location et tendances.",
       }}
       cta={{
         title: `Trouver une ${spec.displayName}`,
@@ -76,13 +76,13 @@ export default async function DatasetView({
           data={graphJsonLd(
             datasetJsonLd({
               name: data?.name || `Prix ${spec.displayName} Maroc`,
-              description: data?.description || `Dataset GoVoiture ${spec.displayName}`,
+              description: data?.description || `Dataset Goovoiture ${spec.displayName}`,
               url: pageUrl,
               dateModified: data?.dateModified || new Date().toISOString(),
               variableMeasured: ["salePriceMad", "rentalPricePerDayMad"],
             }),
             breadcrumbJsonLd([
-              { name: "GoVoiture", url: siteUrl },
+              { name: "Goovoiture", url: siteUrl },
               { name: "Données", url: pageUrl },
               { name: spec.displayName, url: pageUrl },
             ])
@@ -92,7 +92,7 @@ export default async function DatasetView({
     >
       <DatasetCard
         title={`API JSON — ${spec.displayName}`}
-        description="Téléchargez les données brutes via l'endpoint marketplace GoVoiture."
+        description="Téléchargez les données brutes via l'endpoint marketplace Goovoiture."
         href={jsonUrl}
       />
 

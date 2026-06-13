@@ -106,7 +106,7 @@ export default function AccidentAssistantScreen() {
         <View>
           <View style={s.card}>
             <Text style={s.cardTitle}>📞 Contacter votre assurance</Text>
-            {["Appelez dans les 5 jours ouvrables.", "Transmettez le constat et les photos.", "Notez le numéro de sinistre.", "Si location: contactez le propriétaire via GooVoiture."].map((t, i) => (
+            {["Appelez dans les 5 jours ouvrables.", "Transmettez le constat et les photos.", "Notez le numéro de sinistre.", "Si location: contactez le propriétaire via Goovoiture."].map((t, i) => (
               <View key={i} style={s.bullet}>
                 <View style={s.stepNum}><Text style={s.stepNumText}>{i + 1}</Text></View>
                 <Text style={s.bulletText}>{t}</Text>

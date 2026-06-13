@@ -4,7 +4,6 @@ import { useLocation } from "react-router-dom";
 import { api } from "../../api/axios";
 import SeoHead from "../../components/SeoHead";
 import SeoBreadcrumbs from "../../components/seo/SeoBreadcrumbs";
-import SeoFooter from "../../components/seo/SeoFooter";
 import { getCityBySlug, getCityName } from "../../seo/catalog/cities";
 import { resolveCityFacetSlug, getModelBySlugs } from "../../seo/catalog/brands";
 import {
@@ -133,7 +132,7 @@ export default function ProgrammaticFacetPage({ intent = "rental" }) {
   const hubPath = intent === "sale" ? "/voiture-occasion" : "/location-voiture";
 
   const breadcrumbs = [
-    { label: "GoVoiture", href: "/" },
+    { label: "Goovoiture", href: "/" },
     {
       label: intent === "sale" ? (lang === "ar" ? "سيارات مستعملة" : lang === "en" ? "Used cars" : "Voiture occasion") : lang === "ar" ? "تأجير" : lang === "en" ? "Car rental" : "Location voiture",
       href: hubPath,
@@ -218,7 +217,6 @@ export default function ProgrammaticFacetPage({ intent = "rental" }) {
           </dl>
         </section>
       </div>
-      <SeoFooter />
     </div>
   );
 }

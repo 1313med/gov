@@ -15,7 +15,7 @@ const HOME = {
     "Louez ou achetez une voiture au Maroc. Location de voiture, marketplace automobile et annonces vérifiées à Casablanca, Rabat, Marrakech et partout au Maroc.",
   h1: "Location de voiture et vente automobile au Maroc",
   intro:
-    "Goovoiture est la plateforme marocaine pour louer une voiture ou acheter un véhicule d'occasion. Comparez les offres dans 45 villes, les aéroports et toutes les catégories — location, occasion, GoVoiture Pro pour les agences.",
+    "Goovoiture est la plateforme marocaine pour louer une voiture ou acheter un véhicule d'occasion. Comparez les offres dans 45 villes, les aéroports et toutes les catégories — location, occasion, Goovoiture Pro pour les agences.",
   keywords:
     "location voiture maroc, voiture occasion maroc, goovoiture, location voiture casablanca",
 };
@@ -30,25 +30,25 @@ const HOME_FAQS = [
     a: "Permis de conduire valide, CIN ou passeport, et parfois une caution selon l'agence.",
   },
   {
-    q: "Puis-je réserver en ligne sur GoVoiture ?",
+    q: "Puis-je réserver en ligne sur Goovoiture ?",
     a: "Oui — parcourez les annonces, comparez les tarifs et réservez ou contactez l'agence en quelques clics.",
   },
 ];
 
 const PRERENDER_ROUTES = [
   { path: "/", ...HOME },
-  { path: "/location-voiture", title: "Location de voiture au Maroc | GoVoiture", description: "Hub location — 45 villes, aéroports et catégories." },
-  { path: "/voiture-occasion", title: "Voiture occasion Maroc | GoVoiture", description: "Acheter et vendre des voitures d'occasion au Maroc." },
-  { path: "/location-voiture/casablanca", title: "Location voiture Casablanca | GoVoiture", description: "Louer une voiture à Casablanca pas cher." },
-  { path: "/location-voiture/casablanca/suv-4x4", title: "Location SUV Casablanca | GoVoiture", description: "Louez un SUV à Casablanca." },
-  { path: "/location-voiture-aeroport/mohammed-v-casablanca", title: "Location voiture aéroport Mohammed V | GoVoiture", description: "Voiture à l'aéroport CMN." },
-  { path: "/voiture-occasion/casablanca", title: "Voiture occasion Casablanca | GoVoiture", description: "Annonces occasion à Casablanca." },
-  { path: "/marque/dacia", title: "Dacia Maroc — Location & occasion | GoVoiture", description: "Dacia au Maroc." },
-  { path: "/pro", title: "GoVoiture Pro — Logiciel agence location", description: "SaaS pour agences de location au Maroc." },
-  { path: "/pro/crm", title: "CRM agence location | GoVoiture Pro", description: "CRM pour agences de location." },
-  { path: "/blog", title: "Blog automobile Maroc | GoVoiture", description: "Guides location et occasion." },
+  { path: "/location-voiture", title: "Location de voiture au Maroc | Goovoiture", description: "Hub location — 45 villes, aéroports et catégories." },
+  { path: "/voiture-occasion", title: "Voiture occasion Maroc | Goovoiture", description: "Acheter et vendre des voitures d'occasion au Maroc." },
+  { path: "/location-voiture/casablanca", title: "Location voiture Casablanca | Goovoiture", description: "Louer une voiture à Casablanca pas cher." },
+  { path: "/location-voiture/casablanca/suv-4x4", title: "Location SUV Casablanca | Goovoiture", description: "Louez un SUV à Casablanca." },
+  { path: "/location-voiture-aeroport/mohammed-v-casablanca", title: "Location voiture aéroport Mohammed V | Goovoiture", description: "Voiture à l'aéroport CMN." },
+  { path: "/voiture-occasion/casablanca", title: "Voiture occasion Casablanca | Goovoiture", description: "Annonces occasion à Casablanca." },
+  { path: "/marque/dacia", title: "Dacia Maroc — Location & occasion | Goovoiture", description: "Dacia au Maroc." },
+  { path: "/pro", title: "Goovoiture Pro — Logiciel agence location", description: "SaaS pour agences de location au Maroc." },
+  { path: "/pro/crm", title: "CRM agence location | Goovoiture Pro", description: "CRM pour agences de location." },
+  { path: "/blog", title: "Blog automobile Maroc | Goovoiture", description: "Guides location et occasion." },
   { path: "/blog/location-voiture/location-voiture-maroc-guide-complet", title: "Location voiture Maroc guide 2026", description: "Guide complet location voiture." },
-  { path: "/a-propos", title: "À propos | GoVoiture", description: "Écosystème automobile marocain." },
+  { path: "/a-propos", title: "À propos | Goovoiture", description: "Écosystème automobile marocain." },
 ];
 
 const HREFLANG = [

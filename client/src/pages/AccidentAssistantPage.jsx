@@ -124,7 +124,7 @@ export default function AccidentAssistantPage() {
               <div className="flex gap-2"><span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0">1</span><p>Appelez votre assurance dans les <strong>5 jours ouvrables</strong> suivant l'accident.</p></div>
               <div className="flex gap-2"><span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0">2</span><p>Transmettez le constat signé et les photos que vous venez de prendre.</p></div>
               <div className="flex gap-2"><span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0">3</span><p>Notez le <strong>numéro de sinistre</strong> qu'ils vous donnent.</p></div>
-              <div className="flex gap-2"><span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0">4</span><p>Si vous louez : <strong>contactez immédiatement le propriétaire</strong> via GooVoiture.</p></div>
+              <div className="flex gap-2"><span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0">4</span><p>Si vous louez : <strong>contactez immédiatement le propriétaire</strong> via Goovoiture.</p></div>
             </div>
           </div>
           <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-sm text-green-700">

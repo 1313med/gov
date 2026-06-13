@@ -8,7 +8,7 @@ export const BLOG_CLUSTERS = [
   { slug: "conduire-au-maroc", name: { fr: "Conduire au Maroc", en: "Driving in Morocco", ar: "القيادة في المغرب" } },
   { slug: "aeroports", name: { fr: "Aéroports", en: "Airports", ar: "المطارات" } },
   { slug: "tourisme", name: { fr: "Tourisme", en: "Tourism", ar: "السياحة" } },
-  { slug: "pro", name: { fr: "GoVoiture Pro", en: "GoVoiture Pro", ar: "GoVoiture Pro" } },
+  { slug: "pro", name: { fr: "Goovoiture Pro", en: "Goovoiture Pro", ar: "Goovoiture Pro" } },
 ];
 
 export const BLOG_ARTICLES = [
@@ -27,8 +27,8 @@ export const BLOG_ARTICLES = [
     },
     keyword: { fr: "location voiture maroc", en: "car rental morocco", ar: "تأجير سيارات المغرب" },
     body: {
-      fr: "Louer une voiture au Maroc est la meilleure façon de explorer le royaume. Comparez les offres sur GoVoiture, vérifiez les conditions d'assurance et réservez en ligne.",
-      en: "Renting a car in Morocco is the best way to explore the country. Compare offers on GoVoiture.",
+      fr: "Louer une voiture au Maroc est la meilleure façon de explorer le royaume. Comparez les offres sur Goovoiture, vérifiez les conditions d'assurance et réservez en ligne.",
+      en: "Renting a car in Morocco is the best way to explore the country. Compare offers on Goovoiture.",
       ar: "كراء السيارة في المغرب هو أفضل طريقة لاستكشاف البلاد.",
     },
   },
@@ -52,7 +52,7 @@ export const BLOG_ARTICLES = [
     slug: "acheter-voiture-occasion-maroc",
     cluster: "voiture-occasion",
     title: { fr: "Acheter voiture occasion Maroc", en: "Buy used car Morocco", ar: "شراء سيارة مستعملة المغرب" },
-    description: { fr: "Guide d'achat sécurisé sur GoVoiture.", en: "Safe buying guide on GoVoiture.", ar: "دليل الشراء الآمن." },
+    description: { fr: "Guide d'achat sécurisé sur Goovoiture.", en: "Safe buying guide on Goovoiture.", ar: "دليل الشراء الآمن." },
     keyword: { fr: "acheter voiture occasion maroc", en: "buy used car morocco", ar: "شراء سيارة مستعملة" },
     body: { fr: "Vérifiez le contrôle technique et l'historique avant d'acheter.", en: "Check technical inspection before buying.", ar: "تحقق من الفحص التقني قبل الشراء." },
   },
@@ -60,7 +60,7 @@ export const BLOG_ARTICLES = [
     slug: "vendre-voiture-rapidement-maroc",
     cluster: "voiture-occasion",
     title: { fr: "Vendre voiture rapidement Maroc", en: "Sell car fast Morocco", ar: "بيع السيارة بسرعة" },
-    description: { fr: "Publiez sur GoVoiture et touchez des acheteurs vérifiés.", en: "List on GoVoiture.", ar: "انشر على GoVoiture." },
+    description: { fr: "Publiez sur Goovoiture et touchez des acheteurs vérifiés.", en: "List on Goovoiture.", ar: "انشر على Goovoiture." },
     keyword: { fr: "vendre voiture rapidement maroc", en: "sell car fast morocco", ar: "بيع سيارة بسرعة" },
     body: { fr: "Des photos claires et un prix juste accélèrent la vente.", en: "Clear photos and fair pricing speed up sales.", ar: "صور واضحة وسعر مناسب." },
   },
@@ -84,7 +84,7 @@ export const BLOG_ARTICLES = [
     slug: "logiciel-gestion-flotte-location-maroc",
     cluster: "pro",
     title: { fr: "Logiciel gestion flotte location Maroc", en: "Fleet management software Morocco", ar: "برنامج إدارة الأسطول" },
-    description: { fr: "GoVoiture Pro pour agences.", en: "GoVoiture Pro for agencies.", ar: "GoVoiture Pro للوكالات." },
+    description: { fr: "Goovoiture Pro pour agences.", en: "Goovoiture Pro for agencies.", ar: "Goovoiture Pro للوكالات." },
     keyword: { fr: "logiciel gestion flotte maroc", en: "fleet management morocco", ar: "برنامج إدارة الأسطول" },
     body: { fr: "Digitalisez disponibilités, contrats et facturation.", en: "Digitize availability and billing.", ar: "رقمنة التوفر والفوترة." },
   },
@@ -138,15 +138,15 @@ function generatedGuides() {
       out.push({
         slug: t.slug,
         cluster: group.cluster,
-        title: { fr: `${titleFr} | GoVoiture`, en: titleFr, ar: titleFr },
+        title: { fr: `${titleFr} | Goovoiture`, en: titleFr, ar: titleFr },
         description: {
-          fr: `Guide complet : ${titleFr.toLowerCase()}. Conseils pratiques sur GoVoiture.`,
+          fr: `Guide complet : ${titleFr.toLowerCase()}. Conseils pratiques sur Goovoiture.`,
           en: `Guide: ${titleFr}.`,
           ar: `دليل: ${titleFr}.`,
         },
         keyword: { fr: t.slug.replace(/-/g, " "), en: t.slug, ar: t.slug },
         body: {
-          fr: `${titleFr} : lisez notre guide pratique pour le marché automobile marocain sur GoVoiture.`,
+          fr: `${titleFr} : lisez notre guide pratique pour le marché automobile marocain sur Goovoiture.`,
           en: `${titleFr} — practical guide for Morocco.`,
           ar: `${titleFr} — دليل عملي للمغرب.`,
         },
@@ -179,7 +179,7 @@ function generatedGuides() {
       out.push({
         slug: `${brand.slug}-${topic.suffix}`,
         cluster: topic.cluster,
-        title: { fr: `${topic.title(bName)} | GoVoiture`, en: topic.title(bName), ar: topic.title(bName) },
+        title: { fr: `${topic.title(bName)} | Goovoiture`, en: topic.title(bName), ar: topic.title(bName) },
         description: {
           fr: `Guide ${bName} au Maroc : location, occasion, prix et conseils pratiques.`,
           en: `${bName} guide for Morocco.`,
@@ -187,8 +187,8 @@ function generatedGuides() {
         },
         keyword: { fr: `${bName.toLowerCase()} maroc`, en: `${brand.slug} morocco`, ar: brand.slug },
         body: {
-          fr: `Tout sur ${bName} au Maroc — comparez les offres GoVoiture.`,
-          en: `Everything about ${bName} in Morocco on GoVoiture.`,
+          fr: `Tout sur ${bName} au Maroc — comparez les offres Goovoiture.`,
+          en: `Everything about ${bName} in Morocco on Goovoiture.`,
           ar: `كل ما يخص ${bName} في المغرب.`,
         },
       });
@@ -203,13 +203,13 @@ function generatedGuides() {
       cluster: "voiture-occasion",
       title: { fr: `Voiture occasion ${cityN}`, en: `Used cars ${cityN}`, ar: `سيارات مستعملة ${cityN}` },
       description: {
-        fr: `Acheter une voiture d'occasion à ${cityN} — annonces vérifiées GoVoiture.`,
+        fr: `Acheter une voiture d'occasion à ${cityN} — annonces vérifiées Goovoiture.`,
         en: `Buy used cars in ${cityN}.`,
         ar: `شراء سيارة مستعملة في ${cityN}.`,
       },
       keyword: { fr: `voiture occasion ${city.slug}`, en: `used cars ${city.slug}`, ar: city.slug },
       body: {
-        fr: `Parcourez les annonces occasion à ${cityN} sur GoVoiture.`,
+        fr: `Parcourez les annonces occasion à ${cityN} sur Goovoiture.`,
         en: `Browse used car listings in ${cityN}.`,
         ar: `تصفح إعلانات ${cityN}.`,
       },
@@ -235,8 +235,8 @@ function generatedGuides() {
         },
         keyword: { fr: `${brand.name.fr} ${modelN} maroc`, en: `${brand.slug} ${model}`, ar: model },
         body: {
-          fr: `Comparez ${brand.name.fr} ${modelN} — location et vente sur GoVoiture.`,
-          en: `Compare ${brand.name.en} ${modelN} on GoVoiture.`,
+          fr: `Comparez ${brand.name.fr} ${modelN} — location et vente sur Goovoiture.`,
+          en: `Compare ${brand.name.en} ${modelN} on Goovoiture.`,
           ar: `قارن ${brand.name.fr} ${modelN}.`,
         },
       });

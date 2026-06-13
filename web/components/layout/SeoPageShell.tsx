@@ -1,6 +1,7 @@
 import type { SeoLang } from "@/lib/site";
 import Breadcrumbs, { type Crumb } from "@/components/ssr/Breadcrumbs";
 import SeoFooter from "@/components/ssr/SeoFooter";
+import SiteHeader from "@/components/layout/SiteHeader";
 import HeroSection from "@/components/ui/HeroSection";
 import FaqSection from "@/components/ssr/FaqSection";
 import PremiumCTA from "@/components/ui/PremiumCTA";
@@ -52,6 +53,7 @@ export default async function SeoPageShell({
   return (
     <>
       {jsonLd}
+      <SiteHeader lang={lang} />
       <HeroSection
         kicker={hero.kicker}
         title={hero.title}

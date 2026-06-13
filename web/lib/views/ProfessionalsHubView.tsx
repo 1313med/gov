@@ -86,7 +86,7 @@ export default async function ProfessionalsHubView({
         ...(city ? [{ label: cityName, href: undefined }] : []),
       ]}
       hero={{
-        kicker: kind === "agency" ? "GoVoiture Pro · Location" : "GoVoiture Pro · Occasion",
+        kicker: kind === "agency" ? "Goovoiture Pro · Location" : "Goovoiture Pro · Occasion",
         title: seo.h1,
         description: seo.intro,
         badges: [cityName, `${items.length} profils`],
@@ -110,7 +110,7 @@ export default async function ProfessionalsHubView({
             }),
             faqPageJsonLd(faqs),
             breadcrumbJsonLd([
-              { name: "GoVoiture", url: siteUrl },
+              { name: "Goovoiture", url: siteUrl },
               { name: hubLabel, url: `${siteUrl}${buildSeoPath(lang, hubPath)}` },
               ...(city ? [{ name: cityName, url: pageUrl }] : []),
             ])
@@ -129,7 +129,7 @@ export default async function ProfessionalsHubView({
             ))}
           </EntityGrid>
         ) : (
-          <EmptyState title="Aucun profil pour le moment" description="Revenez bientôt — de nouvelles agences rejoignent GoVoiture." />
+          <EmptyState title="Aucun profil pour le moment" description="Revenez bientôt — de nouvelles agences rejoignent Goovoiture." />
         )}
       </section>
     </SeoPageShell>

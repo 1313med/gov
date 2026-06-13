@@ -38,8 +38,8 @@ export async function profileMetadata(kind: ProfileKind, citySlug: string, profi
   const label = kind === "agency" ? "Agence" : "Concessionnaire";
   return {
     basePath: path,
-    title: `${data.seller.name} — ${label} ${cityName} | GoVoiture`,
-    description: `${data.seller.name} à ${cityName} : flotte, avis et contact sur GoVoiture.`,
+    title: `${data.seller.name} — ${label} ${cityName} | Goovoiture`,
+    description: `${data.seller.name} à ${cityName} : flotte, avis et contact sur Goovoiture.`,
     keywords: `${data.seller.name} ${cityName}, ${kind === "agency" ? "agence location voiture" : "concessionnaire auto"}`,
   };
 }
@@ -139,7 +139,7 @@ export default async function ProfileView({
       }}
       faqs={faqs}
       cta={{
-        title: kind === "agency" ? "Réserver sur GoVoiture" : "Voir l'inventaire occasion",
+        title: kind === "agency" ? "Réserver sur Goovoiture" : "Voir l'inventaire occasion",
         primaryHref: buildSeoPath(lang, kind === "agency" ? "/location-voiture" : "/voiture-occasion"),
         primaryLabel: kind === "agency" ? "Explorer les locations" : "Explorer les occasions",
         secondaryHref: wa || undefined,
@@ -164,7 +164,7 @@ export default async function ProfileView({
             }),
             faqPageJsonLd(faqs),
             breadcrumbJsonLd([
-              { name: "GoVoiture", url: siteUrl },
+              { name: "Goovoiture", url: siteUrl },
               { name: hubLabel, url: `${siteUrl}${buildSeoPath(lang, hubPath)}` },
               { name: cityName, url: `${siteUrl}${buildSeoPath(lang, `${hubPath}/${citySlug}`)}` },
               { name: seller.name, url: pageUrl },
@@ -256,7 +256,7 @@ export default async function ProfileView({
             label: `Voir ${cityName} sur OpenStreetMap`,
             href: `https://www.openstreetmap.org/search?query=${encodeURIComponent(cityName + ", Morocco")}`,
           },
-          ...(seller._id ? [{ label: "Score confiance GoVoiture", href: buildSeoPath(lang, `/confiance/${seller._id}`) }] : []),
+          ...(seller._id ? [{ label: "Score confiance Goovoiture", href: buildSeoPath(lang, `/confiance/${seller._id}`) }] : []),
         ]}
       />
     </SeoPageShell>

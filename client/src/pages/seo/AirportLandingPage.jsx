@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { api } from "../../api/axios";
 import SeoHead from "../../components/SeoHead";
 import SeoBreadcrumbs from "../../components/seo/SeoBreadcrumbs";
-import SeoFooter from "../../components/seo/SeoFooter";
 import { getAirportBySlug, getAirportName } from "../../seo/catalog/airports";
 import { getRentalCategoryBySlug } from "../../seo/catalog/categories";
 import { getCityBySlug } from "../../seo/catalog/cities";
@@ -66,7 +65,7 @@ export default function AirportLandingPage() {
           collectionPageJsonLd({ name: seo.h1, url: pageUrl, description: seo.description, items: [] }),
           faqPageJsonLd(faqs),
           breadcrumbJsonLd([
-            { name: "GoVoiture", url: siteUrl },
+            { name: "Goovoiture", url: siteUrl },
             { name: "Location voiture", url: `${siteUrl}${buildSeoPath(lang, "/location-voiture")}` },
             { name: seo.h1, url: pageUrl },
           ])
@@ -75,7 +74,7 @@ export default function AirportLandingPage() {
       <div className="mx-auto max-w-5xl px-4 py-10">
         <SeoBreadcrumbs
           items={[
-            { label: "GoVoiture", href: "/" },
+            { label: "Goovoiture", href: "/" },
             { label: "Location", href: "/location-voiture" },
             { label: getAirportName(airport, lang), href: null },
           ]}
@@ -111,7 +110,6 @@ export default function AirportLandingPage() {
           ))}
         </section>
       </div>
-      <SeoFooter />
     </div>
   );
 }

@@ -13,7 +13,7 @@ import { graphJsonLd, breadcrumbJsonLd, articleJsonLd } from "@client-seo/jsonLd
 export function blogHubMetadata(lang: SeoLang) {
   return {
     basePath: "/blog",
-    title: lang === "fr" ? "Blog automobile Maroc | GoVoiture" : "Automotive blog Morocco | GoVoiture",
+    title: lang === "fr" ? "Blog automobile Maroc | Goovoiture" : "Automotive blog Morocco | Goovoiture",
     description:
       lang === "fr"
         ? "Guides location voiture, occasion, aéroports et conseils pour le Maroc."
@@ -27,7 +27,7 @@ export function blogArticleMetadata(lang: SeoLang, articleSlug: string) {
   if (!article) return null;
   return {
     basePath: blogArticlePath(articleSlug),
-    title: `${article.title[lang] || article.title.fr} | GoVoiture`,
+    title: `${article.title[lang] || article.title.fr} | Goovoiture`,
     description: article.description[lang] || article.description.fr,
     keywords: article.keyword?.[lang] || article.keyword?.fr,
   };
@@ -42,8 +42,8 @@ export function BlogHubView({ lang }: { lang: SeoLang }) {
       lang={lang}
       breadcrumbs={[{ label: "Goovoiture", href: "/" }, { label: "Blog", href: undefined }]}
       hero={{
-        kicker: "GoVoiture Guides",
-        title: lang === "fr" ? "Blog GoVoiture" : "GoVoiture Blog",
+        kicker: "Goovoiture Guides",
+        title: lang === "fr" ? "Blog Goovoiture" : "Goovoiture Blog",
         description:
           lang === "fr"
             ? "Guides pratiques pour louer, acheter et vendre au Maroc — location, occasion, aéroports et conseils d'experts."
@@ -59,7 +59,7 @@ export function BlogHubView({ lang }: { lang: SeoLang }) {
       jsonLd={
         <JsonLd
           data={breadcrumbJsonLd([
-            { name: "GoVoiture", url: siteUrl },
+            { name: "Goovoiture", url: siteUrl },
             { name: "Blog", url: `${siteUrl}${buildSeoPath(lang, "/blog")}` },
           ])}
         />
@@ -121,7 +121,7 @@ export function BlogArticleView({ lang, clusterSlug, articleSlug }: { lang: SeoL
         { label: title, href: undefined },
       ]}
       hero={{
-        kicker: cluster ? cluster.name[lang] || cluster.name.fr : "GoVoiture Guides",
+        kicker: cluster ? cluster.name[lang] || cluster.name.fr : "Goovoiture Guides",
         title,
         description: article.description[lang] || article.description.fr,
       }}
@@ -143,7 +143,7 @@ export function BlogArticleView({ lang, clusterSlug, articleSlug }: { lang: SeoL
               datePublished: "2026-01-01",
             }),
             breadcrumbJsonLd([
-              { name: "GoVoiture", url: siteUrl },
+              { name: "Goovoiture", url: siteUrl },
               { name: "Blog", url: `${siteUrl}${buildSeoPath(lang, "/blog")}` },
               { name: title, url: pageUrl },
             ])

@@ -21,7 +21,7 @@ const GUIDES = [
     steps: [
       { title: "Demandez le certificat de situation administrative", body: "Le vendeur doit pouvoir prouver que la voiture est libre de tout gage bancaire. Ce document s'obtient à la préfecture." },
       { title: "Vérifiez la carte grise", body: "La mention 'gage' ou 'nantissement' apparaît parfois sur la carte grise. Une carte grise normale n'a aucune restriction." },
-      { title: "Utilisez notre outil de vérification", body: "Soumettez une demande de vérification de crédit sur GooVoiture. Notre équipe vérifie manuellement auprès des sources officielles." },
+      { title: "Utilisez notre outil de vérification", body: "Soumettez une demande de vérification de crédit sur Goovoiture. Notre équipe vérifie manuellement auprès des sources officielles." },
       { title: "Méfiez-vous des prix trop bas", body: "Un prix anormalement bas pour l'état et le modèle du véhicule est souvent le signe d'une situation irrégulière (crédit, saisie, vol)." },
     ],
     tip: "Ne payez jamais l'intégralité du montant avant d'avoir signé le contrat de vente et vérifié le statut bancaire du véhicule.",
@@ -56,7 +56,7 @@ const GUIDES = [
     icon: "💬",
     title: "Comment négocier le prix d'une voiture",
     steps: [
-      { title: "Faites vos recherches", body: "Consultez le prix marché sur GooVoiture (bouton 'Estimation prix marché' sur chaque annonce). Connaître le prix réel vous donne un avantage." },
+      { title: "Faites vos recherches", body: "Consultez le prix marché sur Goovoiture (bouton 'Estimation prix marché' sur chaque annonce). Connaître le prix réel vous donne un avantage." },
       { title: "Listez les défauts", body: "Notez tous les défauts lors de l'inspection (rayures, usure des pneus, visite technique expirée). Chaque point est un argument de négociation." },
       { title: "Ne montrez pas trop d'enthousiasme", body: "Restez neutre lors de la visite. Un acheteur trop pressé paiera plus cher." },
       { title: "Faites une offre raisonnable", body: "Proposez 10–15% en dessous du prix demandé. Basez-vous sur le prix marché et les défauts constatés." },

@@ -4,7 +4,7 @@ export default function TrustScoreCard({
   score,
   max = 100,
   grade,
-  label = "Score confiance GoVoiture",
+  label = "Score confiance Goovoiture",
   badges,
 }: {
   score: number;

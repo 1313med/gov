@@ -115,7 +115,7 @@ export default function SeoFooter({ lang }: { lang: SeoLang }) {
       </div>
       <div className="gv-wrap mt-8 pt-6 border-t border-[var(--gv-bdr)] text-center text-xs text-[var(--gv-mut)]">
         <p>
-          <strong className="text-[var(--gv-brand)] font-[family-name:var(--gv-disp)]">GoVoiture</strong> — écosystème automobile Maroc
+          <strong className="text-[var(--gv-brand)] font-[family-name:var(--gv-disp)]">Goovoiture</strong> — écosystème automobile Maroc
         </p>
       </div>
     </footer>

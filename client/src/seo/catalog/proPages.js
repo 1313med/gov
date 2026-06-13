@@ -1,4 +1,4 @@
-/** GoVoiture Pro SaaS landing pages. */
+/** Goovoiture Pro SaaS landing pages. */
 export const PRO_PAGES = [
   {
     slug: "gestion-flotte",
@@ -93,13 +93,13 @@ export const PRO_PAGES = [
     slug: "fonctionnalites",
     title: { fr: "Fonctionnalités", en: "Features", ar: "الميزات" },
     keyword: { fr: "fonctionnalites logiciel location", en: "rental software features", ar: "ميزات البرنامج" },
-    description: { fr: "Découvrez toute la plateforme GoVoiture Pro.", en: "Discover the full GoVoiture Pro platform.", ar: "اكتشف المنصة." },
+    description: { fr: "Découvrez toute la plateforme Goovoiture Pro.", en: "Discover the full Goovoiture Pro platform.", ar: "اكتشف المنصة." },
     price: null,
   },
   {
     slug: "support",
     title: { fr: "Support", en: "Support", ar: "الدعم" },
-    keyword: { fr: "support goovoiture pro", en: "goovoiture pro support", ar: "دعم GoVoiture" },
+    keyword: { fr: "support Goovoiture pro", en: "Goovoiture pro support", ar: "دعم Goovoiture" },
     description: { fr: "Assistance prioritaire 7j/7 pour les agences partenaires.", en: "Priority 7-day support for partner agencies.", ar: "دعم أولوية." },
     price: null,
   },

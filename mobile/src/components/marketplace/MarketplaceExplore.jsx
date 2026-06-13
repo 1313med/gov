@@ -408,7 +408,7 @@ export default function MarketplaceExplore({
               </Text>
               <Text style={{ color: titleColor, fontWeight: "900", fontSize: 30, letterSpacing: -0.8, lineHeight: 36 }}>
                 {variant === "carOwner"
-                  ? pick("The GooVoiture market", "Le marché GooVoiture")
+                  ? pick("The Goovoiture market", "Le marché Goovoiture")
                   : pick("Explore", "Explorez")}
               </Text>
             </View>

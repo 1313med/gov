@@ -2,7 +2,6 @@ import { Link, useParams } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import SeoHead from "../../components/SeoHead";
 import SeoBreadcrumbs from "../../components/seo/SeoBreadcrumbs";
-import SeoFooter from "../../components/seo/SeoFooter";
 import { PRO_PAGES, getProPage, proPagePath } from "../../seo/catalog/proPages";
 import { buildSeoPath, parseSeoPath } from "../../seo/seoPaths";
 import { getSiteUrl } from "../../seo/seoLocales";
@@ -14,10 +13,10 @@ export function ProHubPage() {
   const siteUrl = getSiteUrl();
   const title =
     lang === "fr"
-      ? "GoVoiture Pro — Logiciel agence location voiture Maroc"
+      ? "Goovoiture Pro — Logiciel agence location voiture Maroc"
       : lang === "ar"
-        ? "GoVoiture Pro — برنامج وكالات تأجير السيارات"
-        : "GoVoiture Pro — Rental agency software Morocco";
+        ? "Goovoiture Pro — برنامج وكالات تأجير السيارات"
+        : "Goovoiture Pro — Rental agency software Morocco";
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#05060f]">
@@ -33,18 +32,18 @@ export function ProHubPage() {
         }}
         jsonLdExtra={graphJsonLd(
           softwareApplicationJsonLd({
-            name: "GoVoiture Pro",
+            name: "Goovoiture Pro",
             description: "Suite SaaS pour agences de location automobile au Maroc",
             url: `${siteUrl}/pro`,
           }),
           breadcrumbJsonLd([
-            { name: "GoVoiture", url: siteUrl },
+            { name: "Goovoiture", url: siteUrl },
             { name: "Pro", url: `${siteUrl}${buildSeoPath(lang, "/pro")}` },
           ])
         )}
       />
       <div className="mx-auto max-w-5xl px-4 py-12">
-        <h1 className="text-3xl font-bold mb-4">GoVoiture Pro</h1>
+        <h1 className="text-3xl font-bold mb-4">Goovoiture Pro</h1>
         <p className="text-gray-600 dark:text-gray-400 mb-10">
           {lang === "fr"
             ? "L'écosystème B2B pour dominer la location automobile au Maroc : flotte, CRM, contrats, facturation et SEO."
@@ -64,7 +63,6 @@ export function ProHubPage() {
           ))}
         </ul>
       </div>
-      <SeoFooter />
     </div>
   );
 }
@@ -82,7 +80,7 @@ export default function ProPage() {
   const siteUrl = getSiteUrl();
   const path = proPagePath(pageSlug);
   const pageUrl = `${siteUrl}${buildSeoPath(lang, path)}`;
-  const title = `${page.title[lang] || page.title.fr} | GoVoiture Pro`;
+  const title = `${page.title[lang] || page.title.fr} | Goovoiture Pro`;
   const desc = page.description[lang] || page.description.fr;
 
   return (
@@ -96,13 +94,13 @@ export default function ProPage() {
         }}
         jsonLdExtra={graphJsonLd(
           softwareApplicationJsonLd({
-            name: `GoVoiture Pro — ${page.title.fr}`,
+            name: `Goovoiture Pro — ${page.title.fr}`,
             description: desc,
             url: pageUrl,
             price: page.price,
           }),
           breadcrumbJsonLd([
-            { name: "GoVoiture", url: siteUrl },
+            { name: "Goovoiture", url: siteUrl },
             { name: "Pro", url: `${siteUrl}${buildSeoPath(lang, "/pro")}` },
             { name: page.title[lang] || page.title.fr, url: pageUrl },
           ])
@@ -111,7 +109,7 @@ export default function ProPage() {
       <div className="mx-auto max-w-3xl px-4 py-12">
         <SeoBreadcrumbs
           items={[
-            { label: "GoVoiture", href: "/" },
+            { label: "Goovoiture", href: "/" },
             { label: "Pro", href: "/pro" },
             { label: page.title[lang] || page.title.fr, href: null },
           ]}
@@ -130,7 +128,6 @@ export default function ProPage() {
           {lang === "fr" ? "Demander une démo" : "Request a demo"}
         </Link>
       </div>
-      <SeoFooter />
     </div>
   );
 }

@@ -159,7 +159,7 @@ async function computeReliability(brand, model) {
     insights: merged.slice(0, 12),
     commonIssues: issues.slice(0, 5),
     maintenanceTips: tips.slice(0, 5),
-    methodology: "Score composite : avis annonces, insights communauté GoVoiture, données curatées Maroc.",
+    methodology: "Score composite : avis annonces, insights communauté Goovoiture, données curatées Maroc.",
     lastUpdated: new Date().toISOString(),
   };
 }
@@ -215,7 +215,7 @@ async function computeReputation(userId) {
     soldCount,
     badges,
     memberSince: memberSince?.toISOString(),
-    methodology: "Score GoVoiture : avis vérifiés, identité, historique ventes et activité marketplace.",
+    methodology: "Score Goovoiture : avis vérifiés, identité, historique ventes et activité marketplace.",
     lastUpdated: new Date().toISOString(),
   };
 }
@@ -234,7 +234,7 @@ exports.getSearchDemand = asyncHandler(async (req, res) => {
     return res.json(data);
   }
   const top = await aggregateSearchDemand(Math.min(Number(limit) || 20, 30));
-  res.json({ top, source: "GoVoiture viewCount aggregation", lastUpdated: new Date().toISOString() });
+  res.json({ top, source: "Goovoiture viewCount aggregation", lastUpdated: new Date().toISOString() });
 });
 
 // GET /api/intelligence/reliability?brand=&model=
@@ -300,7 +300,7 @@ exports.getTco = asyncHandler(async (req, res) => {
       consumptionL100: l100,
       depreciationRate: `${Math.round(depreciationRate * 100)}%`,
     },
-    methodology: "Estimation GoVoiture basée sur prix marketplace, barèmes assurance Maroc et tier véhicule.",
+    methodology: "Estimation Goovoiture basée sur prix marketplace, barèmes assurance Maroc et tier véhicule.",
     lastUpdated: new Date().toISOString(),
   });
 });
@@ -332,7 +332,7 @@ exports.getMarketIntel = asyncHandler(async (req, res) => {
       reliability: `/fiabilite/${String(brand).toLowerCase()}/${String(model).toLowerCase().replace(/\s+/g, "-")}`,
       tco: `/cout-possession/${String(brand).toLowerCase()}/${String(model).toLowerCase().replace(/\s+/g, "-")}`,
     },
-    source: "GoVoiture proprietary intelligence",
+    source: "Goovoiture proprietary intelligence",
     lastUpdated: new Date().toISOString(),
   });
 });

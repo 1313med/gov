@@ -16,8 +16,8 @@ import { graphJsonLd, breadcrumbJsonLd, aggregateRatingJsonLd } from "@client-se
 export function sellerTrustMetadata(lang: SeoLang, sellerId: string) {
   return {
     basePath: sellerTrustPath(sellerId),
-    title: "Profil confiance vendeur — GoVoiture",
-    description: "Score réputation GoVoiture : avis vérifiés, identité, historique ventes marketplace Maroc.",
+    title: "Profil confiance vendeur — Goovoiture",
+    description: "Score réputation Goovoiture : avis vérifiés, identité, historique ventes marketplace Maroc.",
     keywords: "réputation vendeur voiture maroc, confiance concessionnaire maroc",
   };
 }
@@ -45,7 +45,7 @@ export default async function SellerReputationView({
         { label: rep.name, href: undefined },
       ]}
       hero={{
-        kicker: "GoVoiture Confiance",
+        kicker: "Goovoiture Confiance",
         title: rep.name,
         description: [
           rep.city,
@@ -71,7 +71,7 @@ export default async function SellerReputationView({
                 })
               : null,
             breadcrumbJsonLd([
-              { name: "GoVoiture", url: siteUrl },
+              { name: "Goovoiture", url: siteUrl },
               { name: "Confiance", url: pageUrl },
               { name: rep.name, url: pageUrl },
             ])
@@ -118,7 +118,7 @@ export default async function SellerReputationView({
           {rep.inventoryCount > 0 && rep.fleetSize > 0 ? " · " : ""}
           {rep.fleetSize > 0 ? `${rep.fleetSize} véhicules location` : ""}
         </p>
-        {rep.identityVerified ? <p className="text-emerald-600 mt-2">✓ Identité vérifiée GoVoiture</p> : null}
+        {rep.identityVerified ? <p className="text-emerald-600 mt-2">✓ Identité vérifiée Goovoiture</p> : null}
       </section>
 
       <p className="text-xs text-[var(--gv-mut)]">{rep.methodology}</p>

@@ -31,14 +31,14 @@ export default function ReferralScreen() {
   const handleShare = async () => {
     if (!data) return;
     try {
-      const txt = pick(`Join GooVoiture with my code ${data.referralCode} and get ${data.rewards.refereeCreditMad} MAD credit! 🚗`, `Rejoins GooVoiture avec mon code ${data.referralCode} et gagne ${data.rewards.refereeCreditMad} MAD de crédit ! 🚗`);
+      const txt = pick(`Join Goovoiture with my code ${data.referralCode} and get ${data.rewards.refereeCreditMad} MAD credit! 🚗`, `Rejoins Goovoiture avec mon code ${data.referralCode} et gagne ${data.rewards.refereeCreditMad} MAD de crédit ! 🚗`);
       await Share.share({ message: txt });
     } catch {}
   };
 
   const handleWhatsApp = () => {
     if (!data) return;
-    const txt = pick(`Join GooVoiture with my code ${data.referralCode} and get ${data.rewards.refereeCreditMad} MAD credit! 🚗`, `Rejoins GooVoiture avec mon code ${data.referralCode} et gagne ${data.rewards.refereeCreditMad} MAD de crédit ! 🚗`);
+    const txt = pick(`Join Goovoiture with my code ${data.referralCode} and get ${data.rewards.refereeCreditMad} MAD credit! 🚗`, `Rejoins Goovoiture avec mon code ${data.referralCode} et gagne ${data.rewards.refereeCreditMad} MAD de crédit ! 🚗`);
     Linking.openURL(`whatsapp://send?text=${encodeURIComponent(txt)}`);
   };
 

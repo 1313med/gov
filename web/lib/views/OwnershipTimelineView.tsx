@@ -20,7 +20,7 @@ import { graphJsonLd, breadcrumbJsonLd, howToJsonLd, faqPageJsonLd } from "@clie
 export function ownershipHubMetadata(lang: SeoLang) {
   return {
     basePath: ownershipHubPath(),
-    title: "Guides possession auto Maroc — timelines GoVoiture",
+    title: "Guides possession auto Maroc — timelines Goovoiture",
     description: "Achat, vente, transfert carte grise, assurance — étapes et délais réalistes au Maroc.",
     keywords: "possession voiture maroc, timeline achat voiture maroc",
   };
@@ -31,7 +31,7 @@ export function ownershipTimelineMetadata(lang: SeoLang, topicSlug: string) {
   if (!t) return null;
   return {
     basePath: ownershipTimelinePath(topicSlug),
-    title: `${t.title} | GoVoiture`,
+    title: `${t.title} | Goovoiture`,
     description: t.description,
     keywords: `possession auto maroc ${topicSlug.replace(/-/g, " ")}`,
   };
@@ -45,7 +45,7 @@ export async function OwnershipHubView({ lang }: { lang: SeoLang }) {
       lang={lang}
       breadcrumbs={[{ label: "Goovoiture", href: "/" }, { label: "Possession", href: undefined }]}
       hero={{
-        kicker: "GoVoiture Guides",
+        kicker: "Goovoiture Guides",
         title: "Guides possession automobile Maroc",
         description: "Timelines procédurales — étapes, checklists et délais réalistes.",
       }}
@@ -103,7 +103,7 @@ export default function OwnershipTimelineDetailView({
         { label: t.title, href: undefined },
       ]}
       hero={{
-        kicker: "GoVoiture Guides",
+        kicker: "Goovoiture Guides",
         title: t.title,
         description: t.description,
       }}
@@ -126,7 +126,7 @@ export default function OwnershipTimelineDetailView({
               steps: t.steps.map((s) => ({ title: s.title, body: s.body })),
             }),
             breadcrumbJsonLd([
-              { name: "GoVoiture", url: siteUrl },
+              { name: "Goovoiture", url: siteUrl },
               { name: "Possession", url: `${siteUrl}${buildSeoPath(lang, ownershipHubPath())}` },
               { name: t.title, url: pageUrl },
             ]),

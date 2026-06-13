@@ -11,9 +11,9 @@ export function organizationJsonLd(siteUrl = DEFAULT_SITE_URL) {
       "Écosystème automobile marocain : location, vente, agences et logiciel pro — car rental & marketplace Morocco.",
     areaServed: { "@type": "Country", name: "Morocco" },
     sameAs: [
-      "https://www.facebook.com/goovoiture",
-      "https://www.instagram.com/goovoiture",
-      "https://www.linkedin.com/company/goovoiture",
+      "https://www.facebook.com/Goovoiture",
+      "https://www.instagram.com/Goovoiture",
+      "https://www.linkedin.com/company/Goovoiture",
     ],
   };
 }
@@ -210,7 +210,7 @@ export function reviewJsonLd({ authorName, rating, body, datePublished, itemRevi
   return {
     "@context": "https://schema.org",
     "@type": "Review",
-    author: { "@type": "Person", name: authorName || "Client GoVoiture" },
+    author: { "@type": "Person", name: authorName || "Client Goovoiture" },
     reviewRating: { "@type": "Rating", ratingValue: String(rating), bestRating: "5" },
     reviewBody: body,
     datePublished,

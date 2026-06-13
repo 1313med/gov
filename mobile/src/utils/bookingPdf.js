@@ -359,7 +359,7 @@ const T = {
   paidOn: "Payé le",
   docs: "Documents joints",
   noDocs: "Aucun document joint",
-  footer: "GooVoiture · Location au Maroc",
+  footer: "Goovoiture · Location au Maroc",
   legal: "Reçu pour votre comptabilité. Conservez ce document.",
 };
 
@@ -431,7 +431,7 @@ function buildBookingHtml(b, logoDataUri) {
     : "color:#f87171;background:rgba(248,113,113,0.12);border:1px solid #f87171";
 
   const logoImg = logoDataUri
-    ? `<div class="hero-logo-wrap"><img class="hero-logo" src="${logoDataUri}" alt="GooVoiture" /></div>`
+    ? `<div class="hero-logo-wrap"><img class="hero-logo" src="${logoDataUri}" alt="Goovoiture" /></div>`
     : "";
 
   const brandHtml = logoDataUri

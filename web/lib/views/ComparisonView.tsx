@@ -38,7 +38,7 @@ export default function ComparisonView({ lang, slug }: { lang: SeoLang; slug: st
         { label: data.h1, href: undefined },
       ]}
       hero={{
-        kicker: "GoVoiture Comparatifs",
+        kicker: "Goovoiture Comparatifs",
         title: data.h1,
         description: data.intro,
       }}
@@ -61,7 +61,7 @@ export default function ComparisonView({ lang, slug }: { lang: SeoLang; slug: st
             }),
             faqPageJsonLd(data.faqs),
             breadcrumbJsonLd([
-              { name: "GoVoiture", url: siteUrl },
+              { name: "Goovoiture", url: siteUrl },
               { name: "Comparatifs", url: `${siteUrl}${buildSeoPath(lang, "/comparer")}` },
               { name: data.h1, url: pageUrl },
             ])

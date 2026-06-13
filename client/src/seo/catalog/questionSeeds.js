@@ -8,7 +8,7 @@ export const QUESTION_SEEDS = [
     topic: "assurance",
     answers: [
       {
-        authorName: "GoVoiture",
+        authorName: "Goovoiture",
         body: "Oui — la responsabilité civile (RC) est obligatoire pour tout véhicule immatriculé. Sans attestation valide, vous risquez une amende et une responsabilité personnelle totale en cas d'accident. Souscrivez RC avant de circuler ; tous risques recommandé pour véhicules récents.",
         verifiedExpert: true,
         accepted: true,
@@ -22,7 +22,7 @@ export const QUESTION_SEEDS = [
     topic: "financement",
     answers: [
       {
-        authorName: "GoVoiture",
+        authorName: "Goovoiture",
         body: "Certaines banques financent à 100 % pour profils stables (CDI, fonctionnaire) sur véhicules neufs ou occasion récente. Taux souvent plus élevé sans apport. Prévoyez au minimum frais dossier + assurance emprunteur.",
         verifiedExpert: true,
         accepted: true,
@@ -35,7 +35,7 @@ export const QUESTION_SEEDS = [
     topic: "demarches",
     answers: [
       {
-        authorName: "GoVoiture",
+        authorName: "Goovoiture",
         body: "Comptez 1 à 4 semaines selon la wilaya et la complétude du dossier (CT valide, quitus fiscal, contrat légalisé). Ne payez jamais le solde sans vérifier l'absence de crédit/gage sur le véhicule.",
         verifiedExpert: true,
         accepted: true,
@@ -50,8 +50,8 @@ export const QUESTION_SEEDS = [
     topic: "achat",
     answers: [
       {
-        authorName: "GoVoiture",
-        body: "Consultez l'indice prix GoVoiture en temps réel — médiane basée sur annonces approuvées et véhicules vendus. Logan 2018–2021 : fourchette typique 65 000–95 000 MAD selon km et finition.",
+        authorName: "Goovoiture",
+        body: "Consultez l'indice prix Goovoiture en temps réel — médiane basée sur annonces approuvées et véhicules vendus. Logan 2018–2021 : fourchette typique 65 000–95 000 MAD selon km et finition.",
         verifiedExpert: true,
         accepted: true,
       },
@@ -63,8 +63,8 @@ export const QUESTION_SEEDS = [
     topic: "location",
     answers: [
       {
-        authorName: "GoVoiture",
-        body: "La caution couvre franchise, dommages non assurés ou carburant manquant. Ce n'est pas une assurance. Comparez les agences GoVoiture avec avis vérifiés et options rachat franchise.",
+        authorName: "Goovoiture",
+        body: "La caution couvre franchise, dommages non assurés ou carburant manquant. Ce n'est pas une assurance. Comparez les agences Goovoiture avec avis vérifiés et options rachat franchise.",
         verifiedExpert: true,
         accepted: true,
       },
@@ -76,8 +76,8 @@ export const QUESTION_SEEDS = [
     topic: "demarches",
     answers: [
       {
-        authorName: "GoVoiture",
-        body: "Utilisez GoVoiture Crédit Check avant achat — workflow de vérification du statut crédit/gage. Exigez aussi carte grise et CIN vendeur cohérents.",
+        authorName: "Goovoiture",
+        body: "Utilisez Goovoiture Crédit Check avant achat — workflow de vérification du statut crédit/gage. Exigez aussi carte grise et CIN vendeur cohérents.",
         verifiedExpert: true,
         accepted: true,
       },

@@ -33,7 +33,7 @@ export default function ReferralPage() {
 
   if (!data) return <div className="flex justify-center py-20"><div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full" /></div>;
 
-  const shareText = `Rejoins GooVoiture avec mon code ${data.referralCode} et gagne ${data.rewards.refereeCreditMad} MAD de crédit ! 🚗`;
+  const shareText = `Rejoins Goovoiture avec mon code ${data.referralCode} et gagne ${data.rewards.refereeCreditMad} MAD de crédit ! 🚗`;
   const shareUrl  = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
 
   return (

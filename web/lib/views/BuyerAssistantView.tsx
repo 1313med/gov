@@ -12,7 +12,7 @@ import { graphJsonLd, breadcrumbJsonLd, softwareApplicationJsonLd } from "@clien
 export function buyerAssistantMetadata(lang: SeoLang) {
   return {
     basePath: buyerAssistantPath(),
-    title: "Assistant achat voiture Maroc — GoVoiture",
+    title: "Assistant achat voiture Maroc — Goovoiture",
     description: "4 questions → modèles recommandés avec indices prix, fiabilité et TCO — données marketplace Maroc.",
     keywords: "assistant achat voiture maroc, quel voiture acheter maroc",
   };
@@ -28,8 +28,8 @@ export default function BuyerAssistantView({ lang }: { lang: SeoLang }) {
       lang={lang}
       breadcrumbs={[{ label: "Goovoiture", href: "/" }, { label: "Assistant achat", href: undefined }]}
       hero={{
-        kicker: "GoVoiture Outils",
-        title: "Assistant achat GoVoiture",
+        kicker: "Goovoiture Outils",
+        title: "Assistant achat Goovoiture",
         description: "Répondez à 4 questions — nous croisons budget, usage et priorités avec nos indices propriétaires (prix, fiabilité, TCO).",
       }}
       cta={{
@@ -44,12 +44,12 @@ export default function BuyerAssistantView({ lang }: { lang: SeoLang }) {
         <JsonLd
           data={graphJsonLd(
             softwareApplicationJsonLd({
-              name: "Assistant achat GoVoiture",
+              name: "Assistant achat Goovoiture",
               description: "Recommandations voiture basées sur budget, usage et priorités — Maroc.",
               url: pageUrl,
             }),
             breadcrumbJsonLd([
-              { name: "GoVoiture", url: siteUrl },
+              { name: "Goovoiture", url: siteUrl },
               { name: "Assistant achat", url: pageUrl },
             ])
           )}
@@ -61,7 +61,7 @@ export default function BuyerAssistantView({ lang }: { lang: SeoLang }) {
       </CalculatorCard>
 
       <p className="text-sm text-[var(--gv-mut)] mt-8">
-        Pas un chatbot générique — recommandations basées sur modèles indexés GoVoiture avec données vérifiées.
+        Pas un chatbot générique — recommandations basées sur modèles indexés Goovoiture avec données vérifiées.
       </p>
 
       <RelatedLinksSection

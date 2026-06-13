@@ -24,7 +24,7 @@ export function tcoMetadata(lang: SeoLang, brandSlug: string, modelSlug: string)
   if (!bench) return null;
   return {
     basePath: `/cout-possession/${brandSlug}/${modelSlug}`,
-    title: `Coût possession ${bench.displayName} Maroc — calculateur GoVoiture`,
+    title: `Coût possession ${bench.displayName} Maroc — calculateur Goovoiture`,
     description: `TCO annuel ${bench.displayName} : carburant, assurance, entretien, dépréciation — barèmes Maroc.`,
     keywords: `coût possession ${bench.displayName} maroc, TCO ${bench.displayName}`,
   };
@@ -55,7 +55,7 @@ export default async function TcoCalculatorView({
     {
       q: `Combien coûte ${bench.displayName} par an au Maroc ?`,
       a: apiTco
-        ? `Estimation GoVoiture : ${apiTco.yearly.total.toLocaleString()} MAD/an (${apiTco.monthly.total.toLocaleString()} MAD/mois).`
+        ? `Estimation Goovoiture : ${apiTco.yearly.total.toLocaleString()} MAD/an (${apiTco.monthly.total.toLocaleString()} MAD/mois).`
         : `Fourchette typique selon usage ${bench.defaultKmPerYear} km/an — utilisez le calculateur.`,
     },
     {
@@ -87,9 +87,9 @@ export default async function TcoCalculatorView({
         { label: bench.displayName, href: undefined },
       ]}
       hero={{
-        kicker: "GoVoiture Data",
+        kicker: "Goovoiture Data",
         title: `Coût de possession ${bench.displayName}`,
-        description: "Calculateur TCO GoVoiture — barèmes carburant, assurance et entretien Maroc 2025.",
+        description: "Calculateur TCO Goovoiture — barèmes carburant, assurance et entretien Maroc 2025.",
       }}
       faqs={faqs}
       cta={{
@@ -104,7 +104,7 @@ export default async function TcoCalculatorView({
         <JsonLd
           data={graphJsonLd(
             breadcrumbJsonLd([
-              { name: "GoVoiture", url: siteUrl },
+              { name: "Goovoiture", url: siteUrl },
               { name: "Coût possession", url: pageUrl },
               { name: bench.displayName, url: pageUrl },
             ]),

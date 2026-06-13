@@ -6,7 +6,7 @@ const fromEnv =
     ? String(process.env.EXPO_PUBLIC_DEV_API_URL).trim().replace(/\/+$/, "")
     : "";
 const DEV_SERVER_URL = fromEnv || DEV_FALLBACK;
-const PROD_SERVER_URL = "https://api.goovoiture.com";
+const PROD_SERVER_URL = "https://api.goovoiture.ma";
 
 // Use HTTP only in development LAN testing; production must stay HTTPS.
 export const SERVER_URL = __DEV__ ? DEV_SERVER_URL : PROD_SERVER_URL;

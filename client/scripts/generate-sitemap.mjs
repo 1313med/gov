@@ -1,5 +1,5 @@
 /**
- * Sharded sitemap index — supports 100k+ URLs (GoVoiture SEO ecosystem).
+ * Sharded sitemap index — supports 100k+ URLs (Goovoiture SEO ecosystem).
  */
 import { writeFileSync, mkdirSync } from "fs";
 import { dirname, join } from "path";
@@ -434,7 +434,7 @@ ${indexEntries.join("\n")}
     "utf8"
   );
 
-  const robots = `# GoVoiture — SEO ecosystem (fr / en / ar)
+  const robots = `# Goovoiture — SEO ecosystem (fr / en / ar)
 User-agent: *
 Allow: /
 Allow: /en/

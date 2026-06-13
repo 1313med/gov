@@ -156,7 +156,7 @@ exports.getMarketPrices = asyncHandler(async (req, res) => {
     model,
     sale,
     rental,
-    source: "GoVoiture marketplace",
+    source: "Goovoiture marketplace",
     methodology: "Trimmed mean (5% outliers removed) on approved and sold listings.",
   });
 });
@@ -168,7 +168,7 @@ exports.getMarketTrends = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "brand and model are required" });
   }
   const trends = await trendStats(brand, model);
-  res.json({ brand, model, ...trends, source: "GoVoiture PriceSnapshot" });
+  res.json({ brand, model, ...trends, source: "Goovoiture PriceSnapshot" });
 });
 
 // GET /api/market/dataset?brand=&model=
@@ -185,11 +185,11 @@ exports.getMarketDataset = asyncHandler(async (req, res) => {
   res.json({
     "@context": "https://schema.org",
     "@type": "Dataset",
-    name: `GoVoiture price index — ${brand} ${model} Morocco`,
-    description: `Live and historical price data for ${brand} ${model} on GoVoiture Morocco.`,
-    url: `https://goovoiture.ma/donnees/prix/${String(brand).toLowerCase()}/${String(model).toLowerCase().replace(/\s+/g, "-")}`,
+    name: `Goovoiture price index — ${brand} ${model} Morocco`,
+    description: `Live and historical price data for ${brand} ${model} on Goovoiture Morocco.`,
+    url: `https://Goovoiture.ma/donnees/prix/${String(brand).toLowerCase()}/${String(model).toLowerCase().replace(/\s+/g, "-")}`,
     dateModified: new Date().toISOString(),
-    publisher: { "@type": "Organization", name: "GoVoiture", url: "https://goovoiture.ma" },
+    publisher: { "@type": "Organization", name: "Goovoiture", url: "https://Goovoiture.ma" },
     distribution: [{ "@type": "DataDownload", encodingFormat: "application/json", contentUrl: req.originalUrl }],
     variableMeasured: ["salePriceMad", "rentalPricePerDayMad"],
     brand,

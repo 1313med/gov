@@ -14,7 +14,7 @@ import { graphJsonLd, qaPageJsonLd, breadcrumbJsonLd } from "@client-seo/jsonLd"
 export function questionsHubMetadata(lang: SeoLang) {
   return {
     basePath: questionsHubPath(),
-    title: "Questions auto Maroc — communauté GoVoiture",
+    title: "Questions auto Maroc — communauté Goovoiture",
     description: "Assurance, crédit, démarches, prix — réponses vérifiées sur le marché automobile marocain.",
     keywords: "questions voiture maroc, forum auto maroc",
   };
@@ -25,7 +25,7 @@ export function questionMetadata(lang: SeoLang, slug: string) {
   if (!seed) return null;
   return {
     basePath: questionPath(slug),
-    title: `${seed.question} | GoVoiture`,
+    title: `${seed.question} | Goovoiture`,
     description: seed.body || seed.question,
     keywords: seed.topic || "auto maroc",
   };
@@ -36,7 +36,7 @@ function normalizeAnswers(q: {
 }) {
   return (q.answers || []).map((a) => ({
     text: a.body,
-    authorName: a.authorName || a.authorId?.name || "Membre GoVoiture",
+    authorName: a.authorName || a.authorId?.name || "Membre Goovoiture",
     accepted: a.accepted,
     verifiedExpert: a.verifiedExpert,
     upvotes: a.upvotes || 0,
@@ -54,9 +54,9 @@ export async function QuestionsHubView({ lang }: { lang: SeoLang }) {
       lang={lang}
       breadcrumbs={[{ label: "Goovoiture", href: "/" }, { label: "Questions", href: undefined }]}
       hero={{
-        kicker: "GoVoiture Communauté",
+        kicker: "Goovoiture Communauté",
         title: "Questions & réponses auto Maroc",
-        description: "Réponses vérifiées GoVoiture et contributions communauté.",
+        description: "Réponses vérifiées Goovoiture et contributions communauté.",
       }}
       cta={{
         title: "Trouver une voiture",
@@ -106,7 +106,7 @@ export async function QuestionDetailView({ lang, slug }: { lang: SeoLang; slug: 
         { label: q.question.slice(0, 40) + (q.question.length > 40 ? "…" : ""), href: undefined },
       ]}
       hero={{
-        kicker: "GoVoiture Communauté",
+        kicker: "Goovoiture Communauté",
         title: q.question,
         description: q.body || undefined,
       }}
@@ -122,7 +122,7 @@ export async function QuestionDetailView({ lang, slug }: { lang: SeoLang; slug: 
           data={graphJsonLd(
             qaPageJsonLd({ question: q.question, answers, url: pageUrl }),
             breadcrumbJsonLd([
-              { name: "GoVoiture", url: siteUrl },
+              { name: "Goovoiture", url: siteUrl },
               { name: "Questions", url: `${siteUrl}${questionsHubPath()}` },
               { name: q.question, url: pageUrl },
             ])
@@ -135,7 +135,7 @@ export async function QuestionDetailView({ lang, slug }: { lang: SeoLang; slug: 
           <div key={i} className={`gv-card p-5 ${a.accepted ? "ring-2 ring-[var(--gv-brand)]" : ""}`}>
             <div className="flex items-center gap-2 mb-2 text-sm flex-wrap">
               <span className="font-medium">{a.authorName}</span>
-              {a.verifiedExpert ? <BadgePill variant="success">Expert GoVoiture</BadgePill> : null}
+              {a.verifiedExpert ? <BadgePill variant="success">Expert Goovoiture</BadgePill> : null}
               {a.accepted ? <BadgePill variant="brand">Acceptée</BadgePill> : null}
               {a.upvotes > 0 ? <span className="text-xs text-[var(--gv-mut)] ml-auto">▲ {a.upvotes}</span> : null}
             </div>
@@ -144,7 +144,7 @@ export async function QuestionDetailView({ lang, slug }: { lang: SeoLang; slug: 
         ))}
       </section>
       <p className="text-sm text-[var(--gv-mut)]">
-        Posez votre question sur l&apos;app GoVoiture — réponses alimentées par la communauté et nos experts.
+        Posez votre question sur l&apos;app Goovoiture — réponses alimentées par la communauté et nos experts.
       </p>
     </SeoPageShell>
   );

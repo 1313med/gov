@@ -42,7 +42,7 @@ const SLIDES = {
     {
       kind: "welcome",
       icon: "sparkles",
-      title: "Bienvenue sur GooVoiture",
+      title: "Bienvenue sur Goovoiture",
       body: "La plateforme pour louer ou acheter des voitures au Maroc, en toute simplicité.",
       tips: ["Annonces vérifiées", "Prix clairs", "Partout au Maroc"],
     },
@@ -62,7 +62,7 @@ const SLIDES = {
       icon: "shield-checkmark",
       title: "Un profil prêt à louer",
       body: "Ajoutez une fois votre permis et votre CIN. Ensuite, vos prochaines réservations seront plus rapides.",
-      tips: ["Documents sécurisés", "Historique des locations", "Support GooVoiture"],
+      tips: ["Documents sécurisés", "Historique des locations", "Support Goovoiture"],
     },
   ],
   car_owner: [
@@ -70,7 +70,7 @@ const SLIDES = {
       kind: "welcome",
       icon: "sparkles",
       title: "Bienvenue, propriétaire",
-      body: "GooVoiture vous aide à suivre votre voiture et à la mettre en vente quand vous voulez.",
+      body: "Goovoiture vous aide à suivre votre voiture et à la mettre en vente quand vous voulez.",
       tips: ["Mon Garage", "Rappels utiles", "Vente optionnelle"],
     },
     {
@@ -88,7 +88,7 @@ const SLIDES = {
     {
       icon: "storefront",
       title: "Vendre sur la marketplace",
-      body: "Quand vous êtes prêt, publiez votre annonce. Des acheteurs parcourent déjà GooVoiture.",
+      body: "Quand vous êtes prêt, publiez votre annonce. Des acheteurs parcourent déjà Goovoiture.",
       tips: ["Photos & prix", "Messages acheteurs", "Gestion des annonces"],
     },
   ],
@@ -124,7 +124,7 @@ const SLIDES = {
       kind: "welcome",
       icon: "sparkles",
       title: "Espace administration",
-      body: "Vous modérez la plateforme GooVoiture : annonces, utilisateurs et signalements.",
+      body: "Vous modérez la plateforme Goovoiture : annonces, utilisateurs et signalements.",
       tips: ["Vue globale", "Actions rapides", "Sécurité"],
     },
     {

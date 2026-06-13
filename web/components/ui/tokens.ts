@@ -1,4 +1,4 @@
-/** GoVoiture design tokens — aligned with Home2.jsx marketplace theme. */
+/** Goovoiture design tokens — aligned with Home2.jsx marketplace theme. */
 export const gvTokens = {
   colors: {
     brand: "#7c6bff",

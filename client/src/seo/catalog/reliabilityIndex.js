@@ -159,7 +159,7 @@ export function getReliabilityIndex(brandSlug, modelSlug) {
       },
       {
         q: `Quels problèmes connus sur ${spec.displayName} ?`,
-        a: rel.weaknesses.join(" — ") + ". Consultez les retours communauté GoVoiture.",
+        a: rel.weaknesses.join(" — ") + ". Consultez les retours communauté Goovoiture.",
       },
       {
         q: `Pièces détachées ${spec.displayName} au Maroc`,

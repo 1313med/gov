@@ -253,12 +253,12 @@ exports.getFuelCompare = asyncHandler(async (req, res) => {
     percentile,
     typicalRange,
     messageFr: myL100 && betterThanPct != null
-      ? `Votre ${car.brand} ${car.model} consomme ${(Math.round(myL100 * 10) / 10)} L/100km — mieux que ${betterThanPct}% des véhicules similaires sur GooVoiture.`
+      ? `Votre ${car.brand} ${car.model} consomme ${(Math.round(myL100 * 10) / 10)} L/100km — mieux que ${betterThanPct}% des véhicules similaires sur Goovoiture.`
       : myL100
         ? `Consommation moyenne : ${(Math.round(myL100 * 10) / 10)} L/100km. Ajoutez plus de pleins pour comparer avec d'autres propriétaires.`
         : "Enregistrez au moins 2 pleins avec le kilométrage pour calculer votre consommation.",
     messageEn: myL100 && betterThanPct != null
-      ? `Your ${car.brand} ${car.model} uses ${(Math.round(myL100 * 10) / 10)} L/100km — better than ${betterThanPct}% of similar cars on GooVoiture.`
+      ? `Your ${car.brand} ${car.model} uses ${(Math.round(myL100 * 10) / 10)} L/100km — better than ${betterThanPct}% of similar cars on Goovoiture.`
       : myL100
         ? `Average consumption: ${(Math.round(myL100 * 10) / 10)} L/100km. Add more fill-ups to compare with other owners.`
         : "Log at least 2 fill-ups with odometer readings to calculate consumption.",
@@ -455,7 +455,7 @@ exports.getEmergencyGuide = asyncHandler(async (req, res) => {
       { icon: "📋", titleFr: "Constat amiable", titleEn: "Accident report", bodyFr: "Remplissez le constat à l'amiable sur place. Ne signez pas sous pression. Chacun garde un exemplaire.", bodyEn: "Fill the amicable report on site. Don't sign under pressure." },
       { icon: "📞", titleFr: "Assurance (5 jours)", titleEn: "Insurance (5 days)", bodyFr: "Déclarez le sinistre à votre assurance sous 5 jours ouvrables. Notez le numéro de dossier.", bodyEn: "Declare to insurer within 5 business days." },
       { icon: "🚛", titleFr: "Remorquage", titleEn: "Tow truck", bodyFr: "Si immobilisé : appelez votre assurance (assistance) ou un dépanneur agréé. Évitez les arnaques — demandez un devis.", bodyEn: "If stuck: call insurer assistance or licensed tow. Ask for a quote." },
-      { icon: "🔔", titleFr: "Rappel sinistre", titleEn: "Claim reminder", bodyFr: "Gardez photos, constat, et numéro de dossier. GooVoiture peut vous rappeler les étapes restantes.", bodyEn: "Keep photos, report, claim number." },
+      { icon: "🔔", titleFr: "Rappel sinistre", titleEn: "Claim reminder", bodyFr: "Gardez photos, constat, et numéro de dossier. Goovoiture peut vous rappeler les étapes restantes.", bodyEn: "Keep photos, report, claim number." },
     ],
   });
 });

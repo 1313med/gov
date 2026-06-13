@@ -8,7 +8,7 @@ import LangSwitch from "./LangSwitch";
 import { hasUserRole } from "../utils/userRoles";
 
 /* ─────────────────────────────────────────────────────────
-   GooVoiture Global Navbar
+   Goovoiture Global Navbar
    Design matches Home2 identity:
      fonts  → Poppins (display) + DM Mono
      accent → #7c6bff (purple) + #38bdf8 (sky)
