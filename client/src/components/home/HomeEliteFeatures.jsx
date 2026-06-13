@@ -193,7 +193,7 @@ function UsefulLinkCard({ item, index, linkCta }) {
           <h4 className="hx-link-title">{item.title}</h4>
           <p className="hx-link-desc">{item.desc}</p>
           <span className="hx-link-arr">
-            {t.linkCta} <span aria-hidden="true">→</span>
+            {linkCta} <span aria-hidden="true">→</span>
           </span>
         </Link>
       </motion.div>
