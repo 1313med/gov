@@ -99,3 +99,7 @@ export function blogArticlePath(slug) {
   const a = getBlogArticle(slug);
   return a ? `/blog/${a.cluster}/${slug}` : "/blog";
 }
+
+export function blogClusterPath(clusterSlug) {
+  return `/blog/${clusterSlug}`;
+}

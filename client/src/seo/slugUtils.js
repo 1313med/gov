@@ -51,7 +51,7 @@ export function parseSemanticListingParam(param) {
 
 export function buildAgencySlug(name, id) {
   const base = slugify(name) || "agence";
-  return `${base}-${String(id).slice(-8)}`;
+  return `${base}-${String(id)}`;
 }
 
 export function buildAgencyPath(citySlug, name, id) {
@@ -62,10 +62,9 @@ export function buildDealerPath(citySlug, name, id) {
   return `/concessionnaires/${slugify(citySlug)}/${buildAgencySlug(name, id)}`;
 }
 
+/** Parse `/agences/casablanca/agence-auto-507f1f77...` → { id, slug } */
 export function parseAgencySlug(param) {
-  const parts = param.split("-");
-  const suffix = parts[parts.length - 1];
-  return { suffix, slug: param };
+  return parseSemanticListingParam(param);
 }
 
 export function matchesListingSlug(listing, slugPart) {

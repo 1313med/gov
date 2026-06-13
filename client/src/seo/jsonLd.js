@@ -207,6 +207,19 @@ export function softwareApplicationJsonLd({ name, description, url, price, curre
   };
 }
 
+export function articleJsonLd({ headline, description, url, datePublished, author = SITE_NAME }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline,
+    description,
+    url,
+    datePublished,
+    author: { "@type": "Organization", name: author },
+    publisher: { "@type": "Organization", name: SITE_NAME },
+  };
+}
+
 export function personJsonLd({ name, url, jobTitle, image }) {
   return {
     "@context": "https://schema.org",
