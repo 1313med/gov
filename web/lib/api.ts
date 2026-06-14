@@ -39,13 +39,13 @@ export type ProfessionalSummary = {
   citySlug?: string;
   bio?: string;
   avatar?: string;
-  phone?: string;
-  email?: string;
   fleetSize: number;
   path: string;
   avgRating: number;
   reviewCount: number;
   verified?: boolean;
+  identityVerified?: boolean;
+  cinVerified?: boolean;
 };
 
 export async function fetchAgencies(cityName?: string, citySlug?: string) {

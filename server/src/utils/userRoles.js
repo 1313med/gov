@@ -64,9 +64,9 @@ function isAdminOnlyUser(user) {
  */
 function rolesFromRegistrationIntent(intent) {
   const key = normalizeRoleSlug(intent);
+  if (key === "admin") return ["customer"];
   if (key === "car_owner") return ["customer", "car_owner"];
   if (key === "rental_owner") return ["customer", "rental_owner"];
-  if (key === "admin") return ["admin", "customer"];
   return ["customer"];
 }
 

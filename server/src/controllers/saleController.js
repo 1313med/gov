@@ -14,6 +14,7 @@ const {
 } = require("../utils/listingFilters");
 const { computeListingScore } = require("../utils/listingScore");
 const { recordPriceSnapshot } = require("../utils/recordPriceSnapshot");
+const { toPublicOwnerPreview } = require("../utils/publicProfile");
 
 const notify = async (userId, message, type) => {
   const n = await Notification.create({ user: userId, message, type });
@@ -98,7 +99,7 @@ exports.getSaleById = asyncHandler(async (req, res) => {
   const sale = await SaleListing.findOne({
     _id: req.params.id,
     deletedAt: null,
-  }).populate("sellerId", "name phone city avatar nationalId");
+  }).populate("sellerId", "name city avatar nationalId driverLicense businessProfile");
 
   if (!sale) return res.status(404).json({ message: "Listing not found" });
   if (sale.status !== "approved") return res.status(403).json({ message: "This listing is not public" });
@@ -108,6 +109,9 @@ exports.getSaleById = asyncHandler(async (req, res) => {
 
   const saleObj = sale.toObject();
   saleObj.qualityScore = computeListingScore(saleObj);
+  if (saleObj.sellerId) {
+    saleObj.sellerId = toPublicOwnerPreview(sale.sellerId);
+  }
 
   res.json(saleObj);
 });

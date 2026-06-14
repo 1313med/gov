@@ -10,6 +10,8 @@ import BadgePill from "@/components/ui/BadgePill";
 import { parseSemanticListingParam, buildRentalListingPath, buildSaleListingPath } from "@client-seo/slugUtils";
 import { buildSeoPath } from "@client-seo/seoPaths";
 import { graphJsonLd, vehicleJsonLd, breadcrumbJsonLd, reviewsGraphJsonLd } from "@client-seo/jsonLd";
+import RentalListingActions from "@/components/client/RentalListingActions";
+import SaleListingActions from "@/components/client/SaleListingActions";
 
 type Intent = "rental" | "sale";
 
@@ -78,6 +80,18 @@ export default async function ListingView({
     listing.seats ? { label: "Places", value: String(listing.seats) } : null,
     listing.mileage ? { label: "Kilométrage", value: `${Number(listing.mileage).toLocaleString()} km` } : null,
   ].filter(Boolean) as Array<{ label: string; value: string }>;
+
+  const listingId = String(listing._id || id);
+  const rentalOwner = intent === "rental" ? listing.rentalOwnerId : null;
+  const saleSeller = intent === "sale" ? listing.sellerId : null;
+  const ownerId =
+    intent === "rental"
+      ? String(rentalOwner?._id || rentalOwner || "")
+      : String(saleSeller?._id || saleSeller || "");
+  const ownerName =
+    intent === "rental"
+      ? (rentalOwner?.name as string | undefined)
+      : (saleSeller?.name as string | undefined);
 
   return (
     <SeoPageShell
@@ -188,6 +202,24 @@ export default async function ListingView({
           </div>
         </section>
       ) : null}
+
+      {intent === "rental" ? (
+        <RentalListingActions
+          listingId={listingId}
+          pricePerDay={Number(price)}
+          ownerId={ownerId || undefined}
+          ownerName={ownerName}
+          lang={lang}
+        />
+      ) : (
+        <SaleListingActions
+          listingId={listingId}
+          sellerId={ownerId || undefined}
+          sellerName={ownerName}
+          price={Number(price)}
+          lang={lang}
+        />
+      )}
 
       <ReviewsSection
         reviews={reviewData.reviews || []}

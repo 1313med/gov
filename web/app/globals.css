@@ -273,6 +273,44 @@ html.dark {
     transform: translateY(-2px);
   }
 
+  /* Listing action panel (client islands) */
+  .gv-field { display: flex; flex-direction: column; gap: 0.35rem; }
+  .gv-field-label { font-size: 0.8rem; font-weight: 600; color: var(--gv-mut); }
+  .gv-input {
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    border-radius: var(--gv-r-md);
+    border: 1px solid var(--gv-bdr2);
+    background: var(--gv-sur2);
+    color: var(--gv-ink);
+    font-family: var(--gv-body);
+    font-size: 0.95rem;
+  }
+  .gv-input:focus {
+    outline: none;
+    border-color: var(--gv-brand);
+    box-shadow: 0 0 0 3px var(--gv-gbg);
+  }
+  .gv-link { color: var(--gv-brand); font-weight: 600; text-decoration: underline; }
+  .gv-alert {
+    padding: 0.75rem 1rem;
+    border-radius: var(--gv-r-md);
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+  .gv-alert-ok {
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(34, 197, 94, 0.25);
+    color: #15803d;
+  }
+  html.dark .gv-alert-ok { color: #86efac; }
+  .gv-alert-err {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.22);
+    color: #b91c1c;
+  }
+  html.dark .gv-alert-err { color: #fca5a5; }
+
   /* Vehicle card (marketplace style) */
   .gv-vcard {
     display: flex;

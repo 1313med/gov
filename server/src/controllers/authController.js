@@ -63,6 +63,10 @@ exports.register = asyncHandler(async (req, res) => {
   }
 
   const intent = normalizeRoleSlug(role || "customer");
+  if (intent === "admin") {
+    res.status(403);
+    throw new Error("Admin accounts cannot be created via public registration");
+  }
   const roles = rolesFromRegistrationIntent(intent);
   const user = await User.create({
     name,
@@ -243,4 +247,20 @@ exports.verifyEmail = asyncHandler(async (req, res) => {
   await user.save({ validateBeforeSave: false });
 
   res.json({ message: "Email verified successfully!" });
+});
+
+// ── POST /api/auth/resend-verification (public, email in body) ──────────────
+exports.resendVerificationPublic = asyncHandler(async (req, res) => {
+  const email = String(req.body.email || "").trim().toLowerCase();
+  if (!email) {
+    res.status(400);
+    throw new Error("Email is required");
+  }
+
+  const user = await User.findOne({ email, deletedAt: null });
+  if (user && !user.isEmailVerified) {
+    await scheduleVerification(user);
+  }
+
+  res.json({ message: "If an account with that email exists and is unverified, a verification email has been sent." });
 });

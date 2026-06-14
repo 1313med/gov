@@ -243,7 +243,7 @@ const loginEn = {
     "Morocco's premium automotive marketplace. Buy, sell, and rent with confidence — all in one place.",
   pills: [
     "Verified Listings",
-    "Instant Booking",
+    "Quick Requests",
     "Trusted Sellers",
     "Secure Platform",
   ],
@@ -256,6 +256,7 @@ const loginEn = {
   welcomeEm: "back.",
   welcomeSub: "Sign in to access your account and listings.",
   phone: "Phone Number",
+  identifier: "Email or phone",
   password: "Password",
   show: "SHOW",
   hide: "HIDE",
@@ -266,6 +267,9 @@ const loginEn = {
   footerLink: "Create one free",
   forgotLink: "Forgot password?",
   invalidCreds: "Invalid credentials. Please try again.",
+  resendVerify: "Resend verification email",
+  resendOk: "Verification email sent if the account exists.",
+  resendFail: "Could not resend verification email.",
 };
 
 const loginFr = {
@@ -278,7 +282,7 @@ const loginFr = {
     "La marketplace automobile premium. Achetez, vendez et louez en toute confiance.",
   pills: [
     "Annonces vérifiées",
-    "Réservation instantanée",
+    "Demandes rapides",
     "Vendeurs de confiance",
     "Plateforme sécurisée",
   ],
@@ -291,6 +295,7 @@ const loginFr = {
   welcomeEm: "revoir.",
   welcomeSub: "Connectez-vous pour accéder à votre compte et vos annonces.",
   phone: "Téléphone",
+  identifier: "E-mail ou téléphone",
   password: "Mot de passe",
   show: "AFFICHER",
   hide: "MASQUER",
@@ -301,6 +306,31 @@ const loginFr = {
   footerLink: "Créer un compte gratuit",
   forgotLink: "Mot de passe oublié ?",
   invalidCreds: "Identifiants invalides. Réessayez.",
+  resendVerify: "Renvoyer l'e-mail de vérification",
+  resendOk: "E-mail de vérification envoyé si le compte existe.",
+  resendFail: "Impossible de renvoyer l'e-mail de vérification.",
+};
+
+const verifyPendingEn = {
+  title: "Check your inbox",
+  body: "We sent a verification link to",
+  hint: "Click the link in the email before signing in. The link expires in 24 hours.",
+  login: "Go to sign in",
+  resend: "Resend verification email",
+  resending: "Sending…",
+  resendOk: "Verification email sent if the account exists.",
+  resendFail: "Could not resend verification email.",
+};
+
+const verifyPendingFr = {
+  title: "Vérifiez votre boîte mail",
+  body: "Nous avons envoyé un lien de vérification à",
+  hint: "Cliquez sur le lien dans l'e-mail avant de vous connecter. Le lien expire sous 24 h.",
+  login: "Aller à la connexion",
+  resend: "Renvoyer l'e-mail de vérification",
+  resending: "Envoi…",
+  resendOk: "E-mail de vérification envoyé si le compte existe.",
+  resendFail: "Impossible de renvoyer l'e-mail de vérification.",
 };
 
 const registerEn = {
@@ -309,6 +339,7 @@ const registerEn = {
   createTitle: "Create Account",
   createSub: "Start buying, selling or renting cars",
   fullName: "Full Name",
+  email: "Email address",
   phone: "Phone Number",
   city: "City",
   accountType: "Account Type",
@@ -330,6 +361,7 @@ const registerFr = {
   createTitle: "Créer un compte",
   createSub: "Achetez, vendez ou louez des voitures",
   fullName: "Nom complet",
+  email: "Adresse e-mail",
   phone: "Téléphone",
   city: "Ville",
   accountType: "Type de compte",
@@ -2210,6 +2242,7 @@ export const appLocales = {
     forgotPassword: forgotPasswordEn,
     resetPassword: resetPasswordEn,
     verifyEmail: verifyEmailEn,
+    verifyPending: verifyPendingEn,
     navbar: navbarEn,
   },
   fr: {
@@ -2243,6 +2276,7 @@ export const appLocales = {
     forgotPassword: forgotPasswordFr,
     resetPassword: resetPasswordFr,
     verifyEmail: verifyEmailFr,
+    verifyPending: verifyPendingFr,
     navbar: navbarFr,
   },
   ar: {
@@ -2277,6 +2311,7 @@ export const appLocales = {
       forgotPassword: forgotPasswordFr,
       resetPassword: resetPasswordFr,
       verifyEmail: verifyEmailFr,
+      verifyPending: verifyPendingFr,
       navbar: navbarFr,
     },
     ...arPublic,

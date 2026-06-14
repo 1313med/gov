@@ -38,9 +38,9 @@ export const home2Dict = {
     marquee: [
       "Same traffic · Better ally",
       "Verified Listings",
-      "Secure Payments",
+      "Tracked Bookings",
       "Premium Fleet",
-      "Instant Booking",
+      "Quick Requests",
       "Trusted Sellers",
       "Zero Hidden Fees",
       "Elite Service",
@@ -56,9 +56,9 @@ export const home2Dict = {
       rentTag: "Elite Rental Service",
       rentTitle: "RENT",
       rentDesc:
-        "Premium fleet at your fingertips. Book by day, week, or month with instant confirmation and fully transparent pricing.",
+        "Premium fleet at your fingertips. Book by day, week, or month with transparent pricing and owner confirmation.",
       rentFeats: [
-        "Instant online booking",
+        "Online booking requests",
         "Verified rental owners",
         "Flexible date ranges",
       ],
@@ -71,7 +71,7 @@ export const home2Dict = {
       sellFeats: [
         "Admin-approved listings",
         "Direct buyer contact",
-        "Secure transactions",
+        "Moderated marketplace",
       ],
       sellCta: "Browse Cars",
       sellAlt: "Buy or Sell a Car",
@@ -139,12 +139,12 @@ export const home2Dict = {
           desc: "Every vehicle and owner profile passes moderation before going live.",
         },
         {
-          title: "Secure Payments",
-          desc: "Protected payment flow and transparent transaction tracking end to end.",
+          title: "Transparent Pricing",
+          desc: "Clear rates, detailed terms, and no surprises when you book or buy.",
         },
         {
-          title: "Instant Booking",
-          desc: "Real-time availability and fast confirmation for premium rentals.",
+          title: "Quick Booking Requests",
+          desc: "Send rental requests online and get confirmation from verified owners.",
         },
         {
           title: "No Hidden Fees",
@@ -291,7 +291,7 @@ export const home2Dict = {
       eyebrow: "Security",
       title1: "Built on",
       title2: "Protection.",
-      sub: "Insurance-backed listings, identity checks, and secure transactions for every journey.",
+      sub: "Insurance-backed listings, identity checks, and moderated communications for every journey.",
       cards: [
         {
           title: "Insurance Coverage",
@@ -302,8 +302,8 @@ export const home2Dict = {
           desc: "Identity and listing validation protects both owners and clients across the platform.",
         },
         {
-          title: "Secure Transactions",
-          desc: "Protected checkout flow and moderated communications reduce risk and build trust.",
+          title: "Moderated Marketplace",
+          desc: "Admin-reviewed listings and in-app messaging reduce risk and build trust.",
         },
       ],
     },
@@ -320,8 +320,8 @@ export const home2Dict = {
       signIn: "Sign In",
       feats: [
         "Verified listings only",
-        "Secure payment processing",
-        "Instant booking confirmation",
+        "Moderated communications",
+        "Owner-confirmed bookings",
         "24/7 customer support",
         "Transparent pricing — no hidden fees",
       ],
@@ -441,9 +441,9 @@ export const home2Dict = {
     marquee: [
       "Même trafic · Meilleur allié",
       "Annonces vérifiées",
-      "Paiements sécurisés",
+      "Suivi des réservations",
       "Flotte premium",
-      "Réservation instantanée",
+      "Demandes rapides",
       "Vendeurs de confiance",
       "Sans frais cachés",
       "Service d’élite",
@@ -459,9 +459,9 @@ export const home2Dict = {
       rentTag: "Location premium",
       rentTitle: "LOUER",
       rentDesc:
-        "Une flotte haut de gamme à portée de main. Réservez à la journée, à la semaine ou au mois avec confirmation immédiate et tarifs transparents.",
+        "Une flotte haut de gamme à portée de main. Réservez à la journée, à la semaine ou au mois avec tarifs transparents et confirmation par le loueur.",
       rentFeats: [
-        "Réservation en ligne instantanée",
+        "Demandes de réservation en ligne",
         "Loueurs vérifiés",
         "Plages de dates flexibles",
       ],
@@ -474,7 +474,7 @@ export const home2Dict = {
       sellFeats: [
         "Annonces validées par l’admin",
         "Contact direct avec les acheteurs",
-        "Transactions sécurisées",
+        "Place de marché modérée",
       ],
       sellCta: "Voir les voitures",
       sellAlt: "Acheter ou vendre une voiture",
@@ -543,12 +543,12 @@ export const home2Dict = {
           desc: "Chaque véhicule et chaque profil est modéré avant publication.",
         },
         {
-          title: "Paiements sécurisés",
-          desc: "Flux de paiement protégé et suivi transparent de bout en bout.",
+          title: "Tarifs transparents",
+          desc: "Tarifs clairs, conditions détaillées, aucune surprise à la réservation.",
         },
         {
-          title: "Réservation instantanée",
-          desc: "Disponibilité en temps réel et confirmation rapide pour les locations premium.",
+          title: "Demandes rapides",
+          desc: "Envoyez vos demandes de location en ligne et obtenez la confirmation du loueur.",
         },
         {
           title: "Sans frais cachés",
@@ -672,7 +672,7 @@ export const home2Dict = {
       eyebrow: "Sécurité",
       title1: "Construit sur la",
       title2: "protection.",
-      sub: "Annonces avec assurance, vérifications d’identité et transactions sécurisées pour chaque trajet.",
+      sub: "Annonces avec assurance, vérifications d’identité et échanges modérés pour chaque trajet.",
       cards: [
         {
           title: "Couverture assurance",
@@ -683,8 +683,8 @@ export const home2Dict = {
           desc: "La validation des profils et des annonces protège propriétaires et clients sur toute la plateforme.",
         },
         {
-          title: "Transactions sécurisées",
-          desc: "Paiement protégé et échanges modérés pour réduire les risques et renforcer la confiance.",
+          title: "Place de marché modérée",
+          desc: "Annonces validées par l’admin et messagerie intégrée pour réduire les risques et renforcer la confiance.",
         },
       ],
     },
@@ -701,8 +701,8 @@ export const home2Dict = {
       signIn: "Se connecter",
       feats: [
         "Annonces vérifiées uniquement",
-        "Paiement sécurisé",
-        "Confirmation de réservation instantanée",
+        "Échanges modérés",
+        "Réservations confirmées par le loueur",
         "Support client 7j/7",
         "Tarifs transparents — sans frais cachés",
       ],

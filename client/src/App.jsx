@@ -37,6 +37,8 @@ const Profile = lazy(() => import("./pages/Profile"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
+const VerifyEmailPending = lazy(() => import("./pages/VerifyEmailPending"));
+const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 const MaintenancePage = lazy(() => import("./pages/MaintenancePage"));
 const KycPage = lazy(() => import("./pages/KycPage"));
 const ReferralPage = lazy(() => import("./pages/ReferralPage"));
@@ -253,6 +255,7 @@ export default function App() {
 
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/register/verify-pending" element={<VerifyEmailPending />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/verify-email/:token" element={<VerifyEmail />} />
@@ -302,6 +305,8 @@ export default function App() {
           <Route path="/travel-ready"     element={<ProtectedRoute roles={["car_owner","admin"]}><TravelReadyPage /></ProtectedRoute>} />
           <Route path="/accident"         element={<AccidentAssistantPage />} />
           <Route path="/owner/staff"      element={<ProtectedRoute roles={["rental_owner"]}><StaffManagementPage /></ProtectedRoute>} />
+
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
       </div>

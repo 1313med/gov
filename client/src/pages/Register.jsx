@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { api } from "../api/axios";
-import { saveAuth } from "../utils/authStorage";
 import { useAppLang } from "../context/AppLangContext";
 import AuthTopBar from "../components/AuthTopBar";
 
@@ -827,6 +826,7 @@ export default function Register() {
   const btnRef    = useRef(null);
 
   const [name,     setName]     = useState("");
+  const [email,    setEmail]    = useState("");
   const [phone,    setPhone]    = useState("");
   const [city,     setCity]     = useState("");
   const [role,     setRole]     = useState("customer");
@@ -861,9 +861,11 @@ export default function Register() {
     addRipple(e);
     setError(""); setLoading(true);
     try {
-      const res = await api.post("/auth/register", { name, phone, password, city, role });
-      saveAuth(res.data);
-      navigate("/");
+      const res = await api.post("/auth/register", { name, email, phone, password, city, role });
+      const registeredEmail = email.trim().toLowerCase();
+      navigate(`/register/verify-pending?email=${encodeURIComponent(registeredEmail)}`, {
+        state: { message: res.data?.message },
+      });
     } catch (err) {
       setError(err?.response?.data?.message || copy.register.regFail);
     } finally {
@@ -986,6 +988,15 @@ export default function Register() {
                 label={copy.register.fullName}
                 value={name}
                 onChange={e => setName(e.target.value)}
+                hasError={!!error}
+              />
+
+              <Field
+                icon="✉"
+                label={copy.register.email}
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
                 hasError={!!error}
               />
 

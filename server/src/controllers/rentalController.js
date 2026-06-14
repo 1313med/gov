@@ -287,9 +287,12 @@ exports.getRentalById = async (req, res, next) => {
       _id: req.params.id,
       status: "approved",
       deletedAt: null,
-    }).populate("rentalOwnerId", "name phone city avatar");
+    }).populate("rentalOwnerId", "name city avatar nationalId driverLicense businessProfile");
     if (!rental) return res.status(404).json({ message: "Rental not found" });
-    res.json(rental);
+    const { toPublicOwnerPreview } = require("../utils/publicProfile");
+    const obj = rental.toObject();
+    if (obj.rentalOwnerId) obj.rentalOwnerId = toPublicOwnerPreview(rental.rentalOwnerId);
+    res.json(obj);
   } catch (error) { next(error); }
 };
 

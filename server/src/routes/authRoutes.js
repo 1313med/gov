@@ -7,6 +7,7 @@ const {
   forgotPassword,
   resetPassword,
   sendVerification,
+  resendVerificationPublic,
   verifyEmail,
 } = require("../controllers/authController");
 const { protect } = require("../middlewares/authMiddleware");
@@ -27,5 +28,6 @@ router.post("/reset-password/:token",      passwordResetLimiter, resetPassword);
 // Email verification
 router.get("/verify-email/:token",         verifyEmail);
 router.post("/send-verification", protect, sendVerification);
+router.post("/resend-verification", registerLimiter, resendVerificationPublic);
 
 module.exports = router;

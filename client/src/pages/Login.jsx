@@ -652,6 +652,8 @@ export default function Login() {
   const btnRef    = useRef(null);
 
   const [phone,    setPhone]    = useState("");
+  const [needVerify, setNeedVerify] = useState(false);
+  const [resendMsg, setResendMsg] = useState("");
   const [password, setPassword] = useState("");
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState("");
@@ -683,13 +685,17 @@ export default function Login() {
   async function handleSubmit(e) {
     e.preventDefault();
     addRipple(e);
-    setError(""); setLoading(true);
+    setError(""); setNeedVerify(false); setResendMsg(""); setLoading(true);
     try {
-      const res = await api.post("/auth/login", { phone, password });
+      const res = await api.post("/auth/login", { identifier: phone, password });
       saveAuth(res.data);
       navigate(homePathForUser(res.data));
     } catch (err) {
-      setError(err?.response?.data?.message || copy.login.invalidCreds);
+      const message = err?.response?.data?.message || copy.login.invalidCreds;
+      setError(message);
+      if (err?.response?.status === 403 && /verify/i.test(message)) {
+        setNeedVerify(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -788,12 +794,36 @@ export default function Login() {
               </div>
             )}
 
+            {needVerify && phone.includes("@") ? (
+              <div style={{ marginBottom: 16, textAlign: "center" }}>
+                <button
+                  type="button"
+                  className="lx-submit"
+                  style={{ padding: "10px 16px", fontSize: 13 }}
+                  onClick={async () => {
+                    setResendMsg("");
+                    try {
+                      await api.post("/auth/resend-verification", { email: phone.trim().toLowerCase() });
+                      setResendMsg(copy.login.resendOk);
+                    } catch (err) {
+                      setResendMsg(err?.response?.data?.message || copy.login.resendFail);
+                    }
+                  }}
+                >
+                  {copy.login.resendVerify}
+                </button>
+                {resendMsg ? (
+                  <p style={{ marginTop: 8, fontSize: 12, color: "var(--mut)" }}>{resendMsg}</p>
+                ) : null}
+              </div>
+            ) : null}
+
             {/* Form */}
             <form onSubmit={handleSubmit} className="lx-form lx-form-anim">
 
               <Field
                 icon="📱"
-                label={copy.login.phone}
+                label={copy.login.identifier || copy.login.phone}
                 value={phone}
                 onChange={e => setPhone(e.target.value)}
                 hasError={!!error}

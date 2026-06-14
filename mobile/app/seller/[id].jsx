@@ -61,10 +61,17 @@ export default function SellerProfileScreen() {
           </View>
         )}
         <Text style={s.name}>{profile.name}</Text>
-        <View style={s.verifiedRow}>
-          <Ionicons name="shield-checkmark" size={14} color={C.green} />
-          <Text style={s.verifiedText}>{pick("Verified Seller", "Vendeur vérifié")}</Text>
-        </View>
+        {(payload.verified || profile.identityVerified) ? (
+          <View style={s.verifiedRow}>
+            <Ionicons name="shield-checkmark" size={14} color={C.green} />
+            <Text style={s.verifiedText}>{pick("Verified Seller", "Vendeur vérifié")}</Text>
+          </View>
+        ) : profile.cinVerified ? (
+          <View style={s.verifiedRow}>
+            <Ionicons name="shield-checkmark-outline" size={14} color={C.muted} />
+            <Text style={[s.verifiedText, { color: C.muted }]}>{pick("ID verified", "Identité vérifiée")}</Text>
+          </View>
+        ) : null}
         {profile.city && (
           <View style={s.cityRow}>
             <Ionicons name="location-outline" size={14} color={C.muted} />
