@@ -193,8 +193,24 @@ ${hreflangLinks(basePath)}
   </url>`;
 }
 
+/** One listing URL per locale; hreflang alternates always use the French basePath. */
+function listingUrlEntry(locPath, basePath, priority, changefreq) {
+  const loc = `${SITE_URL}${locPath}`;
+  const xDefault = `${SITE_URL}${basePath}`;
+  return `  <url>
+    <loc>${xmlEscape(loc)}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>${changefreq}</changefreq>
+    <priority>${priority}</priority>
+${hreflangLinks(basePath)}
+    <xhtml:link rel="alternate" hreflang="x-default" href="${xmlEscape(xDefault)}" />
+  </url>`;
+}
+
 function listingUrlEntries(basePath, priority, changefreq) {
-  return LANGS.map(({ prefix }) => urlEntry(localizedPath(prefix, basePath), priority, changefreq)).join("\n");
+  return LANGS.map(({ prefix }) =>
+    listingUrlEntry(localizedPath(prefix, basePath), basePath, priority, changefreq)
+  ).join("\n");
 }
 
 function writeShard(filename, urlBlocks) {

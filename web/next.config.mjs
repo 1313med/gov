@@ -31,7 +31,11 @@ const nextConfig = {
         permanent: true,
       },
       { source: "/cars/:id", destination: "/acheter/:id", permanent: true },
+      { source: "/en/cars/:id", destination: "/en/acheter/:id", permanent: true },
+      { source: "/ar/cars/:id", destination: "/ar/acheter/:id", permanent: true },
       { source: "/rentals/:id", destination: "/louer/:id", permanent: true },
+      { source: "/en/rentals/:id", destination: "/en/louer/:id", permanent: true },
+      { source: "/ar/rentals/:id", destination: "/ar/louer/:id", permanent: true },
     ];
   },
   async rewrites() {
