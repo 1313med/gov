@@ -27,8 +27,21 @@ if (existsSync(legacyDir)) rmSync(legacyDir, { recursive: true, force: true });
 mkdirSync(join(root, "public"), { recursive: true });
 cpSync(join(clientDir, "dist"), legacyDir, { recursive: true });
 
-// Copy sitemaps + robots to Next public root
-for (const f of ["robots.txt", "sitemap.xml", "sitemap-index.xml"]) {
+// Copy sitemaps + robots + favicons to Next public root
+for (const f of [
+  "robots.txt",
+  "sitemap.xml",
+  "sitemap-index.xml",
+  "favicon.ico",
+  "favicon.svg",
+  "favicon-16x16.png",
+  "favicon-32x32.png",
+  "favicon-192x192.png",
+  "favicon-512x512.png",
+  "apple-touch-icon.png",
+  "site.webmanifest",
+  "manifest.json",
+]) {
   const src = join(clientDir, "public", f);
   if (existsSync(src)) cpSync(src, join(root, "public", f));
 }
