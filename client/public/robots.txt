@@ -9,6 +9,7 @@ Allow: /voiture-occasion
 Allow: /louer/
 Allow: /acheter/
 Allow: /marque/
+Allow: /voitures/
 Allow: /agences/
 Allow: /concessionnaires/
 Allow: /pro

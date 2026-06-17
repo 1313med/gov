@@ -71,6 +71,7 @@ const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
 const MarketplaceHubPage = lazy(() => import("./pages/seo/MarketplaceHubPage"));
 const ProgrammaticFacetPage = lazy(() => import("./pages/seo/ProgrammaticFacetPage"));
 const BrandHubPage = lazy(() => import("./pages/seo/BrandHubPage"));
+const ModelAuthorityPage = lazy(() => import("./pages/seo/ModelAuthorityPage"));
 const AirportLandingPage = lazy(() => import("./pages/seo/AirportLandingPage"));
 const ProHubPage = lazy(() => import("./pages/pro/ProPage.jsx").then((m) => ({ default: m.ProHubPage })));
 const ProPage = lazy(() => import("./pages/pro/ProPage.jsx"));
@@ -146,6 +147,7 @@ export default function App() {
     { path: "/louer/:listingSlug", element: <RentalListingRoute /> },
     { path: "/marque/:brandSlug", element: <BrandHubPage /> },
     { path: "/marque/:brandSlug/:modelSlug", element: <BrandHubPage /> },
+    { path: "/voitures/:brandSlug/:modelSlug", element: <ModelAuthorityPage /> },
     { path: "/pro", element: <ProHubPage /> },
     { path: "/pro/:pageSlug", element: <ProPage /> },
     { path: "/blog", element: <BlogHubPage /> },

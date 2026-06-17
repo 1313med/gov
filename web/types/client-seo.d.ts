@@ -382,3 +382,38 @@ declare module "@client-seo/catalog/questionSeeds" {
   export function questionPath(slug: string): string;
   export function questionsHubPath(): string;
 }
+
+declare module "@client-seo/catalog/modelsAuthority" {
+  export function modelAuthorityPath(brandSlug: string, modelSlug: string): string;
+  export function getModelAuthority(
+    brandSlug: string,
+    modelSlug: string
+  ): {
+    brandSlug: string;
+    modelSlug: string;
+    displayName: string;
+    listingTerms: string[];
+    subtitle: string;
+    introduction: string;
+    popularity: string;
+    engines: { diesel: string; essence: string; automatic: string; manual: string };
+    consumption: { city: string; highway: string };
+    reliability: { strengths: string[]; weaknesses: string[] };
+    prices: { occasion: string; recent: string; popularVersions: string[] };
+    maintenance: string;
+    audience: { youngDrivers: string; families: string; professionals: string; longDistance: string };
+    faqs: { q: string; a: string }[];
+  } | null;
+  export function getAllAuthorityModels(): NonNullable<ReturnType<typeof getModelAuthority>>[];
+  export function getAuthorityModelsByBrand(brandSlug: string): NonNullable<ReturnType<typeof getModelAuthority>>[];
+  export function matchesListingModel(
+    listingModel: string | undefined,
+    authority: NonNullable<ReturnType<typeof getModelAuthority>>
+  ): boolean;
+  export function authorityMetadata(model: NonNullable<ReturnType<typeof getModelAuthority>>): {
+    basePath: string;
+    title: string;
+    description: string;
+    keywords: string;
+  };
+}

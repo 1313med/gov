@@ -11,6 +11,7 @@ import { getAllClusterTopics } from "../src/seo/catalog/contentClusters.js";
 import { getAllQuestionSeeds } from "../src/seo/catalog/questionSeeds.js";
 import { getAllReliabilityIndexes } from "../src/seo/catalog/reliabilityIndex.js";
 import { getAllOwnershipTimelines } from "../src/seo/catalog/ownershipTimelines.js";
+import { getAllAuthorityModels } from "../src/seo/catalog/modelsAuthority/index.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const publicDir = join(__dirname, "..", "public");
@@ -360,6 +361,12 @@ async function main() {
   writeShard("ownership-guides.xml", possessionUrls);
   shardFiles.push("ownership-guides.xml");
 
+  const authorityModelUrls = getAllAuthorityModels().map((m) =>
+    urlEntry(`/voitures/${m.brandSlug}/${m.modelSlug}`, "0.82", "monthly")
+  );
+  writeShard("models-authority.xml", authorityModelUrls);
+  shardFiles.push("models-authority.xml");
+
   // listings-rental.xml (sharded if needed)
   const rentalListingBlocks = [];
   for (const r of rentals) {
@@ -461,6 +468,7 @@ Allow: /voiture-occasion
 Allow: /louer/
 Allow: /acheter/
 Allow: /marque/
+Allow: /voitures/
 Allow: /agences/
 Allow: /concessionnaires/
 Allow: /pro

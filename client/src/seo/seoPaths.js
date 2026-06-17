@@ -44,6 +44,7 @@ const PUBLIC_PREFIXES = [
   "/louer/",
   "/acheter/",
   "/marque/",
+  "/voitures/",
   "/agences/",
   "/concessionnaires/",
   "/pro",

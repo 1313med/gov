@@ -647,4 +647,40 @@ html.dark {
     padding: 0.5rem 1rem !important;
     font-size: 0.8rem !important;
   }
+
+  /* Model authority pages */
+  .gv-ma-section {
+    border-bottom: 1px solid var(--gv-bdr);
+    padding-bottom: 2rem;
+  }
+  .gv-ma-prose {
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: var(--gv-ink-soft, var(--gv-mut));
+    max-width: 72ch;
+  }
+  .gv-ma-note {
+    font-size: 0.875rem;
+    color: var(--gv-mut);
+    font-style: italic;
+  }
+  .gv-ma-toc-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--gv-brand);
+    background: color-mix(in srgb, var(--gv-brand) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--gv-brand) 20%, transparent);
+    text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .gv-ma-toc-link:hover {
+    background: color-mix(in srgb, var(--gv-brand) 14%, transparent);
+    transform: translateY(-1px);
+  }
+  .gv-ma-pros { border-left: 3px solid #10b981; }
+  .gv-ma-cons { border-left: 3px solid #f59e0b; }
 }

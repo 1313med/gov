@@ -3,7 +3,7 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://goovoiture.ma/marche</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-06-17</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.84</priority>
     <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/marche" />
@@ -13,7 +13,7 @@
   </url>
   <url>
     <loc>https://goovoiture.ma/marche/dacia/logan</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-06-17</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/marche/dacia/logan" />
@@ -23,7 +23,7 @@
   </url>
   <url>
     <loc>https://goovoiture.ma/marche/dacia/sandero</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-06-17</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/marche/dacia/sandero" />
@@ -33,7 +33,7 @@
   </url>
   <url>
     <loc>https://goovoiture.ma/marche/dacia/duster</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-06-17</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/marche/dacia/duster" />
@@ -43,7 +43,7 @@
   </url>
   <url>
     <loc>https://goovoiture.ma/marche/renault/clio</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-06-17</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/marche/renault/clio" />
@@ -53,7 +53,7 @@
   </url>
   <url>
     <loc>https://goovoiture.ma/marche/renault/symbol</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-06-17</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/marche/renault/symbol" />
@@ -63,7 +63,7 @@
   </url>
   <url>
     <loc>https://goovoiture.ma/marche/peugeot/208</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-06-17</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/marche/peugeot/208" />
@@ -73,7 +73,7 @@
   </url>
   <url>
     <loc>https://goovoiture.ma/marche/hyundai/i10</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-06-17</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/marche/hyundai/i10" />
@@ -83,7 +83,7 @@
   </url>
   <url>
     <loc>https://goovoiture.ma/marche/hyundai/tucson</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-06-17</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/marche/hyundai/tucson" />
@@ -93,7 +93,7 @@
   </url>
   <url>
     <loc>https://goovoiture.ma/marche/volkswagen/polo</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-06-17</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/marche/volkswagen/polo" />
@@ -103,7 +103,7 @@
   </url>
   <url>
     <loc>https://goovoiture.ma/marche/toyota/yaris</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-06-17</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/marche/toyota/yaris" />
@@ -113,7 +113,7 @@
   </url>
   <url>
     <loc>https://goovoiture.ma/marche/kia/picanto</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-06-17</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/marche/kia/picanto" />
@@ -123,7 +123,7 @@
   </url>
   <url>
     <loc>https://goovoiture.ma/marche/fiat/500</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-06-17</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/marche/fiat/500" />
@@ -133,7 +133,7 @@
   </url>
   <url>
     <loc>https://goovoiture.ma/marche/seat/ibiza</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-06-17</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/marche/seat/ibiza" />
@@ -143,7 +143,7 @@
   </url>
   <url>
     <loc>https://goovoiture.ma/marche/mercedes/classe-a</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-06-17</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/marche/mercedes/classe-a" />
@@ -153,7 +153,7 @@
   </url>
   <url>
     <loc>https://goovoiture.ma/marche/bmw/serie-3</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-06-17</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="fr-MA" href="https://goovoiture.ma/marche/bmw/serie-3" />
