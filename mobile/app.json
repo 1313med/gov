@@ -50,6 +50,7 @@
       ],
       "expo-notifications",
       "expo-web-browser",
+      "expo-apple-authentication",
       "@react-native-community/datetimepicker"
     ],
     "experiments": {

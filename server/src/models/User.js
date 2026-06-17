@@ -42,6 +42,12 @@ const userSchema = new mongoose.Schema(
     passwordResetToken:   { type: String, select: false },
     passwordResetExpires: { type: Date,   select: false },
 
+    // OAuth providers (Google / Facebook / Apple)
+    googleId:   { type: String, default: null },
+    facebookId: { type: String, default: null },
+    appleId:    { type: String, default: null },
+    authProviders: [{ type: String }],
+
     // Driver license (required before renting)
     driverLicense: {
       number:     { type: String, default: null },
@@ -92,6 +98,9 @@ const userSchema = new mongoose.Schema(
 userSchema.index({ phone: 1 }, { unique: true });
 userSchema.index({ email: 1 });
 userSchema.index({ deletedAt: 1 });
+userSchema.index({ googleId: 1 }, { unique: true, sparse: true });
+userSchema.index({ facebookId: 1 }, { unique: true, sparse: true });
+userSchema.index({ appleId: 1 }, { unique: true, sparse: true });
 
 const {
   getUserRoles,

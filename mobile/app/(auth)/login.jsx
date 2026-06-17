@@ -31,6 +31,8 @@ import { clearLoginForm, loadLoginForm, saveLoginForm } from "../../src/utils/au
 import { getRoleTheme, normalizeRoleKey } from "../../src/constants/roleThemes";
 import { loadAuthRoleIntent, saveAuthRoleIntent } from "../../src/utils/authRoleIntent";
 import LanguageSwitcher from "../../src/components/LanguageSwitcher";
+import SocialAuthButtons from "../../src/components/SocialAuthButtons";
+import { useSocialAuth } from "../../src/hooks/useSocialAuth";
 
 const { width: W } = Dimensions.get("window");
 
@@ -125,6 +127,29 @@ export default function LoginScreen() {
   const roleThemeCopy = lang === "ar" ? theme.ar : lang === "fr" ? theme.fr : theme.en;
 
   const readyToSignIn = Boolean(identifier.trim() && password);
+
+  const finishSocialLogin = async (data) => {
+    if (rememberMe) {
+      await saveLoginForm({ phone: identifier, remember: true });
+    } else {
+      await clearLoginForm();
+    }
+    if (isCarOwnerUser(data) && data._id) {
+      await AsyncStorage.setItem(`goovoiture-active-mode:${data._id}`, "car_owner");
+    }
+    await login(data, { remember: rememberMe });
+    if (isCarOwnerUser(data)) {
+      await ensureCarOwnerLanding();
+    } else if (isRentalOwnerUser(data)) {
+      await ensureRentalOwnerLanding();
+    }
+  };
+
+  const social = useSocialAuth({
+    role: authRole,
+    onSuccess: finishSocialLogin,
+    onError: (msg) => Alert.alert(pick("Error", "Erreur"), msg || c.socialFailed),
+  });
 
   useEffect(() => {
     const paramRole = params.role ? normalizeRoleKey(params.role) : null;
@@ -294,6 +319,19 @@ export default function LoginScreen() {
                     {c.welcomeTitle} <Text style={{ color: accent }}>{c.welcomeEm}</Text>
                   </Text>
                 </View>
+
+                <SocialAuthButtons
+                  copy={c}
+                  config={social.config}
+                  busy={social.busy}
+                  onGoogle={social.signInWithGoogle}
+                  onFacebook={social.signInWithFacebook}
+                  onApple={social.signInWithApple}
+                  appleAvailable={social.appleAvailable}
+                  accent={accent}
+                  isDark={isDark}
+                  disabled={loading}
+                />
 
                 <EliteField
                   label={(c.phone || "").toUpperCase()}

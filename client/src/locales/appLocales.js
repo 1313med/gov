@@ -270,6 +270,12 @@ const loginEn = {
   resendVerify: "Resend verification email",
   resendOk: "Verification email sent if the account exists.",
   resendFail: "Could not resend verification email.",
+  socialDivider: "or continue with",
+  google: "Google",
+  facebook: "Facebook",
+  apple: "Apple",
+  socialFailed: "Social sign-in failed. Please try again.",
+  socialNotConfigured: "This sign-in method is not configured yet.",
 };
 
 const loginFr = {
@@ -309,6 +315,12 @@ const loginFr = {
   resendVerify: "Renvoyer l'e-mail de vérification",
   resendOk: "E-mail de vérification envoyé si le compte existe.",
   resendFail: "Impossible de renvoyer l'e-mail de vérification.",
+  socialDivider: "ou continuer avec",
+  google: "Google",
+  facebook: "Facebook",
+  apple: "Apple",
+  socialFailed: "Échec de la connexion sociale. Réessayez.",
+  socialNotConfigured: "Cette méthode de connexion n'est pas encore configurée.",
 };
 
 const verifyPendingEn = {

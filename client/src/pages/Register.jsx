@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { api } from "../api/axios";
+import { saveAuth } from "../utils/authStorage";
+import { homePathForUser } from "../utils/userRoles";
 import { useAppLang } from "../context/AppLangContext";
 import AuthTopBar from "../components/AuthTopBar";
+import SocialAuthButtons from "../components/SocialAuthButtons";
 
 /* ─────────────────────────────────────────────
    GLOBAL STYLES  (mirrors Login's lx-* system)
@@ -822,6 +825,7 @@ function RoleChips({ value, onChange, copy }) {
 export default function Register() {
   const { copy } = useAppLang();
   const navigate  = useNavigate();
+  const [searchParams] = useSearchParams();
   const imgRef    = useRef(null);
   const btnRef    = useRef(null);
 
@@ -833,6 +837,30 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState("");
+
+  function finishAuth(data) {
+    saveAuth(data);
+    navigate(homePathForUser(data));
+  }
+
+  useEffect(() => {
+    const oauth = searchParams.get("oauth");
+    if (!oauth) return;
+
+    if (oauth === "success") {
+      setLoading(true);
+      api
+        .get("/user/me")
+        .then((res) => finishAuth(res.data))
+        .catch(() => setError(copy.login?.socialFailed || "Social sign-in failed"))
+        .finally(() => setLoading(false));
+      return;
+    }
+
+    if (oauth === "error") {
+      setError(searchParams.get("message") || copy.login?.socialFailed || "Social sign-in failed");
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const img = new Image();
@@ -980,6 +1008,15 @@ export default function Register() {
                 <div className="rx-error-text">{error}</div>
               </div>
             )}
+
+            <SocialAuthButtons
+              copy={copy.login}
+              role={role}
+              returnPath="/register"
+              disabled={loading}
+              onSuccess={finishAuth}
+              onError={setError}
+            />
 
             <form onSubmit={handleSubmit} className="rx-form rx-form-anim">
 

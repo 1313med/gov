@@ -225,6 +225,11 @@ const loginEn = {
   footerQ: "Don't have an account?",
   footerLink: "Create one free",
   invalidCreds: "Invalid credentials. Please try again.",
+  socialDivider: "or continue with",
+  google: "Google",
+  facebook: "Facebook",
+  apple: "Apple",
+  socialFailed: "Social sign-in failed. Please try again.",
 };
 
 const loginFr = {
@@ -259,6 +264,11 @@ const loginFr = {
   footerQ: "Pas encore de compte ?",
   footerLink: "Créer un compte gratuit",
   invalidCreds: "Identifiants invalides. Réessayez.",
+  socialDivider: "ou continuer avec",
+  google: "Google",
+  facebook: "Facebook",
+  apple: "Apple",
+  socialFailed: "Échec de la connexion sociale. Réessayez.",
 };
 
 const registerEn = {

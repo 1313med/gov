@@ -25,6 +25,12 @@ import { getApiErrorMessage } from "../../src/utils/apiErrorMessage";
 import { getRoleTheme, normalizeRoleKey } from "../../src/constants/roleThemes";
 import { saveAuthRoleIntent } from "../../src/utils/authRoleIntent";
 import LanguageSwitcher from "../../src/components/LanguageSwitcher";
+import SocialAuthButtons from "../../src/components/SocialAuthButtons";
+import { useSocialAuth } from "../../src/hooks/useSocialAuth";
+import { useAuth } from "../../src/context/AuthContext";
+import { useActiveMode } from "../../src/context/ActiveModeContext";
+import { isCarOwnerUser, isRentalOwnerUser } from "../../src/utils/userRoles";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 function EliteField({
   label,
@@ -90,6 +96,8 @@ export default function RegisterScreen() {
   const preselectedRole = normalizeRoleKey(params.role);
   const theme = getRoleTheme(preselectedRole, isDark);
   const roleCopy = lang === "ar" ? theme.ar : lang === "fr" ? theme.fr : theme.en;
+  const { login } = useAuth();
+  const { ensureCarOwnerLanding, ensureRentalOwnerLanding } = useActiveMode();
 
   const [form, setForm] = useState({
     name: "",
@@ -123,6 +131,24 @@ export default function RegisterScreen() {
       Animated.spring(heroSlide, { toValue: 0, friction: 8, tension: 42, useNativeDriver: true }),
     ]).start();
   }, [heroOpacity, heroSlide]);
+
+  const finishSocialRegister = async (data) => {
+    if (isCarOwnerUser(data) && data._id) {
+      await AsyncStorage.setItem(`goovoiture-active-mode:${data._id}`, "car_owner");
+    }
+    await login(data);
+    if (isCarOwnerUser(data)) {
+      await ensureCarOwnerLanding();
+    } else if (isRentalOwnerUser(data)) {
+      await ensureRentalOwnerLanding();
+    }
+  };
+
+  const social = useSocialAuth({
+    role: form.role,
+    onSuccess: finishSocialRegister,
+    onError: (msg) => Alert.alert(pick("Error", "Erreur"), msg || copy.login.socialFailed),
+  });
 
   const handleRegister = async () => {
     if (!form.name.trim() || !form.phone.trim() || !form.email.trim() || !form.city.trim() || !form.password) {
@@ -182,6 +208,18 @@ export default function RegisterScreen() {
 
           <LinearGradient colors={ctaGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.formCardBorder}>
             <View style={[styles.formCard, { backgroundColor: isDark ? "#0a0b12" : "#fafbff" }]}>
+            <SocialAuthButtons
+              copy={copy.login}
+              config={social.config}
+              busy={social.busy}
+              onGoogle={social.signInWithGoogle}
+              onFacebook={social.signInWithFacebook}
+              onApple={social.signInWithApple}
+              appleAvailable={social.appleAvailable}
+              accent={accent}
+              isDark={isDark}
+              disabled={loading}
+            />
             <EliteField
               label={pick("FULL NAME", "NOM COMPLET")}
               icon="person-outline"

@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
+const passport = require("./config/passport");
 
 const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
 const { authLimiter, apiLimiter } = require("./middlewares/rateLimiter");
@@ -27,6 +28,7 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(passport.initialize());
 
 // HTTP request logging (uses Winston in production, Morgan in dev)
 if (process.env.NODE_ENV !== "production") {

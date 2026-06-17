@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { api } from "../api/axios";
 import { saveAuth } from "../utils/authStorage";
 import { homePathForUser } from "../utils/userRoles";
 import { useAppLang } from "../context/AppLangContext";
 import AuthTopBar from "../components/AuthTopBar";
+import SocialAuthButtons from "../components/SocialAuthButtons";
 
 /* ─────────────────────────────────────────────
    GLOBAL STYLES
@@ -648,6 +649,7 @@ function Field({ icon, label, value, onChange, type = "text", hasError }) {
 export default function Login() {
   const { copy } = useAppLang();
   const navigate  = useNavigate();
+  const [searchParams] = useSearchParams();
   const imgRef    = useRef(null);
   const btnRef    = useRef(null);
 
@@ -657,6 +659,31 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState("");
+
+  function finishAuth(data) {
+    saveAuth(data);
+    navigate(homePathForUser(data));
+  }
+
+  // OAuth redirect callback (?oauth=success from Google/Facebook)
+  useEffect(() => {
+    const oauth = searchParams.get("oauth");
+    if (!oauth) return;
+
+    if (oauth === "success") {
+      setLoading(true);
+      api
+        .get("/user/me")
+        .then((res) => finishAuth(res.data))
+        .catch(() => setError(copy.login.socialFailed || "Social sign-in failed"))
+        .finally(() => setLoading(false));
+      return;
+    }
+
+    if (oauth === "error") {
+      setError(searchParams.get("message") || copy.login.socialFailed || "Social sign-in failed");
+    }
+  }, [searchParams]);
 
   // Lazy-load left panel image
   useEffect(() => {
@@ -688,8 +715,7 @@ export default function Login() {
     setError(""); setNeedVerify(false); setResendMsg(""); setLoading(true);
     try {
       const res = await api.post("/auth/login", { identifier: phone, password });
-      saveAuth(res.data);
-      navigate(homePathForUser(res.data));
+      finishAuth(res.data);
     } catch (err) {
       const message = err?.response?.data?.message || copy.login.invalidCreds;
       setError(message);
@@ -817,6 +843,13 @@ export default function Login() {
                 ) : null}
               </div>
             ) : null}
+
+            <SocialAuthButtons
+              copy={copy.login}
+              disabled={loading}
+              onSuccess={finishAuth}
+              onError={setError}
+            />
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="lx-form lx-form-anim">

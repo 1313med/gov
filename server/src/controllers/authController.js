@@ -1,25 +1,14 @@
 const asyncHandler = require("express-async-handler");
 const crypto = require("crypto");
 const User = require("../models/User");
-const generateToken = require("../utils/generateToken");
 const {
   rolesFromRegistrationIntent,
-  getUserRoles,
-  getPrimaryRole,
   normalizeRoleSlug,
 } = require("../utils/userRoles");
 const emailService    = require("../utils/emailService");
 const whatsappService = require("../utils/whatsappService");
-
-// "none" (not "strict") in production: the web client and the API may live on
-// different domains (e.g. vercel.app + onrender.com), and "strict"/"lax" cookies
-// are never sent cross-site. Requires secure: true. CORS still restricts origins.
-const COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-};
+const passport = require("../config/passport");
+const { issueAuthSession, COOKIE_OPTIONS } = require("../utils/issueAuthSession");
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -91,57 +80,19 @@ exports.register = asyncHandler(async (req, res) => {
 });
 
 // ── POST /api/auth/login ─────────────────────────────────────────────────────
-exports.login = asyncHandler(async (req, res) => {
-  const identifier = String(req.body.identifier || req.body.phone || "").trim();
-  const password = req.body.password;
-
-  if (!identifier || !password) {
-    res.status(400);
-    throw new Error("identifier and password are required");
+exports.login = asyncHandler(async (req, res, next) => {
+  if (!req.body.identifier && req.body.phone) {
+    req.body.identifier = req.body.phone;
   }
 
-  const user = await User.findOne({
-    deletedAt: null,
-    $or: [
-      { phone: identifier },
-      { email: identifier.toLowerCase() },
-    ],
-  });
-  if (!user) {
-    res.status(401);
-    throw new Error("Invalid credentials");
-  }
-
-  if (user.isBanned) {
-    res.status(403);
-    throw new Error("Your account has been suspended. Please contact support.");
-  }
-
-  const ok = await user.matchPassword(password);
-  if (!ok) {
-    res.status(401);
-    throw new Error("Invalid credentials");
-  }
-
-  if (user.email && !user.isEmailVerified) {
-    res.status(403);
-    throw new Error("Please verify your email before logging in.");
-  }
-
-  const token = generateToken(user);
-  res.cookie("token", token, COOKIE_OPTIONS);
-
-  const roles = getUserRoles(user);
-  const primaryRole = getPrimaryRole(user);
-  res.json({
-    _id: user._id,
-    name: user.name,
-    role: primaryRole,
-    roles,
-    token,
-    staffForOwnerId:  user.staffForOwnerId  || null,
-    staffPermissions: user.staffPermissions || null,
-  });
+  passport.authenticate("local", { session: false }, (err, user, info) => {
+    if (err) return next(err);
+    if (!user) {
+      res.status(info?.status || 401);
+      return next(new Error(info?.message || "Invalid credentials"));
+    }
+    res.json(issueAuthSession(user, res));
+  })(req, res, next);
 });
 
 // ── POST /api/auth/logout ────────────────────────────────────────────────────

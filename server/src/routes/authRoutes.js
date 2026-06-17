@@ -10,6 +10,16 @@ const {
   resendVerificationPublic,
   verifyEmail,
 } = require("../controllers/authController");
+const {
+  exchangeGoogle,
+  exchangeFacebook,
+  exchangeApple,
+  startGoogle,
+  callbackGoogle,
+  startFacebook,
+  callbackFacebook,
+  getOAuthConfig,
+} = require("../controllers/oauthController");
 const { protect } = require("../middlewares/authMiddleware");
 const {
   loginLimiter,
@@ -20,6 +30,18 @@ const {
 router.post("/register",           registerLimiter, register);
 router.post("/login",              loginLimiter, login);
 router.post("/logout",             protect, logout);
+
+// OAuth — token exchange (mobile + web popup flows)
+router.get("/oauth/config",        getOAuthConfig);
+router.post("/oauth/google",       loginLimiter, exchangeGoogle);
+router.post("/oauth/facebook",     loginLimiter, exchangeFacebook);
+router.post("/oauth/apple",        loginLimiter, exchangeApple);
+
+// OAuth — browser redirect flows (web)
+router.get("/oauth/google/start",     startGoogle);
+router.get("/oauth/google/callback",  callbackGoogle);
+router.get("/oauth/facebook/start",     startFacebook);
+router.get("/oauth/facebook/callback",  callbackFacebook);
 
 // Password reset (public — no auth needed)
 router.post("/forgot-password",            passwordResetLimiter, forgotPassword);
