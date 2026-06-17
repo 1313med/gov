@@ -662,7 +662,7 @@ export default function Login() {
 
   function finishAuth(data) {
     saveAuth(data);
-    navigate(homePathForUser(data));
+    navigate(homePathForUser(data), { replace: true });
   }
 
   // OAuth redirect callback (?oauth=success from Google/Facebook)

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { loadAuth, clearAuth } from "../utils/authStorage";
+import { useAuthSnapshot } from "../hooks/useAuthSnapshot";
 import { useAppLang } from "../context/AppLangContext";
 import { useSocket } from "../context/SocketContext";
 import { useTheme } from "../context/ThemeContext";
@@ -417,7 +418,7 @@ const ICO_GUIDE = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" st
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const auth = loadAuth();
+  const auth = useAuthSnapshot();
   const { copy } = useAppLang();
   const { unreadNotifications, unreadMessages } = useSocket() || {};
   const { dark, toggle: toggleTheme } = useTheme();

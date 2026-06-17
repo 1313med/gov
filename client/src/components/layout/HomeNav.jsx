@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
-import { loadAuth, clearAuth } from "../../utils/authStorage";
+import { clearAuth } from "../../utils/authStorage";
+import { useAuthSnapshot } from "../../hooks/useAuthSnapshot";
 import { useAppLang } from "../../context/AppLangContext";
 import { useTheme } from "../../context/ThemeContext";
 import { hasUserRole } from "../../utils/userRoles";
@@ -15,7 +16,7 @@ const ROLE_LABELS = {
 
 export default function HomeNav() {
   const { lang, setLang, copy } = useAppLang();
-  const [auth, setAuth] = useState(() => loadAuth());
+  const auth = useAuthSnapshot();
   const { dark, toggle: toggleTheme } = useTheme();
   const [menu, setMenu] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -31,15 +32,8 @@ export default function HomeNav() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    const onStorage = () => setAuth(loadAuth());
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
-
   function logout() {
     clearAuth();
-    setAuth(null);
   }
 
   return (

@@ -840,7 +840,7 @@ export default function Register() {
 
   function finishAuth(data) {
     saveAuth(data);
-    navigate(homePathForUser(data));
+    navigate(homePathForUser(data), { replace: true });
   }
 
   useEffect(() => {
