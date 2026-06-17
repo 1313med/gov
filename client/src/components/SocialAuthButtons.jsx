@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import {
   exchangeAppleToken,
   exchangeGoogleToken,
-  getOAuthConfig,
   oauthRedirectUrl,
 } from "../api/auth";
+import { loadOAuthConfig } from "../api/oauthConfig";
 
 const APPLE_SCRIPT_ID = "apple-auth-js";
 
@@ -36,9 +36,23 @@ export default function SocialAuthButtons({
   const [busy, setBusy] = useState(null);
 
   useEffect(() => {
-    getOAuthConfig()
-      .then((res) => setConfig(res.data))
-      .catch(() => setConfig({ google: { enabled: false }, facebook: { enabled: false }, apple: { enabled: false } }));
+    let cancelled = false;
+    loadOAuthConfig()
+      .then((data) => {
+        if (!cancelled) setConfig(data);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setConfig({
+            google: { enabled: false },
+            facebook: { enabled: false },
+            apple: { enabled: false },
+          });
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const returnUrl = `${window.location.origin}${returnPath}`;
@@ -107,47 +121,27 @@ export default function SocialAuthButtons({
   const facebookEnabled = config?.facebook?.enabled;
   const appleEnabled = config?.apple?.enabled;
 
+  if (config === null) {
+    return (
+      <div className="gv-social-auth" aria-busy="true" aria-label="Loading sign-in options">
+        <style>{socialStyles}</style>
+        <div className="gv-social-divider">
+          <span>{copy.socialDivider || "or continue with"}</span>
+        </div>
+        <div className="gv-social-grid">
+          <div className="gv-social-btn gv-social-skeleton" />
+        </div>
+      </div>
+    );
+  }
+
   if (!googleEnabled && !facebookEnabled && !appleEnabled) {
     return null;
   }
 
   return (
     <div className="gv-social-auth">
-      <style>{`
-        .gv-social-auth { margin-bottom: 18px; }
-        .gv-social-divider {
-          display: flex; align-items: center; gap: 12px;
-          margin-bottom: 14px; color: var(--mut, #53608f);
-          font-family: var(--mono, monospace); font-size: 10px;
-          letter-spacing: 0.08em; text-transform: uppercase;
-        }
-        .gv-social-divider::before,
-        .gv-social-divider::after {
-          content: ""; flex: 1; height: 1px;
-          background: rgba(255,255,255,0.08);
-        }
-        .gv-social-grid {
-          display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
-        }
-        .gv-social-btn {
-          border: 1px solid rgba(255,255,255,0.1);
-          background: rgba(255,255,255,0.04);
-          color: var(--txt, #e8e8f0);
-          border-radius: 12px;
-          padding: 11px 8px;
-          font-family: var(--sans, Outfit, sans-serif);
-          font-size: 12px; font-weight: 600;
-          cursor: pointer; transition: all 0.18s ease;
-        }
-        .gv-social-btn:hover:not(:disabled) {
-          border-color: rgba(124,107,255,0.45);
-          background: rgba(124,107,255,0.1);
-        }
-        .gv-social-btn:disabled { opacity: 0.55; cursor: not-allowed; }
-        @media (max-width: 480px) {
-          .gv-social-grid { grid-template-columns: 1fr; }
-        }
-      `}</style>
+      <style>{socialStyles}</style>
       <div className="gv-social-divider">
         <span>{copy.socialDivider || "or continue with"}</span>
       </div>
@@ -246,3 +240,48 @@ function GoogleOneTap({ clientId, onCredential, disabled }) {
 
   return null;
 }
+
+const socialStyles = `
+  .gv-social-auth { margin-bottom: 18px; }
+  .gv-social-divider {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 14px; color: var(--mut, #53608f);
+    font-family: var(--mono, monospace); font-size: 10px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .gv-social-divider::before,
+  .gv-social-divider::after {
+    content: ""; flex: 1; height: 1px;
+    background: rgba(255,255,255,0.08);
+  }
+  .gv-social-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  }
+  .gv-social-btn {
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04);
+    color: var(--txt, #e8e8f0);
+    border-radius: 12px;
+    padding: 11px 8px;
+    font-family: var(--sans, Outfit, sans-serif);
+    font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.18s ease;
+  }
+  .gv-social-btn:hover:not(:disabled) {
+    border-color: rgba(124,107,255,0.45);
+    background: rgba(124,107,255,0.1);
+  }
+  .gv-social-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+  .gv-social-skeleton {
+    min-height: 42px;
+    animation: gvSocialPulse 1.2s ease-in-out infinite;
+    cursor: default;
+  }
+  @keyframes gvSocialPulse {
+    0%, 100% { opacity: 0.45; }
+    50% { opacity: 0.9; }
+  }
+  @media (max-width: 480px) {
+    .gv-social-grid { grid-template-columns: 1fr; }
+  }
+`;
