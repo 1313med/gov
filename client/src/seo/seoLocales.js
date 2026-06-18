@@ -2,6 +2,7 @@ import { parseSeoPath } from "./seoPaths";
 import { getCityBySlug, cityRentalPath, citySalePath } from "./cityPages";
 import { DARIJA, getCityDarija } from "./seoDarija";
 import { LEGAL_SEO } from "../locales/legal.js";
+import { formatListingTitle, resolveListingDescription } from "./listingContent.js";
 
 export const SITE_NAME = "Goovoiture";
 export const DEFAULT_SITE_URL = "https://goovoiture.ma";
@@ -416,19 +417,19 @@ export const STATIC_PUBLIC_PAGES = Object.keys(STATIC_PAGES).map((path) => {
 
 export function buildSaleListingSeo(lang, car) {
   const city = car.city || "Maroc";
-  const price = Number(car.price).toLocaleString(lang === "ar" ? "ar-MA" : lang === "en" ? "en-US" : "fr-MA");
+  const label = formatListingTitle(car);
   const templates = {
     fr: {
-      title: `${car.brand} ${car.model} ${car.year} à vendre — ${city} | Goovoiture`,
-      description: (car.description || `${car.brand} ${car.model} ${car.year} à ${city}. Prix: ${price} MAD.`).slice(0, 160),
+      title: `${label} à vendre — ${city} | Goovoiture`,
+      description: resolveListingDescription(car, "sale", lang).slice(0, 160),
     },
     en: {
-      title: `${car.brand} ${car.model} ${car.year} for sale — ${city} | Goovoiture`,
-      description: (car.description || `${car.brand} ${car.model} ${car.year} in ${city}. Price: ${price} MAD.`).slice(0, 160),
+      title: `${label} for sale — ${city} | Goovoiture`,
+      description: resolveListingDescription(car, "sale", lang).slice(0, 160),
     },
     ar: {
-      title: `${car.brand} ${car.model} ${car.year} للبيع — ${city} | Goovoiture`,
-      description: (car.description || `${car.brand} ${car.model} ${car.year} في ${city}. السعر: ${price} درهم.`).slice(0, 160),
+      title: `${label} للبيع — ${city} | Goovoiture`,
+      description: resolveListingDescription(car, "sale", lang).slice(0, 160),
     },
   };
   return templates[lang] || templates.fr;
@@ -436,19 +437,19 @@ export function buildSaleListingSeo(lang, car) {
 
 export function buildRentalListingSeo(lang, rental) {
   const city = rental.city || "Maroc";
-  const price = Number(rental.pricePerDay).toLocaleString(lang === "ar" ? "ar-MA" : lang === "en" ? "en-US" : "fr-MA");
+  const label = formatListingTitle(rental);
   const templates = {
     fr: {
-      title: `Location ${rental.brand} ${rental.model} ${rental.year} — ${city} | Goovoiture`,
-      description: (rental.description || `Louez une ${rental.brand} ${rental.model} à ${city}. À partir de ${price} MAD/jour.`).slice(0, 160),
+      title: `Location ${label} — ${city} | Goovoiture`,
+      description: resolveListingDescription(rental, "rental", lang).slice(0, 160),
     },
     en: {
-      title: `Rent ${rental.brand} ${rental.model} ${rental.year} — ${city} | Goovoiture`,
-      description: (rental.description || `Rent a ${rental.brand} ${rental.model} in ${city}. From ${price} MAD/day.`).slice(0, 160),
+      title: `Rent ${label} — ${city} | Goovoiture`,
+      description: resolveListingDescription(rental, "rental", lang).slice(0, 160),
     },
     ar: {
-      title: `تأجير ${rental.brand} ${rental.model} ${rental.year} — ${city} | Goovoiture`,
-      description: (rental.description || `استأجر ${rental.brand} ${rental.model} في ${city}. من ${price} درهم/اليوم.`).slice(0, 160),
+      title: `تأجير ${label} — ${city} | Goovoiture`,
+      description: resolveListingDescription(rental, "rental", lang).slice(0, 160),
     },
   };
   return templates[lang] || templates.fr;

@@ -3,6 +3,7 @@ import VehicleCard from "./VehicleCard";
 import { EntityGrid, EmptyState } from "./PremiumCTA";
 import { buildSeoPath } from "@client-seo/seoPaths";
 import { buildRentalListingPath, buildSaleListingPath } from "@client-seo/slugUtils";
+import { formatListingTitle } from "@client-seo/listingContent";
 
 type Intent = "rental" | "sale";
 
@@ -44,7 +45,7 @@ export default function ListingGrid({
         return (
           <VehicleCard
             key={String(item._id)}
-            title={`${String(item.brand)} ${String(item.model)} ${String(item.year)}`}
+            title={formatListingTitle(item)}
             subtitle={item.city ? String(item.city) : undefined}
             price={price}
             priceLabel={intent === "rental" ? "/jour" : undefined}

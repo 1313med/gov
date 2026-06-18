@@ -10,6 +10,7 @@ const nextConfig = {
   outputFileTracingRoot: path.join(__dirname),
   webpack: (config) => {
     config.resolve.alias["@client-seo"] = path.join(__dirname, "../client/src/seo");
+    config.resolve.alias["@client-locales"] = path.join(__dirname, "../client/src/locales");
     return config;
   },
   images: { remotePatterns: [{ protocol: "https", hostname: "**" }] },

@@ -16,6 +16,7 @@ import ListingGallery from "../components/listing/ListingGallery";
 import ListingSpecGrid from "../components/listing/ListingSpecGrid";
 import SeoHead from "../components/SeoHead";
 import { buildSaleListingSeo, getSiteUrl } from "../seo/seoLocales";
+import { resolveListingDescription } from "../seo/listingContent";
 import { buildSeoPath } from "../seo/seoPaths";
 import { buildSaleListingPath } from "../seo/slugUtils";
 import { vehicleJsonLd } from "../seo/jsonLd";
@@ -153,7 +154,7 @@ export default function CarDetails({ listingId: listingIdProp = null, semanticSl
 
           <div className="ld-card ld-card-pad ld-reveal" style={{ animationDelay: "100ms" }}>
             <div className="ld-section-label">{copy.carDetails.description}</div>
-            <p className="ld-desc">{car.description || copy.carDetails.noDesc}</p>
+            <p className="ld-desc">{resolveListingDescription(car, "sale", lang)}</p>
           </div>
         </div>
 

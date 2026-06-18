@@ -16,7 +16,8 @@
     "plugins": [{ "name": "next" }],
     "paths": {
       "@/*": ["./*"],
-      "@client-seo/*": ["../client/src/seo/*"]
+      "@client-seo/*": ["../client/src/seo/*"],
+      "@client-locales/*": ["../client/src/locales/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

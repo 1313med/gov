@@ -10,6 +10,11 @@ import BadgePill from "@/components/ui/BadgePill";
 import { parseSemanticListingParam, buildRentalListingPath, buildSaleListingPath } from "@client-seo/slugUtils";
 import { buildSeoPath } from "@client-seo/seoPaths";
 import { graphJsonLd, vehicleJsonLd, breadcrumbJsonLd, reviewsGraphJsonLd } from "@client-seo/jsonLd";
+import {
+  formatListingTitle,
+  formatBrandName,
+  resolveListingDescription,
+} from "@client-seo/listingContent";
 import RentalListingActions from "@/components/client/RentalListingActions";
 import SaleListingActions from "@/components/client/SaleListingActions";
 
@@ -21,13 +26,27 @@ export async function listingMetadata(lang: SeoLang, intent: Intent, listingSlug
   const listing = intent === "rental" ? await fetchRentalById(id) : await fetchSaleById(id);
   if (!listing) return null;
   const basePath = intent === "rental" ? buildRentalListingPath(listing) : buildSaleListingPath(listing);
-  const title = `${listing.brand} ${listing.model} ${listing.year}${listing.city ? ` — ${listing.city}` : ""} | Goovoiture`;
-  const price = intent === "rental" ? listing.pricePerDay : listing.price;
-  const description =
+  const label = formatListingTitle(listing);
+  const city = listing.city || "Maroc";
+  const title =
     intent === "rental"
-      ? `Louez ${listing.brand} ${listing.model} ${listing.year} à ${listing.pricePerDay} MAD/jour${listing.city ? ` à ${listing.city}` : ""}.`
-      : `${listing.brand} ${listing.model} ${listing.year} à vendre — ${Number(price).toLocaleString()} MAD${listing.city ? ` à ${listing.city}` : ""}.`;
-  return { basePath, title, description, keywords: `${listing.brand} ${listing.model} ${listing.city || "maroc"}` };
+      ? lang === "en"
+        ? `Rent ${label} — ${city} | Goovoiture`
+        : lang === "ar"
+          ? `تأجير ${label} — ${city} | Goovoiture`
+          : `Location ${label} — ${city} | Goovoiture`
+      : lang === "en"
+        ? `${label} for sale — ${city} | Goovoiture`
+        : lang === "ar"
+          ? `${label} للبيع — ${city} | Goovoiture`
+          : `${label} à vendre — ${city} | Goovoiture`;
+  const cleanDescription = resolveListingDescription(listing, intent, lang);
+  return {
+    basePath,
+    title,
+    description: cleanDescription.slice(0, 160),
+    keywords: `${listing.brand} ${listing.model} ${listing.city || "maroc"}`,
+  };
 }
 
 export default async function ListingView({
@@ -54,7 +73,8 @@ export default async function ListingView({
   const pageUrl = `${siteUrl}${buildSeoPath(lang, basePath)}`;
   const hubPath = intent === "rental" ? "/location-voiture" : "/voiture-occasion";
   const hubLabel = intent === "rental" ? "Location" : "Occasion";
-  const title = `${listing.brand} ${listing.model} ${listing.year}`;
+  const title = formatListingTitle(listing);
+  const displayDescription = resolveListingDescription(listing, intent, lang);
   const price = intent === "rental" ? listing.pricePerDay : listing.price;
   const image = Array.isArray(listing.images) ? listing.images[0] : null;
   const priceLabel =
@@ -123,10 +143,10 @@ export default async function ListingView({
           data={graphJsonLd(
             vehicleJsonLd({
               name: title,
-              brand: listing.brand,
+              brand: formatBrandName(listing.brand),
               model: listing.model,
               year: listing.year,
-              description: listing.description || title,
+              description: displayDescription,
               image,
               price,
               priceUnit: intent === "rental" ? "DAY" : undefined,
@@ -194,11 +214,11 @@ export default async function ListingView({
         </div>
       </div>
 
-      {listing.description ? (
+      {displayDescription ? (
         <section className="gv-sec-sm">
           <SectionHeader eyebrow="Description" title="À propos de ce véhicule" />
           <div className="gv-card gv-card-static p-6">
-            <p className="text-[var(--gv-ink2)] leading-relaxed whitespace-pre-line">{listing.description}</p>
+            <p className="text-[var(--gv-ink2)] leading-relaxed whitespace-pre-line">{displayDescription}</p>
           </div>
         </section>
       ) : null}

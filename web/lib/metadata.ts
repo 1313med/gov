@@ -25,7 +25,7 @@ export function buildPageMetadata({
   const alternates = getAlternateUrls(SITE_URL, buildSeoPath(lang, basePath));
 
   return {
-    title,
+    title: { absolute: title },
     description,
     keywords,
     robots,
